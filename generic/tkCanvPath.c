@@ -693,6 +693,9 @@ MatrixPrintProc(
     return buffer;
 }
 
+
+/* OUTDATED */
+
 /*
  *--------------------------------------------------------------
  *
@@ -1645,6 +1648,8 @@ GetCanvasTMatrix(Tk_Canvas canvas)
     return m;
 }
 
+/* OUTDATED */
+
 static void
 PaintCanvasLinearGradient(Tk_Canvas canvas, Drawable drawable, PathRect *bbox, char *name, int fillRule)
 {
@@ -1680,13 +1685,13 @@ PaintCanvasLinearGradient(Tk_Canvas canvas, Drawable drawable, PathRect *bbox, c
 
 static void
 DisplayPath(
-    Tk_Canvas canvas,			/* Canvas that contains item. */
-    Tk_Item *itemPtr,			/* Item to be displayed. */
-    Display *display,			/* Display on which to draw item. */
-    Drawable drawable,			/* Pixmap or window in which to draw
-					 * item. */
+    Tk_Canvas canvas,		/* Canvas that contains item. */
+    Tk_Item *itemPtr,		/* Item to be displayed. */
+    Display *display,		/* Display on which to draw item. */
+    Drawable drawable,		/* Pixmap or window in which to draw
+                             * item. */
     int x, int y, 			/* Describes region of canvas that */
-    int width, int height)	 	/* must be redisplayed (not used). */
+    int width, int height)	/* must be redisplayed (not used). */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(pathPtr->style);
@@ -1702,7 +1707,8 @@ DisplayPath(
     /*
     if (MakeCanvasPath(canvas, pathPtr, drawable) != TCL_OK) {
         return;
-    }*/
+    }
+    */
     m = GetCanvasTMatrix(canvas);
     TkPathPushTMatrix(drawable, &m);
     if (stylePtr->matrixPtr != NULL) {
@@ -1719,14 +1725,18 @@ DisplayPath(
     if (stylePtr->gradientFillName != NULL) {
         if (HaveLinearGradientStyleWithName(stylePtr->gradientFillName) == TCL_OK) {
             TkPathClipToPath(drawable, stylePtr->fillRule);
+            /*
             PaintCanvasLinearGradient(canvas, drawable, &(pathPtr->bareBbox), 
+                    stylePtr->gradientFillName, stylePtr->fillRule); */
+            PathPaintLinearGradientFromName(drawable, &(pathPtr->bareBbox), 
                     stylePtr->gradientFillName, stylePtr->fillRule);
 
             /* Note: Both CoreGraphics on MacOSX and Win32 GDI clears the current path
              *       when setting clipping. Need therefore to redo the path. 
              */
             if (TkPathDrawingDestroysPath()) {
-                MakeCanvasPath(canvas, pathPtr, drawable);
+                //MakeCanvasPath(canvas, pathPtr, drawable);
+                TkPathMakePath(drawable, pathPtr->atomPtr, stylePtr);
             }
             
             /* We shall remove the path clipping here! */
