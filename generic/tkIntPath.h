@@ -126,7 +126,7 @@ typedef struct CloseAtom {
  * The actual path drawing commands which are all platform specific.
  */
  
-void		TkPathInit(Drawable d);
+void		TkPathInit(Display *display, Drawable d);
 void		TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr);
 void    	TkPathEndPath(Drawable d);
 void		TkPathMoveTo(Drawable d, double x, double y);

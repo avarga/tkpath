@@ -423,7 +423,7 @@ void PathExit(ClientData clientData)
  * Is there a smarter way?
  */
  
-void TkPathInit(Drawable d)
+void TkPathInit(Display *display, Drawable d)
 {
     if (gPathBuilderPtr != NULL) {
         Tcl_Panic("the path drawing context gPathBuilder is already in use\n");

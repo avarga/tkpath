@@ -1375,7 +1375,7 @@ DeletePath(
     Tk_Canvas canvas,			/* Info about overall canvas widget. */
     Tk_Item *itemPtr,			/* Item that is being deleted. */
     Display *display)			/* Display containing window for
-					 * canvas. */
+                                 * canvas. */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
 
@@ -1728,7 +1728,7 @@ DisplayPath(
      * offset must always be taken into account. Note the order!
      */
      
-    TkPathInit(drawable);
+    TkPathInit(display, drawable);
     m = GetCanvasTMatrix(canvas);
     TkPathPushTMatrix(drawable, &m);
     if (stylePtr->matrixPtr != NULL) {
@@ -2186,6 +2186,11 @@ CurveSegments(
     int i;
     int istart = 1 - includeFirst;
     double u, u2, u3, t, t2, t3;
+    
+    /*
+     * We should use the 'de Castlejau' algorithm to iterate
+     * line segments until a certain tolerance.
+     */
 
     for (i = istart; i <= numSteps; i++, coordPtr += 2) {
         t = ((double) i)/((double) numSteps);

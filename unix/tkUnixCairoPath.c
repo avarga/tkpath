@@ -13,6 +13,7 @@
 /*** Help yourself!!! ***/
 
 #include <cairo.h>
+#include <cairo-xlib.h>
 #include <tkUnixInt.h>
 #include "tkPath.h"
 #include "tkIntPath.h"
@@ -25,15 +26,13 @@ extern int gUseAntiAlias;
 
 static  cairo_t *gctx = NULL;
 
-void TkPathInit(Drawable d)
+void TkPathInit(Display *display, Drawable d)
 {
     if (gctx != NULL) {
 	Tcl_Panic("the path drawing context gctx is already in use\n");
     }
     gctx = cairo_create();
-    cairo_set_target_drawable(gctx,
-            GDK_WINDOW_XDISPLAY(d),
-            GDK_WINDOW_XWINDOW(d));
+    cairo_set_target_drawable(gctx, display, d);
 }
 
 void
@@ -59,7 +58,7 @@ void TkPathMoveTo(Drawable d, double x, double y)
 
 void TkPathLineTo(Drawable d, double x, double y)
 {
-    cairo_line_to(gctx, (float) x, (float) y);
+    cairo_line_to(gctx, x, y);
 }
 
 void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
@@ -76,13 +75,13 @@ void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
 
-    cairo_curve_to(gctx, (float) x31, (float) y31, (float) x32, (float) y32, (float) x, (float) y);
+    cairo_curve_to(gctx, x31, y31, x32, y32, x, y);
 }
 
 void TkPathCurveTo(Drawable d, double x1, double y1, 
         double x2, double y2, double x, double y)
 {
-    cairo_curve_to(gctx, (float) x1, (float) y1, (float) x2, (float) y2, (float) x, (float) y);
+    cairo_curve_to(gctx, x1, y1, x2, y2, x, y);
 }
 
 void TkPathArcTo(Drawable d,
@@ -101,11 +100,13 @@ void TkPathClosePath(Drawable d)
 void TkPathClipToPath(Drawable d, int fillRule)
 {
 
+    /* Note: cairo_clip does not consume the current path */
+    cairo_clip(gctx);
 }
 
 void TkPathReleaseClipToPath(Drawable d)
 {
-
+    cairo_reset_clip(gctx);
 }
 
 void TkPathStroke(Drawable d, Tk_PathStyle *style)
@@ -167,9 +168,6 @@ void TkPathStroke(Drawable d, Tk_PathStyle *style)
 
 void TkPathFill(Drawable d, Tk_PathStyle *style)
 {
-    if (style->stroke != NULL) {
-        cairo_save(gctx);
-    }
     cairo_set_rgb_color(gctx,
             RedDoubleFromXColorPtr(style->fillColor),
             GreenDoubleFromXColorPtr(style->fillColor),
@@ -178,14 +176,17 @@ void TkPathFill(Drawable d, Tk_PathStyle *style)
     cairo_set_fill_rule(gctx, 
             (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
     cairo_fill(gctx);
-    if (style->stroke != NULL) {
-        cairo_restore(ctx);
-    }
 }
 
 void TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
 {
+    if (style->stroke != NULL) {
+        cairo_save(gctx);
+    }
     TkPathFill(d, style);
+    if (style->stroke != NULL) {
+        cairo_restore(gctx);
+    }
     TkPathStroke(d, style);
 }
 
@@ -202,7 +203,7 @@ void TkPathFree(Drawable d)
 
 int TkPathDrawingDestroysPath(void)
 {
-    return 0;	//???
+    return 0;
 }
 
 int TkPathGetCurrentPosition(Drawable d, PathPoint *pt)
@@ -217,8 +218,48 @@ int TkPathBoundingBox(PathRect *rPtr)
 }
 
 void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
-{
-
+{    
+    int			i;
+    PathRect 		transition;		/* The transition line. */
+    GradientStop 	*stop;
+    cairo_pattern_t 	*pat;
+    cairo_extend_t	extend;
+    
+    transition = fillPtr->transition;
+    nstops = fillPtr->nstops;
+    fillMethod = fillPtr->method;
+    
+    pat = cairo_pattern_create_linear(transition.x1, transition.y1, transition.x2, transition.y2);
+    for (i = 0; i < nstops; i++) {
+        stop = fillPtr->stops[i];
+        cairo_pattern_add_color_stop(pat, stop->offset, 
+                RedDoubleFromXColorPtr(stop->color),
+                GreenDoubleFromXColorPtr(stop->color),
+                BlueDoubleFromXColorPtr(stop->color)
+                stop->opacity);
+    }
+    cairo_set_pattern(cr, pat);
+    cairo_set_fill_rule(gctx, 
+            (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
+            
+    switch (fillMethod) {
+        case kPathGradientMethodPad: 
+            extend = CAIRO_EXTEND_NONE;
+            break;
+        case kPathGradientMethodRepeat:
+            extend = CAIRO_EXTEND_REPEAT;
+            break;
+        case kPathGradientMethodReflect:
+            extend = CAIRO_EXTEND_REFLECT;
+            break;
+        default:
+            extend = CAIRO_EXTEND_NONE;
+            break;
+    }
+    cairo_pattern_set_extend(pat, extend);
+    cairo_fill(cr);
+    
+    cairo_pattern_destroy(pat);
 }
-
+            
 

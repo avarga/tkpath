@@ -159,7 +159,7 @@ PathCreateBrush(Tk_PathStyle *style)
 }
 
 void		
-TkPathInit(Drawable d)
+TkPathInit(Display *display, Drawable d)
 {
     HDC hdc;
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;

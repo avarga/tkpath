@@ -8,6 +8,7 @@
 		034768DDFF38A45A11DB9C8B = {
 			children = (
 				F550918E036C35030130931B,
+				9AA54B3C07F99AFF00A80065,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -36,6 +37,7 @@
 			projectDirPath = "";
 			targets = (
 				F550918D036C35030130931B,
+				9AA54B2707F99AFF00A80065,
 			);
 		};
 		0867D691FE84028FC02AAC07 = {
@@ -85,6 +87,7 @@
 				9A58E5420796814B00FBE143,
 				9AA0B6C407DD8C9900A80065,
 				9A5BCDA007E2D8B400B6FA03,
+				9AA54B1507F999B200A80065,
 				9A5BCD9E07E2D81600B6FA03,
 			);
 			isa = PBXGroup;
@@ -261,12 +264,6 @@
 			path = /Users/matben/C/cvs/tkpath/generic/tkPathCopyTk.c;
 			refType = 0;
 		};
-		9A5BCD9F07E2D81600B6FA03 = {
-			fileRef = 9A5BCD9E07E2D81600B6FA03;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		9A5BCDA007E2D8B400B6FA03 = {
 			fileEncoding = 4;
 			indentWidth = 4;
@@ -396,6 +393,217 @@
 			settings = {
 			};
 		};
+		9AA54B1507F999B200A80065 = {
+			fileEncoding = 4;
+			indentWidth = 4;
+			isa = PBXFileReference;
+			name = tkPathTkDraw.c;
+			path = /Users/matben/C/cvs/tkpath/generic/tkPathTkDraw.c;
+			refType = 0;
+			tabWidth = 4;
+			usesTabs = 0;
+		};
+		9AA54B2707F99AFF00A80065 = {
+			buildPhases = (
+				9AA54B2807F99AFF00A80065,
+				9AA54B2907F99AFF00A80065,
+				9AA54B2C07F99AFF00A80065,
+				9AA54B3507F99AFF00A80065,
+				9AA54B3A07F99AFF00A80065,
+				9AA54B3B07F99AFF00A80065,
+			);
+			buildSettings = {
+				CC = "/usr/bin/gcc-3.3";
+				CPLUSPLUS = "/usr/bin/g++-3.3";
+				DYLIB_COMPATIBILITY_VERSION = 3.1;
+				DYLIB_CURRENT_VERSION = 3.1;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/Headers\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/PrivateHeaders\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/PrivateHeaders\" /Users/matben/C/cvs/tk/generic";
+				INSTALL_PATH = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = "\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers/X11\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "-DUSE_TCL_STUBS -DTARGET_OS_MAC=1 -DTARGET_API_MAC_CARBON=1 -DUSE_TK_STUBS -DMAC_OSX_TK -DUSE_COMPOSITELESS_PHOTO_PUT_BLOCK";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tkpath0.1.dylib;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+			);
+			isa = PBXLibraryTarget;
+			name = "tkpath TkDraw dylib";
+			productInstallPath = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+			productName = "MovableAlerts dylib";
+			productReference = 9AA54B3C07F99AFF00A80065;
+		};
+		9AA54B2807F99AFF00A80065 = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}\"\nfi";
+		};
+		9AA54B2907F99AFF00A80065 = {
+			buildActionMask = 2147483647;
+			files = (
+				9AA54B2A07F99AFF00A80065,
+				9AA54B2B07F99AFF00A80065,
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AA54B2A07F99AFF00A80065 = {
+			fileRef = 9AA1ECEA077FF7CC00A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B2B07F99AFF00A80065 = {
+			fileRef = 9AF2FEBB079410DB00AB783C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B2C07F99AFF00A80065 = {
+			buildActionMask = 2147483647;
+			files = (
+				9AA54B2E07F99AFF00A80065,
+				9AA54B2F07F99AFF00A80065,
+				9AA54B3007F99AFF00A80065,
+				9AA54B3107F99AFF00A80065,
+				9AA54B3207F99AFF00A80065,
+				9AA54B3307F99AFF00A80065,
+				9AA54B3407F99AFF00A80065,
+				9AA54B3D07F99B3600A80065,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AA54B2E07F99AFF00A80065 = {
+			fileRef = 9AA1ECE8077FF7BF00A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B2F07F99AFF00A80065 = {
+			fileRef = 9A58E5420796814B00FBE143;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3007F99AFF00A80065 = {
+			fileRef = 9A017ED6079FCCE100A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3107F99AFF00A80065 = {
+			fileRef = 9A56FF2807A234510091799F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3207F99AFF00A80065 = {
+			fileRef = 9AA0B6C407DD8C9900A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3307F99AFF00A80065 = {
+			fileRef = 9A5BCDA007E2D8B400B6FA03;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3407F99AFF00A80065 = {
+			fileRef = 9AA54B1507F999B200A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3507F99AFF00A80065 = {
+			buildActionMask = 2147483647;
+			files = (
+				9AA54B3607F99AFF00A80065,
+				9AA54B3707F99AFF00A80065,
+				9AA54B3807F99AFF00A80065,
+				9AA54B3907F99AFF00A80065,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AA54B3607F99AFF00A80065 = {
+			fileRef = 08FB77AAFE841565C02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3707F99AFF00A80065 = {
+			fileRef = F5564883038142E001A4FCC0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3807F99AFF00A80065 = {
+			fileRef = 9A57846A043C3778009A6529;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3907F99AFF00A80065 = {
+			fileRef = 9A57846C043C37A8009A6529;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3A07F99AFF00A80065 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AA54B3B07F99AFF00A80065 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/install -m 444 -g staff \"${SRCROOT}/pkgIndex.tcl\" \"${TARGET_BUILD_DIR}\"";
+		};
+		9AA54B3C07F99AFF00A80065 = {
+			isa = PBXLibraryReference;
+			path = tkpath0.1.dylib;
+			refType = 3;
+		};
+		9AA54B3D07F99B3600A80065 = {
+			fileRef = 9A5BCD9E07E2D81600B6FA03;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AA54B3E07F99B9900A80065 = {
+			fileRef = 9A5BCD9E07E2D81600B6FA03;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		9AF2FEBB079410DB00AB783C = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -437,8 +645,8 @@
 				9A017ED7079FCCE100A80065,
 				9A56FF2907A234510091799F,
 				9AA0B6C507DD8C9900A80065,
-				9A5BCD9F07E2D81600B6FA03,
 				9A5BCDA107E2D8B400B6FA03,
+				9AA54B3E07F99B9900A80065,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

@@ -62,6 +62,11 @@ if paramters are wrong.
     take precedence over any other options set directly. This is how
     SVG works (bad?).
 
+    All path specifications are normalized initially to the fundamental atoms
+    M, L, A, Q, and C, all upper case. When you use the canvas 'coords' command
+    it is the normalized path spec that is returned.
+
+
  o Antialiasing, if available, is controlled by the variable:
     ::tkpath::antialias
     Switch on with:
@@ -133,6 +138,7 @@ if paramters are wrong.
 	::tkpath::transform skewy angle
 
 	::tkpath::transform translate x y
+
 
  o Binaries and libraries:
  

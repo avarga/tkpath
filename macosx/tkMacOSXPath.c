@@ -7,11 +7,6 @@
  *
  * $Id$
  *
- * Notes:
- * 	The QuickDraw/Carbon coordinate system is relative to the
- *	top-level window, *not* to the Tk_Window.  
- *	However, since we're drawing into an off-screen port (Tk "Pixmap),
- *	we don't need to account for this.
  */
 
 #include <Carbon/Carbon.h>
@@ -167,7 +162,7 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
 }
 
 void		
-TkPathInit(Drawable d)
+TkPathInit(Display *display, Drawable d)
 {
     if (gPathCGContext != NULL) {
         Tcl_Panic("the path drawing context gPathCGContext is already in use\n");

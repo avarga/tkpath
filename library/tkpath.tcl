@@ -83,4 +83,98 @@ proc ::tkpath::transform {cmd args} {
     return $matrix
 }
 
+# ::tkpath::coords --
+# 
+#       Helper for designing the path specification for some typical items.
+#       These have SVG prototypes.
+#       
+# Arguments:
+#       type         any of circle, ellipse, polygon, polyline, or rect.
+#       coords       a list of the type specific coordinates
+#       args         optional attributes, such as -rx and -ry for rect.
+#       
+# Results:
+#       a transformation matrix
+
+proc ::tkpath::coords {type coords args} {
+    
+    set len [llength $args]
+    
+    switch -- $type {
+	circle {
+	    if {[llength $coords] != 3} {
+		return -code error "unrecognized circle coords \"$coords\""
+	    }
+	    foreach {cx cy r} $coords {break}
+	    set path [list \
+	      M $cx [expr $cy-$r] \
+	      A $r $r 0 0 1 $cx [expr $cy+$r] \
+	      A $r $r 0 0 1 $cx [expr $cy-$r] Z]
+	}
+	ellipse {
+	    if {[llength $coords] != 4} {
+		return -code error "unrecognized circle ellipse \"$coords\""
+	    }
+	    foreach {cx cy rx ry} $coords {break}
+	    set path [list \
+	      M $cx [expr $cy-$ry] \
+	      A $rx $ry 0 0 1 $cx [expr $cy+$ry] \
+	      A $rx $ry 0 0 1 $cx [expr $cy-$ry] Z]
+	}
+	polygon {
+	    set path [concat M [lrange $coords 0 1] M [lrange $coords 2 end] Z]
+	}
+	polyline {
+	    set path [concat M [lrange $coords 0 1] M [lrange $coords 2 end]]
+	}
+	rect {
+	    if {[llength $coords] != 4} {
+		return -code error "unrecognized rect coords \"$coords\""
+	    }
+	    foreach {x y width height} $coords {break}
+	    if {$args == {}} {
+		set path [list M $x $y h $width v $height h -$width z]
+	    } else {
+		set rx 0.0
+		set ry 0.0
+		foreach {key value} $args {
+		    
+		    switch -- $key {
+			-rx - -ry {
+			    set [string trimleft $key -] $value
+			}
+			default {
+			    return -code error "unrecognized rect option $key"
+			}
+		    }
+		}
+		set x2 [expr $x+$width]
+		set y2 [expr $y+$height]
+		if {[expr 2*$rx] > $width} {
+		    set rx [expr $width/2.0]
+		}
+		if {[expr 2*$ry] > $height} {
+		    set ry [expr $height/2.0]
+		}
+		set dx [expr $width-2*$rx]
+		set dy [expr $height-2*$ry]
+		set path [list \
+		  M [expr $x+$rx] $y \
+		  h $dx \
+		  a $rx $ry 0 0 1 $rx $ry \
+		  v $dy \
+		  a $rx $ry 0 0 1 -$rx $ry \
+		  h [expr -1*$dx] \
+		  a $rx $ry 0 0 1 -$rx -$ry \
+		  v [expr -1*$dy] \
+		  a $rx $ry 0 0 1 $rx -$ry Z]
+	    }
+	}
+	default {
+	    return -code error "unrecognized item type: \"$type\""
+	}
+    }
+    return $path
+}
+
 
