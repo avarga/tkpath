@@ -20,7 +20,7 @@
 
 using namespace Gdiplus;
 
-extern int gUseAntialiasing;
+extern int gUseAntiAlias;
 
 #define MakeGDIPlusColor(xc, opacity) 	Color((int) (opacity*255), 				\
                                                 (((xc)->pixel & 0xFF)),			\
@@ -121,6 +121,9 @@ PathC::PathC(Drawable d)
     mMemHdc = CreateCompatibleDC(NULL);
     SelectObject(mMemHdc, twdPtr->bitmap.handle);
     mGraphics = new Graphics(mMemHdc);
+    if (gUseAntiAlias) {
+        mGraphics->SetSmoothingMode(SmoothingModeAntiAlias);
+    }
     return;    
 }
 
@@ -180,7 +183,11 @@ void PathC::PushTMatrix(TMatrix *tm)
 {
     // this probably just sets the matrix; we need to push it!!!
     Matrix m((float)tm->a, (float)tm->b, (float)tm->c, (float)tm->d, (float)tm->tx, (float)tm->ty);
-    mGraphics->Transform(m);
+    Matrix mSrc;
+    
+    //mGraphics->GetTransform(&mSrc);
+    mGraphics->MultiplyTransform(&m);
+    //mGraphics->SetTransform(&m);
 }
 
 void PathC::BeginPath(Drawable d, Tk_PathStyle *style)
@@ -403,6 +410,7 @@ int TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
     gPathBuilderPtr->GetCurrentPoint(&pf);
     ptPtr->x = (double) pf.X;
     ptPtr->y = (double) pf.Y;
+    return TCL_OK;
 }
 
 int	TkPathDrawingDestroysPath(void)

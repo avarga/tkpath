@@ -21,6 +21,8 @@
 #define Green255FromXColorPtr(xc)  (((xc)->pixel >> 8) & 0xFF)
 #define Blue255FromXColorPtr(xc)   (((xc)->pixel >> 16) & 0xFF)
 
+extern int gUseAntiAlias;
+
 /*
  * This is perhaps a very stupid thing to do.
  * It limits drawing to this single context at a time.

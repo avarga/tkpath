@@ -20,7 +20,7 @@
 #define TKPATH_VERSION "0.1"
 
 extern Tk_ItemType tkPathType;
-int gUseAntialiasing = 0;
+int gUseAntiAlias = 0;
 
 /*
  * Hash table to keep track of linear gradient fills.
@@ -86,7 +86,7 @@ Tkpath_Init(
      */
     Tcl_EvalEx(interp, "namespace eval ::tkpath {}", -1, TCL_EVAL_GLOBAL);
     if (Tcl_LinkVar(interp, "::tkpath::antialias",
-            (char *) &gUseAntialiasing, TCL_LINK_BOOLEAN) != TCL_OK) {
+            (char *) &gUseAntiAlias, TCL_LINK_BOOLEAN) != TCL_OK) {
         Tcl_ResetResult(interp);
     }
 

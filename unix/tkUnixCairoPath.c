@@ -21,7 +21,7 @@
 #define GreenDoubleFromXColorPtr(xc)  (double) ((((xc)->pixel >> 8) & 0xFF)) / 255.0
 #define RedDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
-extern int gUseAntialiasing;
+extern int gUseAntiAlias;
 
 static  cairo_t *gctx = NULL;
 

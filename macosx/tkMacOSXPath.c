@@ -23,7 +23,7 @@
 #define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8) & 0xFF)) / 255.0
 #define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
-extern int gUseAntialiasing;
+extern int gUseAntiAlias;
 
 /*
  * This is perhaps a very stupid thing to do.
@@ -57,7 +57,7 @@ PathSetUpCGContext(
             (float)(boundsRect.bottom - boundsRect.top));
     CGContextConcatCTM(outContext, transform);
     
-    CGContextSetShouldAntialias(outContext, gUseAntialiasing);
+    CGContextSetShouldAntialias(outContext, gUseAntiAlias);
     
     /* Since we are using Pixmaps only we need no clipping or shifting. */
 }
