@@ -1,0 +1,91 @@
+                  
+                             tkpath README
+                             _____________
+
+This package implements path drawing modelled after its SVG counterpart,
+see http://www.w3.org/TR/SVG11/.
+
+The code is divided into two parts:
+
+1) Generic path drawing which also implements the platform specific parts.
+
+2) A path canvas item.
+
+There are various differences compared to SVG. As a canvas item, it also
+behaves a bit differently than an ordinary item.
+
+SVG: It implements the complete syntax of the path elements d attribute with
+one major difference: all separators must be whitespace, no commas, no
+implicit assumptions; all instructions and numbers must form a tcl list.
+The display attribute names are adapted to tcl conventions, see below.
+Also, SVG is web oriented and therefore tolerates parameter errors to some
+degree, while tk is a programming tool and typically generates errors
+if paramters are wrong.
+
+Tk: The path specification must be a single list and not concateneted with
+the rest of the command:
+
+right:  .c create path {M 10 10 h 10 v 10 h -10 z} -fill blue
+wrong:  .c create path M 10 10 h 10 v 10 h -10 z -fill blue    ;# Error
+
+Furthermore, coordinates are pixel coordinates and nothing else.
+
+Options for the path canvas item command. Not all implemented:
+
+    -fill color
+    -fillgradient gradientToken
+    -filloffset
+    -fillopacity float (0,1)
+    -fillrule nonzero|evenodd
+    -fillstipple
+    -matrix (not completely implemented)
+    -state
+    -stroke color
+    -strokedasharray dashArray
+    -strokelinecap 
+    -strokelinejoin
+    -strokemiterlimit float
+    -strokeoffset
+    -strokeopacity float (0,1)
+    -strokestipple
+    -strokewidth float
+    -style (unused)
+    -tags tagList
+
+Antialiasing, if available, is controlled by the variable:
+::tkpath::antialias
+Switch on with:
+set ::tkpath::antialias 1
+
+Linear gradients are created and configured using:
+
+::tkpath::lineargradient cmd ?options?
+
+    ::tkpath::lineargradient cget token option
+        Returns the value of an option.
+
+    ::tkpath::lineargradient configure token ?option? ?value option value...?
+        Configures the object in the usual tcl way.
+
+    ::tkpath::lineargradient create ?-key value ...?
+        Creates a linear gradient object and returns its token.
+
+    ::tkpath::lineargradient delete token
+        Deletes the object.
+
+    ::tkpath::lineargradient names
+        Returns all existing tokens.
+
+The options are:
+    -method pad|repeat|reflect    partial implementation; defaults to pad
+    -stops {stopSpec ?stopSpec...?}
+        where stopSpec is a list {offset color ?opacity?}.
+	All offsets must be ordered and run from 0 to 1.
+    -transition {x1 y1 x2 y2}
+        specifies the transtion vector relative the items bounding box.
+	Coordinates run from 0 to 1. It defaults to {0 0 1 0}.
+
+
+Copyright (c) 2005  Mats Bengtsson
+
+BSD style license.
