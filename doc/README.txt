@@ -90,6 +90,7 @@ if paramters are wrong.
     The same options as for the item are supported with the exception of -style,
     -state, and -tags.
 
+
  o Linear gradients are created and configured using:
 
     ::tkpath::lineargradient cmd ?options?
@@ -117,6 +118,22 @@ if paramters are wrong.
 	-transition {x1 y1 x2 y2}
 	    specifies the transtion vector relative the items bounding box.
 	    Coordinates run from 0 to 1. It defaults to {0 0 1 0}.
+
+
+ o Helper function for making transformation matrices:
+
+    ::tkpath::transform cmd ?args?
+
+        ::tkpath::transform rotate angle ?centerX centerY?
+
+	::tkpath::transform scale factorXY ?factorY?
+
+	::tkpath::transform skewx angle
+
+	::tkpath::transform skewy angle
+
+	::tkpath::transform translate x y
+
 
  o Known issues:
 
