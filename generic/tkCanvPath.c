@@ -239,6 +239,12 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,
         (char *) NULL, Tk_Offset(PathItem, style.dash),
         TK_CONFIG_NULL_OK, &dashOption},
+        
+    /* @@@ This is perhaps something we want?
+    {TK_CONFIG_CUSTOM, "-strokegradient", (char *) NULL, (char *) NULL,
+        (char *) NULL, Tk_Offset(PathItem, style.gradientStrokeName),
+        TK_CONFIG_NULL_OK, &linGradOption}, */
+    
     {TK_CONFIG_CAP_STYLE, "-strokelinecap", (char *) NULL, (char *) NULL,
         "butt", Tk_Offset(PathItem, style.capStyle), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_JOIN_STYLE, "-strokelinejoin", (char *) NULL, (char *) NULL,
@@ -996,20 +1002,38 @@ IncludePointInRect(PathRect *r, double x, double y)
     r->y2 = MAX(r->y2, y);
 }
 
+static void
+CopyPoint(double ptSrc[2], double ptDst[2])
+{
+    ptDst[0] = ptSrc[0];
+    ptDst[1] = ptSrc[1];
+}
+
+static void
+IncludeMiterPointsInRect(double p1[2], double p2[2], double p3[2], PathRect *bounds, double width)
+{
+    double		m1[2], m2[2];
+
+    TkGetMiterPoints(p1, p2, p3, width, m1, m2);
+    IncludePointInRect(bounds, m1[0], m1[1]);
+    IncludePointInRect(bounds, m2[0], m2[1]);
+}
+
 /* Supposed to get the miter extremes since the simple scheme in 
  * SetTotalBboxFromBare fails if sharp line joins using miter.
  *
  * @@@ TODO
  */
+ 
 static PathRect
 GetMiterBbox(PathAtom *atomPtr, double width)
 {
+    int			npts;
     double 		p1[2], p2[2], p3[2];
-    double		m1[2], m2[2];
-    double		current[2];
-    double		currentPtr;
+    double		current[2], second[2];
     PathRect	bounds = {1.0e36, 1.0e36, -1.0e36, -1.0e36};
     
+    npts = 0;
     current[0] = 0.0;
     current[1] = 0.0;
     
@@ -1020,47 +1044,96 @@ GetMiterBbox(PathAtom *atomPtr, double width)
                 MoveToAtom *move = (MoveToAtom *) atomPtr;
                 current[0] = move->x;
                 current[1] = move->y;
+                p1[0] = move->x;
+                p1[1] = move->y;
+                npts = 1;
                 break;
             }
             case PATH_ATOM_L: {
                 LineToAtom *line = (LineToAtom *) atomPtr;
                 current[0] = line->x;
                 current[1] = line->y;
+                CopyPoint(p2, p3);
+                CopyPoint(p1, p2);
+                p1[0] = line->x;
+                p1[1] = line->y;
+                npts++;
+                if (npts >= 3) {
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                }
                 break;
             }
             case PATH_ATOM_A: {
                 ArcAtom *arc = (ArcAtom *) atomPtr;
                 current[0] = arc->x;
                 current[1] = arc->y;
+                /* @@@ TODO */
                 break;
             }
             case PATH_ATOM_Q: {
                 QuadBezierAtom *quad = (QuadBezierAtom *) atomPtr;
                 current[0] = quad->anchorX;
                 current[1] = quad->anchorY;
-                // the control point(s) form the tangent lines at ends
-                // quad->ctrlX, quad->ctrlY
+                /* The control point(s) form the tangent lines at ends. */
+                CopyPoint(p2, p3);
+                CopyPoint(p1, p2);
+                p1[0] = quad->ctrlX;
+                p1[1] = quad->ctrlY;
+                npts++;
+                if (npts >= 3) {
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                }
+                CopyPoint(p1, p2);
+                p1[0] = quad->anchorX;
+                p1[1] = quad->anchorY;
+                npts += 2;
                 break;
             }
             case PATH_ATOM_C: {
                 CurveToAtom *curve = (CurveToAtom *) atomPtr;
                 current[0] = curve->anchorX;
                 current[1] = curve->anchorY;
-                // curve->ctrlX1, curve->ctrlY1, curve->ctrlX2, curve->ctrlY2,
+                /* The control point(s) form the tangent lines at ends. */
+                CopyPoint(p2, p3);
+                CopyPoint(p1, p2);
+                p1[0] = curve->ctrlX1;
+                p1[1] = curve->ctrlY1;
+                npts++;
+                if (npts >= 3) {
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                }
+                p1[0] = curve->ctrlX2;
+                p1[1] = curve->ctrlY2;
+                p1[0] = curve->anchorX;
+                p1[1] = curve->anchorX;
+                npts += 2;
                 break;
             }
             case PATH_ATOM_Z: {
                 CloseAtom *close = (CloseAtom *) atomPtr;
                 current[0] = close->x;
                 current[1] = close->y;
+                CopyPoint(p2, p3);
+                CopyPoint(p1, p2);
+                p1[0] = close->x;
+                p1[1] = close->y;
+                npts++;
+                if (npts >= 3) {
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                }
+                /* Check also the joint of first segment with the last segment. */
+                CopyPoint(p2, p3);
+                CopyPoint(p1, p2);
+                CopyPoint(second, p1);
+                if (npts >= 3) {
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                }
                 break;
             }
         }
-        
-        TkGetMiterPoints(p1, p2, p3, width, m1, m2);
-        IncludePointInRect(&bounds, m1[0], m1[1]);
-        IncludePointInRect(&bounds, m2[0], m2[1]);
-
+        if (npts == 2) {
+            CopyPoint(current, second);
+        }
         atomPtr = atomPtr->nextPtr;
     }
     

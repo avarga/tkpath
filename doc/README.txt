@@ -40,7 +40,7 @@ if paramters are wrong.
 	-fillopacity float (0,1)
 	-fillrule nonzero|evenodd
 	-fillstipple
-	-matrix (not completely implemented)
+	-matrix {{a b} {c d} {tx ty}}
 	-state
 	-stroke color
 	-strokedasharray dashArray
@@ -59,7 +59,7 @@ if paramters are wrong.
     such as rotation, translation etc.
 
     The styleToken can be a style created with tkpath::style. It's options
-    take precedence over the any other options set directly. This is how
+    take precedence over any other options set directly. This is how
     SVG works (bad?).
 
  o Antialiasing, if available, is controlled by the variable:
@@ -134,16 +134,30 @@ if paramters are wrong.
 
 	::tkpath::transform translate x y
 
+ o Binaries and libraries:
+ 
+   MacOSX: CoreGraphics. On my 10.2.8 system all line widths are a multiple
+   of two when not using antialiasing.
+
+   WinXP: GDI+. On pre XP systems it should be possible to get the gdiplus.dll
+   to make it work.
+
+   Win32: GDI. Features like opacity and antialiasing are missing here.
+
 
  o Known issues:
 
    - Any changes made to a style object or a gradient object is not directly
-   noticable to a canvas item. SOme kind of notifier is needed here.
+     noticable to a canvas item. SOme kind of notifier is needed here.
 
    - The style and gradient objects should belong to the canvas widget itself,
-   but that requires changes to the canvas code.
+     but that requires changes to the canvas code.
+
+   - Avoid using the canvas scale command on paths containing arc instructions
+     since an arc cannot generally be scaled and still be an arc.
 
 
 Copyright (c) 2005  Mats Bengtsson
 
 BSD style license.
+

@@ -76,7 +76,7 @@ void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
 
-    TkPathCurveTo(d, x31, y31, x32, y32, x, y);
+    cairo_curve_to(gctx, (float) x31, (float) y31, (float) x32, (float) y32, (float) x, (float) y);
 }
 
 void TkPathCurveTo(Drawable d, double x1, double y1, 

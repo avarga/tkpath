@@ -44,15 +44,15 @@ static double gCurrentY;
 static HPEN
 PathCreatePen(Tk_PathStyle *stylePtr)
 {
-    int widthInt;
-    int useDash = 0;
-    int	dashLen = 0;
-    int win2000atleast = 0;
+    int 	widthInt;
+    int 	useDash = 0;
+    int		dashLen = 0;
+    int 	win2000atleast = 0;
     Tk_Dash *dash;
     OSVERSIONINFO os;
-    DWORD penstyle;
-    HPEN hpen;
-    DWORD *lpStyle = NULL;
+    DWORD 	penstyle;
+    HPEN 	hpen;
+    DWORD 	*lpStyle = NULL;
     
     /* Windows 95/98/Me need special handling since
      * they do not support dashes through the custom style array.
@@ -321,8 +321,8 @@ TkPathReleaseClipToPath(Drawable d)
 void
 TkPathStroke(Drawable d, Tk_PathStyle *style)
 {       
-    HDC hdc;
-    HPEN hpen, oldHpen;
+    HDC 	hdc;
+    HPEN 	hpen, oldHpen;
     
     hdc = gMemHdc;
     hpen = PathCreatePen(style);
@@ -338,8 +338,8 @@ TkPathStroke(Drawable d, Tk_PathStyle *style)
 void
 TkPathFill(Drawable d, Tk_PathStyle *style)
 {
-    HDC hdc;
-    HBRUSH hbrush, oldHbrush;
+    HDC 	hdc;
+    HBRUSH 	hbrush, oldHbrush;
     
     hdc = gMemHdc;
     hbrush = PathCreateBrush(style);
@@ -354,9 +354,9 @@ TkPathFill(Drawable d, Tk_PathStyle *style)
 void        
 TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
 {
-    HDC hdc;
-    HPEN hpen, oldHpen;
-    HBRUSH hbrush, oldHbrush;
+    HDC 	hdc;
+    HPEN 	hpen, oldHpen;
+    HBRUSH 	hbrush, oldHbrush;
     
     hdc = gMemHdc;
     hpen = PathCreatePen(style);
@@ -381,9 +381,11 @@ TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
 int
 TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
 {
-    //POINT pt;
-    
-    //GetCurrentPositionEx(gMemHdc, &pt);
+    /*
+     * Note that GetCurrentPositionEx() wont work since this returns
+     * the coordinates we are actually using for drawing which have 
+     * been transformed!
+     */
     ptPtr->x = gCurrentX;
     ptPtr->y = gCurrentY;
     return TCL_OK;
@@ -398,7 +400,7 @@ TkPathDrawingDestroysPath(void)
 /*
  *----------------------------------------------------------------------
  *
- * TwoStopLinearGradient --
+ * FillTwoStopLinearGradient --
  *
  *		Paint linear gradients using primitive drawing functions.
  *
@@ -406,7 +408,7 @@ TkPathDrawingDestroysPath(void)
  */
 
 static void
-TwoStopLinearGradient(
+FillTwoStopLinearGradient(
         Drawable d, 
         PathRect *bbox, /* The items bounding box in untransformed coords. */
         PathRect *line,	/* The relative line that defines the
@@ -609,11 +611,11 @@ NeedTransitionPadding(PathRect *line)
 void
 TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
-    int i;
-    int pad;
-    int nstops;
-    PathRect line, transition;
-    GradientStop *stop1, *stop2;
+    int 			i;
+    int 			pad;
+    int 			nstops;
+    PathRect 		line, transition;
+    GradientStop 	*stop1, *stop2;
 
     transition = fillPtr->transition;
     nstops = fillPtr->nstops;
@@ -634,7 +636,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
                 line.x2 = transition.x1;
                 line.y2 = transition.y1;
                 stop1 = fillPtr->stops[0];
-                TwoStopLinearGradient(d, bbox, &line,
+                FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
             }
             if ((pad == kPathGradientPadSecond) || (pad == kPathGradientPadBoth)) {
@@ -643,7 +645,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
                 line.x2 = transition.x2 + 1.42*(transition.x2 - transition.x1);
                 line.y2 = transition.y2 + 1.42*(transition.y2 - transition.y1);
                 stop1 = fillPtr->stops[nstops - 1];
-                TwoStopLinearGradient(d, bbox, &line,
+                FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
             }
         }
@@ -657,7 +659,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
             line.y1 = transition.y1;
             line.x2 = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
             line.y2 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);            
-            TwoStopLinearGradient(d, bbox, &line,
+            FillTwoStopLinearGradient(d, bbox, &line,
                     stop1->color, stop1->color, stop1->opacity, stop1->opacity);
         }
         if (fillPtr->stops[nstops-1]->offset < 1.0) {
@@ -666,7 +668,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
             line.y1 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
             line.x2 = transition.x2;
             line.y2 = transition.y2;
-            TwoStopLinearGradient(d, bbox, &line,
+            FillTwoStopLinearGradient(d, bbox, &line,
                     stop2->color, stop2->color, stop2->opacity, stop2->opacity);
         }
         
@@ -688,7 +690,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
             line.y1 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);
             line.x2 = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
             line.y2 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
-            TwoStopLinearGradient(d, bbox, &line,
+            FillTwoStopLinearGradient(d, bbox, &line,
                     stop1->color, stop2->color, stop1->opacity, stop2->opacity);
         }
     } else if (fillPtr->method == kPathGradientMethodRepeat) {

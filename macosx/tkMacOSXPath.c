@@ -512,7 +512,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
 #if 0
 
 static void
-TwoStopLinearGradient(
+FillTwoStopLinearGradient(
         Drawable d, 
         PathRect *bbox, /* The items bounding box. */
         PathRect *line,	/* The relative line that defines the
@@ -719,7 +719,7 @@ TkPathPaintLinearGradient2(Drawable d, PathRect *bbox, LinearGradientFill *fillP
                 line.x2 = transition.x1;
                 line.y2 = transition.y1;
                 stop1 = fillPtr->stops[0];
-                TwoStopLinearGradient(d, bbox, &line,
+                FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
             }
             if ((pad == kPathGradientPadSecond) || (pad == kPathGradientPadBoth)) {
@@ -728,7 +728,7 @@ TkPathPaintLinearGradient2(Drawable d, PathRect *bbox, LinearGradientFill *fillP
                 line.x2 = transition.x2 + 1.42*(transition.x2 - transition.x1);
                 line.y2 = transition.y2 + 1.42*(transition.y2 - transition.y1);
                 stop1 = fillPtr->stops[nstops - 1];
-                TwoStopLinearGradient(d, bbox, &line,
+                FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
             }
         }
@@ -742,7 +742,7 @@ TkPathPaintLinearGradient2(Drawable d, PathRect *bbox, LinearGradientFill *fillP
             line.y1 = transition.y1;
             line.x2 = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
             line.y2 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);            
-            TwoStopLinearGradient(d, bbox, &line,
+            FillTwoStopLinearGradient(d, bbox, &line,
                     stop1->color, stop1->color, stop1->opacity, stop1->opacity);
         }
         if (fillPtr->stops[nstops-1]->offset < 1.0) {
@@ -751,7 +751,7 @@ TkPathPaintLinearGradient2(Drawable d, PathRect *bbox, LinearGradientFill *fillP
             line.y1 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
             line.x2 = transition.x2;
             line.y2 = transition.y2;
-            TwoStopLinearGradient(d, bbox, &line,
+            FillTwoStopLinearGradient(d, bbox, &line,
                     stop2->color, stop2->color, stop2->opacity, stop2->opacity);
         }
         
@@ -773,7 +773,7 @@ TkPathPaintLinearGradient2(Drawable d, PathRect *bbox, LinearGradientFill *fillP
             line.y1 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);
             line.x2 = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
             line.y2 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
-            TwoStopLinearGradient(d, bbox, &line,
+            FillTwoStopLinearGradient(d, bbox, &line,
                     stop1->color, stop2->color, stop1->opacity, stop2->opacity);
         }
     } else if (fillPtr->method == kPathGradientMethodRepeat) {
