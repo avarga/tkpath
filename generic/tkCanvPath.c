@@ -956,8 +956,6 @@ CreatePath(
     pathPtr->pathLen = 0;
     pathPtr->normPathObjPtr = NULL;
     pathPtr->styleName = NULL;
-    pathPtr->style.capStyle = CapButt;
-    pathPtr->style.joinStyle = JoinRound;
     pathPtr->atomPtr = NULL;
     pathPtr->bareBbox = NewEmptyPathRect();
     pathPtr->totalBbox = NewEmptyPathRect();
@@ -1166,7 +1164,7 @@ ConfigurePath(
      * Good or bad?
      */
     if (pathPtr->styleName != NULL) {
-        PathStyleMergeStyles(style, pathPtr->styleName);
+        PathStyleMergeStyles(tkwin, style, pathPtr->styleName);
     } 
 
     /*

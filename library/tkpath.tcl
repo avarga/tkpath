@@ -25,17 +25,21 @@ proc ::tkpath::transform {cmd args} {
     
     switch -- $cmd {
 	rotate {
+	    set phi [lindex $args 0]
+	    set cosPhi [expr cos($phi)]
+	    set sinPhi [expr sin($phi)]
+	    set msinPhi [expr -1.0*$sinPhi]
 	    if {$len == 1} {
-		set phi [lindex $args 0]
-		set cosPhi [expr cos($phi)]
-		set sinPhi [expr sin($phi)]
-		set msinPhi [expr -1.0*$sinPhi]
 		set matrix \
 		  [list [list $cosPhi $sinPhi] [list $msinPhi $cosPhi] {0 0}]
 	    } elseif {$len == 3} {
-		set phi [lindex $args 0]
 		set cx  [lindex $args 1]
 		set cy  [lindex $args 2]
+		set matrix [list \
+		  [list $cosPhi $sinPhi] \
+		  [list $msinPhi $cosPhi] \
+		  [list [expr -$cx*$cosPhi + $cy*$sinPhi + $cx] \
+		  [expr -$cx*$sinPhi - $cy*$cosPhi + $cy]]]
 	    } else {
 		return -code error "usage: transform rotate angle ?centerX centerY?"
 	    }

@@ -426,6 +426,7 @@ PathGenericCmdDispatcher(
         Tcl_HashTable *hashTablePtr,
         Tk_OptionTable optionTable,
         char *(*createAndConfigProc)(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]),
+        void (*configNotifyProc)(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]),
         void (*freeProc)(Tcl_Interp *interp, char *recordPtr))
 {
     char   		*name;
@@ -501,6 +502,9 @@ PathGenericCmdDispatcher(
                         tkwin, NULL, &mask) != TCL_OK) {
 					return TCL_ERROR;
                 }
+                if (configNotifyProc != NULL) {
+                    (*configNotifyProc)(recordPtr, mask, objc - 3, objv + 3);
+                }
 			}
             break;
         }
@@ -534,6 +538,9 @@ PathGenericCmdDispatcher(
                 Tk_FreeConfigOptions(recordPtr, optionTable, NULL);
                 ckfree(recordPtr);
                 return TCL_ERROR;
+            }
+            if (configNotifyProc != NULL) {
+                (*configNotifyProc)(recordPtr, mask, objc - 2, objv + 2);
             }
 
 			hPtr = Tcl_CreateHashEntry(hashTablePtr, str, &isNew);

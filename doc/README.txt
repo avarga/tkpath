@@ -30,7 +30,7 @@ wrong:  .c create path M 10 10 h 10 v 10 h -10 z -fill blue    ;# Error
 
 Furthermore, coordinates are pixel coordinates and nothing else.
 
-Options for the path canvas item command. Not all implemented:
+Options for the path canvas item command. Not all are implemented:
 
     -fill color
     -fillgradient gradientToken
@@ -49,13 +49,40 @@ Options for the path canvas item command. Not all implemented:
     -strokeopacity float (0,1)
     -strokestipple
     -strokewidth float
-    -style (unused)
+    -style styleToken
     -tags tagList
+
+A matrix is specified by a double list as {{a b} {c d} {tx ty}}.
+There are utility functions to create a matrix using simpler transformations,
+such as rotation, translation etc.
+
+The styleToken can be a style created with tkpath::style. It's options
+take precedence over the any other options set directly. This is how
+SVG works (bad?).
 
 Antialiasing, if available, is controlled by the variable:
 ::tkpath::antialias
 Switch on with:
 set ::tkpath::antialias 1
+
+Styles are created and configured using:
+
+::tkpath::style cmd ?options?
+
+    ::tkpath:: style cget token option
+        Returns the value of an option.
+
+    ::tkpath:: style configure token ?option? ?value option value...?
+        Configures the object in the usual tcl way.
+
+    ::tkpath:: style create ?-key value ...?
+        Creates a linear gradient object and returns its token.
+
+    ::tkpath:: style delete token
+        Deletes the object.
+
+    ::tkpath:: style names
+        Returns all existing tokens.
 
 Linear gradients are created and configured using:
 

@@ -465,7 +465,7 @@ LinearGradientCmd(
     return PathGenericCmdDispatcher(interp, objc, objv, 
             kLinGradientNameBase, &gGradientNameUid, 
             gLinearGradientHashPtr, gLinearGradientOptionTable,
-            LinGradientCreateAndConfig, LinGradientFree);
+            LinGradientCreateAndConfig, NULL, LinGradientFree);
 }
 
 static LinearGradientStyle *

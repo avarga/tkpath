@@ -34,6 +34,7 @@ static char 			*kStyleNameBase = "pathstyle";
  */
 
 static char *	StyleCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
+static void 	StyleConfigNotify(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]);
 static void		StyleFree(Tcl_Interp *interp, char *recordPtr);
 
 
@@ -107,14 +108,25 @@ FillGradientGetOption(
     return Tcl_NewStringObj(*((char **) internalPtr), -1);
 }
 
+static void
+FillGradientFreeOption(
+        ClientData clientData,
+        Tk_Window tkwin, 
+        char *internalPtr)
+{
+    if (*((char **) internalPtr) != NULL) {
+        ckfree(*((char **) internalPtr));
+        *((char **) internalPtr) = NULL;
+    }
+}
+
 static Tk_ObjCustomOption fillGradientCO = 
 {
     "fillgradient",
     FillGradientSetOption,
     FillGradientGetOption,
     NULL,
-    NULL,			/* We would perhaps need this to be able to
-                     * free up the record. */
+    FillGradientFreeOption,
     (ClientData) NULL
 };
 
@@ -207,7 +219,10 @@ MatrixFreeOption(
     Tk_Window tkwin,
     char *internalPtr)		/* Pointer to storage for value. */
 {
-    /* @@@ TODO */
+    if (*((char **) internalPtr) != NULL) {
+        ckfree(*((char **) internalPtr));
+        *((char **) internalPtr) = NULL;
+    }
 }
 
 static Tk_ObjCustomOption matrixCO = 
@@ -216,7 +231,7 @@ static Tk_ObjCustomOption matrixCO =
     MatrixSetOption,
     MatrixGetOption,
     NULL,
-    NULL,
+    MatrixFreeOption,
     (ClientData) NULL
 };
 
@@ -282,13 +297,26 @@ DashGetOption(
     return Tcl_NewStringObj(buffer, -1);
 }
 
+static void
+DashFreeOption(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr)		/* Pointer to storage for value. */
+{
+    if (*((char **) internalPtr) != NULL) {
+
+
+        // @@@ TODO
+    }
+}
+
 static Tk_ObjCustomOption dashCO = 
 {
     "dash",
     DashSetOption,
     DashGetOption,
     NULL,
-    NULL,
+    DashFreeOption,
     (ClientData) NULL
 };
 
@@ -312,45 +340,54 @@ static char *nullST[] = {
 
 static Tk_OptionSpec styleOptionSpecs[] = {
     {TK_OPTION_COLOR, "-fill", (char *) NULL, (char *) NULL,
-        "", -1, Tk_Offset(Tk_PathStyle, fillColor), TK_OPTION_NULL_OK, 0, 0},
+        "", -1, Tk_Offset(Tk_PathStyle, fillColor), TK_OPTION_NULL_OK, 0, 
+        PATH_STYLE_OPTION_FILL},
 	{TK_OPTION_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, gradientFillName),
-		TK_OPTION_NULL_OK, (ClientData) &fillGradientCO, 0},
+		TK_OPTION_NULL_OK, (ClientData) &fillGradientCO, 
+        PATH_STYLE_OPTION_FILLGRADIENT},
 	{TK_OPTION_STRING_TABLE, "-filloffset", (char *) NULL, (char *) NULL,	/* @@@ TODO */
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, null),
-		0, (ClientData) &nullST, 0},
+		0, (ClientData) &nullST, PATH_STYLE_OPTION_FILLOFFSET},
     {TK_OPTION_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,
-        "1.0", -1, Tk_Offset(Tk_PathStyle, fillOpacity), 0, 0, 0},
+        "1.0", -1, Tk_Offset(Tk_PathStyle, fillOpacity), 0, 0, 
+        PATH_STYLE_OPTION_FILLOPACITY},
     {TK_OPTION_STRING_TABLE, "-fillrule", (char *) NULL, (char *) NULL,
         "nonzero", -1, Tk_Offset(Tk_PathStyle, fillRule), 
-        0, (ClientData) fillRuleST, 0},
+        0, (ClientData) fillRuleST, PATH_STYLE_OPTION_FILLRULE},
     {TK_OPTION_BITMAP, "-fillstipple", (char *) NULL, (char *) NULL,
-        "", -1, Tk_Offset(Tk_PathStyle, fillStipple), TK_OPTION_NULL_OK, 0, 0},
+        "", -1, Tk_Offset(Tk_PathStyle, fillStipple), TK_OPTION_NULL_OK, 0, 
+        PATH_STYLE_OPTION_FILLSTIPPLE},
 	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, matrix),
-		TK_OPTION_NULL_OK, (ClientData) &matrixCO, 0},
+		TK_OPTION_NULL_OK, (ClientData) &matrixCO, PATH_STYLE_OPTION_MATRIX},
     {TK_OPTION_COLOR, "-stroke", (char *) NULL, (char *) NULL,
-        "black", -1, Tk_Offset(Tk_PathStyle, strokeColor), TK_OPTION_NULL_OK, 0, 0},
+        "black", -1, Tk_Offset(Tk_PathStyle, strokeColor), TK_OPTION_NULL_OK, 0, 
+        PATH_STYLE_OPTION_STROKE},
 	{TK_OPTION_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, dash),
-		TK_OPTION_NULL_OK, (ClientData) &dashCO, 0},
+		TK_OPTION_NULL_OK, (ClientData) &dashCO, PATH_STYLE_OPTION_STROKEDASHARRAY},
     {TK_OPTION_STRING_TABLE, "-strokelinecap", (char *) NULL, (char *) NULL,
         "butt", -1, Tk_Offset(Tk_PathStyle, capStyle), 
-        0, (ClientData) lineCapST, 0},
+        0, (ClientData) lineCapST, PATH_STYLE_OPTION_STROKELINECAP},
     {TK_OPTION_STRING_TABLE, "-strokelinejoin", (char *) NULL, (char *) NULL,
         "round", -1, Tk_Offset(Tk_PathStyle, joinStyle), 
-        0, (ClientData) lineJoinST, 0},
+        0, (ClientData) lineJoinST, PATH_STYLE_OPTION_STROKELINEJOIN},
     {TK_OPTION_DOUBLE, "-strokemiterlimit", (char *) NULL, (char *) NULL,
-        "4.0", -1, Tk_Offset(Tk_PathStyle, miterLimit), 0, 0, 0},
+        "4.0", -1, Tk_Offset(Tk_PathStyle, miterLimit), 0, 0, 
+        PATH_STYLE_OPTION_STROKEMITERLIMIT},
 	{TK_OPTION_STRING_TABLE, "-strokeoffset", (char *) NULL, (char *) NULL,	/* @@@ TODO */
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, null),
-		0, (ClientData) &nullST, 0},
+		0, (ClientData) &nullST, PATH_STYLE_OPTION_STROKEOFFSET},
     {TK_OPTION_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,
-        "1.0", -1, Tk_Offset(Tk_PathStyle, strokeOpacity), 0, 0, 0},
+        "1.0", -1, Tk_Offset(Tk_PathStyle, strokeOpacity), 0, 0, 
+        PATH_STYLE_OPTION_STROKEOPACITY},
     {TK_OPTION_BITMAP, "-strokestipple", (char *) NULL, (char *) NULL,
-        "", -1, Tk_Offset(Tk_PathStyle, strokeStipple), TK_OPTION_NULL_OK, 0, 0},
+        "", -1, Tk_Offset(Tk_PathStyle, strokeStipple), TK_OPTION_NULL_OK, 0, 
+        PATH_STYLE_OPTION_STROKESTIPPLE},
     {TK_OPTION_DOUBLE, "-strokewidth", (char *) NULL, (char *) NULL,
-        "1.0", -1, Tk_Offset(Tk_PathStyle, strokeWidth), 0, 0, 0},
+        "1.0", -1, Tk_Offset(Tk_PathStyle, strokeWidth), 0, 0, 
+        PATH_STYLE_OPTION_STROKEWIDTH},
     
     /* @@@ TODO: When this comes into canvas code we should add a -tags option here??? */
     
@@ -396,7 +433,7 @@ StyleObjCmd(
 {
     return PathGenericCmdDispatcher(interp, objc, objv, 
             kStyleNameBase, &gStyleNameUid, gStyleHashPtr, gStyleOptionTable,
-            StyleCreateAndConfig, StyleFree);
+            StyleCreateAndConfig, StyleConfigNotify, StyleFree);
 }
 
 
@@ -423,6 +460,15 @@ StyleCreateAndConfig(
     return (char *) stylePtr;
 }
 
+static void 
+StyleConfigNotify(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[])
+{
+    Tk_PathStyle *stylePtr = (Tk_PathStyle *) recordPtr;
+
+    /* Let mask be the cumalative options set. */
+    stylePtr->mask |= mask;
+}
+
 static void
 StyleFree(Tcl_Interp *interp, char *recordPtr) 
 {
@@ -444,8 +490,66 @@ PathStyleHaveWithName(CONST char *name)
     }
 }
 
+static void
+CopyXColor(Tk_Window tkwin, XColor **dstPtrPtr, XColor *srcPtr)
+{
+    XColor *dstPtr;
+    XColor *colorPtr = NULL;
+    
+    dstPtr = *dstPtrPtr;
+    if ((dstPtr == NULL) && (srcPtr == NULL)) {
+        /* empty */
+    } else if (dstPtr == NULL) {
+        colorPtr = Tk_GetColorByValue(tkwin, srcPtr);
+    } else {
+        Tk_FreeColor(dstPtr);
+        colorPtr = Tk_GetColorByValue(tkwin, srcPtr);
+    }
+    *dstPtrPtr = colorPtr;
+}
+
+static void
+CopyTMatrix(TMatrix **dstPtrPtr, TMatrix *srcPtr)
+{
+    TMatrix *dstPtr;
+    TMatrix *matrixPtr = NULL;
+    
+    dstPtr = *dstPtrPtr;
+    if ((dstPtr == NULL) && (srcPtr == NULL)) {
+        /* empty */
+    } else if (dstPtr == NULL) {
+        matrixPtr = (TMatrix *) ckalloc(sizeof(TMatrix));
+        *matrixPtr = *srcPtr;
+    } else {
+        *matrixPtr = *srcPtr;
+    }
+    *dstPtrPtr = matrixPtr;
+}
+
+static void
+CopyTkDash(Tk_Dash *dstPtr, Tk_Dash *srcPtr)
+{
+
+    /* @@@ TODO */
+}
+
+static void
+CopyOptionString(char **dstPtrPtr, char *srcPtr)
+{
+    if ((*dstPtrPtr == NULL) && (srcPtr == NULL)) {
+        /* empty */
+    } else if (*dstPtrPtr == NULL) {
+        *dstPtrPtr = (char *) ckalloc(strlen(*srcPtr) + 1);
+        strcpy(*dstPtrPtr, srcPtr);
+    } else {
+        ckfree(*dstPtrPtr);
+        *dstPtrPtr = (char *) ckalloc(strlen(*srcPtr) + 1);
+        strcpy(*dstPtrPtr, srcPtr);
+    }
+}
+
 void
-PathStyleMergeStyles(Tk_PathStyle *stylePtr, CONST char *styleName)
+PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName)
 {
     int mask;
 	Tcl_HashEntry *hPtr;
@@ -463,34 +567,56 @@ PathStyleMergeStyles(Tk_PathStyle *stylePtr, CONST char *styleName)
      */
     mask = srcStylePtr->mask;
     if (mask & PATH_STYLE_OPTION_FILL) {
-    
-        stylePtr-> = ;
-        XColor *fillColor;
+        CopyXColor(tkwin, &(stylePtr->fillColor), srcStylePtr->fillColor);
     }
-    
+    if (mask & PATH_STYLE_OPTION_FILLGRADIENT) {
+        CopyOptionString(&(stylePtr->gradientFillName), srcStylePtr->gradientFillName);
+    }
+    if (mask & PATH_STYLE_OPTION_FILLOFFSET) {
+        /* @@@ TODO */
+    }
+    if (mask & PATH_STYLE_OPTION_FILLOPACITY) {
+        stylePtr->fillOpacity = srcStylePtr->fillOpacity;
+    }
+    if (mask & PATH_STYLE_OPTION_FILLRULE) {
+        stylePtr->fillRule = srcStylePtr->fillRule;
+    }
+    if (mask & PATH_STYLE_OPTION_FILLSTIPPLE) {
+        /* @@@ TODO */
+    }
+    if (mask & PATH_STYLE_OPTION_MATRIX) {
+        CopyTMatrix(&(stylePtr->matrix), srcStylePtr->matrix);
+    }
+    if (mask & PATH_STYLE_OPTION_STROKE) {
+        CopyXColor(tkwin, &(stylePtr->strokeColor), srcStylePtr->strokeColor);
+    }
+    if (mask & PATH_STYLE_OPTION_STROKEDASHARRAY) {
+        CopyTkDash(&(stylePtr->dash), &(srcStylePtr->dash));
+    }
+    if (mask & PATH_STYLE_OPTION_STROKELINECAP) {
+        stylePtr->capStyle = srcStylePtr->capStyle;
+    }
+    if (mask & PATH_STYLE_OPTION_STROKELINEJOIN) {
+        stylePtr->joinStyle = srcStylePtr->joinStyle;
+    }
+    if (mask & PATH_STYLE_OPTION_STROKEMITERLIMIT) {
+        stylePtr->miterLimit = srcStylePtr->miterLimit;
+    }
+    if (mask & PATH_STYLE_OPTION_STROKEOFFSET) {
+        /* @@@ TODO */
+    }
+    if (mask & PATH_STYLE_OPTION_STROKEOPACITY) {
+        stylePtr->strokeOpacity = srcStylePtr->strokeOpacity;
+    }
+    if (mask & PATH_STYLE_OPTION_STROKESTIPPLE) {
+        /* @@@ TODO */
+    }
+    if (mask & PATH_STYLE_OPTION_STROKEWIDTH) {
+        stylePtr->strokeWidth = srcStylePtr->strokeWidth;
+    }
 
     return TCL_OK;
 }
-#if 0
-enum {
-                  	= (1L << 0),
-    PATH_STYLE_OPTION_FILLGRADIENT        	= (1L << 1),
-    PATH_STYLE_OPTION_FILLOFFSET        	= (1L << 2),
-    PATH_STYLE_OPTION_FILLOPACITY    		= (1L << 3),
-    PATH_STYLE_OPTION_FILLRULE         		= (1L << 4),
-    PATH_STYLE_OPTION_FILLSTIPPLE      		= (1L << 5),
-    PATH_STYLE_OPTION_MATRIX              	= (1L << 6),
-    PATH_STYLE_OPTION_STROKE           		= (1L << 7),
-    PATH_STYLE_OPTION_STROKEDASHARRAY    	= (1L << 8),
-    PATH_STYLE_OPTION_STROKELINECAP        	= (1L << 9),
-    PATH_STYLE_OPTION_STROKELINEJOIN       	= (1L << 10),
-    PATH_STYLE_OPTION_STROKEMITERLIMIT     	= (1L << 11),
-    PATH_STYLE_OPTION_STROKEOFFSET        	= (1L << 12),
-    PATH_STYLE_OPTION_STROKEOPACITY	       	= (1L << 13),
-    PATH_STYLE_OPTION_STROKESTIPPLE     	= (1L << 14),
-    PATH_STYLE_OPTION_STROKEWIDTH        	= (1L << 15)
-};
-#endif
 
 /*
  *--------------------------------------------------------------

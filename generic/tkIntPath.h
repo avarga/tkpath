@@ -167,6 +167,7 @@ int 		PathGenericCmdDispatcher(
                     Tcl_HashTable *hashTablePtr,
                     Tk_OptionTable optionTable,
                     char *(*createAndConfigProc)(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]),
+                    void (*configNotifyProc)(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]),
                     void (*freeProc)(Tcl_Interp *interp, char *recordPtr));
 void		PathStyleInit(Tcl_Interp* interp);
 void		PathLinearGradientInit(Tcl_Interp* interp);
@@ -174,7 +175,7 @@ int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 int			PathStyleHaveWithName(CONST char *name);
 int			HaveLinearGradientStyleWithName(CONST char *name);
-void		PathStyleMergeStyles(Tk_PathStyle *stylePtr, CONST char *styleName);
+void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName);
 
 
 /*
