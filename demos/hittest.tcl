@@ -4,7 +4,7 @@
 set t .c_hittest
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400]
+pack [canvas $w -width 400 -height 400 -bg white]
 
 set ::tkpath::antialias 1
 

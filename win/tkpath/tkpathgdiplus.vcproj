@@ -130,10 +130,16 @@
 				RelativePath="..\..\generic\tkPath.c">
 			</File>
 			<File
+				RelativePath="..\..\generic\tkPathCopyTk.c">
+			</File>
+			<File
 				RelativePath="..\..\generic\tkPathGradients.c">
 			</File>
 			<File
-				RelativePath="..\..\generic\tkPathUtilCopy.c">
+				RelativePath="..\..\generic\tkPathStyle.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkPathUtil.c">
 			</File>
 			<File
 				RelativePath="..\tkWinGDIPlusPath.cpp">

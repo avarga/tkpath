@@ -5,7 +5,7 @@ load /Users/matben/C/cvs/tkpath/macosx/build/tkpath0.1.dylib
 set t .c_arcs
 toplevel $t
 set w $t.c
-pack [canvas $w -width 500 -height 400]
+pack [canvas $w -width 500 -height 400 -bg white]
 
 set ::tkpath::antialias 1
 

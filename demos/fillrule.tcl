@@ -5,7 +5,7 @@
 
 toplevel ._fillrule
 set w ._fillrule.c
-pack [canvas $w]
+pack [canvas $w -bg white]
 $w create path "M 10 10 h 80 v 80 h -80 z m 20 20 h 40 v 40 h -40 z" \
   -fill green -fillrule nonzero
 

@@ -239,13 +239,12 @@ TableLookup(LookupTable *map, int n, int from)
 void 
 PathApplyTMatrix(TMatrix *m, double *x, double *y)
 {
-    if (m == NULL) {
-        return;
+    if (m != NULL) {
+        double tmpx = *x;
+        double tmpy = *y;
+        *x = tmpx*m->a + tmpy*m->c + m->tx;
+        *y = tmpx*m->b + tmpy*m->d + m->ty;
     }
-    double tmpx = *x;
-    double tmpy = *y;
-    *x = tmpx*m->a + tmpy*m->c + m->tx;
-    *y = tmpx*m->b + tmpy*m->d + m->ty;
 }
 
 void 
