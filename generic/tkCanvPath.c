@@ -17,7 +17,11 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
-static double kStrokeThicknessLimit = 4.0;
+/*
+ * For wider strokes we must make a more detailed analysis
+ * when doing hit tests and area tests.
+ */
+static double kPathStrokeThicknessLimit = 4.0;
 
 #define MAX_NUM_STATIC_SEGMENTS  2000
 /* @@@ Should this be moved inside the function instead? */
@@ -1874,7 +1878,7 @@ PathToPoint(
                 &intersections, &nonzerorule);
         sumIntersections += intersections;
         sumNonzerorule += nonzerorule;
-        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth <= kStrokeThicknessLimit)) {
+        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth <= kPathStrokeThicknessLimit)) {
         
             /*
              * This gives the distance to a zero width polyline.
@@ -1895,7 +1899,7 @@ PathToPoint(
          * Yes, there is an infinitesimal overlap to the above just
          * to be on the safe side.
          */
-        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth >= kStrokeThicknessLimit)) {
+        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth >= kPathStrokeThicknessLimit)) {
             dist = PathThickPolygonToPoint(stylePtr->joinStyle, stylePtr->capStyle, 
                     width, isclosed, polyPtr, numPoints, pointPtr);
             if (dist < bestDist) {
@@ -2030,8 +2034,8 @@ GetArcNumSegments(double currentX, double currentY, ArcAtom *arc)
 static int
 GetSubpathMaxNumSegments(PathAtom *atomPtr)
 {
-    int			num = 0;
-    int 		maxNumSegments = 0;
+    int			num;
+    int 		maxNumSegments;
     int 		first = 1;
     double 		currentX = 0.0, currentY = 0.0;
     double 		startX = 0.0, startY = 0.0;
@@ -2041,19 +2045,15 @@ GetSubpathMaxNumSegments(PathAtom *atomPtr)
     QuadBezierAtom *quad;
     CurveToAtom *curve;
     
+    num = 0;
+    maxNumSegments = 0;
+    
     while (atomPtr != NULL) {
     
         switch (atomPtr->type) {
             case PATH_ATOM_M: {
                 move = (MoveToAtom *) atomPtr;
-                if (first) {
-                    num = 0;
-                } else {
-                    if (num > maxNumSegments) {
-                        maxNumSegments = num;
-                    }
-                }
-                num++;
+                num = 1;
                 currentX = move->x;
                 currentY = move->y;
                 startX = currentX;
@@ -2094,6 +2094,9 @@ GetSubpathMaxNumSegments(PathAtom *atomPtr)
                 currentY = startY;
                 break;
             }
+        }
+        if (num > maxNumSegments) {
+            maxNumSegments = num;
         }
         atomPtr = atomPtr->nextPtr;
     }
@@ -2431,7 +2434,7 @@ SubPathToArea(
         if (width < 1.0) {
             width = 1.0;
         }
-        if (stylePtr->strokeWidth > kStrokeThicknessLimit) {
+        if (stylePtr->strokeWidth > kPathStrokeThicknessLimit) {
             if (TkThickPolyLineToArea(polyPtr, numStrokes, 
                     width, stylePtr->capStyle, 
                     stylePtr->joinStyle, rectPtr) != inside) {
