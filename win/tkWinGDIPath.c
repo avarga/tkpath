@@ -31,6 +31,13 @@ static HDC gMemHdc = NULL;
 static TMatrix gCTM;		/* The context transformation matrix. */
 static int gHaveMatrix;
 
+/*
+ * Since we do the coordinate transforms ourself we cannot rely
+ * on the GDI api to get current untransformed point.
+ */
+ 
+static double gCurrentX;
+static double gCurrentY;
 
 static HPEN
 PathCreatePen(Tk_PathStyle *stylePtr)
@@ -165,6 +172,8 @@ TkPathInit(Drawable d)
     gMemHdc = hdc;
     gHaveMatrix = 0;
     gCTM = kUnitTMatrix;
+    gCurrentX = 0.0;
+    gCurrentY = 0.0;
 }
 
 void
@@ -190,6 +199,8 @@ TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr)
 void
 TkPathMoveTo(Drawable d, double x, double y)
 {    
+    gCurrentX = x;
+    gCurrentY = y;
     if (gHaveMatrix) {
         PathApplyTMatrix(&gCTM, &x, &y);
     }
@@ -199,6 +210,8 @@ TkPathMoveTo(Drawable d, double x, double y)
 void
 TkPathLineTo(Drawable d, double x, double y)
 {
+    gCurrentX = x;
+    gCurrentY = y;
     if (gHaveMatrix) {
         PathApplyTMatrix(&gCTM, &x, &y);
     }
@@ -218,6 +231,9 @@ TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
     POINT ptc;		/* Current point. */
     POINT pts[3];	/* Control points. */
     
+    gCurrentX = x;
+    gCurrentY = y;
+
     /* Current in transformed coords. */
     GetCurrentPositionEx(gMemHdc, &ptc);
 
@@ -244,6 +260,8 @@ TkPathCurveTo(Drawable d, double ctrlX1, double ctrlY1,
 {
     POINT pts[3];
 
+    gCurrentX = x;
+    gCurrentY = y;
     if (gHaveMatrix) {
         PathApplyTMatrix(&gCTM, &ctrlX1, &ctrlY1);
         PathApplyTMatrix(&gCTM, &ctrlX2, &ctrlY2);
@@ -361,11 +379,11 @@ TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
 int
 TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
 {
-    POINT pt;
+    //POINT pt;
     
-    GetCurrentPositionEx(gMemHdc, &pt);
-    ptPtr->x = (double) pt.x;
-    ptPtr->y = (double) pt.y;
+    //GetCurrentPositionEx(gMemHdc, &pt);
+    ptPtr->x = gCurrentX;
+    ptPtr->y = gCurrentY;
     return TCL_OK;
 }
 
@@ -400,7 +418,7 @@ TwoStopLinearGradient(
     int maxDeltaRGBA;
     int red, green, blue;
     double width, relative;
-    double ax, ay, cx, cy;
+    double ax, ay;
     double a2, alen;
     double p1x, p1y, p2x, p2y;
     double diag;
@@ -408,7 +426,7 @@ TwoStopLinearGradient(
     double x1, y1, x2, y2;
     double deltaX, deltaY;
     HPEN hpen;
-    
+
     /* Scale up 'line' vector to bbox. */
     p1x = bbox->x1 + (bbox->x2 - bbox->x1)*line->x1;
     p1y = bbox->y1 + (bbox->y2 - bbox->y1)*line->y1;
@@ -419,11 +437,8 @@ TwoStopLinearGradient(
      * Vectors: 
      *		p1 = start transition vector
      *		p2 = end transition vector
-     *		c  = center bbox
      *		a  = P2 - P1
      */
-    cx = (bbox->x1 + bbox->x2)/2.0;
-    cy = (bbox->y1 + bbox->y2)/2.0;
     ax = p2x - p1x;
     ay = p2y - p1y;
     a2 = ax*ax + ay*ay;
@@ -447,14 +462,17 @@ TwoStopLinearGradient(
     /*
      * So far everything has taken place in the untransformed
      * coordinate system.
-     */     
+     */  
     if (gHaveMatrix) {
         /*
-         * This is not a 100% foolproof solution.
+         * This is not a 100% foolproof solution. Tricky!
          */
         PathApplyTMatrix(&gCTM, &q1x, &q1y);
         PathApplyTMatrix(&gCTM, &q2x, &q2y);
-        PathApplyTMatrix(&gCTM, &ax, &ay);
+        PathApplyTMatrix(&gCTM, &p1x, &p1y);
+        PathApplyTMatrix(&gCTM, &p2x, &p2y);
+		ax = p2x - p1x;
+	    ay = p2y - p1y;
         a2 = ax*ax + ay*ay;
         alen = sqrt(a2);
     }    
@@ -463,11 +481,9 @@ TwoStopLinearGradient(
     rgba1[0] = Red255FromXColorPtr(color1);
     rgba1[1] = Green255FromXColorPtr(color1);
     rgba1[2] = Blue255FromXColorPtr(color1);
-    //rgba1[3] = opacity1;
     rgba2[0] = Red255FromXColorPtr(color2);
     rgba2[1] = Green255FromXColorPtr(color2);
     rgba2[2] = Blue255FromXColorPtr(color2);
-    //rgba2[3] = opacity2;
     maxDeltaRGBA = 0;
     for (i = 0; i < 3; i++) {
         deltaRGBA[i] = rgba2[i] - rgba1[i];
@@ -502,7 +518,8 @@ TwoStopLinearGradient(
         /* Verify that we don't paint outside. */
         
         
-        hpen = SelectObject(gMemHdc, CreatePen(PS_SOLID, penWidth, RGB(red, green, blue)));
+        hpen = SelectObject(gMemHdc, 
+                CreatePen(PS_SOLID, penWidth, RGB(red, green, blue)));
         MoveToEx(gMemHdc, (int) (x1 + 0.5), (int) (y1 + 0.5), NULL);
         LineTo(gMemHdc, (int) (x2 + 0.5), (int) (y2 + 0.5));
         DeleteObject(SelectObject(gMemHdc, hpen));

@@ -286,6 +286,7 @@
 		9A6C4D7407AD01B100A80065 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lineEnding = 2;
 			name = tkWinGDIPlusPath.cpp;
 			path = /Users/matben/C/cvs/tkpath/win/tkWinGDIPlusPath.cpp;
 			refType = 0;
@@ -331,6 +332,7 @@
 			fileEncoding = 4;
 			indentWidth = 4;
 			isa = PBXFileReference;
+			lineEnding = 2;
 			name = tkWinGDIPath.c;
 			path = /Users/matben/C/cvs/tkpath/win/tkWinGDIPath.c;
 			refType = 0;

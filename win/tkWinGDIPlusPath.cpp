@@ -27,6 +27,27 @@ extern int gUseAntialiasing;
                                                 (((xc)->pixel >> 8) & 0xFF),	\
                                                 (((xc)->pixel >> 16) & 0xFF))
 
+
+static LookupTable LineCapStyleLookupTable[] = {
+    {CapNotLast, 	LineCapFlat},
+    {CapButt, 	 	LineCapFlat},
+    {CapRound, 	 	LineCapRound},
+    {CapProjecting, LineCapSquare}
+};
+
+static LookupTable DashCapStyleLookupTable[] = {
+    {CapNotLast, 	DashCapFlat},
+    {CapButt, 	 	DashCapFlat},
+    {CapRound, 	 	DashCapRound},
+    {CapProjecting, DashCapRound}
+};
+
+static LookupTable LineJoinStyleLookupTable[] = {
+    {JoinMiter, LineJoinMiter},
+    {JoinRound,	LineJoinRound},
+    {JoinBevel, LineJoinBevel}
+};
+
 void PathExit(ClientData clientData);
 
 
@@ -40,6 +61,7 @@ class PathC {
     PathC(Drawable d);
     ~PathC(void);
     
+    void PushTMatrix(TMatrix *m);
 	void BeginPath(Drawable d, Tk_PathStyle *style);
     void MoveTo(float x, float y);
     void LineTo(float x, float y);
@@ -47,17 +69,17 @@ class PathC {
     void CloseFigure(void);
     void Stroke(Tk_PathStyle *style);
     void Fill(Tk_PathStyle *style);
-    void StrokeAndFill(Tk_PathStyle *style);
+    void FillAndStroke(Tk_PathStyle *style);
     void GetCurrentPoint(PointF *pt);
     void PaintLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
     
   private:  
-    HDC mMemHdc;
-    PointF mOrigin;
-    PointF mCurrentPoint;
-    Graphics *mGraphics;
-    GraphicsPath *mPath;
-    Drawable mD;
+    HDC 			mMemHdc;
+    PointF 			mOrigin;
+    PointF 			mCurrentPoint;
+    Graphics 		*mGraphics;
+    GraphicsPath 	*mPath;
+    Drawable 		mD;
     
     static Pen* PathCreatePen(Tk_PathStyle *style);
     static SolidBrush* PathCreateBrush(Tk_PathStyle *style);
@@ -109,26 +131,6 @@ PathC::~PathC(void)
     DeleteDC(mMemHdc);
 }
 
-static LookupTable LineCapStyleLookupTable[] = {
-    {CapNotLast, 	LineCapFlat},
-    {CapButt, 	 	LineCapFlat},
-    {CapRound, 	 	LineCapRound},
-    {CapProjecting, LineCapSquare}
-};
-
-static LookupTable DashCapStyleLookupTable[] = {
-    {CapNotLast, 	DashCapFlat},
-    {CapButt, 	 	DashCapFlat},
-    {CapRound, 	 	DashCapRound},
-    {CapProjecting, DashCapRound}
-};
-
-static LookupTable LineJoinStyleLookupTable[] = {
-    {JoinMiter, LineJoinMiter},
-    {JoinRound,	LineJoinRound},
-    {JoinBevel, LineJoinBevel}
-};
-
 Pen* PathC::PathCreatePen(Tk_PathStyle *style)
 {
 	LineCap cap;
@@ -172,6 +174,13 @@ SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
     
     brushPtr = new SolidBrush(MakeGDIPlusColor(style->strokeColor, style->strokeOpacity));
     return brushPtr;
+}
+
+void PathC::PushTMatrix(TMatrix *tm)
+{
+    // this probably just sets the matrix; we need to push it!!!
+    Matrix m((float)tm->a, (float)tm->b, (float)tm->c, (float)tm->d, (float)tm->tx, (float)tm->ty);
+    mGraphics->Transform(m);
 }
 
 void PathC::BeginPath(Drawable d, Tk_PathStyle *style)
@@ -227,7 +236,7 @@ void PathC::Fill(Tk_PathStyle *style)
 	delete brush;
 }
 
-void PathC::StrokeAndFill(Tk_PathStyle *style)
+void PathC::FillAndStroke(Tk_PathStyle *style)
 {
     Pen *pen = PathCreatePen(style);
     SolidBrush *brush = PathCreateBrush(style);
@@ -243,7 +252,7 @@ void PathC::GetCurrentPoint(PointF *pt)
     *pt = mCurrentPoint;
 }
 
-void PathC::PaintLinearGradient()
+void PathC::PaintLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
 /*
   LinearGradientBrush brush(
@@ -251,6 +260,17 @@ void PathC::PaintLinearGradient()
       PointF(3.0f, 2.4f),
       Color(255, 255, 0, 0),   // red
       Color(255, 0, 0, 255));  // blue
+      
+    LinearGradientBrush linGrBrush(
+        Point(0, 0),
+        Point(200, 100),
+        Color(255, 0, 0, 255),   // opaque blue
+        Color(255, 0, 255, 0));  // opaque green
+
+    Pen pen(&linGrBrush, 10);
+    
+    graphics.DrawLine(&pen, 0, 0, 600, 300);
+    graphics.FillEllipse(&linGrBrush, 10, 100, 200, 100);
       */
 }
 
@@ -265,6 +285,8 @@ void PathExit(ClientData clientData)
 
 /*
  * Standard tkpath interface.
+ * More or less a wrapper for the class PathC.
+ * Is there a smarter way?
  */
  
 void TkPathInit(Drawable d)
@@ -276,9 +298,9 @@ void TkPathInit(Drawable d)
 }
 
 void
-TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
+TkPathPushTMatrix(Drawable d, TMatrix *m)
 {
-    ???
+    gPathBuilderPtr->PushTMatrix(m);
 }
 
 void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
@@ -304,13 +326,13 @@ void TkPathLinesTo(Drawable d, double *pts, int n)
 void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
 {
     double x31, y31, x32, y32;
-    PointF pf;
+    PointF cp;
     
     gPathBuilderPtr->GetCurrentPoint(&cp);
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
     /* Unchecked! Must be an approximation! */
-    x31 = p.X + (ctrlX - pf.X) * 2 / 3;
-    y31 = p.Y + (ctrlY - pf.Y) * 2 / 3;
+    x31 = cp.X + (ctrlX - cp.X) * 2 / 3;
+    y31 = cp.Y + (ctrlY - cp.Y) * 2 / 3;
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
     gPathBuilderPtr->CurveTo((float) x31, (float) y31, (float) x32, (float) y32, (float) x, (float) y);
@@ -319,14 +341,14 @@ void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y
 void TkPathCurveTo(Drawable d, double ctrlX1, double ctrlY1, 
         double ctrlX2, double ctrlY2, double x, double y)
 {
-    gPathBuilderPtr->CurveTo((float) ctrlX, (float) ctrlY, (float) ctrlX2, (float) ctrlY2, (float) x, (float) y);
+    gPathBuilderPtr->CurveTo((float) ctrlX1, (float) ctrlY1, (float) ctrlX2, (float) ctrlY2, (float) x, (float) y);
 }
 
 
 void TkPathArcTo(Drawable d,
         double rx, double ry, 
         double phiDegrees, 	/* The rotation angle in degrees! */
-        char largeArcFlag, char sweepFlag, double x2, double y2)
+        char largeArcFlag, char sweepFlag, double x, double y)
 {
     TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
@@ -352,12 +374,12 @@ TkPathFree(Drawable d)
 
 void TkPathClipToPath(Drawable d, int fillRule)
 {
-    gPathBuilderPtr->
+    /* empty */
 }
 
 void TkPathReleaseClipToPath(Drawable d)
 {
-    SelectClipRgn(gPathBuilderPtr->mMemHdc, NULL);
+    //SelectClipRgn(gPathBuilderPtr->mMemHdc, NULL);
 }
 
 void TkPathStroke(Drawable d, Tk_PathStyle *style)

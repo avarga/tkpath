@@ -693,108 +693,6 @@ MatrixPrintProc(
     return buffer;
 }
 
-
-/* OUTDATED */
-
-/*
- *--------------------------------------------------------------
- *
- * MakeCanvasPath
- *
- *		Defines the path in the canvas using the PathItem.
- *
- * Results:
- *		A standard Tcl result.
- *
- * Side effects:
- *		Defines the current path in drawable.
- *
- *--------------------------------------------------------------
- */
-
-int
-MakeCanvasPath(
-    Tk_Canvas canvas,			/* Canvas that contains item. */
-    PathItem *pathPtr,
-    Drawable drawable)			/* Pixmap or window in which to draw
-					 * item. */
-{
-    short drawableX, drawableY, drawableX1, drawableY1, drawableX2, drawableY2;
-    PathAtom *atomPtr = pathPtr->atomPtr;
-    
-    TkPathBeginPath(drawable, &(pathPtr->style));
-
-    while (atomPtr != NULL) {
-    
-        switch (atomPtr->type) {
-            case PATH_ATOM_M: { 
-                MoveToAtom *move = (MoveToAtom *) atomPtr;
-                
-                Tk_CanvasDrawableCoords(canvas, move->x, move->y, 
-                        &drawableX, &drawableY); 
-                TkPathMoveTo(drawable, drawableX, drawableY);
-                break;
-            }
-            case PATH_ATOM_L: {
-                LineToAtom *line = (LineToAtom *) atomPtr;
-                
-                Tk_CanvasDrawableCoords(canvas, line->x, line->y, 
-                        &drawableX, &drawableY); 
-                TkPathLineTo(drawable, drawableX, drawableY);
-                break;
-            }
-            case PATH_ATOM_A: {
-                ArcAtom *arc = (ArcAtom *) atomPtr;
-
-                Tk_CanvasDrawableCoords(canvas, 
-                        arc->x, arc->y, 
-                        &drawableX2, &drawableY2); 
-                TkPathArcTo(drawable, arc->radX, arc->radY, 
-                        arc->angle, arc->largeArcFlag, arc->sweepFlag,
-                        drawableX2, drawableY2);
-                break;
-            }
-            case PATH_ATOM_Q: {
-                QuadBezierAtom *quad = (QuadBezierAtom *) atomPtr;
-                
-                Tk_CanvasDrawableCoords(canvas, 
-                        quad->ctrlX, quad->ctrlY, 
-                        &drawableX1, &drawableY1); 
-                Tk_CanvasDrawableCoords(canvas, 
-                        quad->anchorX, quad->anchorY, 
-                        &drawableX, &drawableY); 
-                TkPathQuadBezier(drawable, drawableX1, drawableY1, 
-                        drawableX, drawableY);
-                break;
-            }
-            case PATH_ATOM_C: {
-                CurveToAtom *curve = (CurveToAtom *) atomPtr;
-                
-                Tk_CanvasDrawableCoords(canvas, 
-                        curve->ctrlX1, curve->ctrlY1, 
-                        &drawableX1, &drawableY1); 
-                Tk_CanvasDrawableCoords(canvas, 
-                        curve->ctrlX2, curve->ctrlY2, 
-                        &drawableX2, &drawableY2); 
-                Tk_CanvasDrawableCoords(canvas, 
-                        curve->anchorX, curve->anchorY, 
-                        &drawableX, &drawableY); 
-                TkPathCurveTo(drawable, drawableX1, drawableY1,
-                        drawableX2, drawableY2,
-                        drawableX, drawableY);
-                break;
-            }
-            case PATH_ATOM_Z: {
-                TkPathClosePath(drawable);
-                break;
-            }
-        }
-        atomPtr = atomPtr->nextPtr;
-    }
-    TkPathEndPath(drawable);
-    return TCL_OK;
-}
-
 static PathRect
 NewEmptyPathRect(void)
 {
@@ -1096,6 +994,77 @@ IncludePointInRect(PathRect *r, double x, double y)
     r->y1 = MIN(r->y1, y);
     r->x2 = MAX(r->x2, x);
     r->y2 = MAX(r->y2, y);
+}
+
+/* Supposed to get the miter extremes since the simple scheme in 
+ * SetTotalBboxFromBare fails if sharp line joins using miter.
+ *
+ * @@@ TODO
+ */
+static PathRect
+GetMiterBbox(PathAtom *atomPtr, double width)
+{
+    double 		p1[2], p2[2], p3[2];
+    double		m1[2], m2[2];
+    double		current[2];
+    double		currentPtr;
+    PathRect	bounds = {1.0e36, 1.0e36, -1.0e36, -1.0e36};
+    
+    current[0] = 0.0;
+    current[1] = 0.0;
+    
+    while (atomPtr != NULL) {
+    
+        switch (atomPtr->type) {
+            case PATH_ATOM_M: { 
+                MoveToAtom *move = (MoveToAtom *) atomPtr;
+                current[0] = move->x;
+                current[1] = move->y;
+                break;
+            }
+            case PATH_ATOM_L: {
+                LineToAtom *line = (LineToAtom *) atomPtr;
+                current[0] = line->x;
+                current[1] = line->y;
+                break;
+            }
+            case PATH_ATOM_A: {
+                ArcAtom *arc = (ArcAtom *) atomPtr;
+                current[0] = arc->x;
+                current[1] = arc->y;
+                break;
+            }
+            case PATH_ATOM_Q: {
+                QuadBezierAtom *quad = (QuadBezierAtom *) atomPtr;
+                current[0] = quad->anchorX;
+                current[1] = quad->anchorY;
+                // the control point(s) form the tangent lines at ends
+                // quad->ctrlX, quad->ctrlY
+                break;
+            }
+            case PATH_ATOM_C: {
+                CurveToAtom *curve = (CurveToAtom *) atomPtr;
+                current[0] = curve->anchorX;
+                current[1] = curve->anchorY;
+                // curve->ctrlX1, curve->ctrlY1, curve->ctrlX2, curve->ctrlY2,
+                break;
+            }
+            case PATH_ATOM_Z: {
+                CloseAtom *close = (CloseAtom *) atomPtr;
+                current[0] = close->x;
+                current[1] = close->y;
+                break;
+            }
+        }
+        
+        TkGetMiterPoints(p1, p2, p3, width, m1, m2);
+        IncludePointInRect(&bounds, m1[0], m1[1]);
+        IncludePointInRect(&bounds, m2[0], m2[1]);
+
+        atomPtr = atomPtr->nextPtr;
+    }
+    
+    return bounds;
 }
 
 static void
@@ -1648,23 +1617,6 @@ GetCanvasTMatrix(Tk_Canvas canvas)
     return m;
 }
 
-/* OUTDATED */
-
-static void
-PaintCanvasLinearGradient(Tk_Canvas canvas, Drawable drawable, PathRect *bbox, char *name, int fillRule)
-{
-    short drawableX, drawableY;
-    PathRect drawableBbox;
-    
-    Tk_CanvasDrawableCoords(canvas, bbox->x1, bbox->y1, &drawableX, &drawableY); 
-    drawableBbox.x1 = drawableX;
-    drawableBbox.y1 = drawableY;
-    Tk_CanvasDrawableCoords(canvas, bbox->x2, bbox->y2, &drawableX, &drawableY); 
-    drawableBbox.x2 = drawableX;
-    drawableBbox.y2 = drawableY;
-    PathPaintLinearGradientFromName(drawable, &drawableBbox, name, fillRule);
-}
-
 /*
  *--------------------------------------------------------------
  *
@@ -1704,11 +1656,6 @@ DisplayPath(
      */
      
     TkPathInit(drawable);
-    /*
-    if (MakeCanvasPath(canvas, pathPtr, drawable) != TCL_OK) {
-        return;
-    }
-    */
     m = GetCanvasTMatrix(canvas);
     TkPathPushTMatrix(drawable, &m);
     if (stylePtr->matrixPtr != NULL) {
@@ -1725,9 +1672,6 @@ DisplayPath(
     if (stylePtr->gradientFillName != NULL) {
         if (HaveLinearGradientStyleWithName(stylePtr->gradientFillName) == TCL_OK) {
             TkPathClipToPath(drawable, stylePtr->fillRule);
-            /*
-            PaintCanvasLinearGradient(canvas, drawable, &(pathPtr->bareBbox), 
-                    stylePtr->gradientFillName, stylePtr->fillRule); */
             PathPaintLinearGradientFromName(drawable, &(pathPtr->bareBbox), 
                     stylePtr->gradientFillName, stylePtr->fillRule);
 
@@ -1735,7 +1679,6 @@ DisplayPath(
              *       when setting clipping. Need therefore to redo the path. 
              */
             if (TkPathDrawingDestroysPath()) {
-                //MakeCanvasPath(canvas, pathPtr, drawable);
                 TkPathMakePath(drawable, pathPtr->atomPtr, stylePtr);
             }
             
