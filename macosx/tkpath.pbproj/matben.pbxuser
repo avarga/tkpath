@@ -13,14 +13,14 @@
 			F5C4047C036D26C701BDBE87,
 		);
 		perUserDictionary = {
-			PBXPerProjectTemplateStateSaveDate = 133278276;
+			PBXPerProjectTemplateStateSaveDate = 133355213;
 			PBXWorkspaceContents = (
 				{
 					LeftSlideOut = {
 						Split0 = {
 							Split0 = {
 								NavContent0 = {
-									bookmark = 9A11402B07F1B82D00A80065;
+									bookmark = 9AE70FEF07F2D8F300A80065;
 									history = (
 										9ACCDAFE0581CCD300D671C7,
 										9ACCDAFF0581CCD300D671C7,
@@ -94,7 +94,7 @@
 										9A11401D07F1B82D00A80065,
 										9A11401E07F1B82D00A80065,
 										9A11401F07F1B82D00A80065,
-										9A11402007F1B82D00A80065,
+										9A88047507F2D58600A80065,
 									);
 									prevStack = (
 										9AA9447305822E1E00D671C7,
@@ -1630,7 +1630,7 @@
 					WindowLocation = "{0, 4}";
 				},
 			);
-			PBXWorkspaceStateSaveDate = 133278276;
+			PBXWorkspaceStateSaveDate = 133355213;
 		};
 		perUserProjectItems = {
 			9A017EE207A0074300A80065 = 9A017EE207A0074300A80065;
@@ -1766,7 +1766,6 @@
 			9A11401D07F1B82D00A80065 = 9A11401D07F1B82D00A80065;
 			9A11401E07F1B82D00A80065 = 9A11401E07F1B82D00A80065;
 			9A11401F07F1B82D00A80065 = 9A11401F07F1B82D00A80065;
-			9A11402007F1B82D00A80065 = 9A11402007F1B82D00A80065;
 			9A11402107F1B82D00A80065 = 9A11402107F1B82D00A80065;
 			9A11402207F1B82D00A80065 = 9A11402207F1B82D00A80065;
 			9A11402307F1B82D00A80065 = 9A11402307F1B82D00A80065;
@@ -1777,7 +1776,6 @@
 			9A11402807F1B82D00A80065 = 9A11402807F1B82D00A80065;
 			9A11402907F1B82D00A80065 = 9A11402907F1B82D00A80065;
 			9A11402A07F1B82D00A80065 = 9A11402A07F1B82D00A80065;
-			9A11402B07F1B82D00A80065 = 9A11402B07F1B82D00A80065;
 			9A134952059881AB00D67139 = 9A134952059881AB00D67139;
 			9A134953059881AB00D67139 = 9A134953059881AB00D67139;
 			9A134954059881AB00D67139 = 9A134954059881AB00D67139;
@@ -2544,6 +2542,7 @@
 			9A8794C80780462E00A80065 = 9A8794C80780462E00A80065;
 			9A8794C90780462E00A80065 = 9A8794C90780462E00A80065;
 			9A8794CA0780462E00A80065 = 9A8794CA0780462E00A80065;
+			9A88047507F2D58600A80065 = 9A88047507F2D58600A80065;
 			9A88D96F07F1601100A80065 = 9A88D96F07F1601100A80065;
 			9A88D97307F1601100A80065 = 9A88D97307F1601100A80065;
 			9A88D97407F1601100A80065 = 9A88D97407F1601100A80065;
@@ -3002,6 +3001,7 @@
 			9ADFFABD07E338F300DCACF4 = 9ADFFABD07E338F300DCACF4;
 			9ADFFABE07E338F300DCACF4 = 9ADFFABE07E338F300DCACF4;
 			9ADFFABF07E338F300DCACF4 = 9ADFFABF07E338F300DCACF4;
+			9AE70FEF07F2D8F300A80065 = 9AE70FEF07F2D8F300A80065;
 			9AEB323E078C50FA00A80065 = 9AEB323E078C50FA00A80065;
 			9AED41340782FF3E00A80065 = 9AED41340782FF3E00A80065;
 			9AED41350782FF3E00A80065 = 9AED41350782FF3E00A80065;
@@ -4428,16 +4428,6 @@
 		vrLen = 1290;
 		vrLoc = 0;
 	};
-	9A11402007F1B82D00A80065 = {
-		fRef = 9A6C4D7407AD01B100A80065;
-		isa = PBXTextBookmark;
-		name = "tkWinGDIPlusPath.cpp: 23";
-		rLen = 27;
-		rLoc = 457;
-		rType = 0;
-		vrLen = 1335;
-		vrLoc = 0;
-	};
 	9A11402107F1B82D00A80065 = {
 		fRef = 9A8794BD07801B3900A80065;
 		isa = PBXTextBookmark;
@@ -4453,7 +4443,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 31";
 		rLen = 0;
-		rLoc = 847;
+		rLoc = 851;
 		rType = 0;
 		vrLen = 1338;
 		vrLoc = 0;
@@ -4473,7 +4463,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 425";
 		rLen = 0;
-		rLoc = 10862;
+		rLoc = 10776;
 		rType = 0;
 		vrLen = 874;
 		vrLoc = 9874;
@@ -4493,7 +4483,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 23";
 		rLen = 13;
-		rLoc = 468;
+		rLoc = 472;
 		rType = 0;
 		vrLen = 849;
 		vrLoc = 0;
@@ -4512,7 +4502,7 @@
 		fRef = 9A6C4D7407AD01B100A80065;
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 23";
-		rLen = 27;
+		rLen = 31;
 		rLoc = 457;
 		rType = 0;
 		vrLen = 1335;
@@ -4537,16 +4527,6 @@
 		rType = 0;
 		vrLen = 1290;
 		vrLoc = 0;
-	};
-	9A11402B07F1B82D00A80065 = {
-		fRef = 9A6C4D7407AD01B100A80065;
-		isa = PBXTextBookmark;
-		name = "tkWinGDIPlusPath.cpp: 188";
-		rLen = 0;
-		rLoc = 5409;
-		rType = 0;
-		vrLen = 1284;
-		vrLoc = 4729;
 	};
 	9A134952059881AB00D67139 = {
 		bstl = 4F0BB7ED011F40E904CA0E50;
@@ -5101,7 +5081,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 281";
 		rLen = 38;
-		rLoc = 8158;
+		rLoc = 8110;
 		rType = 0;
 		vrLen = 971;
 		vrLoc = 6704;
@@ -5121,7 +5101,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 165";
 		rLen = 0;
-		rLoc = 4895;
+		rLoc = 5014;
 		rType = 0;
 		vrLen = 1307;
 		vrLoc = 4623;
@@ -6221,7 +6201,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 278";
 		rLen = 15;
-		rLoc = 8205;
+		rLoc = 8157;
 		rType = 0;
 		vrLen = 574;
 		vrLoc = 6919;
@@ -6405,7 +6385,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 277";
 		rLen = 94;
-		rLoc = 8104;
+		rLoc = 8056;
 		rType = 0;
 		vrLen = 896;
 		vrLoc = 6743;
@@ -6649,7 +6629,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 370";
 		rLen = 0;
-		rLoc = 10325;
+		rLoc = 10240;
 		rType = 0;
 		vrLen = 878;
 		vrLoc = 8983;
@@ -7304,7 +7284,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 164";
 		rLen = 0;
-		rLoc = 4895;
+		rLoc = 5014;
 		rType = 0;
 		vrLen = 1243;
 		vrLoc = 4884;
@@ -7324,7 +7304,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 337";
 		rLen = 0;
-		rLoc = 9847;
+		rLoc = 9799;
 		rType = 0;
 		vrLen = 891;
 		vrLoc = 8769;
@@ -8415,7 +8395,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 234";
 		rLen = 0;
-		rLoc = 6861;
+		rLoc = 6815;
 		rType = 0;
 		vrLen = 878;
 		vrLoc = 8890;
@@ -12505,6 +12485,16 @@
 		vrLen = 0;
 		vrLoc = 0;
 	};
+	9A88047507F2D58600A80065 = {
+		fRef = 9A6C4D7407AD01B100A80065;
+		isa = PBXTextBookmark;
+		name = "tkWinGDIPlusPath.cpp: 341";
+		rLen = 0;
+		rLoc = 8721;
+		rType = 0;
+		vrLen = 1494;
+		vrLoc = 8450;
+	};
 	9A88D96F07F1601100A80065 = {
 		fRef = 9A017ED6079FCCE100A80065;
 		isa = PBXTextBookmark;
@@ -12520,7 +12510,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 250";
 		rLen = 0;
-		rLoc = 7026;
+		rLoc = 6980;
 		rType = 0;
 		vrLen = 1054;
 		vrLoc = 6460;
@@ -12570,7 +12560,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 255";
 		rLen = 0;
-		rLoc = 7151;
+		rLoc = 7105;
 		rType = 0;
 		vrLen = 1093;
 		vrLoc = 6549;
@@ -15526,7 +15516,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 132";
 		rLen = 20;
-		rLoc = 3774;
+		rLoc = 3893;
 		rType = 0;
 		vrLen = 1386;
 		vrLoc = 4127;
@@ -15670,7 +15660,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 182";
 		rLen = 0;
-		rLoc = 5338;
+		rLoc = 5391;
 		rType = 0;
 		vrLen = 1340;
 		vrLoc = 4475;
@@ -15689,8 +15679,8 @@
 		fRef = 9A6C4D7407AD01B100A80065;
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 179";
-		rLen = 108;
-		rLoc = 5166;
+		rLen = 42;
+		rLoc = 5285;
 		rType = 0;
 		vrLen = 1340;
 		vrLoc = 4475;
@@ -15710,7 +15700,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 382";
 		rLen = 0;
-		rLoc = 10093;
+		rLoc = 10045;
 		rType = 0;
 		vrLen = 961;
 		vrLoc = 9248;
@@ -15740,7 +15730,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 245";
 		rLen = 0;
-		rLoc = 6950;
+		rLoc = 6904;
 		rType = 0;
 		vrLen = 1395;
 		vrLoc = 4504;
@@ -15760,7 +15750,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 37";
 		rLen = 0;
-		rLoc = 1507;
+		rLoc = 1511;
 		rType = 0;
 		vrLen = 1607;
 		vrLoc = 1139;
@@ -16052,7 +16042,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 304";
 		rLen = 0;
-		rLoc = 8987;
+		rLoc = 8939;
 		rType = 0;
 		vrLen = 1053;
 		vrLoc = 8107;
@@ -17200,6 +17190,16 @@
 		name = Xlib.h;
 		path = /Library/Frameworks/Tk.framework/Versions/8.4/Headers/X11/Xlib.h;
 		refType = 0;
+	};
+	9AE70FEF07F2D8F300A80065 = {
+		fRef = 9A6C4D7407AD01B100A80065;
+		isa = PBXTextBookmark;
+		name = "tkWinGDIPlusPath.cpp: 288";
+		rLen = 0;
+		rLoc = 7717;
+		rType = 0;
+		vrLen = 1087;
+		vrLoc = 7240;
 	};
 	9AEB323E078C50FA00A80065 = {
 		fRef = 9A8794BD07801B3900A80065;

@@ -20,7 +20,7 @@
 
 using namespace Gdiplus;
 
-extern int gUseAntiAlias;
+extern "C" int gUseAntiAlias;
 
 #define MakeGDIPlusColor(xc, opacity) 	Color((int) (opacity*255), 				\
                                                 (((xc)->pixel & 0xFF)),			\
@@ -65,7 +65,7 @@ class PathC {
 	void BeginPath(Drawable d, Tk_PathStyle *style);
     void MoveTo(float x, float y);
     void LineTo(float x, float y);
-    void CurveTo(float x, float y, float x1, float y1, float x2, float y2);
+    void CurveTo(float x1, float y1, float x2, float y2, float x, float y);
     void CloseFigure(void);
     void Stroke(Tk_PathStyle *style);
     void Fill(Tk_PathStyle *style);
@@ -84,7 +84,7 @@ class PathC {
     static Pen* PathCreatePen(Tk_PathStyle *style);
     static SolidBrush* PathCreateBrush(Tk_PathStyle *style);
 
-    static int sGdiplusStarted;
+	static int sGdiplusStarted;
     static ULONG_PTR sGdiplusToken;
     static GdiplusStartupOutput sGdiplusStartupOutput;
 };
@@ -97,6 +97,9 @@ class PathC {
 
 static PathC *gPathBuilderPtr = NULL;
 
+int	PathC::sGdiplusStarted;
+ULONG_PTR PathC::sGdiplusToken;
+GdiplusStartupOutput PathC::sGdiplusStartupOutput;
 
 PathC::PathC(Drawable d)
 {
@@ -175,19 +178,14 @@ SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
 {
     SolidBrush *brushPtr;
     
-    brushPtr = new SolidBrush(MakeGDIPlusColor(style->strokeColor, style->strokeOpacity));
+    brushPtr = new SolidBrush(MakeGDIPlusColor(style->fillColor, style->fillOpacity));
     return brushPtr;
 }
 
 void PathC::PushTMatrix(TMatrix *tm)
 {
-    // this probably just sets the matrix; we need to push it!!!
     Matrix m((float)tm->a, (float)tm->b, (float)tm->c, (float)tm->d, (float)tm->tx, (float)tm->ty);
-    Matrix mSrc;
-    
-    //mGraphics->GetTransform(&mSrc);
     mGraphics->MultiplyTransform(&m);
-    //mGraphics->SetTransform(&m);
 }
 
 void PathC::BeginPath(Drawable d, Tk_PathStyle *style)
@@ -211,7 +209,7 @@ void PathC::LineTo(float x, float y)
     mCurrentPoint.Y = y;
 }
 
-void PathC::CurveTo(float x, float y, float x1, float y1, float x2, float y2)
+void PathC::CurveTo(float x1, float y1, float x2, float y2, float x, float y)
 {
     mPath->AddBezier(mCurrentPoint.X, mCurrentPoint.Y, // startpoint
             x1, y1, x2, y2, // controlpoints
@@ -287,7 +285,7 @@ void PathC::PaintLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int
 
 void PathExit(ClientData clientData)
 {
-    //GdiplusShutdown(sGdiplusToken);
+    GdiplusShutdown(sGdiplusToken);
 }
 
 /*
@@ -386,7 +384,7 @@ void TkPathClipToPath(Drawable d, int fillRule)
 
 void TkPathReleaseClipToPath(Drawable d)
 {
-    //SelectClipRgn(gPathBuilderPtr->mMemHdc, NULL);
+    /* empty */
 }
 
 void TkPathStroke(Drawable d, Tk_PathStyle *style)
