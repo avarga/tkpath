@@ -252,6 +252,13 @@
 			settings = {
 			};
 		};
+		9A6C4D7407AD01B100A80065 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = tkWinGDIPlusPath.cpp;
+			path = /Users/matben/C/cvs/tkpath/win/tkWinGDIPlusPath.cpp;
+			refType = 0;
+		};
 		9A8794B5078019DB00A80065 = {
 			children = (
 				08FB77ACFE841707C02AAC07,
@@ -283,7 +290,7 @@
 		9A8794BC07801A5D00A80065 = {
 			children = (
 				9A8794BD07801B3900A80065,
-				9A9FFA4B079FA13F00A80065,
+				9A6C4D7407AD01B100A80065,
 			);
 			isa = PBXGroup;
 			name = windows;
@@ -298,13 +305,6 @@
 			refType = 0;
 			tabWidth = 8;
 			usesTabs = 0;
-		};
-		9A9FFA4B079FA13F00A80065 = {
-			fileEncoding = 4;
-			isa = PBXFileReference;
-			name = tkWinGDIPlusPath.c;
-			path = /Users/matben/C/cvs/tkpath/win/tkWinGDIPlusPath.c;
-			refType = 0;
 		};
 		9AA1ECE6077FF68100A80065 = {
 			fileEncoding = 4;
