@@ -180,7 +180,8 @@ void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *
 int			PathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
 double		PathThickPolygonToPoint(int joinStyle, int capStyle, double width, 
                     int isclosed, double *polyPtr, int numPoints, double *pointPtr);
-double		PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, int fillRule);
+double		PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, 
+                    int *intersectionsPtr, int *nonzerorulePtr);
 
 
 /*

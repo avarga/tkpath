@@ -923,6 +923,21 @@ PathThickPolygonToPoint(
             bestDist = dist;
         }
     }
+        
+    /*
+     * If caps are rounded, check the distance to the cap around the
+     * final end point of the line.
+     */
+    if (!isclosed && (capStyle == CapRound)) {
+        dist = hypot(coordPtr[0] - pointPtr[0], coordPtr[1] - pointPtr[1])
+                - width/2.0;
+        if (dist <= 0.0) {
+            bestDist = 0.0;
+            goto donepoint;
+        } else if (dist < bestDist) {
+            bestDist = dist;
+        }
+    }
 
 donepoint:
 
@@ -936,11 +951,10 @@ donepoint:
  *
  *		Compute the distance from a point to a polygon. This is
  *		essentially identical to TkPolygonToPoint with two exceptions:
- *		1) 	It accepts a fillrule of 'nonzero' or 'evenodd' which
- *			can make a difference of the path winds or intersects.
- *			The path MUST be closed in this case, see 'polyPtr' below.
- *		2)	If the fillRule is -1 it assumes that the polygon is not
- *			filled. The path MAY be open in this case.
+ *		1) 	It returns the closest distance to the *stroke*,
+ *			any fill unrecognized.
+ *		2)	It returns both number of total intersections, and
+ *			the number of directed crossings, nonzerorule.
  *
  * Results:
  *		The return value is 0.0 if the point referred to by
@@ -963,9 +977,9 @@ PathPolygonToPointEx(
                          * must duplicate the first one. */
     int numPoints,		/* Total number of points at *polyPtr. */
     double *pointPtr,	/* Points to coords for point. */
-    int fillRule)		/* Is -1 for unfilled and possibly open polyline. 
-                         * EvenOddRule for evenodd rule, and
-                         * WindingRule for the nonzero rule. */
+    int *intersectionsPtr,	/* (out) The number of intersections. */
+    int *nonzerorulePtr)	/* (out) The number of intersections
+                             * considering crossing direction. */
 {
     double bestDist;		/* Closest distance between point and
                              * any edge in polygon. */
@@ -1096,21 +1110,9 @@ PathPolygonToPointEx(
             bestDist = dist;
         }
     }
-
-    /*
-     * We've processed all of the points.  
-     * EvenOddRule: If the number of intersections is odd, 
-     *			the point is inside the polygon.
-     * WindingRule (nonzero): If the number of directed intersections
-     *			are nonzero, then inside.
-     * -1: unfilled polygon, do not check any inside.
-     */
-
-    if ((fillRule == EvenOddRule) && (intersections & 0x1)) {
-        bestDist = 0.0;
-    } else if ((fillRule == WindingRule) && (nonzerorule != 0)) {
-        bestDist = 0.0;
-    }
+    *intersectionsPtr = intersections;
+    *nonzerorulePtr = nonzerorule;
+    
     return bestDist;
 }
 

@@ -17,24 +17,16 @@ $w bind $id <Button-1> [list puts "hit $id (blue triangle)"]
 set id [$w create path "M 20 200 Q 50 120 100 200 T 150 200 200 200"]
 $w bind $id <Button-1> [list puts "hit $id (quad bezier)"]
 
-if {0} {
-$w create path "M 20 40 h 20 v 10 h -20 z" -fill green
+set id [$w create path "M 10 250 h 80 v 80 h -80 z m 20 20 h 40 v 40 h -40 z" \
+  -fill green -fillrule nonzero]
+$w bind $id <Button-1> [list puts "hit $id (green with nonzero rule)"]
 
-$w create path "M 10 10 h 380 v 380 h -380 z" -stroke blue
-$w create path "M 80 120 h -40 a 40 40 0 1 0 40 -40 z" \
-  -fill red -stroke blue -strokewidth 4
-$w create path "M 70 110 v -40 a 40 40 0 0 0 -40 40 z" \
-  -fill yellow -stroke blue -strokewidth 4
-$w create path "M 10 200 q 40 -80 90 0"
-$w create path "M 20 200 Q 50 120 100 200 T 150 200"
-$w create path "M 20 200 Q 50 120 100 200 T 150 200 200 200"
+set id [$w create path "M 110 250 h 80 v 80 h -80 z m 20 20 h 40 v 40 h -40 z" \
+  -fill blue -fillrule evenodd]
+$w bind $id <Button-1> [list puts "hit $id (blue with evenodd rule)"]
 
-$w create path "M 600 350 l 50 -25  \
-  a 25 25 -30 0 1 50 -25 l 50 -25  \
-  a 25 50 -30 0 1 50 -25 l 50 -25  \
-  a 25 75 -30 0 1 50 -25 l 50 -25  \
-  a 25 100 -30 0 1 50 -25 l 50 -25" -stroke red -strokewidth 5
+set id [$w create path "M 220 50 v 100" -strokewidth 36 -strokelinecap round]
+$w bind $id <Button-1> [list puts "hit $id (fat line with rounded caps)"]
 
-}
 
 

@@ -26,6 +26,11 @@ static int kNumSegmentsQuadBezier = 12;
 /* @@@ Should this be moved inside the function instead? */
 static double staticSpace[2*MAX_NUM_STATIC_SEGMENTS];
 
+int gDebugLevel = 2;
+Tcl_Interp *gInterp;
+
+#define PATH_DEBUG 0
+
 /* Values for the PathItem's flag. */
 
 enum {
@@ -37,23 +42,23 @@ enum {
  */
 
 typedef struct PathItem  {
-    Tk_Item header;		/* Generic stuff that's the same for all
-				 * types.  MUST BE FIRST IN STRUCTURE. */
+    Tk_Item header;			/* Generic stuff that's the same for all
+                             * types.  MUST BE FIRST IN STRUCTURE. */
     Tk_Canvas canvas;		/* Canvas containing item. */
     Tk_Outline outline;		/* Outline structure */
     Tk_PathStyle style;		/* Contains most drawing info. */
     char *styleName;		/* Name of any inherited style object. */
     Tcl_Obj *pathObjPtr;	/* The object containing the path definition. */
     int pathLen;
-    Tcl_Obj *normPathObjPtr;	/* The object containing the normalized path. */
+    Tcl_Obj *normPathObjPtr;/* The object containing the normalized path. */
     PathAtom *atomPtr;
     PathRect bareBbox;		/* Bounding box with zero width outline.
-                                 * Untransformed coordinates. */
+                             * Untransformed coordinates. */
     PathRect totalBbox;		/* Bounding box including stroke.
-                                 * Untransformed coordinates. */
+                             * Untransformed coordinates. */
     int maxNumSegments;		/* Max number of straight segments (for subpath)
-                                 * needed for Area and Point functions. */
-    long flags;			/* Various flags, see enum. */
+                             * needed for Area and Point functions. */
+    long flags;				/* Various flags, see enum. */
 } PathItem;
 
 
@@ -115,7 +120,7 @@ static char *	StylePrintProc(ClientData clientData, Tk_Window tkwin,
 
 static int		GetSubpathMaxNumSegments(PathAtom *atomPtr);
 static void		MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr, 
-                    int *numPointsPtr, int *numStrokesPtr, TMatrix *matrixPtr);
+                        int *numPointsPtr, int *numStrokesPtr, TMatrix *matrixPtr);
 
 
 /* From tkPathCopyTk.c */
@@ -208,56 +213,56 @@ static Tk_CustomOption styleOption = {
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-fill", (char *) NULL, (char *) NULL,
-	"", Tk_Offset(PathItem, style.fillColor), TK_CONFIG_NULL_OK},
+            "", Tk_Offset(PathItem, style.fillColor), TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style.gradientFillName),
-	TK_CONFIG_NULL_OK, &linGradOption},
+            (char *) NULL, Tk_Offset(PathItem, style.gradientFillName),
+            TK_CONFIG_NULL_OK, &linGradOption},
     {TK_CONFIG_CUSTOM, "-filloffset", (char *) NULL, (char *) NULL,
-	"0,0", Tk_Offset(PathItem, style.fillTSOffset),
-	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
+            "0,0", Tk_Offset(PathItem, style.fillTSOffset),
+            TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,
-	"1.0", Tk_Offset(PathItem, style.fillOpacity), 0},
+            "1.0", Tk_Offset(PathItem, style.fillOpacity), 0},
     {TK_CONFIG_CUSTOM, "-fillrule", (char *) NULL, (char *) NULL,
-	"nonzero", Tk_Offset(PathItem, style.fillRule),
-	TK_CONFIG_DONT_SET_DEFAULT, &fillRuleOption},
+            "nonzero", Tk_Offset(PathItem, style.fillRule),
+            TK_CONFIG_DONT_SET_DEFAULT, &fillRuleOption},
     {TK_CONFIG_BITMAP, "-fillstipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style.fillStipple),
-	TK_CONFIG_NULL_OK},
+            (char *) NULL, Tk_Offset(PathItem, style.fillStipple),
+            TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style.matrixPtr),
-	TK_CONFIG_NULL_OK, &matrixOption},
+            (char *) NULL, Tk_Offset(PathItem, style.matrixPtr),
+            TK_CONFIG_NULL_OK, &matrixOption},
     {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
-	&stateOption},
+            (char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
+            &stateOption},
     {TK_CONFIG_COLOR, "-stroke", (char *) NULL, (char *) NULL,
-	"black", Tk_Offset(PathItem, style.strokeColor), TK_CONFIG_NULL_OK},
+            "black", Tk_Offset(PathItem, style.strokeColor), TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style.dash),
-	TK_CONFIG_NULL_OK, &dashOption},
+            (char *) NULL, Tk_Offset(PathItem, style.dash),
+            TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_CAP_STYLE, "-strokelinecap", (char *) NULL, (char *) NULL,
-	"butt", Tk_Offset(PathItem, style.capStyle), TK_CONFIG_DONT_SET_DEFAULT},
+            "butt", Tk_Offset(PathItem, style.capStyle), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_JOIN_STYLE, "-strokelinejoin", (char *) NULL, (char *) NULL,
-	"round", Tk_Offset(PathItem, style.joinStyle), TK_CONFIG_DONT_SET_DEFAULT},
+            "round", Tk_Offset(PathItem, style.joinStyle), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_DOUBLE, "-strokemiterlimit", (char *) NULL, (char *) NULL,
-	"4.0", Tk_Offset(PathItem, style.miterLimit), 0},
+            "4.0", Tk_Offset(PathItem, style.miterLimit), 0},
     {TK_CONFIG_CUSTOM, "-strokeoffset", (char *) NULL, (char *) NULL,
-	"0,0", Tk_Offset(PathItem, style.strokeTSOffset),
-	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
+            "0,0", Tk_Offset(PathItem, style.strokeTSOffset),
+            TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,
-	"1.0", Tk_Offset(PathItem, style.strokeOpacity), 0},
+            "1.0", Tk_Offset(PathItem, style.strokeOpacity), 0},
     {TK_CONFIG_BITMAP, "-strokestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style.strokeStipple),
-	TK_CONFIG_NULL_OK},
+            (char *) NULL, Tk_Offset(PathItem, style.strokeStipple),
+            TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-strokewidth", (char *) NULL, (char *) NULL,
-	"1.0", Tk_Offset(PathItem, style.strokeWidth),
-	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
+            "1.0", Tk_Offset(PathItem, style.strokeWidth),
+            TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_CUSTOM, "-style", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, styleName),
-	TK_CONFIG_DONT_SET_DEFAULT, &styleOption},
+            (char *) NULL, Tk_Offset(PathItem, styleName),
+            TK_CONFIG_DONT_SET_DEFAULT, &styleOption},
     {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+            (char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+            (char *) NULL, 0, 0}
 };
 
 /*
@@ -297,6 +302,22 @@ Tk_CanvasInterp(Tk_Canvas canvas)
     return canvasPtr->interp;
 }
 #endif
+
+
+void
+DebugPrintf(Tcl_Interp *interp, int level, char *fmt, ...)
+{
+	va_list		args;
+	char		tmpstr[256];
+	
+	if (level > gDebugLevel) {
+		return;
+	}
+	va_start( args, fmt );
+	vsprintf( tmpstr, fmt, args );	
+    Tcl_VarEval( interp, "puts \"", tmpstr, "\"", (char *) NULL );
+	va_end (args );
+}
 
 /*
  * A bunch of custum option processing functions needed.
@@ -361,19 +382,19 @@ FillRuleParseProc(
  *
  * FillRulePrintProc --
  *
- *	This procedure is invoked by the Tk configuration code
- *	to produce a printable string for the "-fillrule"
- *	configuration option.
+ *		This procedure is invoked by the Tk configuration code
+ *		to produce a printable string for the "-fillrule"
+ *		configuration option.
  *
  * Results:
- *	The return value is a string describing the state for
- *	the item referred to by "widgRec".  In addition, *freeProcPtr
- *	is filled in with the address of a procedure to call to free
- *	the result string when it's no longer needed (or NULL to
- *	indicate that the string doesn't need to be freed).
+ *		The return value is a string describing the state for
+ *		the item referred to by "widgRec".  In addition, *freeProcPtr
+ *		is filled in with the address of a procedure to call to free
+ *		the result string when it's no longer needed (or NULL to
+ *		indicate that the string doesn't need to be freed).
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -392,11 +413,11 @@ FillRulePrintProc(
     *freeProcPtr = NULL;
 
     if (*fillRulePtr == WindingRule) {
-	return "nonzero";
+        return "nonzero";
     } else if (*fillRulePtr == EvenOddRule) {
-	return "evenodd";
+        return "evenodd";
     } else {
-	return "";
+        return "";
     }
 }
 
@@ -405,11 +426,11 @@ FillRulePrintProc(
  *
  * LinearGradientParseProc --
  *
- *	This procedure is invoked during option processing to handle
- *	the "-lineargradient" option.
+ *		This procedure is invoked during option processing to handle
+ *		the "-lineargradient" option.
  *
  * Results:
- *	A standard Tcl return value.
+ *		A standard Tcl return value.
  *
  * Side effects:
  *
@@ -456,19 +477,19 @@ LinearGradientParseProc(
  *
  * LinearGradientPrintProc --
  *
- *	This procedure is invoked by the Tk configuration code
- *	to produce a printable string for the "-lineargradient"
- *	configuration option.
+ *		This procedure is invoked by the Tk configuration code
+ *		to produce a printable string for the "-lineargradient"
+ *		configuration option.
  *
  * Results:
- *	The return value is a string describing the state for
- *	the item referred to by "widgRec".  In addition, *freeProcPtr
- *	is filled in with the address of a procedure to call to free
- *	the result string when it's no longer needed (or NULL to
- *	indicate that the string doesn't need to be freed).
+ *		The return value is a string describing the state for
+ *		the item referred to by "widgRec".  In addition, *freeProcPtr
+ *		is filled in with the address of a procedure to call to free
+ *		the result string when it's no longer needed (or NULL to
+ *		indicate that the string doesn't need to be freed).
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -499,11 +520,11 @@ LinearGradientPrintProc(
  *
  * StyleParseProc --
  *
- *	This procedure is invoked during option processing to handle
- *	the "-style" option.
+ *		This procedure is invoked during option processing to handle
+ *		the "-style" option.
  *
  * Results:
- *	A standard Tcl return value.
+ *		A standard Tcl return value.
  *
  * Side effects:
  *
@@ -555,19 +576,19 @@ StyleParseProc(
  *
  * StylePrintProc --
  *
- *	This procedure is invoked by the Tk configuration code
- *	to produce a printable string for the "-style"
- *	configuration option.
+ *		This procedure is invoked by the Tk configuration code
+ *		to produce a printable string for the "-style"
+ *		configuration option.
  *
  * Results:
- *	The return value is a string describing the state for
- *	the item referred to by "widgRec".  In addition, *freeProcPtr
- *	is filled in with the address of a procedure to call to free
- *	the result string when it's no longer needed (or NULL to
- *	indicate that the string doesn't need to be freed).
+ *		The return value is a string describing the state for
+ *		the item referred to by "widgRec".  In addition, *freeProcPtr
+ *		is filled in with the address of a procedure to call to free
+ *		the result string when it's no longer needed (or NULL to
+ *		indicate that the string doesn't need to be freed).
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -597,15 +618,15 @@ StylePrintProc(
  *
  * MatrixParseProc --
  *
- *	This procedure is invoked during option processing to handle
- *	the "-matrix" option. It translates the (string) option 
- *	into a double array.
+ *		This procedure is invoked during option processing to handle
+ *		the "-matrix" option. It translates the (string) option 
+ *		into a double array.
  *
  * Results:
- *	A standard Tcl return value.
+ *		A standard Tcl return value.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -677,13 +698,13 @@ MatrixPrintProc(
  *
  * MakeCanvasPath
  *
- *	Defines the path in the canvas using the PathItem.
+ *		Defines the path in the canvas using the PathItem.
  *
  * Results:
- *	A standard Tcl result.
+ *		A standard Tcl result.
  *
  * Side effects:
- *	Defines the current path in drawable.
+ *		Defines the current path in drawable.
  *
  *--------------------------------------------------------------
  */
@@ -823,18 +844,18 @@ NormalizePathRect(PathRect *r)
  *
  * Tk_ConfigStrokePathStyleGC
  *
- *	This procedure should be called in the canvas object
- *	during the configure command. The graphics context
- *	description in gcValues is updated according to the
- *	information in the dash structure, as far as possible.
+ *		This procedure should be called in the canvas object
+ *		during the configure command. The graphics context
+ *		description in gcValues is updated according to the
+ *		information in the dash structure, as far as possible.
  *
  * Results:
- *	The return-value is a mask, indicating which
- *	elements of gcValues have been updated.
- *	0 means there is no outline.
+ *		The return-value is a mask, indicating which
+ *		elements of gcValues have been updated.
+ *		0 means there is no outline.
  *
  * Side effects:
- *	GC information in gcValues is updated.
+ *		GC information in gcValues is updated.
  *
  *--------------------------------------------------------------
  */
@@ -868,33 +889,33 @@ Tk_ConfigStrokePathStyleGC(
     color = style->strokeColor;
     stipple = style->strokeStipple;
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+        state = ((TkCanvas *)canvas)->canvas_state;
     }
     if (color == NULL) {
-	return 0;
+        return 0;
     }
 
     gcValues->line_width = (int) (width + 0.5);
     if (color != NULL) {
-	gcValues->foreground = color->pixel;
-	mask = GCForeground|GCLineWidth;
-	if (stipple != None) {
-	    gcValues->stipple = stipple;
-	    gcValues->fill_style = FillStippled;
-	    mask |= GCStipple|GCFillStyle;
-	}
+        gcValues->foreground = color->pixel;
+        mask = GCForeground|GCLineWidth;
+        if (stipple != None) {
+            gcValues->stipple = stipple;
+            gcValues->fill_style = FillStippled;
+            mask |= GCStipple|GCFillStyle;
+        }
     }
     if (mask && (dash->number != 0)) {
-	gcValues->line_style = LineOnOffDash;
-	gcValues->dash_offset = style->offset;
-	if (dash->number >= 2) {
-	    gcValues->dashes = 4;
-	} else if (dash->number > 0) {
-	    gcValues->dashes = dash->pattern.array[0];
-	} else {
-	    gcValues->dashes = (char) (4 * width);
-	}
-	mask |= GCLineStyle|GCDashList|GCDashOffset;
+        gcValues->line_style = LineOnOffDash;
+        gcValues->dash_offset = style->offset;
+        if (dash->number >= 2) {
+            gcValues->dashes = 4;
+        } else if (dash->number > 0) {
+            gcValues->dashes = dash->pattern.array[0];
+        } else {
+            gcValues->dashes = (char) (4 * width);
+        }
+        mask |= GCLineStyle|GCDashList|GCDashOffset;
     }
     return mask;
 }
@@ -931,17 +952,17 @@ Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
  *
  * CreatePath --
  *
- *	This procedure is invoked to create a new line item in
- *	a canvas.
+ *		This procedure is invoked to create a new line item in
+ *		a canvas.
  *
  * Results:
- *	A standard Tcl return value.  If an error occurred in
- *	creating the item, then an error message is left in
- *	the interp's result;  in this case itemPtr is left uninitialized,
- *	so it can be safely freed by the caller.
+ *		A standard Tcl return value.  If an error occurred in
+ *		creating the item, then an error message is left in
+ *		the interp's result;  in this case itemPtr is left uninitialized,
+ *		so it can be safely freed by the caller.
  *
  * Side effects:
- *	A new line item is created.
+ *		A new line item is created.
  *
  *--------------------------------------------------------------
  */
@@ -959,6 +980,7 @@ CreatePath(
     if (objc == 0) {
         Tcl_Panic("canvas did not pass any coords\n");
     }
+    gInterp = interp;
 
     /*
      * Carry out initialization that is needed to set defaults and to
@@ -1003,15 +1025,15 @@ CreatePath(
  *
  * PathCoords --
  *
- *	This procedure is invoked to process the "coords" widget
- *	command on lines.  See the user documentation for details
- *	on what it does.
+ *		This procedure is invoked to process the "coords" widget
+ *		command on lines.  See the user documentation for details
+ *		on what it does.
  *
  * Results:
- *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
+ *		Returns TCL_OK or TCL_ERROR, and sets the interp's result.
  *
  * Side effects:
- *	The coordinates for the given item may be changed.
+ *		The coordinates for the given item may be changed.
  *
  *--------------------------------------------------------------
  */
@@ -1115,14 +1137,14 @@ SetTotalBboxFromBare(PathItem *pathPtr)
  *
  * SetPathHeaderBbox --
  *
- *	This procedure sets the (transformed) bbox in the items header.
+ *		This procedure sets the (transformed) bbox in the items header.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	The fields x1, y1, x2, and y2 are updated in the header
- *	for itemPtr.
+ *		The fields x1, y1, x2, and y2 are updated in the header
+ *		for itemPtr.
  *
  *--------------------------------------------------------------
  */
@@ -1168,16 +1190,16 @@ SetPathHeaderBbox(PathItem *pathPtr)
  *
  * ConfigurePath --
  *
- *	This procedure is invoked to configure various aspects
- *	of a line item such as its background color.
+ *		This procedure is invoked to configure various aspects
+ *		of a line item such as its background color.
  *
  * Results:
- *	A standard Tcl result code.  If an error occurs, then
- *	an error message is left in the interp's result.
+ *		A standard Tcl result code.  If an error occurs, then
+ *		an error message is left in the interp's result.
  *
  * Side effects:
- *	Configuration information, such as colors and stipple
- *	patterns, may be set for itemPtr.
+ *		Configuration information, such as colors and stipple
+ *		patterns, may be set for itemPtr.
  *
  *--------------------------------------------------------------
  */
@@ -1235,11 +1257,11 @@ ConfigurePath(
     }
     */
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+        state = ((TkCanvas *)canvas)->canvas_state;
     }
     if (state == TK_STATE_HIDDEN) {
-	//ComputePathBbox(canvas, pathPtr);
-	return TCL_OK;
+        //ComputePathBbox(canvas, pathPtr);
+        return TCL_OK;
     }
     
     /* @@@ Not sure if GC's should be used at all! */
@@ -1251,11 +1273,11 @@ ConfigurePath(
         gcValues.cap_style = pathPtr->style.capStyle;
         mask |= GCCapStyle;
 
-	gcValues.join_style = pathPtr->style.joinStyle;
-	mask |= GCJoinStyle;
-	newGC = Tk_GetGC(tkwin, mask, &gcValues);
+        gcValues.join_style = pathPtr->style.joinStyle;
+        mask |= GCJoinStyle;
+        newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = None;
+        newGC = None;
     }
     if (pathPtr->style.strokeGC != None) {
         Tk_FreeGC(Tk_Display(tkwin), pathPtr->style.strokeGC);
@@ -1291,14 +1313,14 @@ ConfigurePath(
  *
  * DeletePath --
  *
- *	This procedure is called to clean up the data structure
- *	associated with a line item.
+ *		This procedure is called to clean up the data structure
+ *		associated with a line item.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	Resources associated with itemPtr are released.
+ *		Resources associated with itemPtr are released.
  *
  *--------------------------------------------------------------
  */
@@ -1333,18 +1355,18 @@ DeletePath(
  *
  * GetBareArcBbox
  *
- *	Gets an overestimate of the bounding box rectangle of
- * 	an arc defined using central parametrization assuming
- *	zero stroke width.
- * 	Untransformed coordinates!
- *	Note: 1) all angles clockwise direction!
- *	      2) all angles in radians.
+ *		Gets an overestimate of the bounding box rectangle of
+ * 		an arc defined using central parametrization assuming
+ *		zero stroke width.
+ * 		Untransformed coordinates!
+ *		Note: 1) all angles clockwise direction!
+ *	    	  2) all angles in radians.
  *
  * Results:
- *	A PathRect.
+ *		A PathRect.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -1448,15 +1470,15 @@ GetBareArcBbox(double cx, double cy, double rx, double ry,
  *
  * GetBarePathBbox
  *
- *	Gets an overestimate of the bounding box rectangle of
- * 	a path assuming zero stroke width.
- * 	Untransformed coordinates!
+ *		Gets an overestimate of the bounding box rectangle of
+ * 		a path assuming zero stroke width.
+ * 		Untransformed coordinates!
  *
  * Results:
- *	A PathRect.
+ *		A PathRect.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -1565,15 +1587,15 @@ GetBarePathBbox(PathAtom *atomPtr)
  *
  * ComputePathBbox --
  *
- *	This procedure is invoked to compute the bounding box of
- *	all the pixels that may be drawn as part of a path.
+ *		This procedure is invoked to compute the bounding box of
+ *		all the pixels that may be drawn as part of a path.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	The fields x1, y1, x2, and y2 are updated in the header
- *	for itemPtr.
+ *		The fields x1, y1, x2, and y2 are updated in the header
+ *		for itemPtr.
  *
  *--------------------------------------------------------------
  */
@@ -1627,15 +1649,15 @@ PaintCanvasLinearGradient(Tk_Canvas canvas, Drawable drawable, PathRect *bbox, c
  *
  * DisplayPath --
  *
- *	This procedure is invoked to draw a line item in a given
- *	drawable.
+ *		This procedure is invoked to draw a line item in a given
+ *		drawable.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	ItemPtr is drawn in drawable using the transformation
- *	information in canvas.
+ *		ItemPtr is drawn in drawable using the transformation
+ *		information in canvas.
  *
  *--------------------------------------------------------------
  */
@@ -1699,17 +1721,17 @@ DisplayPath(
  *
  * PathToPoint --
  *
- *	Computes the distance from a given point to a given
- *	line, in canvas units.
+ *		Computes the distance from a given point to a given
+ *		line, in canvas units.
  *
  * Results:
- *	The return value is 0 if the point whose x and y coordinates
- *	are pointPtr[0] and pointPtr[1] is inside the line.  If the
- *	point isn't inside the line then the return value is the
- *	distance from the point to the line.
+ *		The return value is 0 if the point whose x and y coordinates
+ *		are pointPtr[0] and pointPtr[1] is inside the line.  If the
+ *		point isn't inside the line then the return value is the
+ *		distance from the point to the line.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -1723,6 +1745,8 @@ PathToPoint(
     Tk_State 		state = itemPtr->state;
     int				numPoints, numStrokes;
     int				isclosed;
+    int				intersections, nonzerorule;
+    int				sumIntersections = 0, sumNonzerorule = 0;
     double 			*polyPtr;
     double 			bestDist, radius, width, dist;
     PathItem 		*pathPtr = (PathItem *) itemPtr;
@@ -1736,6 +1760,9 @@ PathToPoint(
         state = ((TkCanvas *)canvas)->canvas_state;
     }
     if ((pathPtr->pathLen <= 3) || itemPtr->state==TK_STATE_HIDDEN) {
+        return bestDist;
+    }
+    if ((stylePtr->fillColor == NULL) && (stylePtr->strokeColor == NULL)) {
         return bestDist;
     }
     
@@ -1756,36 +1783,62 @@ PathToPoint(
     /*
      * Loop through each subpath, creating the approximate polyline,
      * and do the *ToPoint functions.
+     *
+     * Note: Strokes can be treated independently for each subpath,
+     *		 but fills cannot since subpaths may intersect creating
+     *		 "holes".
      */
+     
+#if PATH_DEBUG
+    DebugPrintf(gInterp, 2, "PathToPoint..........");
+#endif
+    
     while (atomPtr != NULL) {
         MakeSubPathSegments(&atomPtr, polyPtr, &numPoints, &numStrokes, matrixPtr);
         isclosed = 0;
         if (numStrokes == numPoints) {
             isclosed = 1;
-        }
-        if (stylePtr->fillColor != NULL) {
-            dist = PathPolygonToPointEx(polyPtr, numPoints, pointPtr, stylePtr->fillRule);
-            if (dist < bestDist) {
-                bestDist = dist;
-            }
-            if (bestDist <= 0.0) {
-                bestDist = 0.0;
-                goto done;
-            }
-        }
-        if (stylePtr->strokeColor != NULL) {
-            if (stylePtr->strokeWidth > kStrokeThicknessLimit) {
-                dist = PathThickPolygonToPoint(stylePtr->joinStyle, stylePtr->capStyle, 
-                        width, isclosed, polyPtr, numPoints, pointPtr);
-            } else {
+        }        
+#if PATH_DEBUG
+        {
+            int i;
             
-                /*
-                 * This gives the distance to a zero width polyline.
-                 * Use a simple scheme to adjust for a small width.
-                 */
-                dist = PathPolygonToPointEx(polyPtr, numPoints, pointPtr, -1);
-                dist -= radius;
+            DebugPrintf(gInterp, 2, "numPoints=%d, isclosed=%d, atomPtr=0x%.8x", numPoints, isclosed, atomPtr);
+            for (i = 0; i < numPoints; i++) {
+                DebugPrintf(gInterp, 2, "\t %6.1f, %6.1f", polyPtr[2*i], polyPtr[2*i+1]);
             }
+        }
+#endif        
+        /*
+         * This gives the min distance to the *stroke* AND the
+         * number of intersections of the two types.
+         */
+        dist = PathPolygonToPointEx(polyPtr, numPoints, pointPtr, 
+                &intersections, &nonzerorule);
+        sumIntersections += intersections;
+        sumNonzerorule += nonzerorule;
+        if (stylePtr->strokeColor != NULL) {
+        
+            /*
+             * This gives the distance to a zero width polyline.
+             * Use a simple scheme to adjust for a small width.
+             */
+            dist -= radius;
+        }
+        if (dist < bestDist) {
+            bestDist = dist;
+        }
+        if (bestDist <= 0.0) {
+            bestDist = 0.0;
+            goto done;
+        }
+
+        /*
+         * For wider strokes we must make a more detailed analysis.
+         */
+        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth > kStrokeThicknessLimit)) {
+            dist = PathThickPolygonToPoint(stylePtr->joinStyle, stylePtr->capStyle, 
+                    width, isclosed, polyPtr, numPoints, pointPtr);
             if (dist < bestDist) {
                 bestDist = dist;
             }
@@ -1793,6 +1846,21 @@ PathToPoint(
                 bestDist = 0.0;
                 goto done;
             }
+        }
+    }        
+
+    /*
+     * We've processed all of the points.  
+     * EvenOddRule: If the number of intersections is odd, 
+     *			the point is inside the polygon.
+     * WindingRule (nonzero): If the number of directed intersections
+     *			are nonzero, then inside.
+     */
+    if (stylePtr->fillColor != NULL) {
+        if ((stylePtr->fillRule == EvenOddRule) && (sumIntersections & 0x1)) {
+            bestDist = 0.0;
+        } else if ((stylePtr->fillRule == WindingRule) && (sumNonzerorule != 0)) {
+            bestDist = 0.0;
         }
     }
     
@@ -1978,16 +2046,16 @@ GetSubpathMaxNumSegments(PathAtom *atomPtr)
  *
  * ArcSegments --
  *
- *	Given the arc parameters it makes a sequence if line segments.
- *	All angles in radians!
- *	Note that segments are transformed!
+ *		Given the arc parameters it makes a sequence if line segments.
+ *		All angles in radians!
+ *		Note that segments are transformed!
  *
  * Results:
- *	The array at *coordPtr gets filled in with 2*numSteps
- *	coordinates, which correspond to the arc.
+ *		The array at *coordPtr gets filled in with 2*numSteps
+ *		coordinates, which correspond to the arc.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -2030,24 +2098,24 @@ ArcSegments(
 /*
  *--------------------------------------------------------------
  *
- * BezierSegments --
+ * CurveSegments --
  *
- *	Given four control points, create a larger set of points
- *	for a Bezier spline based on the points.
+ *		Given four control points, create a larger set of points
+ *		for a cubic Bezier spline based on the points.
  *
  * Results:
- *	The array at *coordPtr gets filled in with 2*numSteps
- *	coordinates, which correspond to the Bezier spline defined
- *	by the four control points.  
+ *		The array at *coordPtr gets filled in with 2*numSteps
+ *		coordinates, which correspond to the Bezier spline defined
+ *		by the four control points.  
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
 
 static void
-BezierSegments(
+CurveSegments(
     double control[],		/* Array of coordinates for four
                              * control points:  x0, y0, x1, y1,
                              * ... x3 y3. */
@@ -2079,16 +2147,16 @@ BezierSegments(
  *
  * QuadBezierSegments --
  *
- *	Given three control points, create a larger set of points
- *	for a quadratic Bezier spline based on the points.
+ *		Given three control points, create a larger set of points
+ *		for a quadratic Bezier spline based on the points.
  *
  * Results:
- *	The array at *coordPtr gets filled in with 2*numSteps
- *	coordinates, which correspond to the quadratic Bezier spline defined
- *	by the control points.
+ *		The array at *coordPtr gets filled in with 2*numSteps
+ *		coordinates, which correspond to the quadratic Bezier spline defined
+ *		by the control points.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -2096,16 +2164,21 @@ BezierSegments(
 static void
 QuadBezierSegments(
     double control[],			/* Array of coordinates for three
-					 * control points:  x0, y0, x1, y1,
-					 * x2, y2. */
+                                 * control points:  x0, y0, x1, y1,
+                                 * x2, y2. */
     int includeFirst,			/* Should the first point be included? */
-    int numSteps,			/* Number of curve segments to
-					 * generate.  */
-    register double *coordPtr)		/* Where to put new points. */
+    int numSteps,				/* Number of curve segments to
+                                 * generate.  */
+    register double *coordPtr)	/* Where to put new points. */
 {
     int i;
     int istart = 1 - includeFirst;
     double u, u2, t, t2;
+
+#if PATH_DEBUG
+    DebugPrintf(gInterp, 2, "QuadBezierSegments %6.0f, %6.0f, %6.0f, %6.0f, %6.0f, %6.0f", 
+            control[0], control[1], control[2], control[3], control[4], control[5]);
+#endif
 
     for (i = istart; i <= numSteps; i++, coordPtr += 2) {
         t = ((double) i)/((double) numSteps);
@@ -2122,14 +2195,14 @@ QuadBezierSegments(
  *
  * AddArcSegments, AddQuadBezierSegments, AddCurveToSegments --
  *
- *	Adds a number of points along the arc (curve) to coordPtr
- *	representing straight line segments.
+ *		Adds a number of points along the arc (curve) to coordPtr
+ *		representing straight line segments.
  *
  * Results:
- *	Number of points added. 
+ *		Number of points added. 
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -2203,6 +2276,17 @@ AddQuadBezierSegments(
 
     numPoints = kNumSegmentsQuadBezier;
     QuadBezierSegments(control, 0, numPoints, coordPtr);
+    
+#if PATH_DEBUG
+        {
+            int i;
+            
+            DebugPrintf(gInterp, 2, "AddQuadBezierSegments: numPoints=%d", numPoints);
+            for (i = 0; i < numPoints; i++) {
+                DebugPrintf(gInterp, 2, "\t %6.1f, %6.1f", coordPtr[2*i], coordPtr[2*i+1]);
+            }
+        }
+#endif
 
     return numPoints;
 }
@@ -2224,7 +2308,7 @@ AddCurveToSegments(
     PathApplyTMatrixToPoint(matrixPtr, &(curve->anchorX), control+6);
 
     numSteps = kNumSegmentsCurveTo;
-    BezierSegments(control, 1, numSteps, coordPtr);
+    CurveSegments(control, 1, numSteps, coordPtr);
     
     return numSteps;
 }
@@ -2234,17 +2318,17 @@ AddCurveToSegments(
  *
  * SubPathToArea --
  *
- *	This procedure is called to determine whether a subpath
- *	lies entirely inside, entirely outside, or overlapping
- *	a given rectangular area.
+ *		This procedure is called to determine whether a subpath
+ *		lies entirely inside, entirely outside, or overlapping
+ *		a given rectangular area.
  *
  * Results:
- *	-1 is returned if the item is entirely outside the
- *	area, 0 if it overlaps, and 1 if it is entirely
- *	inside the given area.
+ *		-1 is returned if the item is entirely outside the
+ *		area, 0 if it overlaps, and 1 if it is entirely
+ *		inside the given area.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -2319,11 +2403,12 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
     int 			first = 1;
     int				numPoints;
     int				numStrokes;
+    int				numAdded;
     int				isclosed = 0;
     double 			current[2];		/* Current untransformed point. */
     double			*currentTPtr;	/* Pointer to the transformed current point. */
     double			*coordPtr;
-    PathAtom 		*atomPtr, *prevAtomPtr;
+    PathAtom 		*atomPtr;
     MoveToAtom 		*move;
     LineToAtom 		*line;
     ArcAtom 		*arc;
@@ -2348,37 +2433,37 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
     current[1] = 0.0;
     numPoints = 0;
     numStrokes = 0;
+    isclosed = 0;
     atomPtr = *atomPtrPtr;
     
     while (atomPtr != NULL) {
-    
+
+#if PATH_DEBUG    
+        DebugPrintf(gInterp, 2, "atomPtr->type %c", atomPtr->type);
+#endif
+
         switch (atomPtr->type) {
             case PATH_ATOM_M: {
                 move = (MoveToAtom *) atomPtr;
             
                 /* A 'M' atom must be first, may show up later as well. */
-
-                coordPtr = polyPtr;
-                PathApplyTMatrixToPoint(matrixPtr, current, coordPtr);
-                current[0] = move->x;
-                current[1] = move->y;
-                currentTPtr = coordPtr;
-                coordPtr += 2;
-                numPoints = 1;
                 
                 if (first) {
-                    
-
+                    coordPtr = polyPtr;
+                    current[0] = move->x;
+                    current[1] = move->y;
+                    PathApplyTMatrixToPoint(matrixPtr, current, coordPtr);
+                    currentTPtr = coordPtr;
+                    coordPtr += 2;
+                    numPoints = 1;
                 } else {
                 
                     /*  
-                     * We have finalized a subpath. Be sure to "decrement"
-                     * the atom pointer!   ?????????????????
+                     * We have finalized a subpath.
                      */
-                    atomPtr = prevAtomPtr;
+                    goto done;
                 }
                 first = 0;
-                isclosed = 0;
                 break;
             }
             case PATH_ATOM_L: {
@@ -2393,8 +2478,9 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
             }
             case PATH_ATOM_A: {
                 arc = (ArcAtom *) atomPtr;
-                numPoints += AddArcSegments(matrixPtr, current, arc, coordPtr);
-                coordPtr += 2 * numPoints;
+                numAdded = AddArcSegments(matrixPtr, current, arc, coordPtr);
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
                 current[0] = arc->x;
                 current[1] = arc->y;
                 currentTPtr = coordPtr;
@@ -2402,9 +2488,10 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
             }
             case PATH_ATOM_Q: {
                 quad = (QuadBezierAtom *) atomPtr;
-                numPoints += AddQuadBezierSegments(matrixPtr, current,
+                numAdded = AddQuadBezierSegments(matrixPtr, current,
                         quad, coordPtr);
-                coordPtr += 2 * numPoints;
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
                 current[0] = quad->anchorX;
                 current[1] = quad->anchorY;
                 currentTPtr = coordPtr;
@@ -2412,9 +2499,10 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
             }
             case PATH_ATOM_C: {
                 curve = (CurveToAtom *) atomPtr;
-                numPoints += AddCurveToSegments(matrixPtr, current,
+                numAdded = AddCurveToSegments(matrixPtr, current,
                         curve, coordPtr);
-                coordPtr += 2 * numPoints;
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
                 current[0] = curve->anchorX;
                 current[1] = curve->anchorY;
                 currentTPtr = coordPtr;
@@ -2434,10 +2522,10 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
                 break;
             }
         }
-        prevAtomPtr = atomPtr;
         atomPtr = atomPtr->nextPtr;
     }
 
+done:
     if (numPoints > 1) {
         if (isclosed) {
             numStrokes = numPoints;
@@ -2457,20 +2545,20 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
  *
  * PathToArea --
  *
- *	This procedure is called to determine whether an item
- *	lies entirely inside, entirely outside, or overlapping
- *	a given rectangular area.
+ *		This procedure is called to determine whether an item
+ *		lies entirely inside, entirely outside, or overlapping
+ *		a given rectangular area.
  *	
- *	Each subpath is treated in turn. Generate straight line
- *	segments for each subpath and treat it as a polygon.
+ *		Each subpath is treated in turn. Generate straight line
+ *		segments for each subpath and treat it as a polygon.
  *
  * Results:
- *	-1 is returned if the item is entirely outside the
- *	area, 0 if it overlaps, and 1 if it is entirely
- *	inside the given area.
+ *		-1 is returned if the item is entirely outside the
+ *		area, 0 if it overlaps, and 1 if it is entirely
+ *		inside the given area.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -2666,15 +2754,15 @@ done:
  *
  * ScalePath --
  *
- *	This procedure is invoked to rescale a line item.
+ *		This procedure is invoked to rescale a line item.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	The line referred to by itemPtr is rescaled so that the
- *	following transformation is applied to all point
- *	coordinates:
+ *		The line referred to by itemPtr is rescaled so that the
+ *		following transformation is applied to all point
+ *		coordinates:
  *		x' = originX + scaleX*(x-originX)
  *		y' = originY + scaleY*(y-originY)
  *
@@ -2779,15 +2867,15 @@ ScalePath(
  *
  * TranslatePath --
  *
- *	This procedure is called to move a line by a given amount.
+ *		This procedure is called to move a line by a given amount.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	The position of the line is offset by (xDelta, yDelta), and
- *	the bounding box is updated in the generic part of the item
- *	structure.
+ *		The position of the line is offset by (xDelta, yDelta), and
+ *		the bounding box is updated in the generic part of the item
+ *		structure.
  *
  *--------------------------------------------------------------
  */
@@ -2877,18 +2965,18 @@ TranslatePath(
  *
  * PathToPostscript --
  *
- *	This procedure is called to generate Postscript for
- *	path items.
+ *		This procedure is called to generate Postscript for
+ *		path items.
  *
  * Results:
- *	The return value is a standard Tcl result.  If an error
- *	occurs in generating Postscript then an error message is
- *	left in the interp's result, replacing whatever used
- *	to be there.  If no error occurs, then Postscript for the
- *	item is appended to the result.
+ *		The return value is a standard Tcl result.  If an error
+ *		occurs in generating Postscript then an error message is
+ *		left in the interp's result, replacing whatever used
+ *		to be there.  If no error occurs, then Postscript for the
+ *		item is appended to the result.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
