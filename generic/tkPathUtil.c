@@ -245,10 +245,12 @@ void
 PathApplyTMatrixToPoint(TMatrix *m, double in[2], double out[2])
 {
     if (m == NULL) {
-        return;
+        out[0] = in[0];
+        out[1] = in[1];
+    } else {
+        out[0] = in[0]*m->a + in[1]*m->c + m->tx;
+        out[1] = in[0]*m->b + in[1]*m->d + m->ty;
     }
-    *out     = in[0]*m->a + in[1]*m->c + m->tx;
-    *(out+1) = in[0]*m->b + in[1]*m->d + m->ty;
 }
 
 void

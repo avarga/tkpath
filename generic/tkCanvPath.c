@@ -1075,6 +1075,10 @@ SetTotalBboxFromBare(PathItem *pathPtr)
         rect.y2 += width;
     }
     
+    /* @@@ TODO: We should have a method here to add the necessary space
+     * needed for sharp miter line joins.
+     */
+    
     /*
      * Add one more pixel of fudge factor just to be safe (e.g.
      * X may round differently than we do). Antialiasing?
@@ -1084,7 +1088,34 @@ SetTotalBboxFromBare(PathItem *pathPtr)
     rect.y1 -= 1.0;
     rect.y2 += 1.0;
     
-    /* Is this the right place? */
+    pathPtr->totalBbox = rect;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SetPathHeaderBbox --
+ *
+ *	This procedure sets the (transformed) bbox in the items header.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The fields x1, y1, x2, and y2 are updated in the header
+ *	for itemPtr.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+SetPathHeaderBbox(PathItem *pathPtr)
+{
+    Tk_PathStyle *style = &(pathPtr->style);
+    PathRect rect;
+    
+    rect = pathPtr->totalBbox;
+
     if (style->matrixPtr != NULL) {
         double x, y;
         PathRect r = NewEmptyPathRect();
@@ -1104,14 +1135,13 @@ SetTotalBboxFromBare(PathItem *pathPtr)
 
         x = rect.x2, y = rect.y2;
         PathApplyTMatrix(style->matrixPtr, &x, &y);
-        IncludePointInRect(&r, x, y);        
+        IncludePointInRect(&r, x, y);
+        rect = r;  
     }
     pathPtr->header.x1 = (int) rect.x1;
     pathPtr->header.x2 = (int) rect.x2;
     pathPtr->header.y1 = (int) rect.y1;
     pathPtr->header.y2 = (int) rect.y2;
-
-    pathPtr->totalBbox = rect;
 }
 
 /*
@@ -1232,6 +1262,7 @@ ConfigurePath(
      * Note: This requires that bareBbox already computed!
      */
     SetTotalBboxFromBare(pathPtr);
+    SetPathHeaderBbox(pathPtr);
 
     return TCL_OK;
 }
@@ -1550,6 +1581,7 @@ ComputePathBbox(
     pathPtr->bareBbox = rect;
 
     SetTotalBboxFromBare(pathPtr);
+    SetPathHeaderBbox(pathPtr);
 }
 
 static void
@@ -1744,13 +1776,29 @@ TkLineToPoint2(end1Ptr, end2Ptr, pointPtr)
     }
 }
 
-/**********************************/
-
-/* All angles in radians! */
+/*
+ *--------------------------------------------------------------
+ *
+ * ArcSegments --
+ *
+ *	Given the arc parameters it makes a sequence if line segments.
+ *	All angles in radians!
+ *	Note that segments are transformed!
+ *
+ * Results:
+ *	The array at *coordPtr gets filled in with 2*numSteps
+ *	coordinates, which correspond to the arc.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
 
 static void
 ArcSegments(
     CentralArcPars *arcPars,
+    TMatrix *matrixPtr,
     int numSteps,			/* Number of curve segments to
 					 * generate.  */
     register double *coordPtr)		/* Where to put new points. */
@@ -1776,6 +1824,7 @@ ArcSegments(
         sinAlpha = sin(alpha);
 	coordPtr[0] = cx + rx*cosAlpha*cosPhi - ry*sinAlpha*sinPhi;
 	coordPtr[1] = cy + rx*cosAlpha*sinPhi + ry*sinAlpha*cosPhi;
+        PathApplyTMatrix(matrixPtr, coordPtr, coordPtr+1);
     }
 }
 
@@ -1791,8 +1840,6 @@ ArcSegments(
  *	The array at *coordPtr gets filled in with 2*numSteps
  *	coordinates, which correspond to the Bezier spline defined
  *	by the four control points.  
- *	Note: output points generated including *first* point
- *	(compare TkBezierPoints).
  *
  * Side effects:
  *	None.
@@ -1837,7 +1884,7 @@ BezierSegments(
  * Results:
  *	The array at *coordPtr gets filled in with 2*numSteps
  *	coordinates, which correspond to the quadratic Bezier spline defined
- *	by the four control points.
+ *	by the control points.
  *
  * Side effects:
  *	None.
@@ -1867,6 +1914,26 @@ QuadBezierSegments(
     }
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * ArcToArea --
+ *
+ *	This procedure is called to determine whether an arc
+ *	lies entirely inside, entirely outside, or overlapping
+ *	a given rectangular area.
+ *
+ * Results:
+ *	-1 is returned if the item is entirely outside the
+ *	area, 0 if it overlaps, and 1 if it is entirely
+ *	inside the given area.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
 static int
 ArcToArea(
     PathItem *pathPtr,
@@ -1886,7 +1953,10 @@ ArcToArea(
     double currentX, currentY;
     double theta1, dtheta;
             
-    // @@@ Pretty complicated to apply matrix to arc parameters...
+    /*
+     * Note: The arc parametrization used cannot generally
+     * be transformed. Need to transform each line segment separately!
+     */
             
     currentX = current[0];
     currentY = current[1];
@@ -1905,6 +1975,8 @@ ArcToArea(
         pts[1] = currentY;
         pts[2] = arc->x;
         pts[3] = arc->y;
+        PathApplyTMatrix(matrixPtr, pts, pts+1);
+        PathApplyTMatrix(matrixPtr, pts+2, pts+3);
         return TkLineToArea(pts, pts+2, rectPtr);
     } else if (result == kPathArcSkip) {
         return -1;
@@ -1925,7 +1997,8 @@ ArcToArea(
     nlength = (int) (0.5*(rx + ry)*dtheta/50 + 0.5);
     numSteps = MAX(4, MAX(ntheta, nlength));;
     coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
-    ArcSegments(&arcPars, numSteps, coordPtr);
+    
+    ArcSegments(&arcPars, matrixPtr, numSteps, coordPtr);
 
     /*
      * Simple test to see if we are in the polygon.  Polygons are
@@ -1971,17 +2044,6 @@ CurveToArea(
     PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->ctrlX1), control+2);
     PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->ctrlX2), control+4);
     PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->anchorX), control+6);
-
-#if 0
-    control[0] = current[0];
-    control[1] = current[1];
-    control[2] = curveToAtomPtr->ctrlX1;
-    control[3] = curveToAtomPtr->ctrlY1;
-    control[4] = curveToAtomPtr->ctrlX2;
-    control[5] = curveToAtomPtr->ctrlY2;
-    control[6] = curveToAtomPtr->anchorX;
-    control[7] = curveToAtomPtr->anchorY;
-#endif
 
     numSteps = 12;
     coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
@@ -2031,14 +2093,6 @@ QuadBezierToArea(
     PathApplyTMatrixToPoint(matrixPtr, &(quadAtomPtr->ctrlX), control+2);
     PathApplyTMatrixToPoint(matrixPtr, &(quadAtomPtr->anchorX), control+4);
 
-#if 0
-    control[0] = current[0];
-    control[1] = current[1];
-    control[2] = quadAtomPtr->ctrlX;
-    control[3] = quadAtomPtr->ctrlY;
-    control[4] = quadAtomPtr->anchorX;
-    control[5] = quadAtomPtr->anchorY;
-#endif
     numSteps = 12;
     coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
     QuadBezierSegments(control, numSteps, coordPtr);
@@ -2143,15 +2197,23 @@ PathToArea(
                     current[0] = moveToAtomPtr->x;
                     current[1] = moveToAtomPtr->y;
                     PathApplyTMatrixToPoint(matrixPtr, current, currentT);
-                    inside = (currentT[0] >= rectPtr[0]) && (currentT[0] <= rectPtr[2])
-                            && (currentT[1] >= rectPtr[1]) && (currentT[1] <= rectPtr[3]);
+                    
+                    /*
+                     * This defines the starting point. It is either -1 or 1. 
+                     * If any subseqent segment has a different 'inside'
+                     * then return 0 since one port (in|out)side and another
+                     * (out|in)side
+                     */
+                    inside = -1;
+                    if ((currentT[0] >= rectPtr[0]) && (currentT[0] <= rectPtr[2])
+                            && (currentT[1] >= rectPtr[1]) && (currentT[1] <= rectPtr[3])) {
+                        inside = 1;
+                    }
                 } else {
                 
-                    /* A "virtual line" connects the subpaths. */
-                    PathApplyTMatrixToPoint(matrixPtr, &(moveToAtomPtr->x), pt);
-                    if (TkLineToArea(currentT, pt, rectPtr) != inside) {
-                        return 0;
-                    }
+                    /*  
+                     * This is not counted since never drawn.
+                     */
                     current[0] = moveToAtomPtr->x;
                     current[1] = moveToAtomPtr->y;
                     PathApplyTMatrixToPoint(matrixPtr, current, currentT);
@@ -2205,10 +2267,9 @@ PathToArea(
             case PATH_ATOM_Z: {
                 CloseAtom *closeAtomPtr = (CloseAtom *) atomPtr;
             
+                PathApplyTMatrixToPoint(matrixPtr, &(closeAtomPtr->x), pt);
                 if (style.fillColor != NULL) {
-                    PathApplyTMatrixToPoint(matrixPtr, &(closeAtomPtr->x), pt);
-                    inside = TkLineToArea(currentT, pt, rectPtr);
-                    if (inside == 0) {
+                    if (TkLineToArea(currentT, pt, rectPtr) != inside) {
                         return 0;
                     }
                 }
