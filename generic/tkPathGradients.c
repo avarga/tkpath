@@ -59,7 +59,6 @@ static int	FillInTransitionFromRectObj(Tcl_Interp *interp,
 
 int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
                 int objc, Tcl_Obj* CONST objv[]);
-int		HaveLinearGradientStyleWithName(CONST char *name);
 static LinearGradientStyle *	LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
 static void						LinGradientFree(Tcl_Interp *interp, char *recordPtr);
 
@@ -487,18 +486,6 @@ LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CO
     /* Set default transition vector in case not set. */
     FillInTransitionFromRectObj(interp, gradientStylePtr, NULL);
 
-	if (Tk_InitOptions(interp, (char *) gradientStylePtr, gradientStylePtr->optionTable, 
-            NULL) != TCL_OK) {
-		ckfree((char *) gradientStylePtr);
-		return NULL;
-	}
-
-	if (Tk_SetOptions(interp, (char *) gradientStylePtr, gradientStylePtr->optionTable, 
-            objc, objv, NULL, NULL, NULL) != TCL_OK) {
-		Tk_FreeConfigOptions((char *) gradientStylePtr, gradientStylePtr->optionTable, NULL);
-		ckfree((char *) gradientStylePtr);
-		return NULL;
-	}
 	return gradientStylePtr;
 }
 

@@ -34,6 +34,7 @@ typedef struct PathItem  {
 				 * types.  MUST BE FIRST IN STRUCTURE. */
     Tk_Outline outline;		/* Outline structure */
     Tk_PathStyle style;		/* Contains most drawing info. */
+    char *styleName;		/* Name of any inherited style object. */
     Tk_Canvas canvas;		/* Canvas containing item. */
     Tcl_Obj *pathObjPtr;	/* The object containing the path definition. */
     int pathLen;
@@ -94,6 +95,11 @@ static int	MatrixParseProc(ClientData clientData,
                         CONST char *value, char *recordPtr, int offset);
 static char *	MatrixPrintProc(ClientData clientData, Tk_Window tkwin, 
                         char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+static int	StyleParseProc(ClientData clientData,
+                        Tcl_Interp *interp, Tk_Window tkwin,
+                        CONST char *value, char *recordPtr, int offset);
+static char *	StylePrintProc(ClientData clientData, Tk_Window tkwin, 
+                        char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 
 
 /* From tkPathUtilCopy.c */
@@ -128,7 +134,6 @@ extern char *	PathTkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
 
 extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
-extern int	HaveLinearGradientStyleWithName(CONST char *name);
 extern void	PathPaintLinearGradientFromName(Drawable d, PathRect *bbox, char *name, int fillRule);
 
     
@@ -178,6 +183,11 @@ static Tk_CustomOption matrixOption = {
     MatrixPrintProc, 
     (ClientData) NULL
 };
+static Tk_CustomOption styleOption = {
+    (Tk_OptionParseProc *) StyleParseProc,
+    StylePrintProc, 
+    (ClientData) NULL
+};
 
 
 static Tk_ConfigSpec configSpecs[] = {
@@ -225,12 +235,9 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-strokewidth", (char *) NULL, (char *) NULL,
 	"1.0", Tk_Offset(PathItem, style.strokeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-        /* It should be nice to have a style that can be reused for 
-         * many items, similar to how 'style' is used in SVG.
     {TK_CONFIG_CUSTOM, "-style", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style),
-	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-        */
+	(char *) NULL, Tk_Offset(PathItem, styleName),
+	TK_CONFIG_DONT_SET_DEFAULT, &styleOption},
     {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
@@ -450,6 +457,105 @@ LinearGradientParseProc(
 
 static char *
 LinearGradientPrintProc(
+    ClientData clientData,		/* Ignored. */
+    Tk_Window tkwin,			/* Window containing canvas widget. */
+    char *widgRec,			/* Pointer to record for item. */
+    int offset,				/* Offset into item. */
+    Tcl_FreeProc **freeProcPtr)		/* Pointer to variable to fill in with
+					 * information about how to reclaim
+					 * storage for return string. */
+{
+    char *result;
+    register char *ptr = (char *) (widgRec + offset);
+
+    result = (*(char **) ptr);
+    if (result == NULL) {
+        result = "";
+    }
+    return result;
+}
+
+
+/*
+ *--------------------------------------------------------------
+ *
+ * StyleParseProc --
+ *
+ *	This procedure is invoked during option processing to handle
+ *	the "-style" option.
+ *
+ * Results:
+ *	A standard Tcl return value.
+ *
+ * Side effects:
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+StyleParseProc(
+    ClientData clientData,		/* some flags.*/
+    Tcl_Interp *interp,			/* Used for reporting errors. */
+    Tk_Window tkwin,			/* Window containing canvas widget. */
+    CONST char *value,			/* Value of option. */
+    char *widgRec,			/* Pointer to record for item. */
+    int offset)				/* Offset into item. */
+{
+    char *old, *new;    
+    register char *ptr = (char *) (widgRec + offset);
+
+    if(value == NULL || *value == 0) {
+        new = NULL;
+    } else {
+    
+        /* 
+         * We only check that the style name exist here and
+         * do the processing after configuration.
+         */
+        if (PathStyleHaveWithName(value) != TCL_OK) {
+            Tcl_AppendResult(interp, "bad value \"", value, 
+                    "\": does not exist",
+                    (char *) NULL);
+            return TCL_ERROR;
+        } else {
+            new = (char *) ckalloc((unsigned) (strlen(value) + 1));
+            strcpy(new, value);
+        }
+    }
+    old = *((char **) ptr);
+    if (old != NULL) {
+        ckfree(old);
+    }
+    
+    /* Note: the _value_ of the address is in turn a pointer to string. */
+    *((char **) ptr) = new;
+    return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * StylePrintProc --
+ *
+ *	This procedure is invoked by the Tk configuration code
+ *	to produce a printable string for the "-style"
+ *	configuration option.
+ *
+ * Results:
+ *	The return value is a string describing the state for
+ *	the item referred to by "widgRec".  In addition, *freeProcPtr
+ *	is filled in with the address of a procedure to call to free
+ *	the result string when it's no longer needed (or NULL to
+ *	indicate that the string doesn't need to be freed).
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static char *
+StylePrintProc(
     ClientData clientData,		/* Ignored. */
     Tk_Window tkwin,			/* Window containing canvas widget. */
     char *widgRec,			/* Pointer to record for item. */
@@ -799,7 +905,9 @@ Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
     return mask;
 }
 
-/*** This starts the canvas item part ***********************************/
+/* 
+ +++ This starts the canvas item part +++ 
+ */
 
 /*
  *--------------------------------------------------------------
@@ -847,6 +955,7 @@ CreatePath(
     pathPtr->pathObjPtr = NULL;
     pathPtr->pathLen = 0;
     pathPtr->normPathObjPtr = NULL;
+    pathPtr->styleName = NULL;
     pathPtr->style.capStyle = CapButt;
     pathPtr->style.joinStyle = JoinRound;
     pathPtr->atomPtr = NULL;
@@ -1049,7 +1158,16 @@ ConfigurePath(
     }
     
     style->strokeOpacity = MAX(0.0, MIN(1.0, style->strokeOpacity));
-    style->fillOpacity   = MAX(0.0, MIN(1.0, style->fillOpacity));    
+    style->fillOpacity   = MAX(0.0, MIN(1.0, style->fillOpacity));
+    
+    /*
+     * If we have got a style name it's options take precedence
+     * over the actual path configuration options. This is how SVG does it.
+     * Good or bad?
+     */
+    if (pathPtr->styleName != NULL) {
+        PathStyleMergeStyles(style, pathPtr->styleName);
+    } 
 
     /*
      * A few of the options require additional processing, such as
@@ -1075,6 +1193,8 @@ ConfigurePath(
 	//ComputePathBbox(canvas, pathPtr);
 	return TCL_OK;
     }
+    
+    /* @@@ Not sure that GC's should be used at all! */
     
     /* Configure the stroke GC. */
     mask = Tk_ConfigStrokePathStyleGC(&gcValues, canvas, itemPtr,
@@ -1153,6 +1273,9 @@ DeletePath(
     if (pathPtr->atomPtr != NULL) {
 	TkPathFreeAtoms(pathPtr->atomPtr);
         pathPtr->atomPtr = NULL;
+    }
+    if (pathPtr->styleName != NULL) {
+        ckfree(pathPtr->styleName);
     }
 }
 

@@ -172,6 +172,9 @@ void		PathStyleInit(Tcl_Interp* interp);
 void		PathLinearGradientInit(Tcl_Interp* interp);
 int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
+int			PathStyleHaveWithName(CONST char *name);
+int			HaveLinearGradientStyleWithName(CONST char *name);
+void		PathStyleMergeStyles(Tk_PathStyle *stylePtr, CONST char *styleName);
 
 
 /*

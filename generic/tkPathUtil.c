@@ -367,22 +367,22 @@ PathGetTclObjFromTMatrix(
     /* @@@ Error handling remains. */
 
     listObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
-    
-    subListObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
-    Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->a));
-    Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->b));
-    Tcl_ListObjAppendElement(interp, listObj, subListObj);
-    
-    subListObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
-    Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->c));
-    Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->d));
-    Tcl_ListObjAppendElement(interp, listObj, subListObj);
-    
-    subListObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
-    Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->tx));
-    Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->ty));
-    Tcl_ListObjAppendElement(interp, listObj, subListObj);
-    
+    if (matrixPtr != NULL) {
+        subListObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
+        Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->a));
+        Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->b));
+        Tcl_ListObjAppendElement(interp, listObj, subListObj);
+        
+        subListObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
+        Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->c));
+        Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->d));
+        Tcl_ListObjAppendElement(interp, listObj, subListObj);
+        
+        subListObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
+        Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->tx));
+        Tcl_ListObjAppendElement(interp, subListObj, Tcl_NewDoubleObj(matrixPtr->ty));
+        Tcl_ListObjAppendElement(interp, listObj, subListObj);
+    }
     *listObjPtrPtr = listObj;
     return TCL_OK;
 }
@@ -432,6 +432,7 @@ PathGenericCmdDispatcher(
     char 		*recordPtr;
     int 		result = TCL_OK;
     int 		index;
+    int			mask;
     Tcl_HashEntry *hPtr;
     Tk_Window tkwin = Tk_MainWindow(interp); /* Should have been the canvas. */
 
@@ -497,7 +498,7 @@ PathGenericCmdDispatcher(
 				Tcl_SetObjResult(interp, resultObjPtr);
 			} else {
 				if (Tk_SetOptions(interp, recordPtr, optionTable, objc - 3, objv + 3, 
-                        tkwin, NULL, NULL) != TCL_OK) {
+                        tkwin, NULL, &mask) != TCL_OK) {
 					return TCL_ERROR;
                 }
 			}
@@ -522,6 +523,19 @@ PathGenericCmdDispatcher(
 			if (recordPtr == NULL) {
 				return TCL_ERROR;
             }
+            
+            if (Tk_InitOptions(interp, recordPtr, optionTable, 
+                    tkwin) != TCL_OK) {
+                ckfree(recordPtr);
+                return TCL_ERROR;
+            }
+            if (Tk_SetOptions(interp, recordPtr, optionTable, 	
+                    objc - 2, objv + 2, tkwin, NULL, &mask) != TCL_OK) {
+                Tk_FreeConfigOptions(recordPtr, optionTable, NULL);
+                ckfree(recordPtr);
+                return TCL_ERROR;
+            }
+
 			hPtr = Tcl_CreateHashEntry(hashTablePtr, str, &isNew);
 			Tcl_SetHashValue(hPtr, recordPtr);
 			Tcl_SetObjResult(interp, Tcl_NewStringObj(str, -1));

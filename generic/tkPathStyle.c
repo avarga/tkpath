@@ -420,28 +420,77 @@ StyleCreateAndConfig(
     /* Fill in defaults */
     Tk_CreatePathStyle(stylePtr);
 
-	if (Tk_InitOptions(interp, (char *) stylePtr, stylePtr->optionTable, 
-            tkwin) != TCL_OK) {
-		ckfree((char *) stylePtr);
-		return NULL;
-	}
-
-	if (Tk_SetOptions(interp, (char *) stylePtr, stylePtr->optionTable, 	
-            objc, objv, tkwin, NULL, NULL) != TCL_OK) {
-		Tk_FreeConfigOptions((char *) stylePtr, stylePtr->optionTable, NULL);
-		ckfree((char *) stylePtr);
-		return NULL;
-	}
-
     return (char *) stylePtr;
 }
 
 static void
 StyleFree(Tcl_Interp *interp, char *recordPtr) 
 {
+    /* @@@ TODO */
     //Tk_DeletePathStyle(display, (Tk_PathStyle *) recordPtr);
     ckfree(recordPtr);
 }
+
+int
+PathStyleHaveWithName(CONST char *name)
+{
+	Tcl_HashEntry *hPtr;
+
+	hPtr = Tcl_FindHashEntry(gStyleHashPtr, name);
+	if (hPtr == NULL) {
+        return TCL_ERROR;
+    } else {
+        return TCL_OK;
+    }
+}
+
+void
+PathStyleMergeStyles(Tk_PathStyle *stylePtr, CONST char *styleName)
+{
+    int mask;
+	Tcl_HashEntry *hPtr;
+    Tk_PathStyle *srcStylePtr;
+
+	hPtr = Tcl_FindHashEntry(gStyleHashPtr, styleName);
+	if (hPtr == NULL) {
+        return TCL_ERROR;
+    }
+    srcStylePtr = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
+
+    /*
+     * Go through all options set in srcStylePtr and merge
+     * these into stylePtr.
+     */
+    mask = srcStylePtr->mask;
+    if (mask & PATH_STYLE_OPTION_FILL) {
+    
+        stylePtr-> = ;
+        XColor *fillColor;
+    }
+    
+
+    return TCL_OK;
+}
+#if 0
+enum {
+                  	= (1L << 0),
+    PATH_STYLE_OPTION_FILLGRADIENT        	= (1L << 1),
+    PATH_STYLE_OPTION_FILLOFFSET        	= (1L << 2),
+    PATH_STYLE_OPTION_FILLOPACITY    		= (1L << 3),
+    PATH_STYLE_OPTION_FILLRULE         		= (1L << 4),
+    PATH_STYLE_OPTION_FILLSTIPPLE      		= (1L << 5),
+    PATH_STYLE_OPTION_MATRIX              	= (1L << 6),
+    PATH_STYLE_OPTION_STROKE           		= (1L << 7),
+    PATH_STYLE_OPTION_STROKEDASHARRAY    	= (1L << 8),
+    PATH_STYLE_OPTION_STROKELINECAP        	= (1L << 9),
+    PATH_STYLE_OPTION_STROKELINEJOIN       	= (1L << 10),
+    PATH_STYLE_OPTION_STROKEMITERLIMIT     	= (1L << 11),
+    PATH_STYLE_OPTION_STROKEOFFSET        	= (1L << 12),
+    PATH_STYLE_OPTION_STROKEOPACITY	       	= (1L << 13),
+    PATH_STYLE_OPTION_STROKESTIPPLE     	= (1L << 14),
+    PATH_STYLE_OPTION_STROKEWIDTH        	= (1L << 15)
+};
+#endif
 
 /*
  *--------------------------------------------------------------
@@ -463,6 +512,7 @@ StyleFree(Tcl_Interp *interp, char *recordPtr)
 void 
 Tk_CreatePathStyle(Tk_PathStyle *style)
 {
+    style->mask = 0;
     style->strokeGC = None;
     style->strokeColor = NULL;
     style->strokeWidth = 1.0;
