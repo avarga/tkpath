@@ -168,7 +168,7 @@ TkPathInit(Drawable d)
 }
 
 void
-TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
+TkPathPushTMatrix(Drawable d, TMatrix *m)
 {
     TMatrix tmp = gCTM;
     
@@ -177,8 +177,8 @@ TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
     gCTM.b  = m->a*tmp.b  + m->b*tmp.d;
     gCTM.c  = m->c*tmp.a  + m->d*tmp.c;
     gCTM.d  = m->c*tmp.b  + m->d*tmp.d;
-    gCTM.tx = m->tx*tmp.a + m->ty*tmp.c;
-    gCTM.ty = m->tx*tmp.b + m->ty*tmp.d;
+    gCTM.tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
+    gCTM.ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
 }
 
 void
@@ -352,6 +352,11 @@ TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
     DeleteObject(SelectObject(hdc, oldHpen));
     DeleteObject(SelectObject(hdc, oldHbrush));
 }
+
+/* TkPathGetCurrentPosition --
+ *
+ * 		Returns the current pen position in untransformed coordinates!
+ */
 
 int
 TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)

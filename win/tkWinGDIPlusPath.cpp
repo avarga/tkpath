@@ -275,6 +275,12 @@ void TkPathInit(Drawable d)
     gPathBuilderPtr = new PathC(d);
 }
 
+void
+TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
+{
+    ???
+}
+
 void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
 {
     gPathBuilderPtr->BeginPath(d, style);
