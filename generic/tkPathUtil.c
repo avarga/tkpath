@@ -724,27 +724,27 @@ PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayPtrPtr)
 /*
  *--------------------------------------------------------------
  *
- * TkPathPolyLineToArea --
+ * PathPolyLineToArea --
  *
- *	Determine whether an open polygon lies entirely inside, entirely
- *	outside, or overlapping a given rectangular area.
- * 	Identical to TkPolygonToArea except that it returns outside (-1)
- *	if completely encompassing the area rect.
+ *		Determine whether an open polygon lies entirely inside, entirely
+ *		outside, or overlapping a given rectangular area.
+ * 		Identical to TkPolygonToArea except that it returns outside (-1)
+ *		if completely encompassing the area rect.
  *
  * Results:
- *	-1 is returned if the polygon given by polyPtr and numPoints
- *	is entirely outside the rectangle given by rectPtr.  0 is
- *	returned if the polygon overlaps the rectangle, and 1 is
- *	returned if the polygon is entirely inside the rectangle.
+ *		-1 is returned if the polygon given by polyPtr and numPoints
+ *		is entirely outside the rectangle given by rectPtr.  0 is
+ *		returned if the polygon overlaps the rectangle, and 1 is
+ *		returned if the polygon is entirely inside the rectangle.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
 
 int
-TkPathPolyLineToArea(
+PathPolyLineToArea(
     double *polyPtr,		/* Points to an array coordinates for
                              * closed polygon:  x0, y0, x1, y1, ...
                              * The polygon may be self-intersecting. */
@@ -770,12 +770,348 @@ TkPathPolyLineToArea(
         return 0;
     }
     for (pPtr = polyPtr+2, count = numPoints-1; count >= 2;
-	    pPtr += 2, count--) {
+            pPtr += 2, count--) {
         if (TkLineToArea(pPtr, pPtr+2, rectPtr) != state) {
             return 0;
         }
     }
     return state;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * PathThickPolygonToPoint --
+ *
+ *		Computes the distance from a given point to a given
+ *		thick polyline (open or closed), in canvas units.
+ *
+ * Results:
+ *		The return value is 0 if the point whose x and y coordinates
+ *		are pointPtr[0] and pointPtr[1] is inside the line.  If the
+ *		point isn't inside the line then the return value is the
+ *		distance from the point to the line.
+ *
+ * Side effects:
+ *		None.
+ *
+ *--------------------------------------------------------------
+ */
+
+double
+PathThickPolygonToPoint(
+    int joinStyle, int capStyle, 
+    double width,
+    int isclosed,
+    double *polyPtr,	/* Points to an array coordinates for
+                         * the polygon:  x0, y0, x1, y1, ...
+                         * The polygon may be self-intersecting. */
+    int numPoints,		/* Total number of points at *polyPtr. */
+    double *pointPtr)	/* Points to coords for point. */
+{
+    int count;
+    int project;
+    int testrounding;
+    int changedMiterToBevel;	/* Non-zero means that a mitered corner
+                                 * had to be treated as beveled after all
+                                 * because the angle was < 11 degrees. */
+    double bestDist;			/* Closest distance between point and
+                                 * any edge in polygon. */
+    double dist, radius;
+    double *coordPtr;
+    double poly[10];
+    
+    bestDist = 1.0e36;
+    radius = width/2.0;
+    project = 0;
+    if (!isclosed) {
+        project = (capStyle == CapProjecting);
+    }
+
+    /*
+     * The overall idea is to iterate through all of the edges of
+     * the line, computing a polygon for each edge and testing the
+     * point against that polygon.  In addition, there are additional
+     * tests to deal with rounded joints and caps.
+     */
+
+    changedMiterToBevel = 0;
+    for (count = numPoints, coordPtr = polyPtr; count >= 2;
+            count--, coordPtr += 2) {
+    
+        /*
+         * If rounding is done around the first point then compute
+         * the distance between the point and the point.
+         */
+        testrounding = 0;
+        if (isclosed) {
+            testrounding = (joinStyle == JoinRound);
+        } else {
+            testrounding = (((capStyle == CapRound) && (count == numPoints))
+                    || ((joinStyle == JoinRound) && (count != numPoints)));
+        }    
+        if (testrounding) {
+            dist = hypot(coordPtr[0] - pointPtr[0], coordPtr[1] - pointPtr[1])
+                    - radius;
+            if (dist <= 0.0) {
+                bestDist = 0.0;
+                goto donepoint;
+            } else if (dist < bestDist) {
+                bestDist = dist;
+            }
+        }
+    
+        /*
+        * Compute the polygonal shape corresponding to this edge,
+        * consisting of two points for the first point of the edge
+        * and two points for the last point of the edge.
+        */
+    
+        if (count == numPoints) {
+            TkGetButtPoints(coordPtr+2, coordPtr, (double) width,
+                    project, poly, poly+2);
+        } else if ((joinStyle == JoinMiter) && !changedMiterToBevel) {
+            poly[0] = poly[6];
+            poly[1] = poly[7];
+            poly[2] = poly[4];
+            poly[3] = poly[5];
+        } else {
+            TkGetButtPoints(coordPtr+2, coordPtr, (double) width, 0,
+                    poly, poly+2);
+    
+            /*
+             * If this line uses beveled joints, then check the distance
+             * to a polygon comprising the last two points of the previous
+             * polygon and the first two from this polygon;  this checks
+             * the wedges that fill the mitered joint.
+             */
+    
+            if ((joinStyle == JoinBevel) || changedMiterToBevel) {
+                poly[8] = poly[0];
+                poly[9] = poly[1];
+                dist = TkPolygonToPoint(poly, 5, pointPtr);
+                if (dist <= 0.0) {
+                    bestDist = 0.0;
+                    goto donepoint;
+                } else if (dist < bestDist) {
+                    bestDist = dist;
+                }
+                changedMiterToBevel = 0;
+            }
+        }
+        if (count == 2) {
+            TkGetButtPoints(coordPtr, coordPtr+2, (double) width,
+                    project, poly+4, poly+6);
+        } else if (joinStyle == JoinMiter) {
+            if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
+                    (double) width, poly+4, poly+6) == 0) {
+                changedMiterToBevel = 1;
+                TkGetButtPoints(coordPtr, coordPtr+2, (double) width,
+                        0, poly+4, poly+6);
+            }
+        } else {
+            TkGetButtPoints(coordPtr, coordPtr+2, (double) width, 0,
+                    poly+4, poly+6);
+        }
+        poly[8] = poly[0];
+        poly[9] = poly[1];
+        dist = TkPolygonToPoint(poly, 5, pointPtr);
+        if (dist <= 0.0) {
+            bestDist = 0.0;
+            goto donepoint;
+        } else if (dist < bestDist) {
+            bestDist = dist;
+        }
+    }
+
+donepoint:
+
+    return bestDist;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * PathPolygonToPointEx --
+ *
+ *		Compute the distance from a point to a polygon. This is
+ *		essentially identical to TkPolygonToPoint with two exceptions:
+ *		1) 	It accepts a fillrule of 'nonzero' or 'evenodd' which
+ *			can make a difference of the path winds or intersects.
+ *			The path MUST be closed in this case, see 'polyPtr' below.
+ *		2)	If the fillRule is -1 it assumes that the polygon is not
+ *			filled. The path MAY be open in this case.
+ *
+ * Results:
+ *		The return value is 0.0 if the point referred to by
+ *		pointPtr is within the polygon referred to by polyPtr
+ *		and numPoints.  Otherwise the return value is the
+ *		distance of the point from the polygon.
+ *
+ * Side effects:
+ *		None.
+ *
+ *--------------------------------------------------------------
+ */
+
+double
+PathPolygonToPointEx(
+    double *polyPtr,	/* Points to an array coordinates for
+                         * the polygon:  x0, y0, x1, y1, ...
+                         * The polygon may be self-intersecting.
+                         * If a fillRule is used the last point
+                         * must duplicate the first one. */
+    int numPoints,		/* Total number of points at *polyPtr. */
+    double *pointPtr,	/* Points to coords for point. */
+    int fillRule)		/* Is -1 for unfilled and possibly open polyline. 
+                         * EvenOddRule for evenodd rule, and
+                         * WindingRule for the nonzero rule. */
+{
+    double bestDist;		/* Closest distance between point and
+                             * any edge in polygon. */
+    int intersections;		/* Number of edges in the polygon that
+                             * intersect a ray extending vertically
+                             * upwards from the point to infinity. */
+    int nonzerorule;		/* As 'intersections' except that it adds
+                             * one if crossing right to left, and
+                             * subtracts one if crossing left to right. */
+    int count;
+    register double *pPtr;
+
+    /*
+     * Iterate through all of the edges in the polygon, updating
+     * bestDist and intersections.
+     *
+     * TRICKY POINT:  when computing intersections, include left
+     * x-coordinate of line within its range, but not y-coordinate.
+     * Otherwise if the point lies exactly below a vertex we'll
+     * count it as two intersections.
+     */
+
+    bestDist = 1.0e36;
+    intersections = 0;
+    nonzerorule = 0;
+
+    for (count = numPoints, pPtr = polyPtr; count > 1; count--, pPtr += 2) {
+        double x, y, dist;
+    
+        /*
+         * Compute the point on the current edge closest to the point
+         * and update the intersection count.  This must be done
+         * separately for vertical edges, horizontal edges, and
+         * other edges.
+         */
+    
+        if (pPtr[2] == pPtr[0]) {
+    
+            /*
+             * Vertical edge.
+             */
+    
+            x = pPtr[0];
+            if (pPtr[1] >= pPtr[3]) {
+                y = MIN(pPtr[1], pointPtr[1]);
+                y = MAX(y, pPtr[3]);
+            } else {
+                y = MIN(pPtr[3], pointPtr[1]);
+                y = MAX(y, pPtr[1]);
+            }
+        } else if (pPtr[3] == pPtr[1]) {
+    
+            /*
+             * Horizontal edge.
+             */
+    
+            y = pPtr[1];
+            if (pPtr[0] >= pPtr[2]) {
+                x = MIN(pPtr[0], pointPtr[0]);
+                x = MAX(x, pPtr[2]);
+                if ((pointPtr[1] < y) && (pointPtr[0] < pPtr[0])
+                        && (pointPtr[0] >= pPtr[2])) {
+                    intersections++;
+                    nonzerorule++;
+                }
+            } else {
+                x = MIN(pPtr[2], pointPtr[0]);
+                x = MAX(x, pPtr[0]);
+                if ((pointPtr[1] < y) && (pointPtr[0] < pPtr[2])
+                        && (pointPtr[0] >= pPtr[0])) {
+                    intersections++;
+                    nonzerorule--;
+                }
+            }
+        } else {
+            double m1, b1, m2, b2;
+            int lower;			/* Non-zero means point below line. */
+    
+            /*
+             * The edge is neither horizontal nor vertical.  Convert the
+             * edge to a line equation of the form y = m1*x + b1.  Then
+             * compute a line perpendicular to this edge but passing
+             * through the point, also in the form y = m2*x + b2.
+             */
+    
+            m1 = (pPtr[3] - pPtr[1])/(pPtr[2] - pPtr[0]);
+            b1 = pPtr[1] - m1*pPtr[0];
+            m2 = -1.0/m1;
+            b2 = pointPtr[1] - m2*pointPtr[0];
+            x = (b2 - b1)/(m1 - m2);
+            y = m1*x + b1;
+            if (pPtr[0] > pPtr[2]) {
+                if (x > pPtr[0]) {
+                    x = pPtr[0];
+                    y = pPtr[1];
+                } else if (x < pPtr[2]) {
+                    x = pPtr[2];
+                    y = pPtr[3];
+                }
+            } else {
+                if (x > pPtr[2]) {
+                    x = pPtr[2];
+                    y = pPtr[3];
+                } else if (x < pPtr[0]) {
+                    x = pPtr[0];
+                    y = pPtr[1];
+                }
+            }
+            lower = (m1*pointPtr[0] + b1) > pointPtr[1];
+            if (lower && (pointPtr[0] >= MIN(pPtr[0], pPtr[2]))
+                    && (pointPtr[0] < MAX(pPtr[0], pPtr[2]))) {
+                intersections++;
+                if (pPtr[0] >= pPtr[2]) {
+                    nonzerorule++;
+                } else {
+                    nonzerorule--;
+                }
+            }
+        }
+    
+        /*
+         * Compute the distance to the closest point, and see if that
+         * is the best distance seen so far.
+         */
+    
+        dist = hypot(pointPtr[0] - x, pointPtr[1] - y);
+        if (dist < bestDist) {
+            bestDist = dist;
+        }
+    }
+
+    /*
+     * We've processed all of the points.  
+     * EvenOddRule: If the number of intersections is odd, 
+     *			the point is inside the polygon.
+     * WindingRule (nonzero): If the number of directed intersections
+     *			are nonzero, then inside.
+     * -1: unfilled polygon, do not check any inside.
+     */
+
+    if ((fillRule == EvenOddRule) && (intersections & 0x1)) {
+        bestDist = 0.0;
+    } else if ((fillRule == WindingRule) && (nonzerorule != 0)) {
+        bestDist = 0.0;
+    }
+    return bestDist;
 }
 
 /*-------------------------------------------------------------------------*/

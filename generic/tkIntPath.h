@@ -177,7 +177,10 @@ int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
 int			PathStyleHaveWithName(CONST char *name);
 int			HaveLinearGradientStyleWithName(CONST char *name);
 void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName);
-int			TkPathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
+int			PathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
+double		PathThickPolygonToPoint(int joinStyle, int capStyle, double width, 
+                    int isclosed, double *polyPtr, int numPoints, double *pointPtr);
+double		PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, int fillRule);
 
 
 /*
