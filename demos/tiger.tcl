@@ -1,3 +1,7 @@
+# Drawing from 
+# 
+# Note that the drawing is presumably copyrighted by someone.
+
 package require tkpath
 
 set t .c_tiger
