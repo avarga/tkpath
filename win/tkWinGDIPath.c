@@ -1,7 +1,7 @@
 /*
  * tkWinGDIPath.c --
  *
- *	This file implements path drawing API's on Windows using the GDI lib.
+ *		This file implements path drawing API's on Windows using the GDI lib.
  *  	GDI is missing several features found in GDI+.
  *
  * Copyright (c) 2005  Mats Bengtsson
@@ -17,7 +17,7 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
-#define Red255FromXColorPtr(xc)    (((xc)->pixel & 0xFF))
+#define Red255FromXColorPtr(xc)    (((xc)->pixel) & 0xFF)
 #define Green255FromXColorPtr(xc)  (((xc)->pixel >> 8) & 0xFF)
 #define Blue255FromXColorPtr(xc)   (((xc)->pixel >> 16) & 0xFF)
 
@@ -28,7 +28,7 @@
  */
 
 static HDC gMemHdc = NULL;
-static TMatrix gCTM;
+static TMatrix gCTM;		/* The context transformation matrix. */
 static int gHaveMatrix;
 
 static void ConcatCTM(TMatrix *m)
@@ -60,7 +60,8 @@ PathCreatePen(Tk_PathStyle *stylePtr)
      * they do not support dashes through the custom style array.
      * This is the two last arguments of ExtCreatePen().
      * Therefore all dashing is switched off for these OSes.
-     * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/pens_6rse.asp */
+     * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/pens_6rse.asp 
+     */
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&os);
@@ -72,7 +73,7 @@ PathCreatePen(Tk_PathStyle *stylePtr)
         widthInt = 1; 	// @@@ ????
     }
 
-    /* Set the line dash patttern in the current graphics state. */
+    /* Set the line dash pattern in the current graphics state. */
     dash = &(stylePtr->dash);
     if (win2000atleast && (dash != NULL) && (dash->number != 0)) {
         useDash = 1;
@@ -80,7 +81,7 @@ PathCreatePen(Tk_PathStyle *stylePtr)
 
     /* "A cosmetic pen can only be a single pixel wide and must be a solid color, 
      * but cosmetic pens are generally faster than geometric pens." 
-     * "The width of a cosmetic pen is always 1." */
+     */
     if ((widthInt <= 1) && !useDash) {
         penstyle = PS_COSMETIC;
     } else {
@@ -105,7 +106,7 @@ PathCreatePen(Tk_PathStyle *stylePtr)
         penstyle |= PS_SOLID;
     }
     if (stylePtr->strokeStipple != None) {
-        // unimplemented
+        /* @@@ TODO */
     }
     if (penstyle & PS_COSMETIC) {
         hpen = CreatePen(penstyle, widthInt, stylePtr->strokeColor->pixel);
@@ -155,7 +156,7 @@ PathCreateBrush(Tk_PathStyle *style)
         return NULL;
     }
     if (style->fillStipple != None) {
-        // unimplemented
+        /* @@@ TODO */
     }
 }
 
@@ -180,6 +181,7 @@ TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr)
 {
     BeginPath(gMemHdc);
     if (stylePtr->matrixPtr != NULL) {
+        gCTM = kUnitTMatrix;
         ConcatCTM(stylePtr->matrixPtr);
         gHaveMatrix = 1;
     } else {
@@ -215,29 +217,27 @@ TkPathLinesTo(Drawable d, double *pts, int n)
 void
 TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
 {
-    double cx, cy;
-    double x31, y31, x32, y32;
-    POINT pt;
+    POINT ptc;		/* Current point. */
+    POINT pts[3];	/* Control points. */
     
-    GetCurrentPositionEx(gMemHdc, &pt);
-    cx = pt.x;
-    cy = pt.y;
+    /* Current in transformed coords. */
+    GetCurrentPositionEx(gMemHdc, &ptc);
 
-    /* Need to get current position in untransformed coordinates! */
     if (gHaveMatrix) {
-        TMatrix m;        
-        PathInverseTMatrix(&gCTM, &m);
-        PathApplyTMatrix(&m, &cx, &cy);
-    }
+        PathApplyTMatrix(&gCTM, &ctrlX, &ctrlY);
+        PathApplyTMatrix(&gCTM, &x, &y);
+    }    
 
     /* Conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg) */
     /* Unchecked! Must be an approximation! */
-    x31 = cx + (ctrlX - cx) * 2 / 3;
-    y31 = cy + (ctrlY - cy) * 2 / 3;
-    x32 = ctrlX + (x - ctrlX) / 3;
-    y32 = ctrlY + (y - ctrlY) / 3;
 
-    TkPathCurveTo(d, x31, y31, x32, y32, x, y);
+    pts[0].x = (LONG) (ptc.x + (ctrlX - ptc.x) * 2 / 3 + 0.5);
+    pts[0].y = (LONG) (ptc.y + (ctrlY - ptc.y) * 2 / 3 + 0.5);
+    pts[1].x = (LONG) (ctrlX + (x - ctrlX) / 3 + 0.5);
+    pts[1].y = (LONG) (ctrlY + (y - ctrlY) / 3 + 0.5);
+    pts[2].x = (LONG) (x + 0.5);
+    pts[2].y = (LONG) (y + 0.5);
+    PolyBezierTo(gMemHdc, pts, 3);
 }
 
 void
@@ -267,91 +267,6 @@ TkPathArcTo(Drawable d,
         char largeArcFlag, char sweepFlag, double x2, double y2)
 {
     TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x2, y2);
-}
-
-/* helper for Arcto : */
-static double
-CalcVectorAngle(double ux, double uy, double vx, double vy)
-{
-    double ta = atan2(uy, ux);
-    double tb = atan2(vy, vx);
-    if (tb >= ta) {
-        return tb-ta;
-    }
-    return 2.0*PI - (ta-tb);
-}
-
-/* Unused */
-void
-TkPathArcTo2(Drawable d,
-        double rx, double ry, 
-        double phiDegrees, 	/* The rotation angle in degrees! */
-        char largeArcFlag, char sweepFlag, double x2, double y2)
-{
-    int result;
-    int i, segments;
-    double x1, y1;
-    double cx, cy;
-    double theta1, dtheta, phi;
-    double sinPhi, cosPhi;
-    double delta, t;
-    PathPoint pt;
-    
-    TkPathGetCurrentPosition(d, &pt);
-    x1 = pt.x;
-    y1 = pt.y;
-    
-    /* In case of transform need to have the original current point. */
-    
-
-    /* All angles except phi is in radians! */
-    phi = phiDegrees * DEGREES_TO_RADIANS;
-    
-    /* Check return value and take action. */
-    result = EndpointToCentralArcParameters(x1, y1,
-            x2, y2, rx, ry, phi, largeArcFlag, sweepFlag,
-            &cx, &cy, &rx, &ry,
-            &theta1, &dtheta);
-	if (result == kPathArcSkip) {
-		return;
-	} else if (result == kPathArcLine) {
-		TkPathLineTo(d, x2, y2);
-		return;
-    }
-    sinPhi = sin(phi);
-    cosPhi = cos(phi);
-    
-    /* Convert into cubic bezier segments <= 90deg (from mozilla/svg; not checked) */
-    segments = (int) ceil(fabs(dtheta/(PI/2.0)));
-    delta = dtheta/segments;
-    t = 8.0/3.0 * sin(delta/4.0) * sin(delta/4.0) / sin(delta/2.0);
-    
-    for (i = 0; i < segments; ++i) {
-        double cosTheta1 = cos(theta1);
-        double sinTheta1 = sin(theta1);
-        double theta2 = theta1 + delta;
-        double cosTheta2 = cos(theta2);
-        double sinTheta2 = sin(theta2);
-        
-        /* a) calculate endpoint of the segment: */
-        double xe = cosPhi * rx*cosTheta2 - sinPhi * ry*sinTheta2 + cx;
-        double ye = sinPhi * rx*cosTheta2 + cosPhi * ry*sinTheta2 + cy;
-    
-        /* b) calculate gradients at start/end points of segment: */
-        double dx1 = t * ( - cosPhi * rx*sinTheta1 - sinPhi * ry*cosTheta1);
-        double dy1 = t * ( - sinPhi * rx*sinTheta1 + cosPhi * ry*cosTheta1);
-        
-        double dxe = t * ( cosPhi * rx*sinTheta2 + sinPhi * ry*cosTheta2);
-        double dye = t * ( sinPhi * rx*sinTheta2 - cosPhi * ry*cosTheta2);
-    
-        /* c) draw the cubic bezier: */
-        TkPathCurveTo(d, x1+dx1, y1+dy1, xe+dxe, ye+dye, xe, ye);
-
-        /* do next segment */
-        theta1 = theta2;
-        x1 = (float) xe;
-        y1 = (float) ye;
-    }
 }
 
 void
@@ -470,7 +385,7 @@ TkPathDrawingDestroysPath(void)
 static void
 TwoStopLinearGradient(
         Drawable d, 
-        PathRect *bbox, /* The items bounding box. */
+        PathRect *bbox, /* The items bounding box in untransformed coords. */
         PathRect *line,	/* The relative line that defines the
                          * gradient transition line. 
                          * We paint perp to this line. */
@@ -498,7 +413,8 @@ TwoStopLinearGradient(
     p2y = bbox->y1 + (bbox->y2 - bbox->y1)*line->y2;
 
     /*
-     * Vectors: p1 = start transition vector
+     * Vectors: 
+     *		p1 = start transition vector
      *		p2 = end transition vector
      *		c  = center bbox
      *		a  = P2 - P1
@@ -524,6 +440,21 @@ TwoStopLinearGradient(
     q1y = p1y + ax*diag/alen;
     q2x = p1x + ay*diag/alen;
     q2y = p1y - ax*diag/alen;
+    
+    /*
+     * So far everything has taken place in the untransformed
+     * coordinate system.
+     */     
+    if (gHaveMatrix) {
+        /*
+         * This is not a 100% foolproof solution.
+         */
+        PathApplyTMatrix(&gCTM, &q1x, &q1y);
+        PathApplyTMatrix(&gCTM, &q2x, &q2y);
+        PathApplyTMatrix(&gCTM, &ax, &ay);
+        a2 = ax*ax + ay*ay;
+        alen = sqrt(a2);
+    }    
     
     /* Color differences. Opacity missing in GDI. */
     rgba1[0] = Red255FromXColorPtr(color1);
@@ -740,9 +671,9 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
         }
     } else if (fillPtr->method == kPathGradientMethodRepeat) {
     
-        /* Unimplemented. */
+        /* @@@ TODO */
     } else if (fillPtr->method == kPathGradientMethodReflect) {
     
-        /* Unimplemented. */
+        /* @@@ TODO */
     }
 }

@@ -356,7 +356,7 @@
 			isa = PBXFileReference;
 			path = tkMacOSXPath.c;
 			refType = 4;
-			tabWidth = 8;
+			tabWidth = 4;
 			usesTabs = 0;
 		};
 		9AA1ECE7077FF68100A80065 = {

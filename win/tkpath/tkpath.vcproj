@@ -34,7 +34,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="tclstub84.lib tkstub84.lib"
-				OutputFile="$(OutDir)/tkpath01.dll"
+				OutputFile="$(OutDir)/tkpathgdi01.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="C:\Tcl\lib"
 				GenerateDebugInformation="TRUE"

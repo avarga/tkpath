@@ -133,4 +133,27 @@ Tkpath_SafeInit(
     return Tkpath_Init(interp);
 }
 
+/*
+ * On Windows we've got two different libs for GDI and GDI+ named differently.
+ */
+#ifdef _WIN32
+    __declspec(dllexport)
+
+int 
+Tkpathgdi_Init(
+    Tcl_Interp *interp)		/* Tcl interpreter. */
+{
+    return Tkpath_Init(interp);
+}
+
+    __declspec(dllexport)
+
+int 
+Tkpathgdiplus_Init(
+    Tcl_Interp *interp)		/* Tcl interpreter. */
+{
+    return Tkpath_Init(interp);
+}
+#endif
+
 /*--------------------------------------------------------------------------------*/

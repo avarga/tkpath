@@ -139,7 +139,7 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
     
     penPtr = new Pen(MakeGDIPlusColor(style->strokeColor, style->strokeOpacity), (float) style->strokeWidth);
 
-	cap = static_cast<LineCap>(TableLookup(LineCapStyleLookupTable, 4, style->capStyle));
+	cap     = static_cast<LineCap>(TableLookup(LineCapStyleLookupTable, 4, style->capStyle));
     dashCap = static_cast<DashCap>(TableLookup(DashCapStyleLookupTable, 4, style->capStyle));
     penPtr->SetLineCap(cap, cap, dashCap);
     
@@ -161,7 +161,7 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
         penPtr->SetDashOffset((float) style->offset);
     }    
     if (style->strokeStipple != None) {
-        // todo
+        /* @@@ TODO */
     }
     return penPtr;
 }
@@ -292,7 +292,7 @@ void TkPathLineTo(Drawable d, double x, double y)
 
 void TkPathLinesTo(Drawable d, double *pts, int n)
 {
-    // TODO
+    /* @@@ TODO */
 }
 
 void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
@@ -334,7 +334,7 @@ TkPathClosePath(Drawable d)
 void
 TkPathEndPath(Drawable d)
 {
-    // empty ?
+    // @@@ empty ?
 }
 
 void

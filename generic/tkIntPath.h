@@ -29,6 +29,8 @@ extern "C" {
 #define RADIANS_TO_DEGREES (180.0/PI)
 
 
+static const TMatrix kUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+
 /* These MUST be kept in sync with methodST ! */
 enum {
     kPathGradientMethodPad = 		0L,
