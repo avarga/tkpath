@@ -36,31 +36,15 @@ typedef struct LinearGradientStyle {
     LinearGradientFill fill;
 } LinearGradientStyle;
 
-/*
- * For dispatching commands.
- */
-
-static CONST char *gradientCmds[] = {
-    "cget", "configure", "create", "delete", "names",
-    (char *) NULL
-};
-
-enum {
-	kPathGradientCmdCget						= 0L,
-    kPathGradientCmdConfigure,
-    kPathGradientCmdCreate,
-    kPathGradientCmdDelete,
-    kPathGradientCmdNames
-};
 
 
-static int	FillInTransitionFromRectObj(Tcl_Interp *interp, 
-                    LinearGradientStyle *gradientStylePtr, Tcl_Obj *rectObj);
+static int			FillInTransitionFromRectObj(Tcl_Interp *interp, 
+                            LinearGradientStyle *gradientStylePtr, Tcl_Obj *rectObj);
 
-int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
-                int objc, Tcl_Obj* CONST objv[]);
-static LinearGradientStyle *	LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
-static void						LinGradientFree(Tcl_Interp *interp, char *recordPtr);
+int 				LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
+                            int objc, Tcl_Obj* CONST objv[]);
+static char *		LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
+static void			LinGradientFree(Tcl_Interp *interp, char *recordPtr);
 
 
 /* Cleanup all this when it works!!!!!!!!!!!!!!!!!!! */
@@ -468,7 +452,7 @@ LinearGradientCmd(
             LinGradientCreateAndConfig, NULL, LinGradientFree);
 }
 
-static LinearGradientStyle *
+static char *
 LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[])
 {
 	LinearGradientStyle *gradientStylePtr;
@@ -486,7 +470,7 @@ LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CO
     /* Set default transition vector in case not set. */
     FillInTransitionFromRectObj(interp, gradientStylePtr, NULL);
 
-	return gradientStylePtr;
+	return (char *) gradientStylePtr;
 }
 
 static void

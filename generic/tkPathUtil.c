@@ -286,14 +286,15 @@ PathInverseTMatrix(TMatrix *m, TMatrix *mi)
 int
 PathGetTMatrix(
         Tcl_Interp* interp, 
-        char *list, 			/* Object containg the lists for the matrix. */
+        CONST char *list, 			/* Object containg the lists for the matrix. */
         TMatrix *matrixPtr)		/* Where to store TMatrix corresponding
                                  * to list. Must be allocated! */
 {
-    char **argv = NULL, **rowArgv = NULL;
+    CONST char **argv = NULL;
+    CONST char **rowArgv = NULL;
     int i, j, argc, rowArgc;
-    double tmp[3][2];
     int result = TCL_OK;
+    double tmp[3][2];
 
     /* Check matrix consistency. */
     if (Tcl_SplitList(interp, list, &argc, &argv) != TCL_OK) {
@@ -634,6 +635,147 @@ ObjectIsEmpty(
     }
     Tcl_GetStringFromObj(objPtr, &length);
     return (length == 0);
+}
+
+static int
+DashConvertToFloats (
+    float *d,		/* The resulting dashes. (Out) */	
+    CONST char *p,	/* A string of "_-,." */
+    size_t n,
+    double width)
+{
+    int result = 0;
+    int size;
+
+    if (n < 0) {
+        n = strlen(p);
+    }
+    while (n-- && *p) {
+        switch (*p++) {
+            case ' ':
+                if (result) {
+                    if (d) {
+                        d[-1] += (float) (width) + 1.0;
+                    }
+                    continue;
+                } else {
+                    return 0;
+                }
+                break;
+            case '_':
+                size = 8;
+                break;
+            case '-':
+                size = 6;
+                break;
+            case ',':
+                size = 4;
+                break;
+            case '.':
+                size = 2;
+                break;
+            default:
+                return -1;
+        }
+        if (d) {
+            *d++ = size * (float) width;
+            *d++ = 4 * (float) width;
+        }
+        result += 2;
+    }
+    return result;
+}
+
+void
+PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayPtrPtr)
+{    
+    char *pt;
+    int	i;
+    float *arrPtr = NULL;
+
+    if (dash->number == 0) {
+        *len = 0;
+    } else if (dash->number < 0) {
+        
+        /* Any of . , - _ verbatim. */
+        i = -1*dash->number;
+        pt = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
+        arrPtr = (float *) ckalloc(2*i*sizeof(float));
+        i = DashConvertToFloats(arrPtr, pt, i, width);
+        if (i < 0) {
+            /* This should never happen since syntax already checked. */
+            *len = 0;
+        } else {
+            *len = i;
+        }
+    } else {
+        pt = (dash->number > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
+        *len = dash->number;
+        arrPtr = (float *) ckalloc(dash->number * sizeof(float));
+        for (i = 0; i < dash->number; i++) {
+        
+            /* We could optionally multiply with 'width' here. */
+            arrPtr[i] = pt[i];
+        }
+    }
+    *arrayPtrPtr = arrPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkPathPolyLineToArea --
+ *
+ *	Determine whether an open polygon lies entirely inside, entirely
+ *	outside, or overlapping a given rectangular area.
+ * 	Identical to TkPolygonToArea except that it returns outside (-1)
+ *	if completely encompassing the area rect.
+ *
+ * Results:
+ *	-1 is returned if the polygon given by polyPtr and numPoints
+ *	is entirely outside the rectangle given by rectPtr.  0 is
+ *	returned if the polygon overlaps the rectangle, and 1 is
+ *	returned if the polygon is entirely inside the rectangle.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkPathPolyLineToArea(
+    double *polyPtr,		/* Points to an array coordinates for
+                             * closed polygon:  x0, y0, x1, y1, ...
+                             * The polygon may be self-intersecting. */
+    int numPoints,			/* Total number of points at *polyPtr. */
+    register double *rectPtr)	/* Points to coords for rectangle, in the
+                             * order x1, y1, x2, y2.  X1 and y1 must
+                             * be lower-left corner. */
+{
+    int state;				/* State of all edges seen so far (-1 means
+                             * outside, 1 means inside, won't ever be
+                             * 0). */
+    int count;
+    register double *pPtr;
+
+    /*
+     * Iterate over all of the edges of the polygon and test them
+     * against the rectangle.  Can quit as soon as the state becomes
+     * "intersecting".
+     */
+
+    state = TkLineToArea(polyPtr, polyPtr+2, rectPtr);
+    if (state == 0) {
+        return 0;
+    }
+    for (pPtr = polyPtr+2, count = numPoints-1; count >= 2;
+	    pPtr += 2, count--) {
+        if (TkLineToArea(pPtr, pPtr+2, rectPtr) != state) {
+            return 0;
+        }
+    }
+    return state;
 }
 
 /*-------------------------------------------------------------------------*/

@@ -369,7 +369,7 @@
 			name = tkCanvPath.c;
 			path = /Users/matben/C/cvs/tkpath/generic/tkCanvPath.c;
 			refType = 0;
-			tabWidth = 8;
+			tabWidth = 4;
 			usesTabs = 0;
 		};
 		9AA1ECE9077FF7BF00A80065 = {

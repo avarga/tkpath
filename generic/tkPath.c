@@ -309,6 +309,8 @@ NewCloseAtom(double x, double y)
     atomPtr = (PathAtom *) closeAtomPtr;
     atomPtr->type = PATH_ATOM_Z;
     atomPtr->nextPtr = NULL;
+    closeAtomPtr->x = x;
+    closeAtomPtr->y = y;
     return atomPtr;
 }
 
@@ -922,92 +924,6 @@ TkPathArcToUsingBezier(Drawable d,
         y1 = (float) ye;
     }
 }
-
-static int
-DashConvertToFloats (
-    float *d,		/* The resulting dashes. (Out) */	
-    CONST char *p,	/* A string of "_-,." */
-    size_t n,
-    double width)
-{
-    int result = 0;
-    int size;
-
-    if (n < 0) {
-	n = strlen(p);
-    }
-    while (n-- && *p) {
-	switch (*p++) {
-	    case ' ':
-		if (result) {
-		    if (d) {
-			d[-1] += (float) (width) + 1.0;
-		    }
-		    continue;
-		} else {
-		    return 0;
-		}
-		break;
-	    case '_':
-		size = 8;
-		break;
-	    case '-':
-		size = 6;
-		break;
-	    case ',':
-		size = 4;
-		break;
-	    case '.':
-		size = 2;
-		break;
-	    default:
-		return -1;
-	}
-	if (d) {
-	    *d++ = size * (float) width;
-	    *d++ = 4 * (float) width;
-	}
-	result += 2;
-    }
-    return result;
-}
-
-void
-PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayPtrPtr)
-{    
-    char *pt;
-    int	i;
-    float *arrPtr = NULL;
-
-    if (dash->number == 0) {
-        *len = 0;
-    } else if (dash->number < 0) {
-        
-        /* Any of . , - _ verbatim. */
-        i = -1*dash->number;
-        pt = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-        arrPtr = (float *) ckalloc(2*i*sizeof(float));
-        i = DashConvertToFloats(arrPtr, pt, i, width);
-        if (i < 0) {
-            /* This should never happen since syntax already checked. */
-            *len = 0;
-        } else {
-            *len = i;
-        }
-    } else {
-        pt = (dash->number > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-        *len = dash->number;
-        arrPtr = (float *) ckalloc(dash->number * sizeof(float));
-        for (i = 0; i < dash->number; i++) {
-        
-            /* We could optionally multiply with 'width' here. */
-            arrPtr[i] = pt[i];
-        }
-    }
-    *arrayPtrPtr = arrPtr;
-}
-
-
 
 /*-----------------------------------------------------------------------*/
 

@@ -17,7 +17,13 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
-static double gStrokeThicknessLimit = 4.0;
+static double kStrokeThicknessLimit = 4.0;
+
+static int kNumSegmentsCurveTo = 12;
+static int kNumSegmentsQuadBezier = 12;
+
+#define MAX_NUM_STATIC_SEGMENTS  2000
+static double staticSpace[2*MAX_NUM_STATIC_SEGMENTS];
 
 /* Values for the PathItem's flag. */
 
@@ -44,6 +50,8 @@ typedef struct PathItem  {
                                  * Untransformed coordinates. */
     PathRect totalBbox;		/* Bounding box including stroke.
                                  * Untransformed coordinates. */
+    int maxNumSegments;		/* Max number of straight segments (for subpath)
+                                 * needed for Area and Point functions. */
     long flags;			/* Various flags, see enum. */
 } PathItem;
 
@@ -52,33 +60,34 @@ typedef struct PathItem  {
  * Prototypes for procedures defined in this file:
  */
 
-static void	ComputePathBbox(Tk_Canvas canvas, PathItem *pathPtr);
-static int	ConfigurePath(Tcl_Interp *interp, Tk_Canvas canvas, 
+static void		ComputePathBbox(Tk_Canvas canvas, PathItem *pathPtr);
+static int		ConfigurePath(Tcl_Interp *interp, Tk_Canvas canvas, 
                         Tk_Item *itemPtr, int objc,
                         Tcl_Obj *CONST objv[], int flags);
-static int	CreatePath(Tcl_Interp *interp,
+static int		CreatePath(Tcl_Interp *interp,
                         Tk_Canvas canvas, struct Tk_Item *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static void	DeletePath(Tk_Canvas canvas,
+static void		DeletePath(Tk_Canvas canvas,
                         Tk_Item *itemPtr, Display *display);
-static void	DisplayPath(Tk_Canvas canvas,
+static void		DisplayPath(Tk_Canvas canvas,
                         Tk_Item *itemPtr, Display *display, Drawable dst,
                         int x, int y, int width, int height);
-static int	PathCoords(Tcl_Interp *interp,
+static int		PathCoords(Tcl_Interp *interp,
                         Tk_Canvas canvas, Tk_Item *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static int	PathToArea(Tk_Canvas canvas,
+static int		PathToArea(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double *rectPtr);
 static double	PathToPoint(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double *coordPtr);
-static int	PathToPostscript(Tcl_Interp *interp,
+static int		PathToPostscript(Tcl_Interp *interp,
                         Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
-static void	ScalePath(Tk_Canvas canvas,
+static void		ScalePath(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double originX, double originY,
                         double scaleX, double scaleY);
-static void	TranslatePath(Tk_Canvas canvas,
+static void		TranslatePath(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double deltaX, double deltaY);
 
+/* For processing custom options. */
 
 static int	FillRuleParseProc(ClientData clientData,
                         Tcl_Interp *interp, Tk_Window tkwin,
@@ -101,8 +110,12 @@ static int	StyleParseProc(ClientData clientData,
 static char *	StylePrintProc(ClientData clientData, Tk_Window tkwin, 
                         char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 
+/* Support functions. */
 
-/* From tkPathUtilCopy.c */
+static int	GetSubpathMaxNumSegments(PathAtom *atomPtr);
+
+
+/* From tkPathCopyTk.c */
 extern int	PathTk_CanvasTagsParseProc(ClientData clientData,
                         Tcl_Interp *interp, Tk_Window tkwin,
                         CONST char *value, char *recordPtr, int offset);
@@ -250,8 +263,8 @@ static Tk_ConfigSpec configSpecs[] = {
  */
 
 Tk_ItemType tkPathType = {
-    "path",				/* name */
-    sizeof(PathItem),			/* itemSize */
+    "path",					/* name */
+    sizeof(PathItem),		/* itemSize */
     CreatePath,				/* createProc */
     configSpecs,			/* configSpecs */
     ConfigurePath,			/* configureProc */
@@ -261,7 +274,7 @@ Tk_ItemType tkPathType = {
     TK_CONFIG_OBJS,			/* flags */
     PathToPoint,			/* pointProc */
     PathToArea,				/* areaProc */
-    PathToPostscript,			/* postscriptProc */
+    PathToPostscript,		/* postscriptProc */
     ScalePath,				/* scaleProc */
     TranslatePath,			/* translateProc */
     (Tk_ItemIndexProc *) NULL,		/* indexProc */
@@ -269,16 +282,18 @@ Tk_ItemType tkPathType = {
     (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
     (Tk_ItemInsertProc *) NULL,		/* insertProc */
     (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL,		/* nextPtr */
+    (Tk_ItemType *) NULL,	/* nextPtr */
 };
 
 /* This one seems missing. */
+#if 0
 static Tcl_Interp *
 Tk_CanvasInterp(Tk_Canvas canvas)
 {
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
     return canvasPtr->interp;
 }
+#endif
 
 /*
  * A bunch of custum option processing functions needed.
@@ -888,19 +903,18 @@ Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
     int mask = 0;
     XColor *color;
     Pixmap stipple;
-    Tk_State state = item->state;
 
     color = style->fillColor;
     stipple = style->fillStipple;
 
     if (color != NULL) {
-	gcValues->foreground = color->pixel;
-	mask = GCForeground;
-	if (stipple != None) {
-	    gcValues->stipple = stipple;
-	    gcValues->fill_style = FillStippled;
-	    mask |= GCStipple|GCFillStyle;
-	}
+        gcValues->foreground = color->pixel;
+        mask = GCForeground;
+        if (stipple != None) {
+            gcValues->stipple = stipple;
+            gcValues->fill_style = FillStippled;
+            mask |= GCStipple|GCFillStyle;
+        }
     }
     return mask;
 }
@@ -940,7 +954,7 @@ CreatePath(
     PathItem *pathPtr = (PathItem *) itemPtr;
 
     if (objc == 0) {
-	Tcl_Panic("canvas did not pass any coords\n");
+        Tcl_Panic("canvas did not pass any coords\n");
     }
 
     /*
@@ -959,6 +973,7 @@ CreatePath(
     pathPtr->atomPtr = NULL;
     pathPtr->bareBbox = NewEmptyPathRect();
     pathPtr->totalBbox = NewEmptyPathRect();
+    pathPtr->maxNumSegments = 0;
     pathPtr->flags = 0L;
     
     /* Forces a computation of the normalized path in PathCoords. */
@@ -969,10 +984,10 @@ CreatePath(
      */
 
     if (PathCoords(interp, canvas, itemPtr, 1, objv) != TCL_OK) {
-	goto error;
+        goto error;
     }
     if (ConfigurePath(interp, canvas, itemPtr, objc-1, objv+1, 0) == TCL_OK) {
-	return TCL_OK;
+        return TCL_OK;
     }
 
     error:
@@ -1037,11 +1052,12 @@ PathCoords(
             pathPtr->pathObjPtr = objv[0];
             Tcl_IncrRefCount(pathPtr->pathObjPtr);
             ComputePathBbox(canvas, pathPtr);
+            pathPtr->maxNumSegments = GetSubpathMaxNumSegments(atomPtr);
         }
         return result;
     } else {
-	Tcl_WrongNumArgs(interp, 0, objv, "pathName coords id ?pathSpec?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 0, objv, "pathName coords id ?pathSpec?");
+        return TCL_ERROR;
     }
 }
 
@@ -1182,8 +1198,8 @@ ConfigurePath(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (CONST char **) objv, (char *) pathPtr, flags|TK_CONFIG_OBJS)) {
-	return TCL_ERROR;
+            (CONST char **) objv, (char *) pathPtr, flags|TK_CONFIG_OBJS)) {
+        return TCL_ERROR;
     }
     
     style->strokeOpacity = MAX(0.0, MIN(1.0, style->strokeOpacity));
@@ -1239,20 +1255,20 @@ ConfigurePath(
 	newGC = None;
     }
     if (pathPtr->style.strokeGC != None) {
-	Tk_FreeGC(Tk_Display(tkwin), pathPtr->style.strokeGC);
+        Tk_FreeGC(Tk_Display(tkwin), pathPtr->style.strokeGC);
     }
     pathPtr->style.strokeGC = newGC;
 
     /* Configure the fill GC. */
     mask = Tk_ConfigFillPathStyleGC(&gcValues, canvas, itemPtr,
-	    &(pathPtr->style));
+            &(pathPtr->style));
     if (mask) {
-	newGC = Tk_GetGC(tkwin, mask, &gcValues);
+        newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = None;
+        newGC = None;
     }
     if (pathPtr->style.fillGC != None) {
-	Tk_FreeGC(Tk_Display(tkwin), pathPtr->style.fillGC);
+        Tk_FreeGC(Tk_Display(tkwin), pathPtr->style.fillGC);
     }
     pathPtr->style.fillGC = newGC;
 
@@ -1317,6 +1333,7 @@ DeletePath(
  *	Gets an overestimate of the bounding box rectangle of
  * 	an arc defined using central parametrization assuming
  *	zero stroke width.
+ * 	Untransformed coordinates!
  *	Note: 1) all angles clockwise direction!
  *	      2) all angles in radians.
  *
@@ -1430,6 +1447,7 @@ GetBareArcBbox(double cx, double cy, double rx, double ry,
  *
  *	Gets an overestimate of the bounding box rectangle of
  * 	a path assuming zero stroke width.
+ * 	Untransformed coordinates!
  *
  * Results:
  *	A PathRect.
@@ -1489,6 +1507,8 @@ GetBarePathBbox(PathAtom *atomPtr)
                     IncludePointInRect(&r, arcRect.x1, arcRect.y1);
                     IncludePointInRect(&r, arcRect.x2, arcRect.y2);
                 }
+                currentX = arc->x;
+                currentY = arc->y;
                 break;
             }
             case PATH_ATOM_Q: {
@@ -1543,7 +1563,7 @@ GetBarePathBbox(PathAtom *atomPtr)
  * ComputePathBbox --
  *
  *	This procedure is invoked to compute the bounding box of
- *	all the pixels that may be drawn as part of a line.
+ *	all the pixels that may be drawn as part of a path.
  *
  * Results:
  *	None.
@@ -1565,12 +1585,12 @@ ComputePathBbox(
     PathRect rect;
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+        state = ((TkCanvas *)canvas)->canvas_state;
     }
     if (pathPtr->pathObjPtr == NULL || (pathPtr->pathLen < 4) || (state == TK_STATE_HIDDEN)) {
         pathPtr->header.x1 = pathPtr->header.x2 =
         pathPtr->header.y1 = pathPtr->header.y2 = -1;
-	return;
+        return;
     }
     
     /*
@@ -1697,6 +1717,7 @@ PathToPoint(
     Tk_Item *itemPtr,		/* Item to check against point. */
     double *pointPtr)		/* Pointer to x and y coordinates. */
 {
+#if 0
     Tk_State state = itemPtr->state;
     PathItem *pathPtr = (PathItem *) itemPtr;
     double *coordPtr, *linePoints;
@@ -1708,12 +1729,14 @@ PathToPoint(
     bestDist = 1.0e36;
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+        state = ((TkCanvas *)canvas)->canvas_state;
     }
 
-    /* TODO.................. */
+    /* @@@ TODO.................. */
     
     return bestDist;
+#endif
+    return 0.0;
 }
 
 /**********************************/
@@ -1776,6 +1799,116 @@ TkLineToPoint2(end1Ptr, end2Ptr, pointPtr)
     }
 }
 
+/* 
+ * Get maximum number of segments needed to describe path. 
+ * Needed to see if we can use static space or need to allocate more.
+ */
+
+static int
+GetArcNumSegments(double currentX, double currentY, ArcAtom *arc)
+{
+    int result;
+    int ntheta, nlength;
+    int numSteps;			/* Number of curve points to
+					 * generate.  */
+    double cx, cy, rx, ry;
+    double theta1, dtheta;
+
+    result = EndpointToCentralArcParameters(
+            currentX, currentY,
+            arc->x, arc->y, arc->radX, arc->radY, 
+            DEGREES_TO_RADIANS * arc->angle, 
+            arc->largeArcFlag, arc->sweepFlag,
+            &cx, &cy, &rx, &ry,
+            &theta1, &dtheta);
+    if (result == kPathArcLine) {
+        return 2;
+    } else if (result == kPathArcSkip) {
+        return 0;
+    }
+
+    /* Estimate the number of steps needed. 
+     * Max 10 degrees or length 50.
+     */
+    ntheta = (int) (dtheta/5.0 + 0.5);
+    nlength = (int) (0.5*(rx + ry)*dtheta/50 + 0.5);
+    numSteps = MAX(4, MAX(ntheta, nlength));;
+    return numSteps;
+}
+
+static int
+GetSubpathMaxNumSegments(PathAtom *atomPtr)
+{
+    int			num = 0;
+    int 		maxNumSegments = 0;
+    int 		first = 1;
+    double 		currentX = 0.0, currentY = 0.0;
+    double 		startX = 0.0, startY = 0.0;
+    MoveToAtom 	*move;
+    LineToAtom 	*line;
+    ArcAtom 	*arc;
+    QuadBezierAtom *quad;
+    CurveToAtom *curve;
+    
+    while (atomPtr != NULL) {
+    
+        switch (atomPtr->type) {
+            case PATH_ATOM_M: {
+                move = (MoveToAtom *) atomPtr;
+                if (first) {
+                    num = 0;
+                } else {
+                    if (num > maxNumSegments) {
+                        maxNumSegments = num;
+                    }
+                }
+                num++;
+                currentX = move->x;
+                currentY = move->y;
+                startX = currentX;
+                startY = currentY;
+                break;
+            }
+            case PATH_ATOM_L: {
+                line = (LineToAtom *) atomPtr;
+                num++;
+                currentX = line->x;
+                currentY = line->y;
+                break;
+            }
+            case PATH_ATOM_A: {
+                arc = (ArcAtom *) atomPtr;
+                num += GetArcNumSegments(currentX, currentY, arc);
+                currentX = arc->x;
+                currentY = arc->y;
+                break;
+            }
+            case PATH_ATOM_Q: {
+                quad = (QuadBezierAtom *) atomPtr;
+                num += kNumSegmentsQuadBezier;
+                currentX = quad->anchorX;
+                currentY = quad->anchorY;
+                break;
+            }
+            case PATH_ATOM_C: {
+                curve = (CurveToAtom *) atomPtr;
+                num += kNumSegmentsCurveTo;
+                currentX = curve->anchorX;
+                currentY = curve->anchorY;
+                break;
+            }
+            case PATH_ATOM_Z: {
+                num++;
+                currentX = startX;
+                currentY = startY;
+                break;
+            }
+        }
+        atomPtr = atomPtr->nextPtr;
+    }
+    return maxNumSegments;
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -1799,11 +1932,13 @@ static void
 ArcSegments(
     CentralArcPars *arcPars,
     TMatrix *matrixPtr,
+    int includeFirst,			/* Should the first point be included? */
     int numSteps,			/* Number of curve segments to
 					 * generate.  */
     register double *coordPtr)		/* Where to put new points. */
 {
     int i;
+    int istart = 1 - includeFirst;
     double cosPhi, sinPhi;
     double cosAlpha, sinAlpha;
     double alpha, dalpha, theta1;
@@ -1818,12 +1953,12 @@ ArcSegments(
     theta1 = arcPars->theta1;
     dalpha = arcPars->dtheta/numSteps;
 
-    for (i = 0; i <= numSteps; i++, coordPtr += 2) {
+    for (i = istart; i <= numSteps; i++, coordPtr += 2) {
         alpha = theta1 + i*dalpha;
         cosAlpha = cos(alpha);
         sinAlpha = sin(alpha);
-	coordPtr[0] = cx + rx*cosAlpha*cosPhi - ry*sinAlpha*sinPhi;
-	coordPtr[1] = cy + rx*cosAlpha*sinPhi + ry*sinAlpha*cosPhi;
+        coordPtr[0] = cx + rx*cosAlpha*cosPhi - ry*sinAlpha*sinPhi;
+        coordPtr[1] = cy + rx*cosAlpha*sinPhi + ry*sinAlpha*cosPhi;
         PathApplyTMatrix(matrixPtr, coordPtr, coordPtr+1);
     }
 }
@@ -1849,27 +1984,29 @@ ArcSegments(
 
 static void
 BezierSegments(
-    double control[],			/* Array of coordinates for four
-					 * control points:  x0, y0, x1, y1,
-					 * ... x3 y3. */
+    double control[],		/* Array of coordinates for four
+                             * control points:  x0, y0, x1, y1,
+                             * ... x3 y3. */
+    int includeFirst,		/* Should the first point be included? */
     int numSteps,			/* Number of curve segments to
-					 * generate.  */
+                             * generate.  */
     register double *coordPtr)		/* Where to put new points. */
 {
     int i;
+    int istart = 1 - includeFirst;
     double u, u2, u3, t, t2, t3;
 
-    for (i = 0; i <= numSteps; i++, coordPtr += 2) {
-	t = ((double) i)/((double) numSteps);
-	t2 = t*t;
-	t3 = t2*t;
-	u = 1.0 - t;
-	u2 = u*u;
-	u3 = u2*u;
-	coordPtr[0] = control[0]*u3
-		+ 3.0 * (control[2]*t*u2 + control[4]*t2*u) + control[6]*t3;
-	coordPtr[1] = control[1]*u3
-		+ 3.0 * (control[3]*t*u2 + control[5]*t2*u) + control[7]*t3;
+    for (i = istart; i <= numSteps; i++, coordPtr += 2) {
+        t = ((double) i)/((double) numSteps);
+        t2 = t*t;
+        t3 = t2*t;
+        u = 1.0 - t;
+        u2 = u*u;
+        u3 = u2*u;
+        coordPtr[0] = control[0]*u3
+                + 3.0 * (control[2]*t*u2 + control[4]*t2*u) + control[6]*t3;
+        coordPtr[1] = control[1]*u3
+                + 3.0 * (control[3]*t*u2 + control[5]*t2*u) + control[7]*t3;
     }
 }
 
@@ -1897,29 +2034,146 @@ QuadBezierSegments(
     double control[],			/* Array of coordinates for three
 					 * control points:  x0, y0, x1, y1,
 					 * x2, y2. */
+    int includeFirst,			/* Should the first point be included? */
     int numSteps,			/* Number of curve segments to
 					 * generate.  */
     register double *coordPtr)		/* Where to put new points. */
 {
     int i;
+    int istart = 1 - includeFirst;
     double u, u2, t, t2;
 
-    for (i = 0; i <= numSteps; i++, coordPtr += 2) {
-	t = ((double) i)/((double) numSteps);
-	t2 = t*t;
-	u = 1.0 - t;
-	u2 = u*u;
-	coordPtr[0] = control[0]*u2 + 2.0 * control[2]*t*u + control[4]*t2;
-	coordPtr[1] = control[1]*u2 + 2.0 * control[3]*t*u + control[5]*t2;
+    for (i = istart; i <= numSteps; i++, coordPtr += 2) {
+        t = ((double) i)/((double) numSteps);
+        t2 = t*t;
+        u = 1.0 - t;
+        u2 = u*u;
+        coordPtr[0] = control[0]*u2 + 2.0 * control[2]*t*u + control[4]*t2;
+        coordPtr[1] = control[1]*u2 + 2.0 * control[3]*t*u + control[5]*t2;
     }
 }
 
 /*
  *--------------------------------------------------------------
  *
- * ArcToArea --
+ * AddArcSegments, AddQuadBezierSegments, AddCurveToSegments --
  *
- *	This procedure is called to determine whether an arc
+ *	Adds a number of points along the arc (curve) to coordPtr
+ *	representing straight line segments.
+ *
+ * Results:
+ *	Number of points added. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+AddArcSegments(
+    PathItem *pathPtr, 
+    TMatrix *matrixPtr,
+    double current[2],		/* Current point. */
+    ArcAtom *arc,
+    double *coordPtr)		/* Where to put the points. */
+{
+    int result;
+    int numPoints;
+    CentralArcPars arcPars;
+    double cx, cy, rx, ry;
+    double theta1, dtheta;
+            
+    /*
+     * Note: The arc parametrization used cannot generally
+     * be transformed. Need to transform each line segment separately!
+     */
+    
+    result = EndpointToCentralArcParameters(
+            current[0], current[1],
+            arc->x, arc->y, arc->radX, arc->radY, 
+            DEGREES_TO_RADIANS * arc->angle, 
+            arc->largeArcFlag, arc->sweepFlag,
+            &cx, &cy, &rx, &ry,
+            &theta1, &dtheta);
+    if (result == kPathArcLine) {
+        double pts[2];
+
+        pts[0] = arc->x;
+        pts[1] = arc->y;
+        PathApplyTMatrix(matrixPtr, pts, pts+1);
+        coordPtr[0] = pts[0];
+        coordPtr[1] = pts[1];
+        return 1;
+    } else if (result == kPathArcSkip) {
+        return 0;
+    }
+
+    arcPars.cx = cx;
+    arcPars.cy = cy;
+    arcPars.rx = rx;
+    arcPars.ry = ry;
+    arcPars.theta1 = theta1;
+    arcPars.dtheta = dtheta;
+    arcPars.phi = arc->angle;
+
+    numPoints = GetArcNumSegments(current[0], current[1], arc);    
+    ArcSegments(&arcPars, matrixPtr, 0, numPoints, coordPtr);
+
+    return numPoints;
+}
+
+static int
+AddQuadBezierSegments(
+    PathItem *pathPtr, 
+    TMatrix *matrixPtr,
+    double current[2],		/* Current point. */
+    QuadBezierAtom *quad,
+    double *coordPtr)		/* Where to put the points. */
+{
+    int numPoints;			/* Number of curve points to
+                             * generate.  */
+    double control[6];
+
+    PathApplyTMatrixToPoint(matrixPtr, current, control);
+    PathApplyTMatrixToPoint(matrixPtr, &(quad->ctrlX), control+2);
+    PathApplyTMatrixToPoint(matrixPtr, &(quad->anchorX), control+4);
+
+    numPoints = kNumSegmentsQuadBezier;
+    QuadBezierSegments(control, 0, numPoints, coordPtr);
+
+    return numPoints;
+}
+
+static int
+AddCurveToSegments(
+    PathItem *pathPtr,
+    TMatrix *matrixPtr,
+    double current[2],			/* Current point. */
+    CurveToAtom *curve,
+    double *coordPtr)
+{
+    int numSteps;				/* Number of curve points to
+                                 * generate.  */
+    double control[8];
+
+    PathApplyTMatrixToPoint(matrixPtr, current, control);
+    PathApplyTMatrixToPoint(matrixPtr, &(curve->ctrlX1), control+2);
+    PathApplyTMatrixToPoint(matrixPtr, &(curve->ctrlX2), control+4);
+    PathApplyTMatrixToPoint(matrixPtr, &(curve->anchorX), control+6);
+
+    numSteps = kNumSegmentsCurveTo;
+    BezierSegments(control, 1, numSteps, coordPtr);
+    
+    return numSteps;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SubpathToArea --
+ *
+ *	This procedure is called to determine whether a subpath
  *	lies entirely inside, entirely outside, or overlapping
  *	a given rectangular area.
  *
@@ -1935,191 +2189,43 @@ QuadBezierSegments(
  */
 
 static int
-ArcToArea(
-    PathItem *pathPtr,
-    TMatrix *matrixPtr,
-    double current[2],			/* Current point. */
-    ArcAtom *arc,
-    double *rectPtr)
+SubpathToArea(
+    PathItem 	*pathPtr, 
+    double 		*polyPtr, 
+    int 		numPoints, 		/* Total number of points. First one
+                                 * is duplicated in the last. */
+    int			numStrokes,		/* The number of strokes which is one less
+                                 * than numPoints if path not closed. */
+    double 		*rectPtr, 
+    int 		inside)			/* This is the current inside status. */
 {
-    int result;
-    int inside;
-    int ntheta, nlength;
-    int numSteps;			/* Number of curve points to
-					 * generate.  */
-    register double *coordPtr;		/* Where to put new points. */
-    CentralArcPars arcPars;
-    double cx, cy, rx, ry;
-    double currentX, currentY;
-    double theta1, dtheta;
-            
-    /*
-     * Note: The arc parametrization used cannot generally
-     * be transformed. Need to transform each line segment separately!
-     */
-            
-    currentX = current[0];
-    currentY = current[1];
+    Tk_PathStyle *stylePtr = &(pathPtr->style);
     
-    result = EndpointToCentralArcParameters(
-            currentX, currentY,
-            arc->x, arc->y, arc->radX, arc->radY, 
-            DEGREES_TO_RADIANS * arc->angle, 
-            arc->largeArcFlag, arc->sweepFlag,
-            &cx, &cy, &rx, &ry,
-            &theta1, &dtheta);
-    if (result == kPathArcLine) {
-        double pts[4];
-
-        pts[0] = currentX;
-        pts[1] = currentY;
-        pts[2] = arc->x;
-        pts[3] = arc->y;
-        PathApplyTMatrix(matrixPtr, pts, pts+1);
-        PathApplyTMatrix(matrixPtr, pts+2, pts+3);
-        return TkLineToArea(pts, pts+2, rectPtr);
-    } else if (result == kPathArcSkip) {
-        return -1;
+    /* @@@ 	There is an open question how a closed unfilled polygon
+     *		completely enclosing the area rect should be counted.
+     *		While the tk canvas polygon item counts it as intersecting (0),
+     *		the line item counts it as outside (-1).
+     */
+    
+    if (stylePtr->fillColor != NULL) {
+    
+        /* This checks a closed polygon with zero width for inside.
+         * If area rect completely enclosed it returns intersecting (0).
+         */
+        inside = TkPolygonToArea(polyPtr, numPoints, rectPtr);
+        if (inside = 0) {
+            return 0;
+        }
     }
-
-    arcPars.cx = cx;
-    arcPars.cy = cy;
-    arcPars.rx = rx;
-    arcPars.ry = ry;
-    arcPars.theta1 = theta1;
-    arcPars.dtheta = dtheta;
-    arcPars.phi = arc->angle;
-
-    /* Estimate the number of steps needed. 
-     * Max 10 degrees or length 50.
-     */
-    ntheta = (int) (dtheta/5.0 + 0.5);
-    nlength = (int) (0.5*(rx + ry)*dtheta/50 + 0.5);
-    numSteps = MAX(4, MAX(ntheta, nlength));;
-    coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
-    
-    ArcSegments(&arcPars, matrixPtr, numSteps, coordPtr);
-
-    /*
-     * Simple test to see if we are in the polygon.  Polygons are
-     * different from othe canvas items in that they register points
-     * being inside even if it isn't filled.
-     */
-    inside = TkPolygonToArea(coordPtr, numSteps, rectPtr);
-    if (inside == 0) {
-        goto donearea;
+    if (stylePtr->strokeColor != NULL) {
+        if (stylePtr->strokeWidth > kStrokeThicknessLimit) {
+            inside = TkThickPolyLineToArea(polyPtr, numStrokes, 
+                    stylePtr->strokeWidth, stylePtr->capStyle, 
+                    stylePtr->joinStyle, rectPtr);
+        } else {
+			inside = TkPathPolyLineToArea(polyPtr, numStrokes, rectPtr);        
+        }
     }
-    if ((pathPtr->style.strokeColor == NULL) || 
-            (pathPtr->style.strokeWidth < gStrokeThicknessLimit)) {
-        goto donearea;
-    }
-    
-    /*
-     * Make a more detailed analysis including line width...
-     */
-
-
-
-donearea:
-
-    ckfree((char *) coordPtr);
-    return inside;
-}
-
-static int
-CurveToArea(
-    PathItem *pathPtr,
-    TMatrix *matrixPtr,
-    double current[2],			/* Current point. */
-    CurveToAtom *curveToAtomPtr,
-    double *rectPtr)
-{
-    int inside;
-    int numSteps;			/* Number of curve points to
-					 * generate.  */
-    register double *coordPtr;		/* Where to put new points. */
-    double control[8];
-
-    PathApplyTMatrixToPoint(matrixPtr, current, control);
-    PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->ctrlX1), control+2);
-    PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->ctrlX2), control+4);
-    PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->anchorX), control+6);
-
-    numSteps = 12;
-    coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
-    BezierSegments(control, numSteps, coordPtr);
-
-    /*
-     * Simple test to see if we are in the polygon.  Polygons are
-     * different from othe canvas items in that they register points
-     * being inside even if it isn't filled.
-     */
-    inside = TkPolygonToArea(coordPtr, numSteps, rectPtr);
-    if (inside == 0) {
-        goto donearea;
-    }
-    if ((pathPtr->style.strokeColor == NULL) || 
-            (pathPtr->style.strokeWidth < gStrokeThicknessLimit)) {
-        goto donearea;
-    }
-    
-    /*
-     * Make a more detailed analysis including line width...
-     */
-    
-    
-    
-donearea:
-
-    ckfree((char *) coordPtr);
-    return inside;
-}
-
-static int
-QuadBezierToArea(
-    PathItem *pathPtr,
-    TMatrix *matrixPtr,
-    double current[2],			/* Current point. */
-    QuadBezierAtom *quadAtomPtr,
-    double *rectPtr)
-{
-    int inside;
-    int numSteps;			/* Number of curve points to
-					 * generate.  */
-    register double *coordPtr;		/* Where to put new points. */
-    double control[6];
-
-    PathApplyTMatrixToPoint(matrixPtr, current, control);
-    PathApplyTMatrixToPoint(matrixPtr, &(quadAtomPtr->ctrlX), control+2);
-    PathApplyTMatrixToPoint(matrixPtr, &(quadAtomPtr->anchorX), control+4);
-
-    numSteps = 12;
-    coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
-    QuadBezierSegments(control, numSteps, coordPtr);
-
-    /*
-     * Simple test to see if we are in the polygon.  Polygons are
-     * different from othe canvas items in that they register points
-     * being inside even if it isn't filled.
-     */
-    inside = TkPolygonToArea(coordPtr, numSteps, rectPtr);
-    if (inside == 0) {
-        goto donearea;
-    }
-    if ((pathPtr->style.strokeColor == NULL) || 
-            (pathPtr->style.strokeWidth < gStrokeThicknessLimit)) {
-        goto donearea;
-    }
-    
-    /*
-     * Make a more detailed analysis including line width...
-     */
-    
-    
-    
-donearea:
-
-    ckfree((char *) coordPtr);
     return inside;
 }
 
@@ -2131,6 +2237,9 @@ donearea:
  *	This procedure is called to determine whether an item
  *	lies entirely inside, entirely outside, or overlapping
  *	a given rectangular area.
+ *	
+ *	Each subpath is treated in turn. Generate straight line
+ *	segments for each subpath and treat it as a polygon.
  *
  * Results:
  *	-1 is returned if the item is entirely outside the
@@ -2149,32 +2258,55 @@ PathToArea(
     Tk_Item *itemPtr,		/* Item to check against line. */
     double *rectPtr)
 {
-    PathItem *pathPtr = (PathItem *) itemPtr;
-    int inside;			/* Tentative guess about what to return,
-				 * based on all points seen so far:  one
-				 * means everything seen so far was
-				 * inside the area;  -1 means everything
-				 * was outside the area.  0 means overlap
-				 * has been found. */ 
-    int first = 1;
-    double radius, width;
-    double current[2];		/* Current untransformed point. */
-    double currentT[2];		/* Current transformed point. */
-    double pt[2];		/* Transformed point. */
-    Tk_State state = itemPtr->state;
-    Tk_PathStyle style = pathPtr->style;
-    PathAtom *atomPtr = pathPtr->atomPtr;
-    TMatrix *matrixPtr = style.matrixPtr;
+    PathItem 		*pathPtr = (PathItem *) itemPtr;
+    int inside;					/* Tentative guess about what to return,
+                                 * based on all points seen so far:  one
+                                 * means everything seen so far was
+                                 * inside the area;  -1 means everything
+                                 * was outside the area.  0 means overlap
+                                 * has been found. */ 
+    int 			first = 1;
+    int				numPoints = 0;
+    int				numStrokes = 0;
+    int				isclosed = 0;
+    double 			current[2];		/* Current untransformed point. */
+    double 			pt[2];			/* Transformed point. */
+    double			*coordPtr, *polyPtr;
+    double			*currentTPtr;	/* Pointer to the transformed current point. */
+    Tk_State 		state = itemPtr->state;
+    Tk_PathStyle 	*stylePtr = &(pathPtr->style);
+    PathAtom 		*atomPtr = pathPtr->atomPtr;
+    MoveToAtom 		*move;
+    LineToAtom 		*line;
+    ArcAtom 		*arc;
+    QuadBezierAtom 	*quad;
+    CurveToAtom 	*curve;
+    CloseAtom		*close;
+    TMatrix 		*matrixPtr = stylePtr->matrixPtr;
     
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
-    }
-    width = style.strokeWidth;
-    radius = (width + 1.0)/2.0;
-    
+        state = ((TkCanvas *)canvas)->canvas_state;
+    }    
     if ((state==TK_STATE_HIDDEN) || (pathPtr->pathLen < 3)) {
-	return -1;
+        return -1;
     }
+
+    /* 
+     * Do we need more memory or can we use static space? 
+     */
+    if (pathPtr->maxNumSegments > MAX_NUM_STATIC_SEGMENTS) {
+        polyPtr = (double *) ckalloc((unsigned) (2*pathPtr->maxNumSegments*sizeof(double)));
+    } else {
+        polyPtr = staticSpace;
+    }
+    coordPtr = polyPtr;
+    
+    /* @@@ 	Note that for unfilled paths we could have made a progressive
+     *     	area check which may be faster since we may stop when 0 (overlapping).
+     *	   	For filled paths we cannot rely on this since the area rectangle
+     *		may be entirely enclosed in the path and still overlapping.
+     *		(Need better explanation!)
+     */
     
     /*
      * Check each segment of the path.
@@ -2191,12 +2323,16 @@ PathToArea(
             case PATH_ATOM_M: {
             
                 /* A 'M' atom must be first, may show up later as well. */
-                MoveToAtom *moveToAtomPtr = (MoveToAtom *) atomPtr;
+
+                coordPtr = polyPtr;
+                PathApplyTMatrixToPoint(matrixPtr, current, coordPtr);
+                current[0] = move->x;
+                current[1] = move->y;
+                currentTPtr = coordPtr;
+                coordPtr += 2;
+                numPoints = 1;
                 
                 if (first) {
-                    current[0] = moveToAtomPtr->x;
-                    current[1] = moveToAtomPtr->y;
-                    PathApplyTMatrixToPoint(matrixPtr, current, currentT);
                     
                     /*
                      * This defines the starting point. It is either -1 or 1. 
@@ -2205,82 +2341,100 @@ PathToArea(
                      * (out|in)side
                      */
                     inside = -1;
-                    if ((currentT[0] >= rectPtr[0]) && (currentT[0] <= rectPtr[2])
-                            && (currentT[1] >= rectPtr[1]) && (currentT[1] <= rectPtr[3])) {
+                    if ((currentTPtr[0] >= rectPtr[0]) && (currentTPtr[0] <= rectPtr[2])
+                            && (currentTPtr[1] >= rectPtr[1]) && (currentTPtr[1] <= rectPtr[3])) {
                         inside = 1;
                     }
                 } else {
                 
                     /*  
-                     * This is not counted since never drawn.
+                     * We have finalized a subpath. Do Area on it.
+                     * Need to close it for fill testing.
                      */
-                    current[0] = moveToAtomPtr->x;
-                    current[1] = moveToAtomPtr->y;
-                    PathApplyTMatrixToPoint(matrixPtr, current, currentT);
+                    if (isclosed) {
+                        numStrokes = numPoints - 1;
+                    } else {
+                        numStrokes = numPoints;
+                    }
+                    inside = SubpathToArea(pathPtr, polyPtr, numPoints, numStrokes, rectPtr, inside);
+                    if (inside == 0) {
+                        goto done;
+                    }
                 }
                 first = 0;
+                isclosed = 0;
                 break;
             }
-            case PATH_ATOM_L: { 
-                LineToAtom *lineToAtomPtr = (LineToAtom *) atomPtr;
-
-                PathApplyTMatrixToPoint(matrixPtr, &(lineToAtomPtr->x), pt);
-                if (TkLineToArea(currentT, pt, rectPtr) != inside) {
-                    return 0;
-                }
-                current[0]  = lineToAtomPtr->x;
-                current[1]  = lineToAtomPtr->y;
-                currentT[0] = pt[0];
-                currentT[1] = pt[1];
+            case PATH_ATOM_L: {
+                line = (LineToAtom *) atomPtr;
+                PathApplyTMatrixToPoint(matrixPtr, &(line->x), coordPtr);
+                current[0] = line->x;
+                current[1] = line->y;
+                currentTPtr = coordPtr;
+                coordPtr += 2;
+                numPoints++;;
                 break;
             }
             case PATH_ATOM_A: {
-                ArcAtom *arcAtomPtr = (ArcAtom *) atomPtr;
-                
-                if (ArcToArea(pathPtr, matrixPtr, current, arcAtomPtr, rectPtr) != inside) {
-                    return 0;
-                }
+                arc = (ArcAtom *) atomPtr;
+                numPoints += AddArcSegments(pathPtr, matrixPtr, current,
+                        arc, coordPtr);
+                coordPtr += 2 * numPoints;
+                current[0] = arc->x;
+                current[1] = arc->y;
+                currentTPtr = coordPtr;
                 break;
             }
             case PATH_ATOM_Q: {
-                QuadBezierAtom *quadBezierAtomPtr = (QuadBezierAtom *) atomPtr;
-            
-                if (QuadBezierToArea(pathPtr, matrixPtr, current, quadBezierAtomPtr, rectPtr) != inside) {
-                    return 0;
-                }
-                current[0] = quadBezierAtomPtr->anchorX;
-                current[1] = quadBezierAtomPtr->anchorY;
-                PathApplyTMatrixToPoint(matrixPtr, current, currentT);
+                quad = (QuadBezierAtom *) atomPtr;
+                numPoints += AddQuadBezierSegments(pathPtr, matrixPtr, current,
+                        quad, coordPtr);
+                coordPtr += 2 * numPoints;
+                current[0] = quad->anchorX;
+                current[1] = quad->anchorY;
+                currentTPtr = coordPtr;
                 break;
             }
             case PATH_ATOM_C: {
-                CurveToAtom *curveToAtomPtr = (CurveToAtom *) atomPtr;
-
-                if (CurveToArea(pathPtr, matrixPtr, current, curveToAtomPtr, rectPtr) != inside) {
-                    return 0;
-                }
-                current[0] = curveToAtomPtr->anchorX;
-                current[1] = curveToAtomPtr->anchorY;
-                PathApplyTMatrixToPoint(matrixPtr, current, currentT);
+                curve = (CurveToAtom *) atomPtr;
+                numPoints += AddCurveToSegments(pathPtr, matrixPtr, current,
+                        curve, coordPtr);
+                coordPtr += 2 * numPoints;
+                current[0] = curve->anchorX;
+                current[1] = curve->anchorY;
+                currentTPtr = coordPtr;
                 break;
             }
             case PATH_ATOM_Z: {
-                CloseAtom *closeAtomPtr = (CloseAtom *) atomPtr;
             
-                PathApplyTMatrixToPoint(matrixPtr, &(closeAtomPtr->x), pt);
-                if (style.fillColor != NULL) {
-                    if (TkLineToArea(currentT, pt, rectPtr) != inside) {
-                        return 0;
-                    }
-                }
-                current[0]  = closeAtomPtr->x;
-                current[1]  = closeAtomPtr->y;
-                currentT[0] = pt[0];
-                currentT[1] = pt[1];
+                /* Just add the first point to the end. */
+                close = (CloseAtom *) atomPtr;
+                coordPtr[0] = polyPtr[0];
+                coordPtr[1] = polyPtr[1];
+                numPoints++;
+                current[0]  = close->x;
+                current[1]  = close->y;
+                isclosed = 1;
                 break;
             }
         }
     }
+
+    if (numPoints > 1) {
+        if (isclosed) {
+            numStrokes = numPoints - 1;
+        } else {
+            numStrokes = numPoints;
+        }
+        inside = SubpathToArea(pathPtr, polyPtr, numPoints, 
+                numStrokes, rectPtr, inside);
+    }
+    
+done:
+    if (polyPtr != staticSpace) {
+        ckfree((char *) polyPtr);
+    }
+
     return inside;
 }
 
@@ -2527,7 +2681,7 @@ PathToPostscript(interp, canvas, itemPtr, prepass)
 					 * collect font information;  0 means
 					 * final Postscript is being created. */
 {
-    PathItem *pathPtr = (PathItem *) itemPtr;
+    /* PathItem *pathPtr = (PathItem *) itemPtr; */
 
     return TCL_OK;
 }

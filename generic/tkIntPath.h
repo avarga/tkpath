@@ -147,7 +147,7 @@ void 		PathApplyTMatrixToPoint(TMatrix *m, double in[2], double out[2]);
 void		PathInverseTMatrix(TMatrix *m, TMatrix *mi);
 
 int			ObjectIsEmpty(Tcl_Obj *objPtr);
-int			PathGetTMatrix(Tcl_Interp* interp, char *list, TMatrix *matrixPtr);
+int			PathGetTMatrix(Tcl_Interp* interp, CONST char *list, TMatrix *matrixPtr);
 int			PathGetTclObjFromTMatrix(Tcl_Interp* interp, TMatrix *matrixPtr,
                     Tcl_Obj **listObjPtrPtr);
 
@@ -177,6 +177,7 @@ int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
 int			PathStyleHaveWithName(CONST char *name);
 int			HaveLinearGradientStyleWithName(CONST char *name);
 void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName);
+int			TkPathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
 
 
 /*

@@ -63,7 +63,9 @@ typedef struct TMatrix {
     double tx, ty;
 } TMatrix;
 
+#if 0
 static const TMatrix kUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+#endif
 
 /*
  * Records used for parsing path to a linked list of primitive 

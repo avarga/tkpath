@@ -148,11 +148,10 @@ static int MatrixSetOption(
     int flags)				/* Flags for the option, set Tk_SetOptions. */
 {
     char *internalPtr;
-    char *new;
     char *list;
     int length;
     Tcl_Obj *valuePtr;
-    TMatrix *matrixPtr;
+    TMatrix *new;
     
     valuePtr = *value;
     if (internalOffset >= 0) {
@@ -167,17 +166,16 @@ static int MatrixSetOption(
     if (internalPtr != NULL) {
 		if (valuePtr != NULL) {
             list = Tcl_GetStringFromObj(valuePtr, &length);
-            matrixPtr = (TMatrix *) ckalloc(sizeof(TMatrix));
-            if (PathGetTMatrix(interp, list, matrixPtr) != TCL_OK) {
-                ckfree((char *) matrixPtr);
+            new = (TMatrix *) ckalloc(sizeof(TMatrix));
+            if (PathGetTMatrix(interp, list, new) != TCL_OK) {
+                ckfree((char *) new);
                 return TCL_ERROR;
             }
-		    new = matrixPtr;
 		} else {
 		    new = NULL;
         }
-		*((char **) oldInternalPtr) = *((char **) internalPtr);
-		*((char **) internalPtr) = new;
+		*((TMatrix **) oldInternalPtr) = *((TMatrix **) internalPtr);
+		*((TMatrix **) internalPtr) = new;
     }
     return TCL_OK;
 }
@@ -444,7 +442,6 @@ StyleCreateAndConfig(
         Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[])
 {
 	Tk_PathStyle *stylePtr;
-    Tk_Window tkwin = Tk_MainWindow(interp); /* Should have been the canvas. */
 
 	stylePtr = (Tk_PathStyle *) ckalloc(sizeof(Tk_PathStyle));
 	memset(stylePtr, '\0', sizeof(Tk_PathStyle));
@@ -541,11 +538,11 @@ CopyOptionString(char **dstPtrPtr, char *srcPtr)
     if ((*dstPtrPtr == NULL) && (srcPtr == NULL)) {
         /* empty */
     } else if (*dstPtrPtr == NULL) {
-        *dstPtrPtr = (char *) ckalloc(strlen(*srcPtr) + 1);
+        *dstPtrPtr = (char *) ckalloc(strlen(srcPtr) + 1);
         strcpy(*dstPtrPtr, srcPtr);
     } else {
         ckfree(*dstPtrPtr);
-        *dstPtrPtr = (char *) ckalloc(strlen(*srcPtr) + 1);
+        *dstPtrPtr = (char *) ckalloc(strlen(srcPtr) + 1);
         strcpy(*dstPtrPtr, srcPtr);
     }
 }
@@ -559,7 +556,7 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
 
 	hPtr = Tcl_FindHashEntry(gStyleHashPtr, styleName);
 	if (hPtr == NULL) {
-        return TCL_ERROR;
+        return;
     }
     srcStylePtr = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
 
@@ -617,7 +614,7 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
         stylePtr->strokeWidth = srcStylePtr->strokeWidth;
     }
 
-    return TCL_OK;
+    return;
 }
 
 /*
