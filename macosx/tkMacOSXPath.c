@@ -367,6 +367,11 @@ TkPathDrawingDestroysPath(void)
     return 1;
 }
 
+/* TkPathGetCurrentPosition --
+ *
+ * 		Returns the current pen position in untransformed coordinates!
+ */
+ 
 int		
 TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
 {
@@ -392,7 +397,119 @@ TkPathBoundingBox(PathRect *rPtr)
     return TCL_OK;
 }
 
+/*
+ * Using CGShading for fill gradients.
+ */
+ 
+typedef struct TwoStopRecord {
+    GradientStop *stop1;
+    GradientStop *stop2;
+} TwoStopRecord;
+
+static void
+ShadeEvaluate(void *info, const float *in, float *out)
+{
+    TwoStopRecord 	*twoStopPtr = (TwoStopRecord *) info;
+    float 			par = *in;
+    float			par2;
+    GradientStop 	*stop1, *stop2;
+    
+    stop1 = twoStopPtr->stop1;
+    stop2 = twoStopPtr->stop2;
+        
+    /* Interpolate between the two stops. */
+    par2 = 1.0 - par;
+    *out++ = par2 * RedFloatFromXColorPtr(stop1->color) + 
+            par * RedFloatFromXColorPtr(stop2->color);
+    *out++ = par2 * GreenFloatFromXColorPtr(stop1->color) + 
+            par * GreenFloatFromXColorPtr(stop2->color);
+    *out++ = par2 * BlueFloatFromXColorPtr(stop1->color) + 
+            par * BlueFloatFromXColorPtr(stop2->color);
+    *out++ = par2 * stop1->opacity + par * stop2->opacity;
+}
+
+static void
+ShadeRelease(void *info)
+{
+    /* Not sure if anything to do here. */
+}
+
+void
+TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+{
+    int					i, nstops;
+    int					fillMethod;
+    bool 				extendStart, extendEnd;
+    CGShadingRef 		shading;
+    CGPoint 			start, end;
+    CGColorSpaceRef 	colorSpaceRef;
+    CGFunctionRef 		function;
+    CGFunctionCallbacks callbacks;
+    PathRect 			transition;		/* The transition line. */
+    PathRect			bounds;			/* transition line scaled to bbox. */
+    GradientStop 		*stop1, *stop2;
+    TwoStopRecord		twoStop;
+    
+    transition = fillPtr->transition;
+    nstops = fillPtr->nstops;
+    fillMethod = fillPtr->method;
+    
+    callbacks.version = 0;
+    callbacks.evaluate = ShadeEvaluate;
+    callbacks.releaseInfo = ShadeRelease;
+    colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+        
+    /* Scale up the transition using bbox. */
+    bounds.x1 = bbox->x1 + (bbox->x2 - bbox->x1) * transition.x1;
+    bounds.y1 = bbox->y1 + (bbox->y2 - bbox->y1) * transition.y1;
+    bounds.x2 = bbox->x1 + (bbox->x2 - bbox->x1) * transition.x2;
+    bounds.y2 = bbox->y1 + (bbox->y2 - bbox->y1) * transition.y2;
+    
+    /*
+     * Paint all stops pairwise.
+     */
+    for (i = 0; i < nstops - 1; i++) {
+        stop1 = fillPtr->stops[i];
+        stop2 = fillPtr->stops[i+1];
+        twoStop.stop1 = stop1;
+        twoStop.stop2 = stop2;
+        function = CGFunctionCreate((void *) &twoStop, 1, NULL, 4, NULL, &callbacks);
+        
+        /* If the two offsets identical then skip. */
+        if (fabs(stop1->offset - stop2->offset) < 1e-6) {
+            continue;
+        }
+        extendStart = 0;
+        extendEnd = 0;
+        if (i == 0) {
+            extendStart = 1;
+        } else if (i == nstops-1) {
+            extendEnd = 1;
+        }
+
+        /* Construct the gradient 'line' by scaling the transition
+         * using the stop offsets. 
+         */
+        start.x = bounds.x1 + stop1->offset * (bounds.x2 - bounds.x1);
+        start.y = bounds.y1 + stop1->offset * (bounds.y2 - bounds.y1);
+        end.x   = bounds.x1 + stop2->offset * (bounds.x2 - bounds.x1);
+        end.y   = bounds.y1 + stop2->offset * (bounds.y2 - bounds.y1);
+    
+        shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, extendStart, extendEnd);
+        CGContextDrawShading(gPathCGContext, shading);
+        CGShadingRelease(shading);
+        CGFunctionRelease(function);
+    }
+    
+    CGColorSpaceRelease(colorSpaceRef);
+}
+
+
 /*-------- This should be replaced by Shading!!! -----------------*/
+
+/* OUTDATED!!!!!!!!!! */
+
+#if 0
 
 static void
 TwoStopLinearGradient(
@@ -668,113 +785,4 @@ TkPathPaintLinearGradient2(Drawable d, PathRect *bbox, LinearGradientFill *fillP
     }
 }
 
-/*
- * Using CGShading instead. Testing...
- */
- 
-typedef struct TwoStopRecord {
-    GradientStop *stop1;
-    GradientStop *stop2;
-} TwoStopRecord;
-
-static void
-ShadeEvaluate(void *info, const float *in, float *out)
-{
-    TwoStopRecord 	*twoStopPtr = (TwoStopRecord *) info;
-    float 			par = *in;
-    float 			frac1, frac2;
-    double 			offset1, offset2;
-    GradientStop 	*stop1, *stop2;
-    
-    stop1 = twoStopPtr->stop1;
-    stop2 = twoStopPtr->stop2;
-        
-    /* Interpolate between the two stops. */
-    offset1 = stop1->offset;
-    offset2 = stop2->offset;
-    frac2 = (par - offset1)/MAX(1e-6, offset2 - offset1);
-    frac1 = 1.0 - frac2;        
-    *out++ = frac1 * RedFloatFromXColorPtr(stop1->color) + 
-            frac2 * RedFloatFromXColorPtr(stop2->color);
-    *out++ = frac1 * GreenFloatFromXColorPtr(stop1->color) + 
-            frac2 * GreenFloatFromXColorPtr(stop2->color);
-    *out++ = frac1 * BlueFloatFromXColorPtr(stop1->color) + 
-            frac2 * BlueFloatFromXColorPtr(stop2->color);
-    *out++ = frac1 * stop1->opacity + frac2 * stop2->opacity;
-}
-
-static void
-ShadeRelease(void *info)
-{
-    /* Not sure if anything to do here. */
-}
-
-void
-TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
-{
-    int					i, nstops;
-    int					fillMethod;
-    bool 				extendStart, extendEnd;
-    CGShadingRef 		shading;
-    CGPoint 			start, end;
-    CGColorSpaceRef 	colorSpaceRef;
-    CGFunctionRef 		function;
-    CGFunctionCallbacks callbacks;
-    PathRect 			transition;		/* The transition line. */
-    PathRect			bounds;			/* transition line scaled to bbox. */
-    GradientStop 		*stop1, *stop2;
-    TwoStopRecord		twoStop;
-    
-    transition = fillPtr->transition;
-    nstops = fillPtr->nstops;
-    fillMethod = fillPtr->method;
-    
-    callbacks.version = 0;
-    callbacks.evaluate = ShadeEvaluate;
-    callbacks.releaseInfo = ShadeRelease;
-    colorSpaceRef = CGColorSpaceCreateDeviceRGB();
-        
-    /* Scale up the transition using bbox. */
-    bounds.x1 = bbox->x1 + (bbox->x2 - bbox->x1) * transition.x1;
-    bounds.y1 = bbox->y1 + (bbox->y2 - bbox->y1) * transition.y1;
-    bounds.x2 = bbox->x1 + (bbox->x2 - bbox->x1) * transition.x2;
-    bounds.y2 = bbox->y1 + (bbox->y2 - bbox->y1) * transition.y2;
-    
-    /*
-     * Paint all stops pairwise.
-     */
-    for (i = 0; i < nstops - 1; i++) {
-        stop1 = fillPtr->stops[i];
-        stop2 = fillPtr->stops[i+1];
-        twoStop.stop1 = stop1;
-        twoStop.stop2 = stop2;
-        function = CGFunctionCreate((void *) &twoStop, 1, NULL, 4, NULL, &callbacks);
-        
-        /* If the two offsets identical then skip. */
-        if (fabs(stop1->offset - stop2->offset) < 1e-6) {
-            continue;
-        }
-        extendStart = 0;
-        extendEnd = 0;
-        if (i == 0) {
-            extendStart = 1;
-        } else if (i == nstops-1) {
-            extendEnd = 1;
-        }
-        /* Construct the gradient 'line' by scaling the transition
-         * using the stop offsets. 
-         */
-        start.x = bounds.x1 + stop1->offset * (bounds.x2 - bounds.x1);
-        start.y = bounds.y1 + stop1->offset * (bounds.y2 - bounds.y1);
-        end.x   = bounds.x1 + stop2->offset * (bounds.x2 - bounds.x1);
-        end.y   = bounds.y1 + stop2->offset * (bounds.y2 - bounds.y1);
-    
-        shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, extendStart, extendEnd);
-        CGContextDrawShading(gPathCGContext, shading);
-        CGShadingRelease(shading);
-        CGFunctionRelease(function);
-    }
-    
-    CGColorSpaceRelease(colorSpaceRef);
-}
-
+#endif

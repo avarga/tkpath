@@ -36,15 +36,16 @@ void TkPathInit(Drawable d)
             GDK_WINDOW_XWINDOW(d));
 }
 
+void
+TkPathPushTMatrix(Drawable d, TMatrix *m)
+{
+    cairo_matrix_t *matrix = cairo_matrix_create();
+    cairo_matrix_set_affine(matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
+    cairo_concat_matrix(gctx, matrix);
+}
+
 void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
 {
-    if (style->matrixPtr != NULL) {
-        TMatrix *m = style->matrixPtr;
-        
-        cairo_matrix_t *matrix = cairo_matrix_create();
-        cairo_matrix_set_affine(matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
-        cairo_concat_matrix(ctx, matrix);
-    }
 
     /* save/pop the state so we don't screw up the xform */
     //cairo_save(gctx);
