@@ -44,8 +44,11 @@ typedef struct _PathContext {
 
 static _PathContext *gctx = NULL;
 
-static void _PathContextInit(_PathContext *ctx)
+static _PathContext* _NewPathContext(void)
 {
+    _PathContext *ctx;
+    
+    ctx = (_PathContext *) ckalloc(sizeof(_PathContext));
     ctx->currentX = 0.0;
     ctx->currentY = 0.0;
     ctx->lastMoveX = 0.0;
@@ -54,6 +57,18 @@ static void _PathContextInit(_PathContext *ctx)
     ctx->m = NULL;
     ctx->segm = NULL;
     ctx->currentSegm = NULL;
+    return ctx;
+}
+
+static _PathSegments* _NewPathSegments(void)
+{
+    _PathSegments *segm;
+    
+    segm = (_PathSegments *) ckalloc(sizeof(_PathSegments));
+    segm->npoints = 0;
+    
+    segm->next = NULL;
+    return segm;
 }
 
 static void _PathContextFree(_PathContext *ctx)
@@ -72,11 +87,7 @@ static void _PathContextFree(_PathContext *ctx)
 
 void TkPathInit(Display *display, Drawable d)
 {
-    _PathContext *ctx;
-    
-    ctx = (_PathContext *) ckalloc(sizeof(_PathContext));
-    _PathContextInit(ctx);
-    gctx = ctx;
+    gctx = _NewPathContext();
 }
 
 void
@@ -100,17 +111,27 @@ TkPathPushTMatrix(Drawable d, TMatrix *m)
 
 void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
 {
-
+    /* empty */
 }
 
 void TkPathMoveTo(Drawable d, double x, double y)
 {
+    _PathSegments *segm, *currentSegm;
 
+    segm = _NewPathSegments();
+    if (gctx->segm == NULL) {
+        gctx->segm = segm;
+    } else {
+        currentSegm = gctx->currentSegm;
+        
+        
+    }
+    
 }
 
 void TkPathLineTo(Drawable d, double x, double y)
 {
-    _PathSegments segm;
+    _PathSegments *segm;
     
     gctx->currentX = x;
     gctx->currentY = y;

@@ -1743,7 +1743,7 @@ DisplayPath(
     
     /*
      * And do the necessary paintjob. 
-     * What if both -fill and -filllineargradient?
+     * What if both -fill and -fillgradient?
      */     
     if (stylePtr->gradientFillName != NULL) {
         if (HaveLinearGradientStyleWithName(stylePtr->gradientFillName) == TCL_OK) {

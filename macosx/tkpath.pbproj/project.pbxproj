@@ -159,7 +159,7 @@
 			name = tkUnixCairoPath.c;
 			path = /Users/matben/C/cvs/tkpath/unix/tkUnixCairoPath.c;
 			refType = 0;
-			tabWidth = 8;
+			tabWidth = 4;
 			usesTabs = 0;
 		};
 		9A49B82107A7AAD000A80065 = {

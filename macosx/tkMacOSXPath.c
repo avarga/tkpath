@@ -100,7 +100,7 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
             TableLookup(LineJoinStyleLookupTable, 3, style->joinStyle));
     
     /* Set the miter limit in the current graphics state to `limit'. */
-    //CGContextSetMiterLimit(c, style->miterLimit);
+    CGContextSetMiterLimit(c, style->miterLimit);
 
     /* Set the line dash patttern in the current graphics state. */
     dash = &(style->dash);
@@ -146,19 +146,6 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
         /* @@@ TODO */
         //CGContextSetStrokePattern(c, CGPatternRef pattern, const float color[]);
     }
-#if 0
-    if (style->matrixPtr != NULL) {
-        CGAffineTransform transform;
-        TMatrix *mPtr = style->matrixPtr;
-    
-        /* Return the transform [ a b c d tx ty ]. */
-        transform = CGAffineTransformMake(
-                (float) mPtr->a, (float) mPtr->b,
-                (float) mPtr->c, (float) mPtr->d,
-                (float) mPtr->tx, (float) mPtr->ty);
-        CGContextConcatCTM(gPathCGContext, transform);    
-    }
-#endif
 }
 
 void		
@@ -230,65 +217,6 @@ TkPathArcTo(Drawable d,
         char largeArcFlag, char sweepFlag, double x, double y)
 {
     TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
-}
-
-/* Unused */
-
-void
-TkPathArcTo2(Drawable d,
-        double rx, double ry, 
-        double phiDegrees, 	/* The rotation angle in degrees! */
-        char largeArcFlag, char sweepFlag, double x, double y)
-{
-    int result;
-    int clockwise;
-    double cx, cy;		/* Center coordinates. */
-    double theta1, dtheta;	/* Start angle and extent in radians!. */
-    double phi;
-    double currentX, currentY;
-    CGPoint cgpt;
-    
-    cgpt = CGContextGetPathCurrentPoint(gPathCGContext);
-    currentX = cgpt.x;
-    currentY = cgpt.y;
-    
-    /* All angles except phi is in radians! */
-    phi = phiDegrees * DEGREES_TO_RADIANS;
-    
-    /* Check return value and take action. */
-    result = EndpointToCentralArcParameters(currentX, currentY,
-            x, y, rx, ry, phi, largeArcFlag, sweepFlag,
-            &cx, &cy, &rx, &ry,
-            &theta1, &dtheta);
-    if (result == kPathArcSkip) {
-        return;
-    } else if (result == kPathArcLine) {
-        TkPathLineTo(d, x, y);
-        return;
-    }
-
-    /*
-     * If we are drawing an oval, we have to squash the coordinate
-     * system before drawing, since CGContextAddArcToPoint only draws
-     * circles.
-     */
-
-    CGContextSaveGState(gPathCGContext);
-
-    CGContextTranslateCTM(gPathCGContext, cx, cy);
-    CGContextScaleCTM(gPathCGContext, 1.0, ry/rx);
-    CGContextRotateCTM(gPathCGContext, phi);    
-    clockwise = (dtheta >= 0.0) ? 0 : 1;
-    
-    /* Add an arc of a circle to the context's path, possibly preceded by a
-     * straight line segment.  `(x, y)' is the center of the arc; `radius' is
-     * its radius; `startAngle' is the angle to the first endpoint of the arc;
-     * `endAngle' is the angle to the second endpoint of the arc; and
-     * `clockwise' is 1 if the arc is to be drawn clockwise, 0 otherwise.
-     * `startAngle' and `endAngle' are measured in radians. */
-    CGContextAddArc(gPathCGContext, 0.0, 0.0, rx, theta1, theta1+dtheta, clockwise);
-
-    CGContextRestoreGState(gPathCGContext);
 }
 
 void

@@ -142,8 +142,12 @@ if paramters are wrong.
 
  o Binaries and libraries:
  
-   MacOSX: CoreGraphics. On my 10.2.8 system all line widths are a multiple
-   of two when not using antialiasing.
+   On some systems (CoreGraphics and cairo) lines that are not placed at the
+   pixel centers, that is 8.0 12.4 etc., get an even number line width
+   if not using antialiasing. For instance, a -strokewidth 1 results in
+   a 2 pixel wide line. This is by design. If you want to be sure to get
+   the exact width when not using antialiasing always pick pixel center
+   coordinates using something like: [expr int($x) + 0.5]
 
    WinXP: GDI+. On pre XP systems it should be possible to get the gdiplus.dll
    to make it work.
@@ -154,7 +158,7 @@ if paramters are wrong.
  o Known issues:
 
    - Any changes made to a style object or a gradient object is not directly
-     noticable to a canvas item. SOme kind of notifier is needed here.
+     noticable to a canvas item. Some kind of notifier is needed here.
 
    - The style and gradient objects should belong to the canvas widget itself,
      but that requires changes to the canvas code.
@@ -162,6 +166,11 @@ if paramters are wrong.
    - Avoid using the canvas scale command on paths containing arc instructions
      since an arc cannot generally be scaled and still be an arc.
 
+ o Further documentation:
+
+    - http://www.w3.org/TR/SVG11/
+
+    - http://cairographics.org
 
 Copyright (c) 2005  Mats Bengtsson
 

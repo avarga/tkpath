@@ -21,12 +21,21 @@
 extern "C" {
 #endif
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define ABS(a)    (((a) >= 0)  ? (a) : -1*(a))
+#define MIN(a, b) 	(((a) < (b)) ? (a) : (b))
+#define MAX(a, b) 	(((a) > (b)) ? (a) : (b))
+#define ABS(a)    	(((a) >= 0)  ? (a) : -1*(a))
 #define PI 3.14159265358979323846
 #define DEGREES_TO_RADIANS (PI/180.0)
 #define RADIANS_TO_DEGREES (180.0/PI)
+
+/* Takes a double and aligns it to the closest pixels center.
+ * This is useful when not antialiasing since some systems 
+ * (CoreGraphics on MacOSX 10.2 and cairo) consistantly gives 2 pixel
+ * line widths when 1 is expected.
+ * This works fine on verical and horizontal lines using CG but terrible else!
+ * Best to use this on tcl level.
+ */
+#define ALIGN_TO_PIXEL(x) 	(gUseAntiAlias ? (x) : (((int) x) + 0.5))
 
 
 static const TMatrix kUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};

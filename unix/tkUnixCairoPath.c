@@ -25,7 +25,7 @@ static  cairo_t *gctx = NULL;
 void TkPathInit(Display *display, Drawable d)
 {
     if (gctx != NULL) {
-	Tcl_Panic("the path drawing context gctx is already in use\n");
+        Tcl_Panic("the path drawing context gctx is already in use\n");
     }
     gctx = cairo_create();
     cairo_set_target_drawable(gctx, display, d);
@@ -213,28 +213,41 @@ int TkPathBoundingBox(PathRect *rPtr)
 
 void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {    
-    int			i;
-    int			nstops;
-    int			fillMethod;
-    PathRect 		transition;		/* The transition line. */
-    GradientStop 	*stop;
-    cairo_pattern_t 	*pat;
-    cairo_extend_t	extend;
+    int					i;
+    int					nstops;
+    int					fillMethod;
+    double				x1, y1, x2, y2;
+    PathRect 			transition;		/* The transition line. */
+    GradientStop 		*stop;
+    cairo_pattern_t 	*pattern;
+    cairo_extend_t		extend;
     
+    /*
+     * The current path is consumed by filling.
+     * Need therfore to save the current context and restore after.
+     */
+    cairo_save(gctx);
+
     transition = fillPtr->transition;
     nstops = fillPtr->nstops;
     fillMethod = fillPtr->method;
     
-    pat = cairo_pattern_create_linear(transition.x1, transition.y1, transition.x2, transition.y2);
+    /* Scale up 'transition' vector to bbox. */
+    x1 = bbox->x1 + (bbox->x2 - bbox->x1)*transition.x1;
+    y1 = bbox->y1 + (bbox->y2 - bbox->y1)*transition.y1;
+    x2 = bbox->x1 + (bbox->x2 - bbox->x1)*transition.x2;
+    y2 = bbox->y1 + (bbox->y2 - bbox->y1)*transition.y2;
+
+    pattern = cairo_pattern_create_linear(x1, y1, x2, y2);
     for (i = 0; i < nstops; i++) {
         stop = fillPtr->stops[i];
-        cairo_pattern_add_color_stop(pat, stop->offset, 
+        cairo_pattern_add_color_stop(pattern, stop->offset, 
                 RedDoubleFromXColorPtr(stop->color),
                 GreenDoubleFromXColorPtr(stop->color),
                 BlueDoubleFromXColorPtr(stop->color),
                 stop->opacity);
     }
-    cairo_set_pattern(gctx, pat);
+    cairo_set_pattern(gctx, pattern);
     cairo_set_fill_rule(gctx, 
             (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
             
@@ -252,10 +265,10 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
             extend = CAIRO_EXTEND_NONE;
             break;
     }
-    cairo_pattern_set_extend(pat, extend);
+    cairo_pattern_set_extend(pattern, extend);
     cairo_fill(gctx);
     
-    cairo_pattern_destroy(pat);
+    cairo_pattern_destroy(pattern);
+    cairo_restore(gctx);
 }
             
-

@@ -1,6 +1,6 @@
 
-#package require tkpath
-load /Users/matben/C/cvs/tkpath/macosx/build/tkpath0.1.dylib
+#load /Users/matben/C/cvs/tkpath/macosx/build/tkpath0.1.dylib
+package require tkpath
 
 set t .c_arcs
 toplevel $t
