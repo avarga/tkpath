@@ -22,95 +22,109 @@ Also, SVG is web oriented and therefore tolerates parameter errors to some
 degree, while tk is a programming tool and typically generates errors
 if paramters are wrong.
 
-Tk: The path specification must be a single list and not concateneted with
-the rest of the command:
+ o The canvas path item
 
-right:  .c create path {M 10 10 h 10 v 10 h -10 z} -fill blue
-wrong:  .c create path M 10 10 h 10 v 10 h -10 z -fill blue    ;# Error
+    The path specification must be a single list and not concateneted with
+    the rest of the command:
 
-Furthermore, coordinates are pixel coordinates and nothing else.
+    right:  .c create path {M 10 10 h 10 v 10 h -10 z} -fill blue
+    wrong:  .c create path M 10 10 h 10 v 10 h -10 z -fill blue    ;# Error
 
-Options for the path canvas item command. Not all are implemented:
+    Furthermore, coordinates are pixel coordinates and nothing else.
 
-    -fill color
-    -fillgradient gradientToken
-    -filloffset
-    -fillopacity float (0,1)
-    -fillrule nonzero|evenodd
-    -fillstipple
-    -matrix (not completely implemented)
-    -state
-    -stroke color
-    -strokedasharray dashArray
-    -strokelinecap 
-    -strokelinejoin
-    -strokemiterlimit float
-    -strokeoffset
-    -strokeopacity float (0,1)
-    -strokestipple
-    -strokewidth float
-    -style styleToken
-    -tags tagList
+    Options for the path canvas item command. Not all are implemented:
 
-A matrix is specified by a double list as {{a b} {c d} {tx ty}}.
-There are utility functions to create a matrix using simpler transformations,
-such as rotation, translation etc.
+	-fill color
+	-fillgradient gradientToken
+	-filloffset
+	-fillopacity float (0,1)
+	-fillrule nonzero|evenodd
+	-fillstipple
+	-matrix (not completely implemented)
+	-state
+	-stroke color
+	-strokedasharray dashArray
+	-strokelinecap 
+	-strokelinejoin
+	-strokemiterlimit float
+	-strokeoffset
+	-strokeopacity float (0,1)
+	-strokestipple
+	-strokewidth float
+	-style styleToken
+	-tags tagList
 
-The styleToken can be a style created with tkpath::style. It's options
-take precedence over the any other options set directly. This is how
-SVG works (bad?).
+    A matrix is specified by a double list as {{a b} {c d} {tx ty}}.
+    There are utility functions to create a matrix using simpler transformations,
+    such as rotation, translation etc.
 
-Antialiasing, if available, is controlled by the variable:
-::tkpath::antialias
-Switch on with:
-set ::tkpath::antialias 1
+    The styleToken can be a style created with tkpath::style. It's options
+    take precedence over the any other options set directly. This is how
+    SVG works (bad?).
 
-Styles are created and configured using:
+ o Antialiasing, if available, is controlled by the variable:
+    ::tkpath::antialias
+    Switch on with:
+    set ::tkpath::antialias 1
 
-::tkpath::style cmd ?options?
 
-    ::tkpath:: style cget token option
-        Returns the value of an option.
+ o Styles are created and configured using:
 
-    ::tkpath:: style configure token ?option? ?value option value...?
-        Configures the object in the usual tcl way.
+    ::tkpath::style cmd ?options?
 
-    ::tkpath:: style create ?-key value ...?
-        Creates a linear gradient object and returns its token.
+        ::tkpath:: style cget token option
+	    Returns the value of an option.
 
-    ::tkpath:: style delete token
-        Deletes the object.
+        ::tkpath:: style configure token ?option? ?value option value...?
+            Configures the object in the usual tcl way.
 
-    ::tkpath:: style names
-        Returns all existing tokens.
+        ::tkpath:: style create ?-key value ...?
+            Creates a linear gradient object and returns its token.
 
-Linear gradients are created and configured using:
+	::tkpath:: style delete token
+	    Deletes the object.
 
-::tkpath::lineargradient cmd ?options?
+	::tkpath:: style names
+	    Returns all existing tokens.
 
-    ::tkpath::lineargradient cget token option
-        Returns the value of an option.
+    The same options as for the item are supported with the exception of -style,
+    -state, and -tags.
 
-    ::tkpath::lineargradient configure token ?option? ?value option value...?
-        Configures the object in the usual tcl way.
+ o Linear gradients are created and configured using:
 
-    ::tkpath::lineargradient create ?-key value ...?
-        Creates a linear gradient object and returns its token.
+    ::tkpath::lineargradient cmd ?options?
 
-    ::tkpath::lineargradient delete token
-        Deletes the object.
+	::tkpath::lineargradient cget token option
+	    Returns the value of an option.
 
-    ::tkpath::lineargradient names
-        Returns all existing tokens.
+	::tkpath::lineargradient configure token ?option? ?value option value...?
+	    Configures the object in the usual tcl way.
 
-The options are:
-    -method pad|repeat|reflect    partial implementation; defaults to pad
-    -stops {stopSpec ?stopSpec...?}
-        where stopSpec is a list {offset color ?opacity?}.
-	All offsets must be ordered and run from 0 to 1.
-    -transition {x1 y1 x2 y2}
-        specifies the transtion vector relative the items bounding box.
-	Coordinates run from 0 to 1. It defaults to {0 0 1 0}.
+	::tkpath::lineargradient create ?-key value ...?
+	    Creates a linear gradient object and returns its token.
+
+	::tkpath::lineargradient delete token
+	    Deletes the object.
+
+	::tkpath::lineargradient names
+	    Returns all existing tokens.
+
+    The options are:
+	-method pad|repeat|reflect    partial implementation; defaults to pad
+	-stops {stopSpec ?stopSpec...?}
+	    where stopSpec is a list {offset color ?opacity?}.
+	    All offsets must be ordered and run from 0 to 1.
+	-transition {x1 y1 x2 y2}
+	    specifies the transtion vector relative the items bounding box.
+	    Coordinates run from 0 to 1. It defaults to {0 0 1 0}.
+
+ o Known issues:
+
+   - Any changes made to a style object or a gradient object is not directly
+   noticable to a canvas item. SOme kind of notifier is needed here.
+
+   - The style and gradient objects should belong to the canvas widget itself,
+   but that requires changes to the canvas code.
 
 
 Copyright (c) 2005  Mats Bengtsson

@@ -304,9 +304,11 @@ DashFreeOption(
     char *internalPtr)		/* Pointer to storage for value. */
 {
     if (*((char **) internalPtr) != NULL) {
+        Tk_Dash *dash = (Tk_Dash *) internalPtr;
 
-
-        // @@@ TODO
+        if (ABS(dash->number) > sizeof(char *)) {
+            ckfree((char *) dash->pattern.pt);
+        }
     }
 }
 
@@ -359,7 +361,7 @@ static Tk_OptionSpec styleOptionSpecs[] = {
         "", -1, Tk_Offset(Tk_PathStyle, fillStipple), TK_OPTION_NULL_OK, 0, 
         PATH_STYLE_OPTION_FILLSTIPPLE},
 	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
-		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, matrix),
+		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, matrixPtr),
 		TK_OPTION_NULL_OK, (ClientData) &matrixCO, PATH_STYLE_OPTION_MATRIX},
     {TK_OPTION_COLOR, "-stroke", (char *) NULL, (char *) NULL,
         "black", -1, Tk_Offset(Tk_PathStyle, strokeColor), TK_OPTION_NULL_OK, 0, 
@@ -585,7 +587,7 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
         /* @@@ TODO */
     }
     if (mask & PATH_STYLE_OPTION_MATRIX) {
-        CopyTMatrix(&(stylePtr->matrix), srcStylePtr->matrix);
+        CopyTMatrix(&(stylePtr->matrixPtr), srcStylePtr->matrixPtr);
     }
     if (mask & PATH_STYLE_OPTION_STROKE) {
         CopyXColor(tkwin, &(stylePtr->strokeColor), srcStylePtr->strokeColor);
@@ -661,7 +663,7 @@ Tk_CreatePathStyle(Tk_PathStyle *style)
     style->fillStipple = None;
     style->fillRule = WindingRule;
     style->gradientFillName = NULL;    
-    style->matrix = NULL;
+    style->matrixPtr = NULL;
 }
 
 /*
@@ -706,8 +708,8 @@ Tk_DeletePathStyle(Display *display, Tk_PathStyle *style)
     if (style->fillStipple != None) {
         Tk_FreeBitmap(display, style->fillStipple);
     }
-    if (style->matrix != NULL) {
-        ckfree((char *) style->matrix);
+    if (style->matrixPtr != NULL) {
+        ckfree((char *) style->matrixPtr);
     }
 }
 

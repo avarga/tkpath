@@ -143,6 +143,7 @@ void		TkPathClosePath(Drawable d);
 int 		TableLookup(LookupTable *map, int n, int from);
 void		PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayPtrPtr);
 void 		PathApplyTMatrix(TMatrix *m, double *x, double *y);
+void 		PathApplyTMatrixToPoint(TMatrix *m, double in[2], double out[2]);
 void		PathInverseTMatrix(TMatrix *m, TMatrix *mi);
 
 int			ObjectIsEmpty(Tcl_Obj *objPtr);

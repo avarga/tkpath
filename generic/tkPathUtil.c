@@ -225,13 +225,30 @@ TableLookup(LookupTable *map, int n, int from)
     }
 }
 
+/*
+ * Miscellaneous matrix utilities.
+ */
+ 
 void 
 PathApplyTMatrix(TMatrix *m, double *x, double *y)
 {
+    if (m == NULL) {
+        return;
+    }
     double tmpx = *x;
     double tmpy = *y;
     *x = tmpx*m->a + tmpy*m->c + m->tx;
     *y = tmpx*m->b + tmpy*m->d + m->ty;
+}
+
+void 
+PathApplyTMatrixToPoint(TMatrix *m, double in[2], double out[2])
+{
+    if (m == NULL) {
+        return;
+    }
+    *out     = in[0]*m->a + in[1]*m->c + m->tx;
+    *(out+1) = in[0]*m->b + in[1]*m->d + m->ty;
 }
 
 void

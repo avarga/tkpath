@@ -149,9 +149,9 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     if (style->strokeStipple != None) {
         //CGContextSetStrokePattern(c, CGPatternRef pattern, const float color[]);
     }
-    if (style->matrix != NULL) {
+    if (style->matrixPtr != NULL) {
         CGAffineTransform transform;
-        TMatrix *mPtr = style->matrix;
+        TMatrix *mPtr = style->matrixPtr;
     
         /* Return the transform [ a b c d tx ty ]. */
         transform = CGAffineTransformMake(

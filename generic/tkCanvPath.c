@@ -32,10 +32,10 @@ enum {
 typedef struct PathItem  {
     Tk_Item header;		/* Generic stuff that's the same for all
 				 * types.  MUST BE FIRST IN STRUCTURE. */
+    Tk_Canvas canvas;		/* Canvas containing item. */
     Tk_Outline outline;		/* Outline structure */
     Tk_PathStyle style;		/* Contains most drawing info. */
     char *styleName;		/* Name of any inherited style object. */
-    Tk_Canvas canvas;		/* Canvas containing item. */
     Tcl_Obj *pathObjPtr;	/* The object containing the path definition. */
     int pathLen;
     Tcl_Obj *normPathObjPtr;	/* The object containing the normalized path. */
@@ -208,7 +208,7 @@ static Tk_ConfigSpec configSpecs[] = {
 	(char *) NULL, Tk_Offset(PathItem, style.fillStipple),
 	TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style.matrix),
+	(char *) NULL, Tk_Offset(PathItem, style.matrixPtr),
 	TK_CONFIG_NULL_OK, &matrixOption},
     {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
@@ -1012,7 +1012,7 @@ PathCoords(
     int result, len;
     
     if (objc == 0) {
-        /* We have an option here if to return the normalized or original path. */
+        /* @@@ We have an option here if to return the normalized or original path. */
         //Tcl_SetObjResult(interp, pathPtr->pathObjPtr);
         
         /* We may need to recompute the normalized path from the atoms. */
@@ -1027,6 +1027,7 @@ PathCoords(
     } else if (objc == 1) {
         result = TkPathParseToAtoms(interp, objv[0], &atomPtr, &len);
         if (result == TCL_OK) {
+        
             /* Free any old atoms. */
             if (pathPtr->atomPtr != NULL) {
                 TkPathFreeAtoms(pathPtr->atomPtr);
@@ -1084,25 +1085,25 @@ SetTotalBboxFromBare(PathItem *pathPtr)
     rect.y2 += 1.0;
     
     /* Is this the right place? */
-    if (style->matrix != NULL) {
+    if (style->matrixPtr != NULL) {
         double x, y;
         PathRect r = NewEmptyPathRect();
 
         /* Take each four corners in turn. */
         x = rect.x1, y = rect.y1;
-        PathApplyTMatrix(style->matrix, &x, &y);
+        PathApplyTMatrix(style->matrixPtr, &x, &y);
         IncludePointInRect(&r, x, y);
 
         x = rect.x2, y = rect.y1;
-        PathApplyTMatrix(style->matrix, &x, &y);
+        PathApplyTMatrix(style->matrixPtr, &x, &y);
         IncludePointInRect(&r, x, y);
 
         x = rect.x1, y = rect.y2;
-        PathApplyTMatrix(style->matrix, &x, &y);
+        PathApplyTMatrix(style->matrixPtr, &x, &y);
         IncludePointInRect(&r, x, y);
 
         x = rect.x2, y = rect.y2;
-        PathApplyTMatrix(style->matrix, &x, &y);
+        PathApplyTMatrix(style->matrixPtr, &x, &y);
         IncludePointInRect(&r, x, y);        
     }
     pathPtr->header.x1 = (int) rect.x1;
@@ -1192,7 +1193,7 @@ ConfigurePath(
 	return TCL_OK;
     }
     
-    /* @@@ Not sure that GC's should be used at all! */
+    /* @@@ Not sure if GC's should be used at all! */
     
     /* Configure the stroke GC. */
     mask = Tk_ConfigStrokePathStyleGC(&gcValues, canvas, itemPtr,
@@ -1297,7 +1298,7 @@ DeletePath(
  *--------------------------------------------------------------
  */
 
-PathRect
+static PathRect
 GetBareArcBbox(double cx, double cy, double rx, double ry,
         double theta1, double dtheta, double phi)
 {
@@ -1408,7 +1409,7 @@ GetBareArcBbox(double cx, double cy, double rx, double ry,
  *--------------------------------------------------------------
  */
 
-PathRect
+static PathRect
 GetBarePathBbox(PathAtom *atomPtr)
 {
     double x1, y1, x2, y2, x3, y3, x4, y4, x5, y5;
@@ -1869,8 +1870,8 @@ QuadBezierSegments(
 static int
 ArcToArea(
     PathItem *pathPtr,
-    double currentX,			/* Current point. */
-    double currentY,
+    TMatrix *matrixPtr,
+    double current[2],			/* Current point. */
     ArcAtom *arc,
     double *rectPtr)
 {
@@ -1882,8 +1883,14 @@ ArcToArea(
     register double *coordPtr;		/* Where to put new points. */
     CentralArcPars arcPars;
     double cx, cy, rx, ry;
+    double currentX, currentY;
     double theta1, dtheta;
             
+    // @@@ Pretty complicated to apply matrix to arc parameters...
+            
+    currentX = current[0];
+    currentY = current[1];
+    
     result = EndpointToCentralArcParameters(
             currentX, currentY,
             arc->x, arc->y, arc->radX, arc->radY, 
@@ -1949,8 +1956,8 @@ donearea:
 static int
 CurveToArea(
     PathItem *pathPtr,
-    double cx,			/* Current point. */
-    double cy,
+    TMatrix *matrixPtr,
+    double current[2],			/* Current point. */
     CurveToAtom *curveToAtomPtr,
     double *rectPtr)
 {
@@ -1960,14 +1967,22 @@ CurveToArea(
     register double *coordPtr;		/* Where to put new points. */
     double control[8];
 
-    control[0] = cx;
-    control[1] = cy;
+    PathApplyTMatrixToPoint(matrixPtr, current, control);
+    PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->ctrlX1), control+2);
+    PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->ctrlX2), control+4);
+    PathApplyTMatrixToPoint(matrixPtr, &(curveToAtomPtr->anchorX), control+6);
+
+#if 0
+    control[0] = current[0];
+    control[1] = current[1];
     control[2] = curveToAtomPtr->ctrlX1;
     control[3] = curveToAtomPtr->ctrlY1;
     control[4] = curveToAtomPtr->ctrlX2;
     control[5] = curveToAtomPtr->ctrlY2;
     control[6] = curveToAtomPtr->anchorX;
     control[7] = curveToAtomPtr->anchorY;
+#endif
+
     numSteps = 12;
     coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
     BezierSegments(control, numSteps, coordPtr);
@@ -2001,8 +2016,8 @@ donearea:
 static int
 QuadBezierToArea(
     PathItem *pathPtr,
-    double cx,			/* Current point. */
-    double cy,
+    TMatrix *matrixPtr,
+    double current[2],			/* Current point. */
     QuadBezierAtom *quadAtomPtr,
     double *rectPtr)
 {
@@ -2012,12 +2027,18 @@ QuadBezierToArea(
     register double *coordPtr;		/* Where to put new points. */
     double control[6];
 
-    control[0] = cx;
-    control[1] = cy;
+    PathApplyTMatrixToPoint(matrixPtr, current, control);
+    PathApplyTMatrixToPoint(matrixPtr, &(quadAtomPtr->ctrlX), control+2);
+    PathApplyTMatrixToPoint(matrixPtr, &(quadAtomPtr->anchorX), control+4);
+
+#if 0
+    control[0] = current[0];
+    control[1] = current[1];
     control[2] = quadAtomPtr->ctrlX;
     control[3] = quadAtomPtr->ctrlY;
     control[4] = quadAtomPtr->anchorX;
     control[5] = quadAtomPtr->anchorY;
+#endif
     numSteps = 12;
     coordPtr = (double *) ckalloc((unsigned) (2 * sizeof(double) * numSteps));
     QuadBezierSegments(control, numSteps, coordPtr);
@@ -2083,25 +2104,18 @@ PathToArea(
 				 * has been found. */ 
     int first = 1;
     double radius, width;
-    double cx, cy;	/* Current point. */
+    double current[2];		/* Current untransformed point. */
+    double currentT[2];		/* Current transformed point. */
+    double pt[2];		/* Transformed point. */
     Tk_State state = itemPtr->state;
     Tk_PathStyle style = pathPtr->style;
     PathAtom *atomPtr = pathPtr->atomPtr;
+    TMatrix *matrixPtr = style.matrixPtr;
     
     if(state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
-    width = pathPtr->outline.width;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (pathPtr->outline.activeWidth>width) {
-	    width = pathPtr->outline.activeWidth;
-	}
-    } else if (state==TK_STATE_DISABLED) {
-	if (pathPtr->outline.disabledWidth>0) {
-	    width = pathPtr->outline.disabledWidth;
-	}
-    }
-
+    width = style.strokeWidth;
     radius = (width + 1.0)/2.0;
     
     if ((state==TK_STATE_HIDDEN) || (pathPtr->pathLen < 3)) {
@@ -2109,32 +2123,38 @@ PathToArea(
     }
     
     /*
-     * Check the segments of the path.
+     * Check each segment of the path.
+     * Any transform matrix is applied at the last stage when comparing to rect.
+     * 'current' is always untransformed coords.
      */
 
-    cx = 0.0;
-    cy = 0.0;
+    current[0] = 0.0;
+    current[1] = 0.0;
     
     while (atomPtr != NULL) {
     
         switch (atomPtr->type) {
-            case PATH_ATOM_M: { 
+            case PATH_ATOM_M: {
+            
                 /* A 'M' atom must be first, may show up later as well. */
                 MoveToAtom *moveToAtomPtr = (MoveToAtom *) atomPtr;
                 
                 if (first) {
-                    cx = moveToAtomPtr->x;
-                    cy = moveToAtomPtr->y;
-                    inside = (cx >= rectPtr[0]) && (cx <= rectPtr[2])
-                            && (cy >= rectPtr[1]) && (cy <= rectPtr[3]);
+                    current[0] = moveToAtomPtr->x;
+                    current[1] = moveToAtomPtr->y;
+                    PathApplyTMatrixToPoint(matrixPtr, current, currentT);
+                    inside = (currentT[0] >= rectPtr[0]) && (currentT[0] <= rectPtr[2])
+                            && (currentT[1] >= rectPtr[1]) && (currentT[1] <= rectPtr[3]);
                 } else {
                 
                     /* A "virtual line" connects the subpaths. */
-                    if (TkLineToArea(&cx, &(moveToAtomPtr->x), rectPtr) != inside) {
+                    PathApplyTMatrixToPoint(matrixPtr, &(moveToAtomPtr->x), pt);
+                    if (TkLineToArea(currentT, pt, rectPtr) != inside) {
                         return 0;
                     }
-                    cx = moveToAtomPtr->x;
-                    cy = moveToAtomPtr->y;
+                    current[0] = moveToAtomPtr->x;
+                    current[1] = moveToAtomPtr->y;
+                    PathApplyTMatrixToPoint(matrixPtr, current, currentT);
                 }
                 first = 0;
                 break;
@@ -2142,15 +2162,20 @@ PathToArea(
             case PATH_ATOM_L: { 
                 LineToAtom *lineToAtomPtr = (LineToAtom *) atomPtr;
 
-                if (TkLineToArea(&cx, &(lineToAtomPtr->x), rectPtr) != inside) {
+                PathApplyTMatrixToPoint(matrixPtr, &(lineToAtomPtr->x), pt);
+                if (TkLineToArea(currentT, pt, rectPtr) != inside) {
                     return 0;
                 }
+                current[0]  = lineToAtomPtr->x;
+                current[1]  = lineToAtomPtr->y;
+                currentT[0] = pt[0];
+                currentT[1] = pt[1];
                 break;
             }
             case PATH_ATOM_A: {
                 ArcAtom *arcAtomPtr = (ArcAtom *) atomPtr;
-            
-                if (ArcToArea(pathPtr, cx, cy, arcAtomPtr, rectPtr) != inside) {
+                
+                if (ArcToArea(pathPtr, matrixPtr, current, arcAtomPtr, rectPtr) != inside) {
                     return 0;
                 }
                 break;
@@ -2158,28 +2183,39 @@ PathToArea(
             case PATH_ATOM_Q: {
                 QuadBezierAtom *quadBezierAtomPtr = (QuadBezierAtom *) atomPtr;
             
-                if (QuadBezierToArea(pathPtr, cx, cy, quadBezierAtomPtr, rectPtr) != inside) {
+                if (QuadBezierToArea(pathPtr, matrixPtr, current, quadBezierAtomPtr, rectPtr) != inside) {
                     return 0;
                 }
+                current[0] = quadBezierAtomPtr->anchorX;
+                current[1] = quadBezierAtomPtr->anchorY;
+                PathApplyTMatrixToPoint(matrixPtr, current, currentT);
                 break;
             }
             case PATH_ATOM_C: {
                 CurveToAtom *curveToAtomPtr = (CurveToAtom *) atomPtr;
 
-                if (CurveToArea(pathPtr, cx, cy, curveToAtomPtr, rectPtr) != inside) {
+                if (CurveToArea(pathPtr, matrixPtr, current, curveToAtomPtr, rectPtr) != inside) {
                     return 0;
                 }
+                current[0] = curveToAtomPtr->anchorX;
+                current[1] = curveToAtomPtr->anchorY;
+                PathApplyTMatrixToPoint(matrixPtr, current, currentT);
                 break;
             }
             case PATH_ATOM_Z: {
                 CloseAtom *closeAtomPtr = (CloseAtom *) atomPtr;
             
                 if (style.fillColor != NULL) {
-                    inside = TkLineToArea(&cx, &(closeAtomPtr->x), rectPtr);
+                    PathApplyTMatrixToPoint(matrixPtr, &(closeAtomPtr->x), pt);
+                    inside = TkLineToArea(currentT, pt, rectPtr);
                     if (inside == 0) {
                         return 0;
                     }
                 }
+                current[0]  = closeAtomPtr->x;
+                current[1]  = closeAtomPtr->y;
+                currentT[0] = pt[0];
+                currentT[1] = pt[1];
                 break;
             }
         }

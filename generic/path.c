@@ -96,10 +96,10 @@ Tkpath_Init(
     Tcl_CreateObjCommand(interp, "::tkpath::lineargradient",
             LinearGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathLinearGradientInit(interp);
+
     /*
-    gLinearGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
-    Tcl_InitHashTable(gLinearGradientHashPtr, TCL_STRING_KEYS);
-*/
+     * Style object.
+     */
     Tcl_CreateObjCommand(interp, "::tkpath::style",
             StyleObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathStyleInit(interp);

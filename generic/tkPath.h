@@ -155,7 +155,7 @@ typedef struct Tk_PathStyle {
                                  * gradient fill. No fill record since
                                  * bad idea duplicate pointers.
                                  * Look up each time. */
-    TMatrix *matrix;			/*  a  b   default (NULL): 1 0
+    TMatrix *matrixPtr;			/*  a  b   default (NULL): 1 0
                                     c  d				   0 1
                                     tx ty 				   0 0 */
     char *null;   				/* Just a placeholder for not yet implemented stuff. */ 
