@@ -63,7 +63,7 @@ typedef struct TMatrix {
     double tx, ty;
 } TMatrix;
 
-static const TMatrix gUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+static const TMatrix kUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
 /*
  * Records used for parsing path to a linked list of primitive 
@@ -105,6 +105,8 @@ typedef struct RadialGradientFill {
 } RadialGradientFill;
 
 typedef struct Tk_PathStyle {
+	Tk_OptionTable optionTable;	/* Not used for canvas. */
+	Tk_Uid name;				/* Not used for canvas. */
     GC strokeGC;				/* Graphics context for stroke. */
     XColor *strokeColor;		/* Stroke color. */
     double strokeWidth;			/* Width of stroke. */
@@ -128,11 +130,10 @@ typedef struct Tk_PathStyle {
                                  * gradient fill. No fill record since
                                  * bad idea duplicate pointers.
                                  * Look up each time. */
-    char *matrixStr;			/* Transformation matrix string. */
-                                /* Not fully implemeted! */
     TMatrix *matrix;			/*  a  b   default (NULL): 1 0
                                     c  d				   0 1
                                     tx ty 				   0 0 */
+    char *null;   				/* Just a placeholder for not yet implemented stuff. */ 
 } Tk_PathStyle;
 
 /*

@@ -23,9 +23,10 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
-extern Tcl_HashTable 	*gLinearGradientHashPtr;
-static int gStyleNameUid = 0;
-static char *gStyleNameBase = "lineargradient";
+extern Tcl_HashTable *	gLinearGradientHashPtr;
+static Tk_OptionTable 	gLinearGradientOptionTable;
+static int 				gGradientNameUid = 0;
+static char *			kLinGradientNameBase = "lineargradient";
 
 typedef struct LinearGradientStyle {
 	Tk_OptionTable optionTable;
@@ -54,26 +55,20 @@ enum {
 
 
 static int	FillInTransitionFromRectObj(Tcl_Interp *interp, 
-                    LinearGradientStyle *stylePtr, Tcl_Obj *rectObj);
+                    LinearGradientStyle *gradientStylePtr, Tcl_Obj *rectObj);
 
 int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
                 int objc, Tcl_Obj* CONST objv[]);
 int		HaveLinearGradientStyleWithName(CONST char *name);
+static LinearGradientStyle *	LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
+static void						LinGradientFree(Tcl_Interp *interp, char *recordPtr);
 
 
 /* Cleanup all this when it works!!!!!!!!!!!!!!!!!!! */
 
-static int ObjectIsEmpty(Tcl_Obj *obj)
-{
-    int length;
-
-    if (obj == NULL)
-        return 1;
-    if (obj->bytes != NULL)
-        return (obj->length == 0);
-    Tcl_GetStringFromObj(obj, &length);
-    return (length == 0);
-}
+/*
+ * Custom option processing code.
+ */
 
 /*
  * Procedures for processing the transition option of the gradient fill.
@@ -92,7 +87,7 @@ static int TransitionSet(
 {
     char *internalPtr;
     int objEmpty = 0;
-    LinearGradientStyle *stylePtr = (LinearGradientStyle *) recordPtr;
+    LinearGradientStyle *gradientStylePtr = (LinearGradientStyle *) recordPtr;
     
     if (internalOffset >= 0) {
         internalPtr = recordPtr + internalOffset;
@@ -132,7 +127,7 @@ static int TransitionSet(
                 return TCL_ERROR;
             }
         }
-        return FillInTransitionFromRectObj(interp, stylePtr, (*value));
+        return FillInTransitionFromRectObj(interp, gradientStylePtr, (*value));
     }
 }
 
@@ -173,11 +168,11 @@ FreeAllStops(GradientStop **stops, int nstops)
 }
 
 static void
-FreeLinearGradientStyle(LinearGradientStyle *stylePtr)
+FreeLinearGradientStyle(LinearGradientStyle *gradientStylePtr)
 {
-    FreeAllStops(stylePtr->fill.stops, stylePtr->fill.nstops);
-	Tk_FreeConfigOptions((char *) stylePtr, stylePtr->optionTable, NULL);
-	ckfree( (char *) stylePtr );
+    FreeAllStops(gradientStylePtr->fill.stops, gradientStylePtr->fill.nstops);
+	Tk_FreeConfigOptions((char *) gradientStylePtr, gradientStylePtr->optionTable, NULL);
+	ckfree( (char *) gradientStylePtr );
 }
 
 /*
@@ -203,8 +198,8 @@ static int StopsSet(
     Tcl_Obj *obj;
     XColor *color;
     GradientStop **stops = NULL;
-    LinearGradientStyle *stylePtr = (LinearGradientStyle *) recordPtr;
-    LinearGradientFill *fillPtr = &(stylePtr->fill);
+    LinearGradientStyle *gradientStylePtr = (LinearGradientStyle *) recordPtr;
+    LinearGradientFill *fillPtr = &(gradientStylePtr->fill);
     
     if (internalOffset >= 0) {
         internalPtr = recordPtr + internalOffset;
@@ -331,9 +326,9 @@ FormatResult(Tcl_Interp *interp, char *fmt, ...)
 }
 
 static int
-FillInTransitionFromRectObj(Tcl_Interp *interp, LinearGradientStyle *stylePtr, Tcl_Obj *rectObj)
+FillInTransitionFromRectObj(Tcl_Interp *interp, LinearGradientStyle *gradientStylePtr, Tcl_Obj *rectObj)
 {
-    LinearGradientFill *fillPtr = &(stylePtr->fill);
+    LinearGradientFill *fillPtr = &(gradientStylePtr->fill);
     
     /* The default is left to right fill. */
     if (rectObj == NULL) {
@@ -362,39 +357,6 @@ FillInTransitionFromRectObj(Tcl_Interp *interp, LinearGradientStyle *stylePtr, T
     return TCL_OK;
 }
 
-static LinearGradientStyle *
-LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[])
-{
-	LinearGradientStyle *stylePtr;
-
-	stylePtr = (LinearGradientStyle *) ckalloc(sizeof(LinearGradientStyle));
-	memset(stylePtr, '\0', sizeof(LinearGradientStyle));
-    
-    /*
-     * Create the option table for this class.  If it has already
-     * been created, the cached pointer will be returned.
-     */
-	stylePtr->optionTable = Tk_CreateOptionTable(interp, linGradientStyleOptionSpecs); 
-	stylePtr->name = Tk_GetUid(name);
-    
-    /* Set default transition vector in case not set. */
-    FillInTransitionFromRectObj(interp, stylePtr, NULL);
-
-	if (Tk_InitOptions(interp, (char *) stylePtr, stylePtr->optionTable, 
-            NULL) != TCL_OK) {
-		ckfree((char *) stylePtr);
-		return NULL;
-	}
-
-	if (Tk_SetOptions(interp, (char *) stylePtr, stylePtr->optionTable, 
-            objc, objv, NULL, NULL, NULL) != TCL_OK) {
-		Tk_FreeConfigOptions((char *) stylePtr, stylePtr->optionTable, NULL);
-		ckfree((char *) stylePtr);
-		return NULL;
-	}
-	return stylePtr;
-}
-
 static int 
 GetGradientStyleFromObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientStyle **stylePtrPtr)
 {
@@ -415,28 +377,28 @@ GetGradientStyleFromObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientStyle **
 static int
 GetLinearGradientFromNameObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientFill **gradientPtrPtr)
 {
-    LinearGradientStyle *stylePtr;
+    LinearGradientStyle *gradientStylePtr;
     
-    if (GetGradientStyleFromObj(interp, obj, &stylePtr) != TCL_OK) {
+    if (GetGradientStyleFromObj(interp, obj, &gradientStylePtr) != TCL_OK) {
         return TCL_ERROR;
     }
-    *gradientPtrPtr = &(stylePtr->fill);
+    *gradientPtrPtr = &(gradientStylePtr->fill);
     return TCL_OK;
 }
 
-int
+static int
 GetLinearGradientFromName(char *name, LinearGradientFill **gradientPtrPtr)
 {
 	Tcl_HashEntry *hPtr;
-    LinearGradientStyle *stylePtr;
+    LinearGradientStyle *gradientStylePtr;
 
 	hPtr = Tcl_FindHashEntry(gLinearGradientHashPtr, name);
 	if (hPtr == NULL) {
         *gradientPtrPtr = NULL;
         return TCL_ERROR;
     } else {
-        stylePtr = (LinearGradientStyle *) Tcl_GetHashValue(hPtr);
-        *gradientPtrPtr = &(stylePtr->fill);
+        gradientStylePtr = (LinearGradientStyle *) Tcl_GetHashValue(hPtr);
+        *gradientPtrPtr = &(gradientStylePtr->fill);
         return TCL_OK;
     }
 }
@@ -454,16 +416,28 @@ HaveLinearGradientStyleWithName(CONST char *name)
     }
 }
 
-static void 
-FreeStyle(LinearGradientStyle *stylePtr)
+void
+PathPaintLinearGradientFromName(Drawable d, PathRect *bbox, char *name, int fillRule)
 {
-	Tcl_HashEntry *hPtr;
+    LinearGradientFill *fillPtr;
 
-    hPtr = Tcl_FindHashEntry(gLinearGradientHashPtr, stylePtr->name);
-    if (hPtr != NULL) {
-		Tcl_DeleteHashEntry(hPtr);
-	}
-    FreeLinearGradientStyle(stylePtr);
+    if (GetLinearGradientFromName(name, &fillPtr) != TCL_OK) {
+        return;
+    }
+    TkPathPaintLinearGradient(d, bbox, fillPtr, fillRule);
+}
+
+void
+PathLinearGradientInit(Tcl_Interp* interp) 
+{
+    gLinearGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
+    Tcl_InitHashTable(gLinearGradientHashPtr, TCL_STRING_KEYS);
+    
+    /*
+     * The option table must only be made once and not for each instance.
+     */
+    gLinearGradientOptionTable = Tk_CreateOptionTable(interp, 
+            linGradientStyleOptionSpecs);
 }
 
 /*
@@ -484,6 +458,63 @@ FreeStyle(LinearGradientStyle *stylePtr)
 
 int 
 LinearGradientCmd( 
+        ClientData clientData,
+        Tcl_Interp* interp,
+        int objc,
+      	Tcl_Obj* CONST objv[] )
+{
+    return PathGenericCmdDispatcher(interp, objc, objv, 
+            kLinGradientNameBase, &gGradientNameUid, 
+            gLinearGradientHashPtr, gLinearGradientOptionTable,
+            LinGradientCreateAndConfig, LinGradientFree);
+}
+
+static LinearGradientStyle *
+LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[])
+{
+	LinearGradientStyle *gradientStylePtr;
+
+	gradientStylePtr = (LinearGradientStyle *) ckalloc(sizeof(LinearGradientStyle));
+	memset(gradientStylePtr, '\0', sizeof(LinearGradientStyle));
+    
+    /*
+     * Create the option table for this class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+	gradientStylePtr->optionTable = gLinearGradientOptionTable; 
+	gradientStylePtr->name = Tk_GetUid(name);
+    
+    /* Set default transition vector in case not set. */
+    FillInTransitionFromRectObj(interp, gradientStylePtr, NULL);
+
+	if (Tk_InitOptions(interp, (char *) gradientStylePtr, gradientStylePtr->optionTable, 
+            NULL) != TCL_OK) {
+		ckfree((char *) gradientStylePtr);
+		return NULL;
+	}
+
+	if (Tk_SetOptions(interp, (char *) gradientStylePtr, gradientStylePtr->optionTable, 
+            objc, objv, NULL, NULL, NULL) != TCL_OK) {
+		Tk_FreeConfigOptions((char *) gradientStylePtr, gradientStylePtr->optionTable, NULL);
+		ckfree((char *) gradientStylePtr);
+		return NULL;
+	}
+	return gradientStylePtr;
+}
+
+static void
+LinGradientFree(Tcl_Interp *interp, char *recordPtr) 
+{
+    FreeLinearGradientStyle((LinearGradientStyle *) recordPtr);
+    ckfree(recordPtr);
+}
+
+/*--------------------- junk */
+
+#if 0
+
+int 
+LinearGradientCmdBU( 
         ClientData clientData,
         Tcl_Interp* interp,
         int objc,
@@ -550,9 +581,9 @@ LinearGradientCmd(
                         NULL, NULL) != TCL_OK) {
 					return TCL_ERROR;
                 }
-                
 			}
             break;
+        }
         
         case kPathGradientCmdCreate: {
         
@@ -567,43 +598,9 @@ LinearGradientCmd(
 				Tcl_WrongNumArgs(interp, 2, objv, "?option value...?");
 				return TCL_ERROR;
 			}
-            sprintf(name, "%s%d", gStyleNameBase, gStyleNameUid);
-            gStyleNameUid++;
+            sprintf(name, "%s%d", kLinGradientNameBase, gGradientNameUid);
+            gGradientNameUid++;
 			stylePtr = LinGradientCreateAndConfig(interp, name, objc - 2, objv + 2);
-			if (stylePtr == NULL) {
-				return TCL_ERROR;
-            }
-			hPtr = Tcl_CreateHashEntry(gLinearGradientHashPtr, name, &isNew);
-			Tcl_SetHashValue(hPtr, stylePtr);
-			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
-            break;
-        }
-        }
-        
-        case -99: {
-            /*
-             * Create using named style. I don't like this.
-             */
-			char *name;
-			int len;
-			Tcl_HashEntry *hPtr;
-			int isNew;
-
-			if (objc < 3) {
-				Tcl_WrongNumArgs(interp, 3, objv, "name ?option value...?");
-				return TCL_ERROR;
-			}
-			name = Tcl_GetStringFromObj(objv[2], &len);
-			if (!len) {
-				FormatResult(interp, "invalid style name \"\"");
-				return TCL_ERROR;
-			}
-			hPtr = Tcl_FindHashEntry(gLinearGradientHashPtr, name);
-			if (hPtr != NULL) {
-				FormatResult(interp, "style \"%s\" already exists", name);
-				return TCL_ERROR;
-			}
-			stylePtr = LinGradientCreateAndConfig(interp, name, objc - 3, objv + 3);
 			if (stylePtr == NULL) {
 				return TCL_ERROR;
             }
@@ -645,224 +642,6 @@ LinearGradientCmd(
     return result;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * GenericCommandDispatcher --
- *
- *		Supposed to be a generic command dispatcher.  
- *
- * Results:
- *		Standard Tcl result
- *
- * Side effects:
- *		None
- *
- *----------------------------------------------------------------------
- */
-
-#if 0
-
-static CONST char *genericCmds[] = {
-    "cget", "configure", "create", "delete", "names",
-    (char *) NULL
-};
-
-enum {
-	kPathGenericCmdCget						= 0L,
-    kPathGenericCmdConfigure,
-    kPathGenericCmdCreate,
-    kPathGenericCmdDelete,
-    kPathGenericCmdNames
-};
-
-int 
-GenericCommandDispatcher( 
-        ClientData clientData,
-        Tcl_Interp* interp,
-        char *baseName,
-        int *baseNameUIDPtr,
-        Tcl_HashTable *hashTablePtr,
-        Tk_OptionTable optionTable,
-        char *recordPtr,
-        int *createAndConfigProc(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]),
-        //void *freeProc(),
-        int objc,
-      	Tcl_Obj* CONST objv[] )
-{
-    char *name;
-    int result = TCL_OK;
-    int index;
-    Tcl_HashEntry *hPtr;
-
-    if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "command ?arg arg...?");
-        return TCL_ERROR;
-    }
-
-    if (Tcl_GetIndexFromObj(interp, objv[1], genericCmds, "command", 0,
-            &index) != TCL_OK) {
-        return TCL_ERROR;
-    }
-
-    switch (index) {
-    
-        case kPathGenericCmdCget: {
-            Tcl_Obj *resultObjPtr = NULL;
-            
-    		if (objc != 4) {
-				Tcl_WrongNumArgs( interp, 3, objv, "option" );
-    			return TCL_ERROR;
-    		}
-            name = Tcl_GetString(objv[2]);
-            hPtr = Tcl_FindHashEntry(hashTablePtr, name);
-            if (hPtr == NULL) {
-                Tcl_AppendResult(interp, 
-                        "object \"", name, "\" doesn't exist", NULL);
-                return TCL_ERROR;
-            }
-            recordPtr = Tcl_GetHashValue(hPtr);
-			resultObjPtr = Tk_GetOptionValue(interp, recordPtr, optionTable, objv[3], NULL);
-			if (resultObjPtr == NULL) {
-				result = TCL_ERROR;
-			} else {
-				Tcl_SetObjResult( interp, resultObjPtr );
-			}
-            break;
-        }
-        
-        case kPathGenericCmdConfigure: {
-			Tcl_Obj *resultObjPtr = NULL;
-
-			if (objc < 3) {
-				Tcl_WrongNumArgs(interp, 2, objv, "name ?option? ?value option value...?");
-				return TCL_ERROR;
-			}
-            name = Tcl_GetString(objv[2]);
-            hPtr = Tcl_FindHashEntry(hashTablePtr, name);
-            if (hPtr == NULL) {
-                Tcl_AppendResult(interp, 
-                        "object \"", name, "\" doesn't exist", NULL);
-                return TCL_ERROR;
-            }
-            recordPtr = Tcl_GetHashValue(hPtr);
-			if (objc <= 4) {
-				resultObjPtr = Tk_GetOptionInfo(interp, recordPtr,
-                        optionTable,
-                        (objc == 3) ? (Tcl_Obj *) NULL : objv[3],
-                        NULL);
-				if (resultObjPtr == NULL) {
-					return TCL_ERROR;
-                }
-				Tcl_SetObjResult(interp, resultObjPtr);
-			} else {
-				if (Tk_SetOptions(interp, recordPtr, optionTable, objc - 3, objv + 3, 
-                        NULL, NULL, NULL) != TCL_OK) {
-					return TCL_ERROR;
-                }
-			}
-            break;
-        
-        case kPathGenericCmdCreate: {
-        
-            /*
-             * Create with auto generated unique name.
-             */
-			char str[255];
-			int isNew;
-
-			if (objc < 2) {
-				Tcl_WrongNumArgs(interp, 2, objv, "?option value...?");
-				return TCL_ERROR;
-			}
-            sprintf(str, "%s%d", baseName, *baseNameUIDPtr);
-            *baseNameUIDPtr++;
-			stylePtr = *createAndConfigProc(interp, str, objc - 2, objv + 2);
-			if (stylePtr == NULL) {
-				return TCL_ERROR;
-            }
-			hPtr = Tcl_CreateHashEntry(hashTablePtr, str, &isNew);
-			Tcl_SetHashValue(hPtr, stylePtr);
-			Tcl_SetObjResult(interp, Tcl_NewStringObj(str, -1));
-            break;
-        }
-        }
-        
-        case -99: {
-            /*
-             * Create using named style. I don't like this.
-             */
-			int len;
-			int isNew;
-
-			if (objc < 3) {
-				Tcl_WrongNumArgs(interp, 3, objv, "name ?option value...?");
-				return TCL_ERROR;
-			}
-			name = Tcl_GetStringFromObj(objv[2], &len);
-			if (!len) {
-				FormatResult(interp, "invalid style name \"\"");
-				return TCL_ERROR;
-			}
-			hPtr = Tcl_FindHashEntry(hashTablePtr, name);
-			if (hPtr != NULL) {
-				FormatResult(interp, "style \"%s\" already exists", name);
-				return TCL_ERROR;
-			}
-			stylePtr = LinGradientCreateAndConfig(interp, name, objc - 3, objv + 3);
-			if (stylePtr == NULL) {
-				return TCL_ERROR;
-            }
-			hPtr = Tcl_CreateHashEntry(hashTablePtr, name, &isNew);
-			Tcl_SetHashValue(hPtr, stylePtr);
-			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
-            break;
-        }
-        
-        case kPathGenericCmdDelete: {
-			if (objc < 3) {
-				Tcl_WrongNumArgs(interp, 2, objv, "name");
-				return TCL_ERROR;
-			}
-            name = Tcl_GetString(obj);
-            hPtr = Tcl_FindHashEntry(hashTablePtr, name);
-			if (hPtr != NULL) {
-                Tcl_DeleteHashEntry(hPtr);
-			}
-
-			break;
-        }
-        
-        case kPathGenericCmdNames: {
-			Tcl_Obj *listObj;
-			Tcl_HashSearch search;
-
-			listObj = Tcl_NewListObj(0, NULL);
-			hPtr = Tcl_FirstHashEntry(hashTablePtr, &search);
-			while (hPtr != NULL) {
-                stylePtr = (LinearGradientStyle *) Tcl_GetHashValue(hPtr);
-				Tcl_ListObjAppendElement(interp, listObj, 
-                        Tcl_NewStringObj(stylePtr->name, -1));
-				hPtr = Tcl_NextHashEntry(&search);
-			}
-			Tcl_SetObjResult(interp, listObj);
-            break;
-        }
-    }
-    return result;
-}
 #endif
-
-void
-PathPaintLinearGradientFromName(Drawable d, PathRect *bbox, char *name, int fillRule)
-{
-    LinearGradientFill *fillPtr;
-
-    if (GetLinearGradientFromName(name, &fillPtr) != TCL_OK) {
-        return;
-    }
-    TkPathPaintLinearGradient(d, bbox, fillPtr, fillRule);
-}
-
 
 

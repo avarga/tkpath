@@ -26,7 +26,7 @@ enum {
 };
 
 /*
- * The structure below defines the record for each line item.
+ * The structure below defines the record for each path item.
  */
 
 typedef struct PathItem  {
@@ -198,7 +198,7 @@ static Tk_ConfigSpec configSpecs[] = {
 	(char *) NULL, Tk_Offset(PathItem, style.fillStipple),
 	TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PathItem, style.matrixStr),
+	(char *) NULL, Tk_Offset(PathItem, style.matrix),
 	TK_CONFIG_NULL_OK, &matrixOption},
     {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
@@ -265,14 +265,6 @@ Tk_ItemType tkPathType = {
     (Tk_ItemType *) NULL,		/* nextPtr */
 };
 
-/*
- * The definition below determines how large are static arrays
- * used to hold spline points (splines larger than this have to
- * have their arrays malloc-ed).
- */
-
-#define MAX_STATIC_POINTS 200
-
 /* This one seems missing. */
 static Tcl_Interp *
 Tk_CanvasInterp(Tk_Canvas canvas)
@@ -281,6 +273,10 @@ Tk_CanvasInterp(Tk_Canvas canvas)
     return canvasPtr->interp;
 }
 
+/*
+ * A bunch of custum option processing functions needed.
+ */
+ 
 /*
  *--------------------------------------------------------------
  *
@@ -368,6 +364,7 @@ FillRulePrintProc(
 					 * storage for return string. */
 {
     register int *fillRulePtr = (int *) (widgRec + offset);
+    *freeProcPtr = NULL;
 
     if (*fillRulePtr == WindingRule) {
 	return "nonzero";
@@ -403,8 +400,7 @@ LinearGradientParseProc(
     char *widgRec,			/* Pointer to record for item. */
     int offset)				/* Offset into item. */
 {
-    char *old, *new;
-    
+    char *old, *new;    
     register char *ptr = (char *) (widgRec + offset);
 
     if(value == NULL || *value == 0) {
@@ -478,7 +474,8 @@ LinearGradientPrintProc(
  * MatrixParseProc --
  *
  *	This procedure is invoked during option processing to handle
- *	the "-matrix" option. It translates the option into a double array.
+ *	the "-matrix" option. It translates the (string) option 
+ *	into a double array.
  *
  * Results:
  *	A standard Tcl return value.
@@ -499,97 +496,28 @@ MatrixParseProc(
     int offset)				/* Offset into item. */
 {
     char *old, *new;
-    int i, j, argc, rowArgc;
-    char **argv = NULL, **rowArgv = NULL;
-    double tmp[3][2];
-    TMatrix *matrix;
-    PathItem *itemPtr = (PathItem *) widgRec;
-    Tk_PathStyle *stylePtr = &(itemPtr->style);
+    TMatrix *matrixPtr;
     register char *ptr = (char *) (widgRec + offset);
 
     if(value == NULL || *value == 0) {
         new = NULL;
     } else {
-    
-        /* Check matrix consistency. */
-        if (Tcl_SplitList(interp, value, &argc, &argv) != TCL_OK) {
-            goto error;
+        matrixPtr = (TMatrix *) ckalloc(sizeof(TMatrix));
+        if (PathGetTMatrix(interp, value, matrixPtr) != TCL_OK) {
+            ckfree((char *) matrixPtr);
+            return TCL_ERROR;
         }
-        if (argc != 3) {
-            Tcl_AppendResult(interp, "matrix inconsistent",
-                    (char *) NULL);
-            goto error;
-        }
-        matrix = (TMatrix *) ckalloc(sizeof(TMatrix));
-        
-        /* Take each row in turn. */
-        for (i = 0; i < 3; i++) {
-            if (Tcl_SplitList(interp, argv[i], &rowArgc, &rowArgv) != TCL_OK) {
-                goto error;
-            }
-            if (rowArgc != 2) {
-                Tcl_AppendResult(interp, "matrix inconsistent",
-                        (char *) NULL);
-                goto error;
-            }
-            for (j = 0; j < 2; j++) {
-                if (Tcl_GetDouble(interp, rowArgv[j], &(tmp[i][j])) != TCL_OK) {
-                    Tcl_AppendResult(interp, " matrix inconsistent",
-                            (char *) NULL);
-                    goto error;
-                }
-            }
-            if (rowArgv != NULL) {
-                Tcl_Free((char *) rowArgv);
-                rowArgv = NULL;
-            }
-        }
-        
-        /* Check that the matrix is not close to being singular. */
-        if (fabs(tmp[0][0]*tmp[1][1] - tmp[0][1]*tmp[1][0]) < 1e-6) {
-            Tcl_AppendResult(interp, "matrix \"", value, "\"is close to singular",
-                    (char *) NULL);
-            goto error;
-        }
-        
-        /* String */
-        new = (char *) ckalloc((unsigned) (strlen(value) + 1));
-        strcpy(new, value);
-        
-        /* Matrix. */
-        matrix->a  = tmp[0][0];
-        matrix->b  = tmp[0][1];
-        matrix->c  = tmp[1][0];
-        matrix->d  = tmp[1][1];
-        matrix->tx = tmp[2][0];
-        matrix->ty = tmp[2][1];
+        new = (char *) matrixPtr;
     }
     old = *((char **) ptr);
     if (old != NULL) {
         ckfree(old);
     }
-    if (stylePtr->matrix != NULL) {
-        ckfree((char *) stylePtr->matrix);
-    }
     
     /* Note: the _value_ of the address is in turn a pointer to string. */
     *((char **) ptr) = new;
     
-    /* The matrix. */
-    stylePtr->matrix = matrix;
     return TCL_OK;
-    
-error:
-    if (argv != NULL) {
-        Tcl_Free((char *) argv);
-    }
-    if (rowArgv != NULL) {
-        Tcl_Free((char *) rowArgv);
-    }
-    if (matrix != NULL) {
-        ckfree((char *) matrix);
-    }
-    return TCL_ERROR;
 }
 
 static char *
@@ -602,16 +530,22 @@ MatrixPrintProc(
 					 * information about how to reclaim
 					 * storage for return string. */
 {
-    char *result;
+    char *buffer, *str;
+    int len;
+    TMatrix *matrixPtr;
+    Tcl_Obj *listObj;
     register char *ptr = (char *) (widgRec + offset);
-    PathItem *itemPtr = (PathItem *) widgRec;
-    Tk_PathStyle *stylePtr = &(itemPtr->style);
 
-    result = (*(char **) ptr);
-    if (result == NULL) {
-        result = "";
-    }
-    return result;
+    *freeProcPtr = TCL_DYNAMIC;
+
+    matrixPtr = (*(TMatrix **) ptr); 
+    PathGetTclObjFromTMatrix(NULL, matrixPtr, &listObj);
+    str = Tcl_GetStringFromObj(listObj, &len);
+    buffer = (char *) ckalloc((unsigned int) (len + 1));
+    strcpy(buffer, str);
+    Tcl_DecrRefCount(listObj);
+
+    return buffer;
 }
 
 /*

@@ -145,6 +145,10 @@ void		PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayP
 void 		PathApplyTMatrix(TMatrix *m, double *x, double *y);
 void		PathInverseTMatrix(TMatrix *m, TMatrix *mi);
 
+int			ObjectIsEmpty(Tcl_Obj *objPtr);
+int			PathGetTMatrix(Tcl_Interp* interp, char *list, TMatrix *matrixPtr);
+int			PathGetTclObjFromTMatrix(Tcl_Interp* interp, TMatrix *matrixPtr,
+                    Tcl_Obj **listObjPtrPtr);
 
 int			EndpointToCentralArcParameters(
                     double x1, double y1, double x2, double y2,	/* The endpoints. */
@@ -153,6 +157,21 @@ int			EndpointToCentralArcParameters(
                     double *cxPtr, double *cyPtr, 			/* Out. */
                     double *rxPtr, double *ryPtr,
                     double *theta1Ptr, double *dthetaPtr);
+
+int 		PathGenericCmdDispatcher( 
+                    Tcl_Interp* interp,
+                    int objc,
+                    Tcl_Obj* CONST objv[],
+                    char *baseName,
+                    int *baseNameUIDPtr,
+                    Tcl_HashTable *hashTablePtr,
+                    Tk_OptionTable optionTable,
+                    char *(*createAndConfigProc)(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]),
+                    void (*freeProc)(Tcl_Interp *interp, char *recordPtr));
+void		PathStyleInit(Tcl_Interp* interp);
+void		PathLinearGradientInit(Tcl_Interp* interp);
+int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
+                    int objc, Tcl_Obj* CONST objv[]);
 
 
 /*
