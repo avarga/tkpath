@@ -22,7 +22,7 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
-#define _PATH_N_BUFFER_POINTS 	2000
+#define _PATH_N_BUFFER_POINTS 		2000
 
 extern int gUseAntiAlias;
 
@@ -33,8 +33,9 @@ extern void	CurveSegments(double control[], int includeFirst, int numSteps, regi
  * These are always stored as transformed coordinates.
  */
 typedef struct _PathSegments {
-    int 			npoints;
-    double 			*points;
+    int 			npoints;	/* Number of points in points array. */
+    double 			*points;	/* The actual point coordinates. */
+    int				size;		/* The number of _points_ allocated in points array. */	
     int				isclosed;
     struct _PathSegments *next;
 } _PathSegments;
@@ -81,6 +82,7 @@ static _PathSegments* _NewPathSegments(void)
     segm = (_PathSegments *) ckalloc(sizeof(_PathSegments));
     segm->npoints = 0;
     segm->points = (double *) ckalloc((unsigned) (2*_PATH_N_BUFFER_POINTS*sizeof(double)));
+    segm->size = _PATH_N_BUFFER_POINTS;
     segm->isclosed = 0;
     segm->next = NULL;
     return segm;
@@ -103,12 +105,13 @@ static void _PathContextFree(_PathContext *ctx)
     ckfree((char *) ctx);
 }
 
-static double* _CheckCoordSpace(_PathSegments *segm, int numPoints)
+static void _CheckCoordSpace(_PathSegments *segm, int numPoints)
 {
-
-    //char *ckrealloc(ptr, size)
-
-    //_PATH_N_BUFFER_POINTS
+    if (segm->npoints + numPoints >= segm->size) {
+        double *points;
+        points = (double *) ckrealloc((char *)segm->points, 2*(segm->size + _PATH_N_BUFFER_POINTS)*sizeof(double));
+        segm->points = points;
+    }
 }
 
 void TkPathInit(Display *display, Drawable d)
@@ -170,6 +173,7 @@ void TkPathLineTo(Drawable d, double x, double y)
     _PathSegments *segm;
     
     segm = gctx->currentSegm;
+    _CheckCoordSpace(segm, 1);
     gctx->current[0] = x;
     gctx->current[1] = y;
     coordPtr = segm->points + 2*segm->npoints;
@@ -220,6 +224,7 @@ void TkPathCurveTo(Drawable d, double x1, double y1,
 
     numSteps = kPathNumSegmentsCurveTo;
     segm = gctx->currentSegm;
+    _CheckCoordSpace(segm, numSteps);
     coordPtr = segm->points + 2*segm->npoints;
     CurveSegments(control, 0, numSteps, coordPtr);
     segm->npoints += numSteps;
@@ -241,6 +246,7 @@ void TkPathClosePath(Drawable d)
     _PathSegments *segm;
 
     segm = gctx->currentSegm;
+    _CheckCoordSpace(segm, 1);
     segm->isclosed = 1;
     gctx->current[0] = gctx->lastMove[0];
     gctx->current[1] = gctx->lastMove[1];
