@@ -26,13 +26,6 @@ extern int gUseAntialiasing;
                                                 (((xc)->pixel & 0xFF)),			\
                                                 (((xc)->pixel >> 8) & 0xFF),	\
                                                 (((xc)->pixel >> 16) & 0xFF))
-/*
- * This is perhaps a very stupid thing to do.
- * It limits drawing to this single context at a time.
- * Perhaps some window structure should be augmented???
- */
-
-//static HDC gMemHdc = NULL;
 
 void PathExit(ClientData clientData);
 
@@ -69,14 +62,19 @@ class PathC {
     static Pen* PathCreatePen(Tk_PathStyle *style);
     static SolidBrush* PathCreateBrush(Tk_PathStyle *style);
 
-	void Junk(void);
-
     static int sGdiplusStarted;
     static ULONG_PTR sGdiplusToken;
     static GdiplusStartupOutput sGdiplusStartupOutput;
 };
 
+/*
+ * This is perhaps a very stupid thing to do.
+ * It limits drawing to this single context at a time.
+ * Perhaps some window structure should be augmented???
+ */
+
 static PathC *gPathBuilderPtr = NULL;
+
 
 PathC::PathC(Drawable d)
 {
@@ -135,6 +133,7 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
 {
 	LineCap cap;
 	DashCap dashCap;
+    LineJoin lineJoin;
 	Pen *penPtr;
     Tk_Dash *dash;
     
@@ -144,7 +143,8 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
     dashCap = static_cast<DashCap>(TableLookup(DashCapStyleLookupTable, 4, style->capStyle));
     penPtr->SetLineCap(cap, cap, dashCap);
     
-    penPtr->SetLineJoin(static_cast<LineJoin>(TableLookup(LineJoinStyleLookupTable, 3, style->joinStyle)));
+    lineJoin = static_cast<LineJoin>(TableLookup(LineJoinStyleLookupTable, 3, style->joinStyle));
+    penPtr->SetLineJoin(lineJoin);
     
     penPtr->SetMiterLimit((float) style->miterLimit);
 
@@ -235,6 +235,11 @@ void PathC::StrokeAndFill(Tk_PathStyle *style)
 	delete brush;
 }
 
+void PathC::GetCurrentPoint(PointF *pt)
+{
+    *pt = mCurrentPoint;
+}
+
 void PathC::PaintLinearGradient()
 {
 /*
@@ -290,11 +295,13 @@ void TkPathLinesTo(Drawable d, double *pts, int n)
 void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
 {
     double x31, y31, x32, y32;
+    PointF pf;
     
+    gPathBuilderPtr->GetCurrentPoint(&cp);
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
     /* Unchecked! Must be an approximation! */
-    x31 = mCurrentPoint.x + (ctrlX - mCurrentPoint.x) * 2 / 3;
-    y31 = mCurrentPoint.y + (ctrlY - mCurrentPoint.y) * 2 / 3;
+    x31 = p.X + (ctrlX - pf.X) * 2 / 3;
+    y31 = p.Y + (ctrlY - pf.Y) * 2 / 3;
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
     gPathBuilderPtr->CurveTo((float) x31, (float) y31, (float) x32, (float) y32, (float) x, (float) y);
@@ -341,7 +348,7 @@ void TkPathClipToPath(Drawable d, int fillRule)
 
 void TkPathReleaseClipToPath(Drawable d)
 {
-
+    SelectClipRgn(gPathBuilderPtr->mMemHdc, NULL);
 }
 
 void TkPathStroke(Drawable d, Tk_PathStyle *style)
@@ -363,8 +370,8 @@ int TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
 {
     PointF pf;
     gPathBuilderPtr->GetCurrentPoint(&pf);
-    ptPtr->x = (double) pf.x;
-    ptPtr->y = (double) pf.y;
+    ptPtr->x = (double) pf.X;
+    ptPtr->y = (double) pf.Y;
 }
 
 int	TkPathDrawingDestroysPath(void)

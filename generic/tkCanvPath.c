@@ -39,22 +39,6 @@ typedef struct PathItem  {
     int pathLen;
     Tcl_Obj *normPathObjPtr;	/* The object containing the normalized path. */
     PathAtom *atomPtr;
-    /* Remove: */
-    int numPoints;		/* Number of points in line (always >= 0). */
-    double *coordPtr;		/* Pointer to malloc-ed array containing
-				 * x- and y-coords of all points in line.
-				 * X-coords are even-valued indices, y-coords
-				 * are corresponding odd-valued indices. If
-				 * the line has arrowheads then the first
-				 * and last points have been adjusted to refer
-				 * to the necks of the arrowheads rather than
-				 * their tips.  The actual endpoints are
-				 * stored in the *firstArrowPtr and
-				 * *lastArrowPtr, if they exist. */
-    /* Remove: */
-    int capStyle;		/* Cap style for line. */
-    int joinStyle;		/* Join style for line. */
-    
     PathRect bareBbox;		/* Bounding box with zero width outline.
                                  * Untransformed coordinates. */
     PathRect totalBbox;		/* Bounding box including stroke.
@@ -929,8 +913,6 @@ CreatePath(
     pathPtr->pathObjPtr = NULL;
     pathPtr->pathLen = 0;
     pathPtr->normPathObjPtr = NULL;
-    pathPtr->numPoints = 0;
-    pathPtr->coordPtr = NULL;
     pathPtr->style.capStyle = CapButt;
     pathPtr->style.joinStyle = JoinRound;
     pathPtr->atomPtr = NULL;
@@ -1630,167 +1612,19 @@ PathToPoint(
     Tk_State state = itemPtr->state;
     PathItem *pathPtr = (PathItem *) itemPtr;
     double *coordPtr, *linePoints;
-    double staticSpace[2*MAX_STATIC_POINTS];
-    double poly[10];
     double bestDist, dist, width;
-    int numPoints, count;
     int changedMiterToBevel;	/* Non-zero means that a mitered corner
 				 * had to be treated as beveled after all
 				 * because the angle was < 11 degrees. */
 
     bestDist = 1.0e36;
 
-    return bestDist;
-
-
-    /*
-     * Handle smoothed lines by generating an expanded set of points
-     * against which to do the check.
-     */
-
     if(state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
 
-    width = pathPtr->outline.width;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (pathPtr->outline.activeWidth>width) {
-	    width = pathPtr->outline.activeWidth;
-	}
-    } else if (state==TK_STATE_DISABLED) {
-	if (pathPtr->outline.disabledWidth>0) {
-	    width = pathPtr->outline.disabledWidth;
-	}
-    }
-
-    numPoints = pathPtr->numPoints;
-    linePoints = pathPtr->coordPtr;
-
-    if (width < 1.0) {
-	width = 1.0;
-    }
-
-    if (!numPoints || itemPtr->state==TK_STATE_HIDDEN) {
-	return bestDist;
-    } else if (numPoints == 1) {
-	bestDist = hypot(linePoints[0] - pointPtr[0], linePoints[1] - pointPtr[1])
-		    - width/2.0;
-	if (bestDist < 0) bestDist = 0;
-	return bestDist;
-    }
-
-    /*
-     * The overall idea is to iterate through all of the edges of
-     * the line, computing a polygon for each edge and testing the
-     * point against that polygon.  In addition, there are additional
-     * tests to deal with rounded joints and caps.
-     */
-
-    changedMiterToBevel = 0;
-    for (count = numPoints, coordPtr = linePoints; count >= 2;
-	    count--, coordPtr += 2) {
-
-	/*
-	 * If rounding is done around the first point then compute
-	 * the distance between the point and the point.
-	 */
-
-	if (((pathPtr->capStyle == CapRound) && (count == numPoints))
-		|| ((pathPtr->joinStyle == JoinRound)
-			&& (count != numPoints))) {
-	    dist = hypot(coordPtr[0] - pointPtr[0], coordPtr[1] - pointPtr[1])
-		    - width/2.0;
-	    if (dist <= 0.0) {
-		bestDist = 0.0;
-		goto done;
-	    } else if (dist < bestDist) {
-		bestDist = dist;
-	    }
-	}
-
-	/*
-	 * Compute the polygonal shape corresponding to this edge,
-	 * consisting of two points for the first point of the edge
-	 * and two points for the last point of the edge.
-	 */
-
-	if (count == numPoints) {
-	    TkGetButtPoints(coordPtr+2, coordPtr, width,
-		    pathPtr->capStyle == CapProjecting, poly, poly+2);
-	} else if ((pathPtr->joinStyle == JoinMiter) && !changedMiterToBevel) {
-	    poly[0] = poly[6];
-	    poly[1] = poly[7];
-	    poly[2] = poly[4];
-	    poly[3] = poly[5];
-	} else {
-	    TkGetButtPoints(coordPtr+2, coordPtr, width, 0,
-		    poly, poly+2);
-
-	    /*
-	     * If this line uses beveled joints, then check the distance
-	     * to a polygon comprising the last two points of the previous
-	     * polygon and the first two from this polygon;  this checks
-	     * the wedges that fill the mitered joint.
-	     */
-
-	    if ((pathPtr->joinStyle == JoinBevel) || changedMiterToBevel) {
-		poly[8] = poly[0];
-		poly[9] = poly[1];
-		dist = TkPolygonToPoint(poly, 5, pointPtr);
-		if (dist <= 0.0) {
-		    bestDist = 0.0;
-		    goto done;
-		} else if (dist < bestDist) {
-		    bestDist = dist;
-		}
-		changedMiterToBevel = 0;
-	    }
-	}
-	if (count == 2) {
-	    TkGetButtPoints(coordPtr, coordPtr+2, width,
-		    pathPtr->capStyle == CapProjecting, poly+4, poly+6);
-	} else if (pathPtr->joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
-		    width, poly+4, poly+6) == 0) {
-		changedMiterToBevel = 1;
-		TkGetButtPoints(coordPtr, coordPtr+2, width,
-			0, poly+4, poly+6);
-	    }
-	} else {
-	    TkGetButtPoints(coordPtr, coordPtr+2, width, 0,
-		    poly+4, poly+6);
-	}
-	poly[8] = poly[0];
-	poly[9] = poly[1];
-	dist = TkPolygonToPoint(poly, 5, pointPtr);
-	if (dist <= 0.0) {
-	    bestDist = 0.0;
-	    goto done;
-	} else if (dist < bestDist) {
-	    bestDist = dist;
-	}
-    }
-
-    /*
-     * If caps are rounded, check the distance to the cap around the
-     * final end point of the line.
-     */
-
-    if (pathPtr->capStyle == CapRound) {
-	dist = hypot(coordPtr[0] - pointPtr[0], coordPtr[1] - pointPtr[1])
-		- width/2.0;
-	if (dist <= 0.0) {
-	    bestDist = 0.0;
-	    goto done;
-	} else if (dist < bestDist) {
-	    bestDist = dist;
-	}
-    }
-
-    done:
-    if ((linePoints != staticSpace) && (linePoints != pathPtr->coordPtr)) {
-	ckfree((char *) linePoints);
-    }
+    /* TODO.................. */
+    
     return bestDist;
 }
 
