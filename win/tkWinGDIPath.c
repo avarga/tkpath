@@ -173,7 +173,7 @@ TkPathInit(Display *display, Drawable d)
     SelectObject(hdc, twdPtr->bitmap.handle);
     gMemHdc = hdc;
     gHaveMatrix = 0;
-    gCTM = kUnitTMatrix;
+    gCTM = kPathUnitTMatrix;
     gCurrentX = 0.0;
     gCurrentY = 0.0;
 }

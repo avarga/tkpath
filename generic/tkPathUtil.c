@@ -13,23 +13,17 @@
 #include "tkIntPath.h"
 
 
-
+/* from mozilla */
 static double 
 CalcVectorAngle(double ux, double uy, double vx, double vy)
 {
-    return ((ux*vy-uy*vx) > 0.0 ? 1.0 : -1.0) *
-            acos( (ux*vx+uy*vy)/(hypot(ux,uy)*hypot(vx,vy)));
-}
-
-/* from mozilla */
-static double 
-CalcVectorAngle2(double ux, double uy, double vx, double vy)
-{
     double ta = atan2(uy, ux);
     double tb = atan2(vy, vx);
-    if (tb >= ta)
+    if (tb >= ta) {
         return tb-ta;
-    return 2.0*PI - (ta-tb);
+    } else {
+        return 2.0*PI - (ta-tb);
+    }
 }
 
 /*

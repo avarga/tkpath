@@ -14,6 +14,9 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
+/* For debugging. */
+extern Tcl_Interp *gInterp;
+
 static const char kPathSyntaxError[] = "syntax error in path definition";
 
 /*
@@ -925,7 +928,12 @@ TkPathArcToUsingBezier(Drawable d,
             x2, y2, rx, ry, phi, largeArcFlag, sweepFlag,
             &cx, &cy, &rx, &ry,
             &theta1, &dtheta);
-	if (result == kPathArcSkip) {
+#if 0    
+    DebugPrintf(gInterp, 0, 
+        "EndpointToCentralArcParameters: x1=%8.3f, y1=%8.3f, x2=%8.3f, y2=%8.3f, cx=%8.3f, cy=%8.3f, theta1=%8.3f, dtheta=%8.3f", 
+        x1, y1, x2, y2, cx, cy, theta1, dtheta);
+#endif
+    if (result == kPathArcSkip) {
 		return;
 	} else if (result == kPathArcLine) {
 		TkPathLineTo(d, x2, y2);

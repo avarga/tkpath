@@ -1,5 +1,3 @@
-#load /Users/matben/C/cvs/tkpath/macosx/build/tkpath0.1.dylib
-#source /Users/matben/C/cvs/tkpath/library/tkpath.tcl
 package require tkpath
  
 set t .c_clock

@@ -1683,7 +1683,7 @@ GetCanvasTMatrix(Tk_Canvas canvas)
     /* @@@ Any scaling involved as well??? */
     Tk_CanvasDrawableCoords(canvas, 0.0, 0.0, &originX, &originY);
 
-    m = kUnitTMatrix;
+    m = kPathUnitTMatrix;
     m.tx = originX;
     m.ty = originY;
     

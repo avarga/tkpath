@@ -20,6 +20,9 @@
 
 extern int gUseAntiAlias;
 
+/* For debugging. */
+extern Tcl_Interp *gInterp;
+
 /*
  * This is perhaps a very stupid thing to do.
  * It limits drawing to this single context at a time.
@@ -428,7 +431,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
 }
 
 
-/*-------- This should be replaced by Shading!!! -----------------*/
+/*-------- This is replaced by Shading!!! -----------------*/
 
 /* OUTDATED!!!!!!!!!! */
 

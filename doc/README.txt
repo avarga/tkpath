@@ -77,19 +77,19 @@ if paramters are wrong.
 
     ::tkpath::style cmd ?options?
 
-        ::tkpath:: style cget token option
+        ::tkpath::style cget token option
 	    Returns the value of an option.
 
-        ::tkpath:: style configure token ?option? ?value option value...?
+        ::tkpath::style configure token ?option? ?value option value...?
             Configures the object in the usual tcl way.
 
-        ::tkpath:: style create ?-key value ...?
+        ::tkpath::style create ?-key value ...?
             Creates a linear gradient object and returns its token.
 
-	::tkpath:: style delete token
+	::tkpath::style delete token
 	    Deletes the object.
 
-	::tkpath:: style names
+	::tkpath::style names
 	    Returns all existing tokens.
 
     The same options as for the item are supported with the exception of -style,
@@ -165,6 +165,7 @@ if paramters are wrong.
 
    - Avoid using the canvas scale command on paths containing arc instructions
      since an arc cannot generally be scaled and still be an arc.
+     
 
  o Further documentation:
 

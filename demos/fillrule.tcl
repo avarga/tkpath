@@ -1,6 +1,3 @@
-# fillrule.tcl
-
-#load /Users/matben/C/cvs/tkpath/macosx/build/tkpath0.1.dylib
 package require tkpath
 
 toplevel ._fillrule
