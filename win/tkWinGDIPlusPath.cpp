@@ -135,7 +135,7 @@ PathC::PathC(Drawable d)
     return;    
 }
 
-PathC::~PathC(void)
+inline PathC::~PathC(void)
 {
     delete mPath;
     delete mGraphics;
@@ -179,7 +179,7 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
     return penPtr;
 }
 
-SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
+inline SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
 {
     SolidBrush 	*brushPtr;
     
@@ -187,18 +187,18 @@ SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
     return brushPtr;
 }
 
-void PathC::PushTMatrix(TMatrix *tm)
+inline void PathC::PushTMatrix(TMatrix *tm)
 {
     Matrix m((float)tm->a, (float)tm->b, (float)tm->c, (float)tm->d, (float)tm->tx, (float)tm->ty);
     mGraphics->MultiplyTransform(&m);
 }
 
-void PathC::BeginPath(Drawable d, Tk_PathStyle *style)
+inline void PathC::BeginPath(Drawable d, Tk_PathStyle *style)
 {
     mPath = new GraphicsPath((style->fillRule == WindingRule) ? FillModeWinding : FillModeAlternate);
 }
 
-void PathC::MoveTo(float x, float y)
+inline void PathC::MoveTo(float x, float y)
 {
     mPath->StartFigure();
     mOrigin.X = (float) x;
@@ -207,14 +207,14 @@ void PathC::MoveTo(float x, float y)
     mCurrentPoint.Y = (float) y;
 }
 
-void PathC::LineTo(float x, float y)
+inline void PathC::LineTo(float x, float y)
 {
     mPath->AddLine(mCurrentPoint.X, mCurrentPoint.Y, x, y);
     mCurrentPoint.X = x;
     mCurrentPoint.Y = y;
 }
 
-void PathC::CurveTo(float x1, float y1, float x2, float y2, float x, float y)
+inline void PathC::CurveTo(float x1, float y1, float x2, float y2, float x, float y)
 {
     mPath->AddBezier(mCurrentPoint.X, mCurrentPoint.Y, // startpoint
             x1, y1, x2, y2, // controlpoints
@@ -223,14 +223,14 @@ void PathC::CurveTo(float x1, float y1, float x2, float y2, float x, float y)
     mCurrentPoint.Y = y;
 }
 
-void PathC::CloseFigure()
+inline void PathC::CloseFigure()
 {
     mPath->CloseFigure();
     mCurrentPoint.X = mOrigin.X;
     mCurrentPoint.Y = mOrigin.Y;
 }
 
-void PathC::Stroke(Tk_PathStyle *style)
+inline void PathC::Stroke(Tk_PathStyle *style)
 {
     Pen *pen = PathCreatePen(style);
     
@@ -238,7 +238,7 @@ void PathC::Stroke(Tk_PathStyle *style)
 	delete pen;
 }
 
-void PathC::Fill(Tk_PathStyle *style)
+inline void PathC::Fill(Tk_PathStyle *style)
 {
     SolidBrush *brush = PathCreateBrush(style);
     
@@ -246,7 +246,7 @@ void PathC::Fill(Tk_PathStyle *style)
 	delete brush;
 }
 
-void PathC::FillAndStroke(Tk_PathStyle *style)
+inline void PathC::FillAndStroke(Tk_PathStyle *style)
 {
     Pen 		*pen = PathCreatePen(style);
     SolidBrush 	*brush = PathCreateBrush(style);
@@ -257,7 +257,7 @@ void PathC::FillAndStroke(Tk_PathStyle *style)
 	delete brush;
 }
 
-void PathC::GetCurrentPoint(PointF *pt)
+inline void PathC::GetCurrentPoint(PointF *pt)
 {
     *pt = mCurrentPoint;
 }
@@ -380,11 +380,6 @@ void PathC::FillTwoStopLinearGradient(
     clipPath.CloseFigure();
     
     GraphicsContainer container = mGraphics->BeginContainer();
-    
-#if 0
-    Region pathRegion;
-    mGraphics->GetClip(&pathRegion);
-#endif
 
     Region region(&clipPath);
     mGraphics->SetClip(&region);

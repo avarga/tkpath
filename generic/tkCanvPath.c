@@ -950,8 +950,8 @@ PathCoords(
     Tcl_Interp *interp,			/* Used for error reporting. */
     Tk_Canvas canvas,			/* Canvas containing item. */
     Tk_Item *itemPtr,			/* Item whose coordinates are to be
-					 * read or modified. */
-    int objc,				/*  */
+                                 * read or modified. */
+    int objc,					/*  */
     Tcl_Obj *CONST objv[])		/*  */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;

@@ -14,20 +14,21 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
+static const char kPathSyntaxError[] = "syntax error in path definition";
 
 /*
  *--------------------------------------------------------------
  *
  * GetPathInstruction --
  *
- *	Gets the path instruction at position index of objv.
- *	If unrecognized instruction returns PATH_NEXT_ERROR.
+ *		Gets the path instruction at position index of objv.
+ *		If unrecognized instruction returns PATH_NEXT_ERROR.
  *
  * Results:
- *	A PATH_NEXT_* result.
+ *		A PATH_NEXT_* result.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -71,53 +72,66 @@ GetPathInstruction(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int index, char *c
  * GetPathDouble, GetPathBoolean, GetPathPoint, GetPathTwoPoints,
  * GetPathThreePoints, GetPathArcParameters --
  *
- *	Gets a certain number of numbers from objv.
- *	Increments indexPtr by the number of numbers extracted
- *	if succesful, else it is unchanged.
+ *		Gets a certain number of numbers from objv.
+ *		Increments indexPtr by the number of numbers extracted
+ *		if succesful, else it is unchanged.
  *
  * Results:
- *	A standard tcl result.
+ *		A standard tcl result.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
 
 static int
-GetPathDouble(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr, double *zPtr) 
+GetPathDouble(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *indexPtr, double *zPtr) 
 {
     int result;
 
-    result = Tcl_GetDoubleFromObj(interp, objv[*indexPtr], zPtr);
-    if (result == TCL_OK) {
-        (*indexPtr)++;
+    if (*indexPtr > len - 1) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
+        result = TCL_ERROR;
+    } else {
+        result = Tcl_GetDoubleFromObj(interp, objv[*indexPtr], zPtr);
+        if (result == TCL_OK) {
+            (*indexPtr)++;
+        }
     }
     return result;
 }
 
 static int
-GetPathBoolean(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr, char *boolPtr) 
+GetPathBoolean(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *indexPtr, char *boolPtr) 
 {
     int result;
     int bool;
 
-    result = Tcl_GetBooleanFromObj(interp, objv[*indexPtr], &bool);
-    if (result == TCL_OK) {
-        (*indexPtr)++;
-        *boolPtr = bool;
+    if (*indexPtr > len - 1) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
+        result = TCL_ERROR;
+    } else {
+        result = Tcl_GetBooleanFromObj(interp, objv[*indexPtr], &bool);
+        if (result == TCL_OK) {
+            (*indexPtr)++;
+            *boolPtr = bool;
+        }
     }
     return result;
 }
 
 static int
-GetPathPoint(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr, 
+GetPathPoint(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *indexPtr, 
         double *xPtr, double *yPtr)
 {
     int result = TCL_OK;
     int indIn = *indexPtr;
     
-    if (Tcl_GetDoubleFromObj(interp, objv[(*indexPtr)++], xPtr) != TCL_OK) {
+    if (*indexPtr > len - 2) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
+        result = TCL_ERROR;
+    } else if (Tcl_GetDoubleFromObj(interp, objv[(*indexPtr)++], xPtr) != TCL_OK) {
         *indexPtr = indIn;
         result = TCL_ERROR;
     } else if (Tcl_GetDoubleFromObj(interp, objv[(*indexPtr)++], yPtr) != TCL_OK) {
@@ -128,15 +142,15 @@ GetPathPoint(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr,
 }
 
 static int
-GetPathTwoPoints(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr, 
+GetPathTwoPoints(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *indexPtr, 
         double *x1Ptr, double *y1Ptr, double *x2Ptr, double *y2Ptr)
 {
     int result;
     int indIn = *indexPtr;
 
-    result = GetPathPoint(interp, objv, indexPtr, x1Ptr, y1Ptr);
+    result = GetPathPoint(interp, objv, len, indexPtr, x1Ptr, y1Ptr);
     if (result == TCL_OK) {
-        if (GetPathPoint(interp, objv, indexPtr, x2Ptr, y2Ptr) != TCL_OK) {
+        if (GetPathPoint(interp, objv, len, indexPtr, x2Ptr, y2Ptr) != TCL_OK) {
             *indexPtr = indIn;
             result = TCL_ERROR;
         }
@@ -145,19 +159,19 @@ GetPathTwoPoints(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr,
 }
 
 static int
-GetPathThreePoints(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr, 
+GetPathThreePoints(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *indexPtr, 
         double *x1Ptr, double *y1Ptr, double *x2Ptr, double *y2Ptr,
         double *x3Ptr, double *y3Ptr)
 {
     int result;
     int indIn = *indexPtr;
 
-    result = GetPathPoint(interp, objv, indexPtr, x1Ptr, y1Ptr);
+    result = GetPathPoint(interp, objv, len, indexPtr, x1Ptr, y1Ptr);
     if (result == TCL_OK) {
-        if (GetPathPoint(interp, objv, indexPtr, x2Ptr, y2Ptr) != TCL_OK) {
+        if (GetPathPoint(interp, objv, len, indexPtr, x2Ptr, y2Ptr) != TCL_OK) {
             *indexPtr = indIn;
             result = TCL_ERROR;
-        } else if (GetPathPoint(interp, objv, indexPtr, x3Ptr, y3Ptr) != TCL_OK) {
+        } else if (GetPathPoint(interp, objv, len, indexPtr, x3Ptr, y3Ptr) != TCL_OK) {
             *indexPtr = indIn;
             result = TCL_ERROR;
         }
@@ -166,7 +180,7 @@ GetPathThreePoints(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr,
 }
 
 static int
-GetPathArcParameters(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr,
+GetPathArcParameters(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *indexPtr,
         double *radXPtr, double *radYPtr, double *anglePtr, 
         char *largeArcFlagPtr, char *sweepFlagPtr, 
         double *xPtr, double *yPtr)
@@ -174,18 +188,18 @@ GetPathArcParameters(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr,
     int result;
     int indIn = *indexPtr;
 
-    result = GetPathPoint(interp, objv, indexPtr, radXPtr, radYPtr);
+    result = GetPathPoint(interp, objv, len, indexPtr, radXPtr, radYPtr);
     if (result == TCL_OK) {
-        if (GetPathDouble(interp, objv, indexPtr, anglePtr) != TCL_OK) {
+        if (GetPathDouble(interp, objv, len, indexPtr, anglePtr) != TCL_OK) {
             *indexPtr = indIn;
             result = TCL_ERROR;
-        } else if (GetPathBoolean(interp, objv, indexPtr, largeArcFlagPtr) != TCL_OK) {
+        } else if (GetPathBoolean(interp, objv, len, indexPtr, largeArcFlagPtr) != TCL_OK) {
             *indexPtr = indIn;
             result = TCL_ERROR;
-        } else if (GetPathBoolean(interp, objv, indexPtr, sweepFlagPtr) != TCL_OK) {
+        } else if (GetPathBoolean(interp, objv, len, indexPtr, sweepFlagPtr) != TCL_OK) {
             *indexPtr = indIn;
             result = TCL_ERROR;
-        } else if (GetPathPoint(interp, objv, indexPtr, xPtr, yPtr) != TCL_OK) {
+        } else if (GetPathPoint(interp, objv, len, indexPtr, xPtr, yPtr) != TCL_OK) {
             *indexPtr = indIn;
             result = TCL_ERROR;
         } 
@@ -199,14 +213,14 @@ GetPathArcParameters(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int *indexPtr,
  * NewMoveToAtom, NewLineToAtom, NewArcAtom, NewQuadBezierAtom,
  * NewCurveToAtom, NewCloseAtom --
  *
- *	Creates a PathAtom of the specified type using the given
- *	parameters. It updates the currentX and currentY.
+ *		Creates a PathAtom of the specified type using the given
+ *		parameters. It updates the currentX and currentY.
  *
  * Results:
- *	A PathAtom pointer.
+ *		A PathAtom pointer.
  *
  * Side effects:
- *	Memory allocated.
+ *		Memory allocated.
  *
  *--------------------------------------------------------------
  */
@@ -319,14 +333,14 @@ NewCloseAtom(double x, double y)
  *
  * TkPathParseToAtoms
  *
- *	Takes a tcl list of values which defines the path item and
- *	parses them into a linked list of path atoms.
+ *		Takes a tcl list of values which defines the path item and
+ *		parses them into a linked list of path atoms.
  *
  * Results:
- *	A standard Tcl result.
+ *		A standard Tcl result.
  *
  * Side effects:
- *	None
+ *		None
  *
  *--------------------------------------------------------------
  */
@@ -334,17 +348,17 @@ NewCloseAtom(double x, double y)
 int
 TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPtr, int *lenPtr)
 {
-    char currentInstr;		/* current instruction (M, l, c, etc.) */
-    char lastInstr;		/* previous instruction */
-    int len;
-    int currentInd;
-    int index;
-    int next;
-    int relative;
-    double currentX, currentY;	/* current point */
-    double startX, startY;	/* the current moveto point */
-    double ctrlX, ctrlY;	/* last control point, for s, S, t, T */
-    double x, y;
+    char 	currentInstr;		/* current instruction (M, l, c, etc.) */
+    char 	lastInstr;			/* previous instruction */
+    int 	len;
+    int 	currentInd;
+    int 	index;
+    int 	next;
+    int 	relative;
+    double 	currentX, currentY;	/* current point */
+    double 	startX, startY;		/* the current moveto point */
+    double 	ctrlX, ctrlY;		/* last control point, for s, S, t, T */
+    double 	x, y;
     Tcl_Obj **objv;
     PathAtom *atomPtr = NULL;
     PathAtom *currentAtomPtr = NULL;
@@ -364,22 +378,22 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
     /* First some error checking. Necessary??? */
     if (len < 3) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"path specification too short", -1));
+                "path specification too short", -1));
         return TCL_ERROR;
     }
     if ((GetPathInstruction(interp, objv, 0, &currentInstr) != PATH_NEXT_INSTRUCTION) || 
             (toupper(currentInstr) != 'M')) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"path must start with M or m", -1));
+                "path must start with M or m", -1));
         return TCL_ERROR;
     }
     currentInd = 1;
-    if (GetPathPoint(interp, objv, &currentInd, &x, &y) != TCL_OK) {
+    if (GetPathPoint(interp, objv, len, &currentInd, &x, &y) != TCL_OK) {
         return TCL_ERROR;
     }
     currentInd = 0;
      
-    while (currentInd < *lenPtr) {
+    while (currentInd < len) {
 
         next = GetPathInstruction(interp, objv, currentInd, &currentInstr);
         if (next == PATH_NEXT_ERROR) {
@@ -402,8 +416,9 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
         index = currentInd;
         
         switch (currentInstr) {
+        
             case 'M': case 'm': {
-                if (GetPathPoint(interp, objv, &index, &x, &y) != TCL_OK) {
+                if (GetPathPoint(interp, objv, len, &index, &x, &y) != TCL_OK) {
                     goto error;
                 }
                 if (relative) {
@@ -423,8 +438,13 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 startY = y;
                 break;
             }
+            
             case 'L': case 'l': {
-                if (GetPathPoint(interp, objv, &index, &x, &y) == TCL_OK) {
+                if (index > len - 2) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
+                    goto error;
+                }
+                if (GetPathPoint(interp, objv, len, &index, &x, &y) == TCL_OK) {
                     if (relative) {
                         x += currentX;
                         y += currentY;
@@ -439,11 +459,12 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 }
                 break;
             }
+            
             case 'A': case 'a': {
                 double radX, radY, angle;
                 char largeArcFlag, sweepFlag;
                 
-                if (GetPathArcParameters(interp, objv, &index,
+                if (GetPathArcParameters(interp, objv, len, &index,
                         &radX, &radY, &angle, &largeArcFlag, &sweepFlag,
                         &x, &y) == TCL_OK) {
                     if (relative) {
@@ -460,10 +481,15 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 }
                 break;
             }
+            
             case 'C': case 'c': {
                 double x1, y1, x2, y2;	/* The two control points. */
                 
-                if (GetPathThreePoints(interp, objv, &index, &x1, &y1, &x2, &y2, &x, &y) == TCL_OK) {
+                if (index > len - 6) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
+                    goto error;
+                }
+                if (GetPathThreePoints(interp, objv, len, &index, &x1, &y1, &x2, &y2, &x, &y) == TCL_OK) {
                     if (relative) {
                         x1 += currentX;
                         y1 += currentY;
@@ -484,6 +510,7 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 }
                 break;
             }
+            
             case 'S': case 's': {
                 double x1, y1;	/* The first control point. */
                 double x2, y2;	/* The second control point. */
@@ -497,7 +524,11 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                     x1 = currentX;
                     y1 = currentY;
                 }
-                if (GetPathTwoPoints(interp, objv, &index, &x2, &y2, &x, &y) == TCL_OK) {
+                if (index > len - 4) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
+                    goto error;
+                }
+                if (GetPathTwoPoints(interp, objv, len, &index, &x2, &y2, &x, &y) == TCL_OK) {
                     if (relative) {
                         x2 += currentX;
                         y2 += currentY;
@@ -516,10 +547,11 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 }
                 break;
             }
+            
             case 'Q': case 'q': {
                 double x1, y1;	/* The control point. */
                 
-                if (GetPathTwoPoints(interp, objv, &index, &x1, &y1, &x, &y) == TCL_OK) {
+                if (GetPathTwoPoints(interp, objv, len, &index, &x1, &y1, &x, &y) == TCL_OK) {
                     if (relative) {
                         x1 += currentX;
                         y1 += currentY;
@@ -538,6 +570,7 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 }
                 break;
             }
+            
             case 'T': case 't': {
                 double x1, y1;	/* The control point. */
                 
@@ -550,7 +583,7 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                     x1 = currentX;
                     y1 = currentY;
                 }
-                if (GetPathPoint(interp, objv, &index, &x, &y) == TCL_OK) {
+                if (GetPathPoint(interp, objv, len, &index, &x, &y) == TCL_OK) {
                     if (relative) {
                         x  += currentX;
                         y  += currentY;
@@ -567,9 +600,10 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 }
                 break;
             }
+            
             case 'H': {
                 while ((index < len) && 
-                        (GetPathDouble(interp, objv, &index, &x) == TCL_OK))
+                        (GetPathDouble(interp, objv, len, &index, &x) == TCL_OK))
                     ;
                 atomPtr = NewLineToAtom(x, currentY);
                 currentAtomPtr->nextPtr = atomPtr;
@@ -577,12 +611,13 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 currentX = x;
                 break;
             }
+            
             case 'h': {
                 double z;
                 
                 x = currentX;
                 while ((index < len) &&
-                        (GetPathDouble(interp, objv, &index, &z) == TCL_OK)) {
+                        (GetPathDouble(interp, objv, len, &index, &z) == TCL_OK)) {
                     x += z;
                 }
                 atomPtr = NewLineToAtom(x, currentY);
@@ -591,9 +626,10 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 currentX = x;
                 break;
             }
+            
             case 'V': {
                 while ((index < len) && 
-                        (GetPathDouble(interp, objv, &index, &y) == TCL_OK))
+                        (GetPathDouble(interp, objv, len, &index, &y) == TCL_OK))
                     ;
                 atomPtr = NewLineToAtom(currentX, y);
                 currentAtomPtr->nextPtr = atomPtr;
@@ -601,12 +637,13 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 currentY = y;
                 break;
             }
+            
             case 'v': {
                 double z;
                 
                 y = currentY;
                 while ((index < len) &&
-                        (GetPathDouble(interp, objv, &index, &z) == TCL_OK)) {
+                        (GetPathDouble(interp, objv, len, &index, &z) == TCL_OK)) {
                     y += z;
                 }
                 atomPtr = NewLineToAtom(currentX, y);
@@ -615,6 +652,7 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 currentY = y;
                 break;
             }
+            
             case 'Z': case 'z': {
                 atomPtr = NewCloseAtom(startX, startY);
                 currentAtomPtr->nextPtr = atomPtr;
@@ -623,6 +661,7 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
                 currentY = startY;
                 break;
             }
+            
             default: {
                 Tcl_SetObjResult(interp, Tcl_NewStringObj(
                         "unrecognized path instruction", -1));
@@ -650,13 +689,13 @@ error:
  *
  * TkPathFreeAtoms
  *
- *	Frees up all memory allocated for the path atoms.
+ *		Frees up all memory allocated for the path atoms.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -678,15 +717,15 @@ TkPathFreeAtoms(PathAtom *pathAtomPtr)
  *
  * TkPathNormalize
  *
- *	Takes a list of PathAtoms and creates a tcl list where
- *	elements have a standard form. All upper case instructions,
- *	no repeates.
+ *		Takes a list of PathAtoms and creates a tcl list where
+ *		elements have a standard form. All upper case instructions,
+ *		no repeates.
  *
  * Results:
- *	A standard Tcl result.
+ *		A standard Tcl result.
  *
  * Side effects:
- *	New list returned in listObjPtrPtr.
+ *		New list returned in listObjPtrPtr.
  *
  *--------------------------------------------------------------
  */
@@ -768,13 +807,13 @@ TkPathNormalize(Tcl_Interp *interp, PathAtom *atomPtr, Tcl_Obj **listObjPtrPtr)
  *
  * TkPathMakePath
  *
- *	Defines the path using the PathAtom.
+ *		Defines the path using the PathAtom.
  *
  * Results:
- *	A standard Tcl result.
+ *		A standard Tcl result.
  *
  * Side effects:
- *	Defines the current path in drawable.
+ *		Defines the current path in drawable.
  *
  *--------------------------------------------------------------
  */
@@ -844,14 +883,14 @@ TkPathMakePath(
  *
  * TkPathArcToUsingBezier
  *
- *	Translates an ArcTo drawing into a sequence of CurveTo.
- *	Helper function for the platform specific drawing code.
+ *		Translates an ArcTo drawing into a sequence of CurveTo.
+ *		Helper function for the platform specific drawing code.
  *
  * Results:
- *	None.
+ *		None.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
