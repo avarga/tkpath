@@ -269,10 +269,13 @@
 		};
 		9A5BCDA007E2D8B400B6FA03 = {
 			fileEncoding = 4;
+			indentWidth = 4;
 			isa = PBXFileReference;
 			name = tkPathUtil.c;
 			path = /Users/matben/C/cvs/tkpath/generic/tkPathUtil.c;
 			refType = 0;
+			tabWidth = 4;
+			usesTabs = 0;
 		};
 		9A5BCDA107E2D8B400B6FA03 = {
 			fileRef = 9A5BCDA007E2D8B400B6FA03;
@@ -331,7 +334,7 @@
 			name = tkWinGDIPath.c;
 			path = /Users/matben/C/cvs/tkpath/win/tkWinGDIPath.c;
 			refType = 0;
-			tabWidth = 8;
+			tabWidth = 4;
 			usesTabs = 0;
 		};
 		9AA0B6C407DD8C9900A80065 = {

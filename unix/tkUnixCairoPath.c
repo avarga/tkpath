@@ -38,11 +38,11 @@ void TkPathInit(Drawable d)
 
 void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
 {
-    if (style->matrix != NULL) {
-        double *m = style->matrix;
+    if (style->matrixPtr != NULL) {
+        TMatrix *m = style->matrixPtr;
         
         cairo_matrix_t *matrix = cairo_matrix_create();
-        cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
+        cairo_matrix_set_affine(matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
         cairo_concat_matrix(ctx, matrix);
     }
 

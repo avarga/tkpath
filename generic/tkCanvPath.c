@@ -19,7 +19,7 @@
 
 static double kStrokeThicknessLimit = 4.0;
 
-static int kNumSegmentsCurveTo = 12;
+static int kNumSegmentsCurveTo    = 18;
 static int kNumSegmentsQuadBezier = 12;
 
 #define MAX_NUM_STATIC_SEGMENTS  2000
@@ -213,56 +213,56 @@ static Tk_CustomOption styleOption = {
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-fill", (char *) NULL, (char *) NULL,
-            "", Tk_Offset(PathItem, style.fillColor), TK_CONFIG_NULL_OK},
+        "", Tk_Offset(PathItem, style.fillColor), TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PathItem, style.gradientFillName),
-            TK_CONFIG_NULL_OK, &linGradOption},
+        (char *) NULL, Tk_Offset(PathItem, style.gradientFillName),
+        TK_CONFIG_NULL_OK, &linGradOption},
     {TK_CONFIG_CUSTOM, "-filloffset", (char *) NULL, (char *) NULL,
-            "0,0", Tk_Offset(PathItem, style.fillTSOffset),
-            TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
+        "0,0", Tk_Offset(PathItem, style.fillTSOffset),
+        TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,
-            "1.0", Tk_Offset(PathItem, style.fillOpacity), 0},
+        "1.0", Tk_Offset(PathItem, style.fillOpacity), 0},
     {TK_CONFIG_CUSTOM, "-fillrule", (char *) NULL, (char *) NULL,
-            "nonzero", Tk_Offset(PathItem, style.fillRule),
-            TK_CONFIG_DONT_SET_DEFAULT, &fillRuleOption},
+        "nonzero", Tk_Offset(PathItem, style.fillRule),
+        TK_CONFIG_DONT_SET_DEFAULT, &fillRuleOption},
     {TK_CONFIG_BITMAP, "-fillstipple", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PathItem, style.fillStipple),
-            TK_CONFIG_NULL_OK},
+        (char *) NULL, Tk_Offset(PathItem, style.fillStipple),
+        TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PathItem, style.matrixPtr),
-            TK_CONFIG_NULL_OK, &matrixOption},
+        (char *) NULL, Tk_Offset(PathItem, style.matrixPtr),
+        TK_CONFIG_NULL_OK, &matrixOption},
     {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
-            &stateOption},
+        (char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
+        &stateOption},
     {TK_CONFIG_COLOR, "-stroke", (char *) NULL, (char *) NULL,
-            "black", Tk_Offset(PathItem, style.strokeColor), TK_CONFIG_NULL_OK},
+        "black", Tk_Offset(PathItem, style.strokeColor), TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PathItem, style.dash),
-            TK_CONFIG_NULL_OK, &dashOption},
+        (char *) NULL, Tk_Offset(PathItem, style.dash),
+        TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_CAP_STYLE, "-strokelinecap", (char *) NULL, (char *) NULL,
-            "butt", Tk_Offset(PathItem, style.capStyle), TK_CONFIG_DONT_SET_DEFAULT},
+        "butt", Tk_Offset(PathItem, style.capStyle), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_JOIN_STYLE, "-strokelinejoin", (char *) NULL, (char *) NULL,
-            "round", Tk_Offset(PathItem, style.joinStyle), TK_CONFIG_DONT_SET_DEFAULT},
+        "round", Tk_Offset(PathItem, style.joinStyle), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_DOUBLE, "-strokemiterlimit", (char *) NULL, (char *) NULL,
-            "4.0", Tk_Offset(PathItem, style.miterLimit), 0},
+        "4.0", Tk_Offset(PathItem, style.miterLimit), 0},
     {TK_CONFIG_CUSTOM, "-strokeoffset", (char *) NULL, (char *) NULL,
-            "0,0", Tk_Offset(PathItem, style.strokeTSOffset),
-            TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
+        "0,0", Tk_Offset(PathItem, style.strokeTSOffset),
+        TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,
-            "1.0", Tk_Offset(PathItem, style.strokeOpacity), 0},
+        "1.0", Tk_Offset(PathItem, style.strokeOpacity), 0},
     {TK_CONFIG_BITMAP, "-strokestipple", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PathItem, style.strokeStipple),
-            TK_CONFIG_NULL_OK},
+        (char *) NULL, Tk_Offset(PathItem, style.strokeStipple),
+        TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-strokewidth", (char *) NULL, (char *) NULL,
-            "1.0", Tk_Offset(PathItem, style.strokeWidth),
-            TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
+        "1.0", Tk_Offset(PathItem, style.strokeWidth),
+        TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_CUSTOM, "-style", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PathItem, styleName),
-            TK_CONFIG_DONT_SET_DEFAULT, &styleOption},
+        (char *) NULL, Tk_Offset(PathItem, styleName),
+        TK_CONFIG_DONT_SET_DEFAULT, &styleOption},
     {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
-            (char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+        (char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-            (char *) NULL, 0, 0}
+        (char *) NULL, 0, 0}
 };
 
 /*
@@ -1742,7 +1742,6 @@ PathToPoint(
     Tk_Item *itemPtr,		/* Item to check against point. */
     double *pointPtr)		/* Pointer to x and y coordinates. */
 {
-    Tk_State 		state = itemPtr->state;
     int				numPoints, numStrokes;
     int				isclosed;
     int				intersections, nonzerorule;
@@ -1751,6 +1750,7 @@ PathToPoint(
     double 			bestDist, radius, width, dist;
     PathItem 		*pathPtr = (PathItem *) itemPtr;
     PathAtom		*atomPtr = pathPtr->atomPtr;
+    Tk_State 		state = itemPtr->state;
     Tk_PathStyle 	*stylePtr = &(pathPtr->style);
     TMatrix 		*matrixPtr = stylePtr->matrixPtr;
 
@@ -1759,10 +1759,13 @@ PathToPoint(
     if(state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
     }
-    if ((pathPtr->pathLen <= 3) || itemPtr->state==TK_STATE_HIDDEN) {
+    if ((pathPtr->pathLen <= 3) || state==TK_STATE_HIDDEN) {
         return bestDist;
     }
     if ((stylePtr->fillColor == NULL) && (stylePtr->strokeColor == NULL)) {
+        return bestDist;
+    }
+    if (atomPtr == NULL) {
         return bestDist;
     }
     
@@ -1817,7 +1820,7 @@ PathToPoint(
                 &intersections, &nonzerorule);
         sumIntersections += intersections;
         sumNonzerorule += nonzerorule;
-        if (stylePtr->strokeColor != NULL) {
+        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth <= kStrokeThicknessLimit)) {
         
             /*
              * This gives the distance to a zero width polyline.
@@ -1835,8 +1838,10 @@ PathToPoint(
 
         /*
          * For wider strokes we must make a more detailed analysis.
+         * Yes, there is an infinitesimal overlap to the above just
+         * to be on the safe side.
          */
-        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth > kStrokeThicknessLimit)) {
+        if ((stylePtr->strokeColor != NULL) && (stylePtr->strokeWidth >= kStrokeThicknessLimit)) {
             dist = PathThickPolygonToPoint(stylePtr->joinStyle, stylePtr->capStyle, 
                     width, isclosed, polyPtr, numPoints, pointPtr);
             if (dist < bestDist) {
@@ -2358,8 +2363,7 @@ SubPathToArea(
         /* This checks a closed polygon with zero width for inside.
          * If area rect completely enclosed it returns intersecting (0).
          */
-        inside = TkPolygonToArea(polyPtr, numPoints, rectPtr);
-        if (inside = 0) {
+        if (TkPolygonToArea(polyPtr, numPoints, rectPtr) != inside) {
             return 0;
         }
     }
@@ -2369,11 +2373,15 @@ SubPathToArea(
             width = 1.0;
         }
         if (stylePtr->strokeWidth > kStrokeThicknessLimit) {
-            inside = TkThickPolyLineToArea(polyPtr, numStrokes, 
+            if (TkThickPolyLineToArea(polyPtr, numStrokes, 
                     width, stylePtr->capStyle, 
-                    stylePtr->joinStyle, rectPtr);
+                    stylePtr->joinStyle, rectPtr) != inside) {
+                return 0;
+            }
         } else {
-			inside = PathPolyLineToArea(polyPtr, numStrokes, rectPtr);        
+			if (PathPolyLineToArea(polyPtr, numStrokes, rectPtr) != inside) {
+                return 0;
+            }
         }
     }
     return inside;
@@ -2569,6 +2577,90 @@ PathToArea(
     Tk_Item *itemPtr,		/* Item to check against line. */
     double *rectPtr)
 {
+    int inside;					/* Tentative guess about what to return,
+                                 * based on all points seen so far:  one
+                                 * means everything seen so far was
+                                 * inside the area;  -1 means everything
+                                 * was outside the area.  0 means overlap
+                                 * has been found. */ 
+    int				numPoints = 0;
+    int				numStrokes = 0;
+    int				isclosed = 0;
+    double 			*polyPtr;
+    double			currentT[2];
+    PathItem 		*pathPtr = (PathItem *) itemPtr;
+    PathAtom		*atomPtr = pathPtr->atomPtr;
+    Tk_State 		state = itemPtr->state;
+    Tk_PathStyle 	*stylePtr = &(pathPtr->style);
+    TMatrix 		*matrixPtr = stylePtr->matrixPtr;
+    MoveToAtom		*move;
+
+    if(state == TK_STATE_NULL) {
+        state = ((TkCanvas *)canvas)->canvas_state;
+    }    
+    if ((state==TK_STATE_HIDDEN) || (pathPtr->pathLen < 3)) {
+        return -1;
+    }
+    if ((stylePtr->fillColor == NULL) && (stylePtr->strokeColor == NULL)) {
+        return -1;
+    }
+    if (atomPtr == NULL) {
+        return -1;
+    }
+    
+    /* 
+     * Do we need more memory or can we use static space? 
+     */
+    if (pathPtr->maxNumSegments > MAX_NUM_STATIC_SEGMENTS) {
+        polyPtr = (double *) ckalloc((unsigned) (2*pathPtr->maxNumSegments*sizeof(double)));
+    } else {
+        polyPtr = staticSpace;
+    }
+
+    /* A 'M' atom must be first, may show up later as well. */
+    if (atomPtr->type != PATH_ATOM_M) {
+        return -1;
+    }
+    move = (MoveToAtom *) atomPtr;
+    PathApplyTMatrixToPoint(matrixPtr, &(move->x), currentT);
+    
+    /*
+     * This defines the starting point. It is either -1 or 1. 
+     * If any subseqent segment has a different 'inside'
+     * then return 0 since one port (in|out)side and another
+     * (out|in)side
+     */
+    inside = -1;
+    if ((currentT[0] >= rectPtr[0]) && (currentT[0] <= rectPtr[2])
+            && (currentT[1] >= rectPtr[1]) && (currentT[1] <= rectPtr[3])) {
+        inside = 1;
+    }
+    
+    while (atomPtr != NULL) {
+        MakeSubPathSegments(&atomPtr, polyPtr, &numPoints, &numStrokes, matrixPtr);
+        isclosed = 0;
+        if (numStrokes == numPoints) {
+            isclosed = 1;
+        }        
+        inside = SubPathToArea(pathPtr, polyPtr, numPoints, numStrokes, rectPtr, inside);
+        if (inside == 0) {
+            goto done;
+        }
+    }
+
+done:
+    if (polyPtr != staticSpace) {
+        ckfree((char *) polyPtr);
+    }
+    return inside;
+}
+
+static int
+PathToAreaBU(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against line. */
+    double *rectPtr)
+{
     PathItem 		*pathPtr = (PathItem *) itemPtr;
     int inside;					/* Tentative guess about what to return,
                                  * based on all points seen so far:  one
@@ -2581,7 +2673,6 @@ PathToArea(
     int				numStrokes = 0;
     int				isclosed = 0;
     double 			current[2];		/* Current untransformed point. */
-    double 			pt[2];			/* Transformed point. */
     double			*coordPtr, *polyPtr;
     double			*currentTPtr;	/* Pointer to the transformed current point. */
     Tk_State 		state = itemPtr->state;
@@ -2637,9 +2728,9 @@ PathToArea(
                 /* A 'M' atom must be first, may show up later as well. */
 
                 coordPtr = polyPtr;
-                PathApplyTMatrixToPoint(matrixPtr, current, coordPtr);
                 current[0] = move->x;
                 current[1] = move->y;
+                PathApplyTMatrixToPoint(matrixPtr, current, coordPtr);
                 currentTPtr = coordPtr;
                 coordPtr += 2;
                 numPoints = 1;

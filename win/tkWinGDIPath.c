@@ -17,9 +17,9 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
-#define Red255FromXColorPtr(xc)   (((xc)->pixel & 0xFF))
+#define Red255FromXColorPtr(xc)    (((xc)->pixel & 0xFF))
 #define Green255FromXColorPtr(xc)  (((xc)->pixel >> 8) & 0xFF)
-#define Blue255FromXColorPtr(xc)    (((xc)->pixel >> 16) & 0xFF)
+#define Blue255FromXColorPtr(xc)   (((xc)->pixel >> 16) & 0xFF)
 
 /*
  * This is perhaps a very stupid thing to do.
@@ -69,7 +69,7 @@ PathCreatePen(Tk_PathStyle *stylePtr)
     }
     widthInt = (int) (stylePtr->strokeWidth + 0.5);
     if (widthInt < 1) {
-        widthInt = 1; 	// ????
+        widthInt = 1; 	// @@@ ????
     }
 
     /* Set the line dash patttern in the current graphics state. */
@@ -179,8 +179,8 @@ void
 TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr)
 {
     BeginPath(gMemHdc);
-    if (stylePtr->matrix != NULL) {
-        ConcatCTM(stylePtr->matrix);
+    if (stylePtr->matrixPtr != NULL) {
+        ConcatCTM(stylePtr->matrixPtr);
         gHaveMatrix = 1;
     } else {
         gHaveMatrix = 0;
@@ -230,7 +230,7 @@ TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
         PathApplyTMatrix(&m, &cx, &cy);
     }
 
-    // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
+    /* Conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg) */
     /* Unchecked! Must be an approximation! */
     x31 = cx + (ctrlX - cx) * 2 / 3;
     y31 = cy + (ctrlY - cy) * 2 / 3;
@@ -266,7 +266,7 @@ TkPathArcTo(Drawable d,
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x2, double y2)
 {
-	TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x2, y2);
+    TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x2, y2);
 }
 
 /* helper for Arcto : */
@@ -288,13 +288,13 @@ TkPathArcTo2(Drawable d,
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x2, double y2)
 {
-	int result;
-	int i, segments;
+    int result;
+    int i, segments;
     double x1, y1;
     double cx, cy;
     double theta1, dtheta, phi;
-	double sinPhi, cosPhi;
-	double delta, t;
+    double sinPhi, cosPhi;
+    double delta, t;
     PathPoint pt;
     
     TkPathGetCurrentPosition(d, &pt);
@@ -456,6 +456,16 @@ TkPathDrawingDestroysPath(void)
 {
     return 1;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TwoStopLinearGradient --
+ *
+ *		Paint linear gradients using primitive drawing functions.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 TwoStopLinearGradient(

@@ -214,6 +214,7 @@ void PathC::CloseFigure()
 void PathC::Stroke(Tk_PathStyle *style)
 {
     Pen *pen = PathCreatePen(style);
+    
     mGraphics->DrawPath(pen, mPath);
 	delete pen;
 }
@@ -221,6 +222,7 @@ void PathC::Stroke(Tk_PathStyle *style)
 void PathC::Fill(Tk_PathStyle *style)
 {
     SolidBrush *brush = PathCreateBrush(style);
+    
     mGraphics->FillPath(brush, mPath);
 	delete brush;
 }
@@ -229,6 +231,7 @@ void PathC::StrokeAndFill(Tk_PathStyle *style)
 {
     Pen *pen = PathCreatePen(style);
     SolidBrush *brush = PathCreateBrush(style);
+    
     mGraphics->FillPath(brush, mPath);
     mGraphics->DrawPath(pen, mPath);
 	delete pen;

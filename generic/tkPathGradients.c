@@ -267,8 +267,8 @@ static Tk_ObjCustomOption stopsCO =
     StopsSet,
     NULL,
     NULL,
-    NULL,			/* We would perhaps need this to be able to
-                     * free up the stops record. */
+    NULL,			/* @@@ TODO: We would perhaps need this to be able to
+                     * free up the stops record. Mem Leak!!! */
     (ClientData) NULL
 };
 

@@ -11,8 +11,8 @@ set ::tkpath::antialias 1
 set id [$w create path "M 20 20 L 120 20 v 30 h -20 z"]
 $w bind $id <Button-1> [list puts "hit $id"]
 
-set id [$w create path "M 10 80 h 100 v 100 z" -fill blue]
-$w bind $id <Button-1> [list puts "hit $id (blue triangle)"]
+set id [$w create path "M 10 80 h 100 v 100 z" -fill red]
+$w bind $id <Button-1> [list puts "hit $id (red triangle)"]
 
 set id [$w create path "M 20 200 Q 50 120 100 200 T 150 200 200 200"]
 $w bind $id <Button-1> [list puts "hit $id (quad bezier)"]

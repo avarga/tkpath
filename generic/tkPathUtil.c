@@ -37,15 +37,15 @@ CalcVectorAngle2(double ux, double uy, double vx, double vy)
  *
  * CentralToEndpointArcParameters
  *
- *	Conversion from center to endpoint parameterization.
- *	All angles in radians!
- *	From: http://www.w3.org/TR/2003/REC-SVG11-20030114
+ *		Conversion from center to endpoint parameterization.
+ *		All angles in radians!
+ *		From: http://www.w3.org/TR/2003/REC-SVG11-20030114
  *
  * Results:
- *	Arc specific return code.
+ *		Arc specific return code.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -88,15 +88,15 @@ CentralToEndpointArcParameters(
  *
  * EndpointToCentralArcParameters
  *
- *	Conversion from endpoint to center parameterization.
- *	All angles in radians!
- *	From: http://www.w3.org/TR/2003/REC-SVG11-20030114
+ *		Conversion from endpoint to center parameterization.
+ *		All angles in radians!
+ *		From: http://www.w3.org/TR/2003/REC-SVG11-20030114
  *
  * Results:
- *	Arc specific return code.
+ *		Arc specific return code.
  *
  * Side effects:
- *	None.
+ *		None.
  *
  *--------------------------------------------------------------
  */
@@ -115,7 +115,7 @@ EndpointToCentralArcParameters(
     double x1dash, y1dash;
     double cxdash, cydash;
     double cx, cy;
-    double numerator, lambda, root;
+    double numerator, root;
     double theta1, dtheta;
 
     /* 1. Treat out-of-range parameters as described in
@@ -128,7 +128,7 @@ EndpointToCentralArcParameters(
         return kPathArcSkip;
     }
     
-    /* If rX = 0 or rY = 0 then this arc is treated as a straight line
+    /* If rx = 0 or ry = 0 then this arc is treated as a straight line
      * segment (a "lineto") joining the endpoints.
      */
     if (rx == 0.0f || ry == 0.0f) {
@@ -154,20 +154,27 @@ EndpointToCentralArcParameters(
     x1dash =  cosPhi * dx + sinPhi * dy;
     y1dash = -sinPhi * dx + cosPhi * dy;
 
-    /* F.6.6 Correction of out-of-range radii. */
-    lambda = x1dash*x1dash/(rx*rx) + y1dash*y1dash/(ry*ry);
-    if (lambda > 1.0) {
-        double sqrtLambda;
-        
-        sqrtLambda = sqrt(lambda);
-        rx = sqrtLambda * rx;
-        ry = sqrtLambda *ry;
-    }    
-
     /* Compute cx' and cy'. */
     numerator = rx*rx*ry*ry - rx*rx*y1dash*y1dash - ry*ry*x1dash*x1dash;
-    root = (largeArcFlag == sweepFlag ? -1.0 : 1.0) *
-            sqrt( numerator/(rx*rx*y1dash*y1dash+ry*ry*x1dash*x1dash) );
+    if (numerator < 0.0) { 
+    
+        /* If rx , ry and are such that there is no solution (basically,
+         * the ellipse is not big enough to reach from (x1, y1) to (x2,
+         * y2)) then the ellipse is scaled up uniformly until there is
+         * exactly one solution (until the ellipse is just big enough).
+         * 	-> find factor s, such that numerator' with rx'=s*rx and
+         *    ry'=s*ry becomes 0 :
+         */
+        float s = (float) sqrt(1.0 - numerator/(rx*rx*ry*ry));
+    
+        rx *= s;
+        ry *= s;
+        root = 0.0;
+    } else {
+        root = (largeArcFlag == sweepFlag ? -1.0 : 1.0) *
+                sqrt( numerator/(rx*rx*y1dash*y1dash + ry*ry*x1dash*x1dash) );
+    }
+    
     cxdash =  root*rx*y1dash/ry;
     cydash = -root*ry*x1dash/rx;
 
@@ -180,9 +187,9 @@ EndpointToCentralArcParameters(
     dtheta = CalcVectorAngle(
             (x1dash-cxdash)/rx,  (y1dash-cydash)/ry,
             (-x1dash-cxdash)/rx, (-y1dash-cydash)/ry);
-    if (sweepFlag == 0 && dtheta > 0.0) {
+    if (!sweepFlag && (dtheta > 0.0)) {
         dtheta -= 2.0*PI;
-    } else if (sweepFlag == 1 && dtheta < 0.0) {
+    } else if (sweepFlag && (dtheta < 0.0)) {
         dtheta += 2.0*PI;
     }
     *cxPtr = cx;
@@ -200,13 +207,13 @@ EndpointToCentralArcParameters(
  *
  * TableLooup
  *
- *	Look up an index from a statically allocated table of ints.
+ *		Look up an index from a statically allocated table of ints.
  *
  * Results:
- *	integer
+ *		integer
  *
  * Side effects:
- *	None
+ *		None
  *
  *--------------------------------------------------------------
  */
@@ -607,16 +614,16 @@ PathGenericCmdDispatcher(
  *
  * ObjectIsEmpty --
  *
- *	This procedure tests whether the string value of an object is
- *	empty.
+ *		This procedure tests whether the string value of an object is
+ *		empty.
  *
  * Results:
- *	The return value is 1 if the string value of objPtr has length
- *	zero, and 0 otherwise.
+ *		The return value is 1 if the string value of objPtr has length
+ *		zero, and 0 otherwise.
  *
  * Side effects:
- *	May cause object shimmering, since this function can force a
- *	conversion to a string object.
+ *		May cause object shimmering, since this function can force a
+ *		conversion to a string object.
  *
  *----------------------------------------------------------------------
  */
