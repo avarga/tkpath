@@ -781,8 +781,8 @@ TkPathNormalize(Tcl_Interp *interp, PathAtom *atomPtr, Tcl_Obj **listObjPtrPtr)
 
 int
 TkPathMakePath(
-    Drawable drawable,			/* Pixmap or window in which to draw
-					 * item. */
+    Drawable drawable,		/* Pixmap or window in which to draw
+                             * item. */
     PathAtom *atomPtr,
     Tk_PathStyle *stylePtr)
 {

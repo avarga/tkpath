@@ -31,17 +31,6 @@ static HDC gMemHdc = NULL;
 static TMatrix gCTM;		/* The context transformation matrix. */
 static int gHaveMatrix;
 
-static void ConcatCTM(TMatrix *m)
-{
-    TMatrix tmp = gCTM;
-    
-    gCTM.a  = m->a*tmp.a  + m->b*tmp.c;
-    gCTM.b  = m->a*tmp.b  + m->b*tmp.d;
-    gCTM.c  = m->c*tmp.a  + m->d*tmp.c;
-    gCTM.d  = m->c*tmp.b  + m->d*tmp.d;
-    gCTM.tx = m->tx*tmp.a + m->ty*tmp.c;
-    gCTM.ty = m->tx*tmp.b + m->ty*tmp.d;
-}
 
 static HPEN
 PathCreatePen(Tk_PathStyle *stylePtr)
@@ -174,19 +163,28 @@ TkPathInit(Drawable d)
     hdc = CreateCompatibleDC(NULL);
     SelectObject(hdc, twdPtr->bitmap.handle);
     gMemHdc = hdc;
+    gHaveMatrix = 0;
+    gCTM = kUnitTMatrix;
+}
+
+void
+TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
+{
+    TMatrix tmp = gCTM;
+    
+    gHaveMatrix = 1;
+    gCTM.a  = m->a*tmp.a  + m->b*tmp.c;
+    gCTM.b  = m->a*tmp.b  + m->b*tmp.d;
+    gCTM.c  = m->c*tmp.a  + m->d*tmp.c;
+    gCTM.d  = m->c*tmp.b  + m->d*tmp.d;
+    gCTM.tx = m->tx*tmp.a + m->ty*tmp.c;
+    gCTM.ty = m->tx*tmp.b + m->ty*tmp.d;
 }
 
 void
 TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr)
 {
     BeginPath(gMemHdc);
-    if (stylePtr->matrixPtr != NULL) {
-        gCTM = kUnitTMatrix;
-        ConcatCTM(stylePtr->matrixPtr);
-        gHaveMatrix = 1;
-    } else {
-        gHaveMatrix = 0;
-    }
 }
 
 void

@@ -1629,6 +1629,22 @@ ComputePathBbox(
     SetPathHeaderBbox(pathPtr);
 }
 
+static TMatrix
+GetCanvasTMatrix(Tk_Canvas canvas)
+{
+    short originX, originY;
+    TMatrix m;
+    
+    /* @@@ Any scaling involved as well??? */
+    Tk_CanvasDrawableCoords(canvas, 0.0, 0.0, &originX, &originY);
+
+    m = kUnitTMatrix;
+    m.tx = originX;
+    m.ty = originY;
+    
+    return m;
+}
+
 static void
 PaintCanvasLinearGradient(Tk_Canvas canvas, Drawable drawable, PathRect *bbox, char *name, int fillRule)
 {
@@ -1674,13 +1690,25 @@ DisplayPath(
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(pathPtr->style);
+    TMatrix m;
     
     /*
      * Define the path in the drawable using the path drawing functions.
+     * Any transform matrix need to be considered and canvas drawable
+     * offset must always be taken into account. Note the order!
      */
      
     TkPathInit(drawable);
+    /*
     if (MakeCanvasPath(canvas, pathPtr, drawable) != TCL_OK) {
+        return;
+    }*/
+    m = GetCanvasTMatrix(canvas);
+    TkPathPushTMatrix(drawable, &m);
+    if (stylePtr->matrixPtr != NULL) {
+        TkPathPushTMatrix(drawable, stylePtr->matrixPtr);
+    }
+    if (TkPathMakePath(drawable, pathPtr->atomPtr, stylePtr) != TCL_OK) {
         return;
     }
     

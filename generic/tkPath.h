@@ -182,6 +182,7 @@ int 		TkPathBoundingBox(PathRect *rPtr);
 void		TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
 void    	TkPathFree(Drawable d);
 int			TkPathDrawingDestroysPath();
+void		TkPathPushTMatrix(Drawable d, TMatrix *mPtr);
 
 /*
  * Utilities for creating and deleting Tk_PathStyles.

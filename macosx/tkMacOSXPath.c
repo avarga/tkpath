@@ -43,7 +43,7 @@ PathSetUpCGContext(
     CGContextRef outContext;
     OSStatus err;
     Rect boundsRect;
-    CGAffineTransform coordsTransform;
+    CGAffineTransform transform;
 
     err = QDBeginCGContext(destPort, contextPtr);
     outContext = *contextPtr;
@@ -53,9 +53,9 @@ PathSetUpCGContext(
     GetPortBounds(destPort, &boundsRect);
     
     CGContextResetCTM(outContext);
-    coordsTransform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0, 
+    transform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0, 
             (float)(boundsRect.bottom - boundsRect.top));
-    CGContextConcatCTM(outContext, coordsTransform);
+    CGContextConcatCTM(outContext, transform);
     
     CGContextSetShouldAntialias(outContext, gUseAntialiasing);
     
@@ -151,6 +151,7 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
         /* @@@ TODO */
         //CGContextSetStrokePattern(c, CGPatternRef pattern, const float color[]);
     }
+#if 0
     if (style->matrixPtr != NULL) {
         CGAffineTransform transform;
         TMatrix *mPtr = style->matrixPtr;
@@ -162,15 +163,29 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
                 (float) mPtr->tx, (float) mPtr->ty);
         CGContextConcatCTM(gPathCGContext, transform);    
     }
+#endif
 }
 
 void		
 TkPathInit(Drawable d)
 {
     if (gPathCGContext != NULL) {
-	Tcl_Panic("the path drawing context gPathCGContext is already in use\n");
+        Tcl_Panic("the path drawing context gPathCGContext is already in use\n");
     }
     PathSetUpCGContext((MacDrawable *) d, TkMacOSXGetDrawablePort(d), &gPathCGContext);
+}
+
+void
+TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
+{
+    CGAffineTransform transform;
+
+    /* Return the transform [ a b c d tx ty ]. */
+    transform = CGAffineTransformMake(
+            (float) mPtr->a, (float) mPtr->b,
+            (float) mPtr->c, (float) mPtr->d,
+            (float) mPtr->tx, (float) mPtr->ty);
+    CGContextConcatCTM(gPathCGContext, transform);    
 }
 
 void
