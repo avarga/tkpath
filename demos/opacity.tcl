@@ -33,7 +33,7 @@ proc move {} {
     array set frac [list red 3./7 green 11./17. blue 23./29.]
     foreach col {red green blue} {
 	set tx [expr $rc*cos([expr $phi*$frac($col)])]
-	set ty [expr $rc*sin($phi)]
+	set ty [expr $rc*sin([expr $phi/$frac($col)])]
 	set m [list {1 0} {0 1} [list $tx $ty]]
 	$w itemconfig $col -matrix $m
     }

@@ -8,10 +8,6 @@
  * $Id$
  */
 
-/* Never built this one. Just "random" code! */
-
-/*** Help yourself!!! ***/
-
 #include <cairo.h>
 #include <cairo-xlib.h>
 #include <tkUnixInt.h>
@@ -45,9 +41,6 @@ TkPathPushTMatrix(Drawable d, TMatrix *m)
 
 void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
 {
-
-    /* save/pop the state so we don't screw up the xform */
-    //cairo_save(gctx);
     cairo_new_path(gctx);
 }
 
@@ -99,28 +92,28 @@ void TkPathClosePath(Drawable d)
 
 void TkPathClipToPath(Drawable d, int fillRule)
 {
-
+    /* Clipping to path is done by default. */
     /* Note: cairo_clip does not consume the current path */
-    cairo_clip(gctx);
+    //cairo_clip(gctx);
 }
 
 void TkPathReleaseClipToPath(Drawable d)
 {
-    cairo_reset_clip(gctx);
+    //cairo_reset_clip(gctx);
 }
 
 void TkPathStroke(Drawable d, Tk_PathStyle *style)
 {       
     Tk_Dash *dash;
 
-    cairo_set_rgb_color(ctx,
+    cairo_set_rgb_color(gctx,
             RedDoubleFromXColorPtr(style->strokeColor),
             GreenDoubleFromXColorPtr(style->strokeColor),
             BlueDoubleFromXColorPtr(style->strokeColor));
-    cairo_set_alpha(ctx, double(opacity));
-    cairo_set_line_width(ctx, style->strokeWidth);
+    cairo_set_alpha(gctx, style->strokeOpacity);
+    cairo_set_line_width(gctx, style->strokeWidth);
 
-    switch (stylePtr->capStyle) {
+    switch (style->capStyle) {
         case CapNotLast:
         case CapButt:
             cairo_set_line_cap(gctx, CAIRO_LINE_CAP_BUTT);
@@ -132,7 +125,7 @@ void TkPathStroke(Drawable d, Tk_PathStyle *style)
             cairo_set_line_cap(gctx, CAIRO_LINE_CAP_SQUARE);
             break;
     }
-    switch (stylePtr->joinStyle) {
+    switch (style->joinStyle) {
         case JoinMiter: 
             cairo_set_line_join(gctx, CAIRO_LINE_JOIN_MITER);
             break;
@@ -143,7 +136,7 @@ void TkPathStroke(Drawable d, Tk_PathStyle *style)
             cairo_set_line_join(gctx, CAIRO_LINE_JOIN_BEVEL);
             break;
     }
-    cairo_set_miter_limit(gctx, style.miterLimit);
+    cairo_set_miter_limit(gctx, style->miterLimit);
 
     dash = &(style->dash);
     if ((dash != NULL) && (dash->number != 0)) {
@@ -180,13 +173,13 @@ void TkPathFill(Drawable d, Tk_PathStyle *style)
 
 void TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
 {
-    if (style->stroke != NULL) {
-        cairo_save(gctx);
-    }
+    /*
+     * The current path is consumed by filling.
+     * Need therfore to save the current context and restore after.
+     */
+    cairo_save(gctx);
     TkPathFill(d, style);
-    if (style->stroke != NULL) {
-        cairo_restore(gctx);
-    }
+    cairo_restore(gctx);
     TkPathStroke(d, style);
 }
 
@@ -203,6 +196,7 @@ void TkPathFree(Drawable d)
 
 int TkPathDrawingDestroysPath(void)
 {
+    /* We use save/restore instead. */
     return 0;
 }
 
@@ -220,6 +214,8 @@ int TkPathBoundingBox(PathRect *rPtr)
 void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {    
     int			i;
+    int			nstops;
+    int			fillMethod;
     PathRect 		transition;		/* The transition line. */
     GradientStop 	*stop;
     cairo_pattern_t 	*pat;
@@ -235,10 +231,10 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
         cairo_pattern_add_color_stop(pat, stop->offset, 
                 RedDoubleFromXColorPtr(stop->color),
                 GreenDoubleFromXColorPtr(stop->color),
-                BlueDoubleFromXColorPtr(stop->color)
+                BlueDoubleFromXColorPtr(stop->color),
                 stop->opacity);
     }
-    cairo_set_pattern(cr, pat);
+    cairo_set_pattern(gctx, pat);
     cairo_set_fill_rule(gctx, 
             (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
             
@@ -257,7 +253,7 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
             break;
     }
     cairo_pattern_set_extend(pat, extend);
-    cairo_fill(cr);
+    cairo_fill(gctx);
     
     cairo_pattern_destroy(pat);
 }

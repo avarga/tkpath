@@ -366,9 +366,12 @@ TkPathParseToAtoms(Tcl_Interp *interp, Tcl_Obj *listObjPtr, PathAtom **atomPtrPt
     *atomPtrPtr = NULL;
     currentX = 0.0;
     currentY = 0.0;
+    startX = 0.0;
+    startY = 0.0;
     ctrlX = 0.0;
     ctrlY = 0.0;
     lastInstr = 'M';	/* If first instruction is missing it defaults to M ? */
+    relative = 0;
         
     if (Tcl_ListObjGetElements(interp, listObjPtr, lenPtr, &objv) != TCL_OK) {
         return TCL_ERROR;

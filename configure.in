@@ -1,0 +1,85 @@
+#
+# $Id$
+#
+
+#AC_REVISION($Revision$)
+AC_INIT([tkpath],[0.1])
+AC_CONFIG_AUX_DIR(tclconfig)
+
+# Usual Tcl stuff:
+#
+TEA_INIT([3.1])
+TEA_PATH_TCLCONFIG
+TEA_LOAD_TCLCONFIG
+TEA_PATH_TKCONFIG
+TEA_LOAD_TKCONFIG
+
+TEA_PREFIX
+
+TEA_SETUP_COMPILER
+
+TEA_ADD_SOURCES([])
+#TEA_ADD_HEADERS([])
+TEA_ADD_INCLUDES([-I. -I\"`${CYGPATH} ${srcdir}/generic`\"])
+#TEA_ADD_LIBS([])
+#TEA_ADD_CFLAGS([])
+#TEA_ADD_STUB_SOURCES([])
+#TEA_ADD_TCL_SOURCES([])
+
+TEA_PRIVATE_TCL_HEADERS
+TEA_PRIVATE_TK_HEADERS
+
+# Build stuff:
+#
+TEA_ENABLE_THREADS
+TEA_ENABLE_SHARED
+TEA_ENABLE_SYMBOLS
+TEA_CONFIG_CFLAGS
+
+TEA_PATH_X
+
+# Build options:
+#
+AC_ARG_ENABLE(compat,
+    [  --disable-compat        disable compatibility options],
+    [want_compat=$enableval],
+    [want_compat="yes"])
+if test "$want_compat" = "no" ; then
+    AC_DEFINE(NO_COMPAT)
+fi
+
+# Platform-specific stuff:
+#
+case "${TEA_WINDOWINGSYSTEM}" in
+    windows)
+        AC_MSG_ERROR(not implemented on windows)
+	;;
+    aqua)
+        AC_MSG_ERROR(not implemented on macosx)
+	;;
+    x11)
+        #TEA_ADD_INCLUDES([-I/usr/local/include/freetype2])
+        #TEA_ADD_INCLUDES([-I/usr/include/freetype2])
+        TEA_ADD_INCLUDES([`freetype-config --cflags`])
+        TEA_ADD_LIBS([-lcairo])
+        TEA_ADD_SOURCES([\$(UNIX_OBJECTS)])
+	;;
+esac;
+
+CLEANFILES="$CLEANFILES pkgIndex.tcl"
+AC_SUBST(CLEANFILES)
+
+AC_DEFINE(USE_TCL_STUBS,[1],[Should always be 1])
+AC_DEFINE(USE_TK_STUBS,[1],[Should always be 1])
+AC_DEFINE(BUILD_tkpath,[1],[Set to 1 when building package])
+
+TEA_MAKE_LIB
+TEA_PROG_WISH
+
+CONFIGURE_OUTPUTS="Makefile config.cache config.log config.status"
+AC_SUBST(CONFIGURE_OUTPUTS)
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
+
+#*EOF*

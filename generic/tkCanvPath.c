@@ -1387,7 +1387,7 @@ DeletePath(
         Tcl_DecrRefCount(pathPtr->normPathObjPtr);
     }
     if (pathPtr->atomPtr != NULL) {
-	TkPathFreeAtoms(pathPtr->atomPtr);
+        TkPathFreeAtoms(pathPtr->atomPtr);
         pathPtr->atomPtr = NULL;
     }
     if (pathPtr->styleName != NULL) {
@@ -1534,6 +1534,9 @@ GetBarePathBbox(PathAtom *atomPtr)
     double x1, y1, x2, y2, x3, y3, x4, y4, x5, y5;
     double currentX, currentY;
     PathRect r = {1.0e36, 1.0e36, -1.0e36, -1.0e36};
+    
+    currentX = 0.0;
+    currentY = 0.0;
 
     while (atomPtr != NULL) {
     
@@ -2502,6 +2505,7 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
     numStrokes = 0;
     isclosed = 0;
     atomPtr = *atomPtrPtr;
+    coordPtr = NULL;
     
     while (atomPtr != NULL) {
 

@@ -3,6 +3,11 @@
  *
  *		This file implements a path canvas item modelled after its
  *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
+ *		
+ * 	Note:
+ *		This is supposed to be a minimal implementation using
+ *		Tk drawing only. It fails in a number of places such as
+ *		filled and overlapping subpaths.
  *
  * Copyright (c) 2005  Mats Bengtsson
  *
@@ -20,16 +25,77 @@
 
 extern int gUseAntiAlias;
 
+typedef struct _PathSegments {
+    int 	npoints;
+    double 	*points;
+    struct _PathSegments *next;
+} _PathSegments;
+
+typedef struct _PathContext {
+    double 	currentX;
+    double	currentY;
+    double 	lastMoveX;
+    double	lastMoveY;
+    int		hasCurrent;
+    TMatrix *m;
+    _PathSegments *segm;
+    _PathSegments *currentSegm;
+} _PathContext;
+
+static _PathContext *gctx = NULL;
+
+static void _PathContextInit(_PathContext *ctx)
+{
+    ctx->currentX = 0.0;
+    ctx->currentY = 0.0;
+    ctx->lastMoveX = 0.0;
+    ctx->lastMoveY = 0.0;
+    ctx->hasCurrent = 0;
+    ctx->m = NULL;
+    ctx->segm = NULL;
+    ctx->currentSegm = NULL;
+}
+
+static void _PathContextFree(_PathContext *ctx)
+{
+    _PathSegments *tmpSegm, *segm;
+
+    segm = ctx->segm;
+    while (segm != NULL) {
+        tmpSegm = segm;
+        segm = tmpSegm->next;
+        ckfree((char *) tmpSegm->points);
+        ckfree((char *) tmpSegm);
+    }
+    ckfree((char *) ctx);
+}
 
 void TkPathInit(Display *display, Drawable d)
 {
-
+    _PathContext *ctx;
+    
+    ctx = (_PathContext *) ckalloc(sizeof(_PathContext));
+    _PathContextInit(ctx);
+    gctx = ctx;
 }
 
 void
 TkPathPushTMatrix(Drawable d, TMatrix *m)
 {
-
+    if (gctx->m == NULL) {
+        gctx->m = (TMatrix *) ckalloc(sizeof(TMatrix));
+        *(gctx->m) = *m;
+    } else {
+        TMatrix tmp = *(gctx->m);
+        TMatrix *p = gctx->m;
+        
+        p->a  = m->a*tmp.a  + m->b*tmp.c;
+        p->b  = m->a*tmp.b  + m->b*tmp.d;
+        p->c  = m->c*tmp.a  + m->d*tmp.c;
+        p->d  = m->c*tmp.b  + m->d*tmp.d;
+        p->tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
+        p->ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
+    }
 }
 
 void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
@@ -44,7 +110,15 @@ void TkPathMoveTo(Drawable d, double x, double y)
 
 void TkPathLineTo(Drawable d, double x, double y)
 {
-
+    _PathSegments segm;
+    
+    gctx->currentX = x;
+    gctx->currentY = y;
+    segm = gctx->currentSegm;
+    if (gctx->m != NULL) {
+        PathApplyTMatrix(gctx->m, &x, &y);
+    }
+    
 }
 
 void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
@@ -52,7 +126,8 @@ void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y
     double cx, cy;
     double x31, y31, x32, y32;
     
-    //cairo_current_point(gctx, &cx, &cy);
+    cx = gctx->currentX;
+    cy = gctx->currentY;
 
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
     /* Unchecked! Must be an approximation! */
@@ -61,7 +136,7 @@ void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
 
-
+    TkPathCurveTo(d, x31, y31, x32, y32, x, y);
 }
 
 void TkPathCurveTo(Drawable d, double x1, double y1, 
@@ -85,22 +160,24 @@ void TkPathClosePath(Drawable d)
 
 void TkPathClipToPath(Drawable d, int fillRule)
 {
-
+    /* empty */
 }
 
 void TkPathReleaseClipToPath(Drawable d)
 {
-
+    /* empty */
 }
 
 void TkPathStroke(Drawable d, Tk_PathStyle *style)
 {       
 
+    XDrawLines();
 }
 
 void TkPathFill(Drawable d, Tk_PathStyle *style)
 {
 
+    XFillPolygon();
 }
 
 void TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
@@ -115,7 +192,8 @@ void TkPathEndPath(Drawable d)
 
 void TkPathFree(Drawable d)
 {
-
+    _PathContextFree(gctx);
+    gctx = NULL;
 }
 
 int TkPathDrawingDestroysPath(void)
@@ -125,7 +203,8 @@ int TkPathDrawingDestroysPath(void)
 
 int TkPathGetCurrentPosition(Drawable d, PathPoint *pt)
 {
-
+    pt->x = gctx->currentX;
+    pt->y = gctx->currentY;
     return TCL_OK;
 }
 

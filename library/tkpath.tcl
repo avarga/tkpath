@@ -90,54 +90,55 @@ proc ::tkpath::transform {cmd args} {
 #       
 # Arguments:
 #       type         any of circle, ellipse, polygon, polyline, or rect.
-#       coords       a list of the type specific coordinates
-#       args         optional attributes, such as -rx and -ry for rect.
+#       args         a list of the type specific coordinates, followed by
+#                    optional attributes, such as -rx and -ry for rect.
 #       
 # Results:
 #       a transformation matrix
 
-proc ::tkpath::coords {type coords args} {
+proc ::tkpath::coords {type args} {
     
     set len [llength $args]
     
     switch -- $type {
 	circle {
-	    if {[llength $coords] != 3} {
-		return -code error "unrecognized circle coords \"$coords\""
+	    if {$len != 3} {
+		return -code error "unrecognized circle coords \"$args\""
 	    }
-	    foreach {cx cy r} $coords {break}
+	    foreach {cx cy r} $args {break}
 	    set path [list \
 	      M $cx [expr $cy-$r] \
 	      A $r $r 0 0 1 $cx [expr $cy+$r] \
 	      A $r $r 0 0 1 $cx [expr $cy-$r] Z]
 	}
 	ellipse {
-	    if {[llength $coords] != 4} {
-		return -code error "unrecognized circle ellipse \"$coords\""
+	    if {$len != 4} {
+		return -code error "unrecognized circle ellipse \"$args\""
 	    }
-	    foreach {cx cy rx ry} $coords {break}
+	    foreach {cx cy rx ry} $args {break}
 	    set path [list \
 	      M $cx [expr $cy-$ry] \
 	      A $rx $ry 0 0 1 $cx [expr $cy+$ry] \
 	      A $rx $ry 0 0 1 $cx [expr $cy-$ry] Z]
 	}
 	polygon {
-	    set path [concat M [lrange $coords 0 1] M [lrange $coords 2 end] Z]
+	    set path [concat M [lrange $args 0 1] M [lrange $args 2 end] Z]
 	}
 	polyline {
-	    set path [concat M [lrange $coords 0 1] M [lrange $coords 2 end]]
+	    set path [concat M [lrange $args 0 1] M [lrange $args 2 end]]
 	}
 	rect {
-	    if {[llength $coords] != 4} {
-		return -code error "unrecognized rect coords \"$coords\""
+	    if {$len < 4} {
+		return -code error "unrecognized rect coords \"$args\""
 	    }
-	    foreach {x y width height} $coords {break}
-	    if {$args == {}} {
+	    foreach {x y width height} $args {break}
+	    set opts [lrange $args 4 end]
+	    if {$opts == {}} {
 		set path [list M $x $y h $width v $height h -$width z]
 	    } else {
 		set rx 0.0
 		set ry 0.0
-		foreach {key value} $args {
+		foreach {key value} $opts {
 		    
 		    switch -- $key {
 			-rx - -ry {
