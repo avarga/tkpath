@@ -19,9 +19,6 @@
 
 static double kStrokeThicknessLimit = 4.0;
 
-static int kNumSegmentsCurveTo    = 18;
-static int kNumSegmentsQuadBezier = 12;
-
 #define MAX_NUM_STATIC_SEGMENTS  2000
 /* @@@ Should this be moved inside the function instead? */
 static double staticSpace[2*MAX_NUM_STATIC_SEGMENTS];
@@ -2079,14 +2076,14 @@ GetSubpathMaxNumSegments(PathAtom *atomPtr)
             }
             case PATH_ATOM_Q: {
                 quad = (QuadBezierAtom *) atomPtr;
-                num += kNumSegmentsQuadBezier;
+                num += kPathNumSegmentsQuadBezier;
                 currentX = quad->anchorX;
                 currentY = quad->anchorY;
                 break;
             }
             case PATH_ATOM_C: {
                 curve = (CurveToAtom *) atomPtr;
-                num += kNumSegmentsCurveTo;
+                num += kPathNumSegmentsCurveTo;
                 currentX = curve->anchorX;
                 currentY = curve->anchorY;
                 break;
@@ -2176,7 +2173,7 @@ ArcSegments(
  *--------------------------------------------------------------
  */
 
-static void
+void
 CurveSegments(
     double control[],		/* Array of coordinates for four
                              * control points:  x0, y0, x1, y1,
@@ -2341,7 +2338,7 @@ AddQuadBezierSegments(
     PathApplyTMatrixToPoint(matrixPtr, &(quad->ctrlX), control+2);
     PathApplyTMatrixToPoint(matrixPtr, &(quad->anchorX), control+4);
 
-    numPoints = kNumSegmentsQuadBezier;
+    numPoints = kPathNumSegmentsQuadBezier;
     QuadBezierSegments(control, 0, numPoints, coordPtr);
     
 #if PATH_DEBUG
@@ -2374,7 +2371,7 @@ AddCurveToSegments(
     PathApplyTMatrixToPoint(matrixPtr, &(curve->ctrlX2), control+4);
     PathApplyTMatrixToPoint(matrixPtr, &(curve->anchorX), control+6);
 
-    numSteps = kNumSegmentsCurveTo;
+    numSteps = kPathNumSegmentsCurveTo;
     CurveSegments(control, 1, numSteps, coordPtr);
     
     return numSteps;

@@ -37,6 +37,14 @@ extern "C" {
  */
 #define ALIGN_TO_PIXEL(x) 	(gUseAntiAlias ? (x) : (((int) x) + 0.5))
 
+/*
+ * So far we use a fixed number of straight line segments when
+ * doing various things, but it would be better to use the de Castlejau
+ * algorithm to iterate these segments.
+ */
+static int kPathNumSegmentsCurveTo    = 18;
+static int kPathNumSegmentsQuadBezier = 12;
+static int kPathNumSegmentsMax		  = 18;
 
 static const TMatrix kUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 

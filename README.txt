@@ -25,6 +25,9 @@ The backends:
 
     5) Tk drawing, fallback for cairo mainly, very basic
 
+I could think of one more backend based on X11 that has more features than
+the compatibility layer of Tk, since the fallback is only necessary on unix 
+systems anyway.
 
 
 Copyright (c) 2005  Mats Bengtsson
