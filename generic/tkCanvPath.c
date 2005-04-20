@@ -17,6 +17,8 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
+extern int gUseAntiAlias;
+
 /*
  * For wider strokes we must make a more detailed analysis
  * when doing hit tests and area tests.
@@ -1145,6 +1147,7 @@ static void
 SetTotalBboxFromBare(PathItem *pathPtr)
 {
     Tk_PathStyle *style = &(pathPtr->style);
+    double fudge = 1.0;
     double width;
     PathRect rect;
     
@@ -1167,13 +1170,17 @@ SetTotalBboxFromBare(PathItem *pathPtr)
      */
     
     /*
-     * Add one more pixel of fudge factor just to be safe (e.g.
-     * X may round differently than we do). Antialiasing?
+     * Add one (or two if antialiasing) more pixel of fudge factor just to be safe 
+     * (e.g. X may round differently than we do).
      */
-    rect.x1 -= 1.0;
-    rect.x2 += 1.0;
-    rect.y1 -= 1.0;
-    rect.y2 += 1.0;
+     
+    if (gUseAntiAlias) {
+        fudge = 2;
+    }
+    rect.x1 -= fudge;
+    rect.x2 += fudge;
+    rect.y1 -= fudge;
+    rect.y2 += fudge;
     
     pathPtr->totalBbox = rect;
 }
