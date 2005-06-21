@@ -29,7 +29,19 @@ extern "C" int gUseAntiAlias;
                                                 (((xc)->pixel & 0xFF)),			\
                                                 (((xc)->pixel >> 8) & 0xFF),	\
                                                 (((xc)->pixel >> 16) & 0xFF))
+/*
+#define ALPHA_SHIFT 24
+#define RED_SHIFT   16
+#define GREEN_SHIFT 8
+#define BLUE_SHIFT  0
+#define ALPHA_MASK  ((ARGB) 0xff << ALPHA_SHIFT)
 
+#define MAKEARGB(a, r, g, b) \
+                (((ARGB) ((a) & 0xff) << ALPHA_SHIFT)| \
+                 ((ARGB) ((r) & 0xff) << RED_SHIFT)  | \
+                 ((ARGB) ((g) & 0xff) << GREEN_SHIFT)| \
+                 ((ARGB) ((b) & 0xff) << BLUE_SHIFT))
+*/
 
 static LookupTable LineCapStyleLookupTable[] = {
     {CapNotLast, 	LineCapFlat},
@@ -132,6 +144,12 @@ PathC::PathC(Drawable d)
     if (gUseAntiAlias) {
         mGraphics->SetSmoothingMode(SmoothingModeAntiAlias);
     }
+    /* from tile
+    TkWinDCState dcState;
+    HDC hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
+    ...
+    TkWinReleaseDrawableDC(d, hdc, &dcState);
+    */
     return;    
 }
 

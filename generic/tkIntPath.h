@@ -21,6 +21,34 @@
 extern "C" {
 #endif
 
+/*
+ * From tclInt.h version 1.118.2.11
+ * Ensure WORDS_BIGENDIAN is defined correcly:
+ * Needs to happen here in addition to configure to work with
+ * fat compiles on Darwin (i.e. ppc and i386 at the same time).
+ */
+ 
+#ifndef WORDS_BIGENDIAN
+#	ifdef HAVE_SYS_TYPES_H
+# Ê Ê	include <sys/types.h>
+#	endif
+#	ifdef HAVE_SYS_PARAM_H
+# Ê Ê	include <sys/param.h>
+#	endif
+#   ifdef BYTE_ORDER
+#		ifdef BIG_ENDIAN
+#			if BYTE_ORDER == BIG_ENDIAN
+#				define WORDS_BIGENDIAN
+#			endif
+#		endif
+#		ifdef LITTLE_ENDIAN
+#			if BYTE_ORDER == LITTLE_ENDIAN
+#				undef WORDS_BIGENDIAN
+#			endif
+#		endif
+#	endif
+#endif
+
 #define MIN(a, b) 	(((a) < (b)) ? (a) : (b))
 #define MAX(a, b) 	(((a) > (b)) ? (a) : (b))
 #define ABS(a)    	(((a) >= 0)  ? (a) : -1*(a))
