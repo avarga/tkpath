@@ -27,6 +27,8 @@ int 		Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
 
 int			CoordsForRectangularItems(Tcl_Interp *interp, Tk_Canvas canvas, 
                     PathRect *rectPtr, int objc, Tcl_Obj *CONST objv[]);
+int			CoordsForPolygonline(Tcl_Interp *interp, Tk_Canvas canvas, int closed,
+                    int objc, Tcl_Obj *CONST objv[], PathAtom **atomPtrPtr, int *lenPtr);
 PathRect	GetGenericBarePathBbox(PathAtom *atomPtr);
 PathRect	GetGenericPathTotalBboxFromBare(Tk_PathStyle *stylePtr, PathRect *bboxPtr);
 void		SetGenericPathHeaderBbox(Tk_Item *headerPtr, TMatrix *mPtr,

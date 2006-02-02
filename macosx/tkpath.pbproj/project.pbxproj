@@ -89,6 +89,7 @@
 				9A66FCF20978D8050086B7B8,
 				9A587F03098FA7870094E994,
 				9A587F06098FADFA0094E994,
+				9A18020D099244EA00A80065,
 				9A58E5420796814B00FBE143,
 				9AA0B6C407DD8C9900A80065,
 				9A5BCDA007E2D8B400B6FA03,
@@ -154,6 +155,25 @@
 		};
 		9A017ED7079FCCE100A80065 = {
 			fileRef = 9A017ED6079FCCE100A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A18020D099244EA00A80065 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = tkCanvPpolygon.c;
+			path = ../generic/tkCanvPpolygon.c;
+			refType = 2;
+		};
+		9A18020E099244EA00A80065 = {
+			fileRef = 9A18020D099244EA00A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A18020F099244EA00A80065 = {
+			fileRef = 9A18020D099244EA00A80065;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -254,8 +274,8 @@
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			name = tkCanvPline.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkCanvPline.c;
-			refType = 0;
+			path = ../generic/tkCanvPline.c;
+			refType = 2;
 		};
 		9A587F04098FA7870094E994 = {
 			fileRef = 9A587F03098FA7870094E994;
@@ -273,8 +293,8 @@
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			name = tkCanvPolyline.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkCanvPolyline.c;
-			refType = 0;
+			path = ../generic/tkCanvPolyline.c;
+			refType = 2;
 		};
 		9A587F07098FADFA0094E994 = {
 			fileRef = 9A587F06098FADFA0094E994;
@@ -612,6 +632,7 @@
 				9A95DCE20980F5E900C25EDB,
 				9A587F05098FA7870094E994,
 				9A587F08098FADFA0094E994,
+				9A18020F099244EA00A80065,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -779,6 +800,7 @@
 				9A5B17C8097BA957000B33B2,
 				9A587F04098FA7870094E994,
 				9A587F07098FADFA0094E994,
+				9A18020E099244EA00A80065,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

@@ -1,7 +1,7 @@
 /*
- * tkCanvPolyline.c --
+ * tkCanvPpolygon.c --
  *
- *	This file implements a polyline canvas item modelled after its
+ *	This file implements a polygon canvas item modelled after its
  *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
  * Copyright (c) 2006  Mats Bengtsson
@@ -16,17 +16,17 @@
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
-/* Values for the PolylineItem's flag. */
+/* Values for the PpolygonItem's flag. */
 
 enum {
-    kPolylineItemNoBboxCalculation     	= (1L << 0)		/* Inhibit any 'ComputePolylineBbox' call. */
+    kPpolygonItemNoBboxCalculation     	= (1L << 0)		/* Inhibit any 'ComputePpolygonBbox' call. */
 };
 
 /*
  * The structure below defines the record for each path item.
  */
 
-typedef struct PolylineItem  {
+typedef struct PpolygonItem  {
     Tk_Item header;			/* Generic stuff that's the same for all
                              * types.  MUST BE FIRST IN STRUCTURE. */
     Tk_Canvas canvas;		/* Canvas containing item. */
@@ -41,48 +41,48 @@ typedef struct PolylineItem  {
                              * needed for Area and Point functions. */
     long flags;				/* Various flags, see enum. */
     char *null;   			/* Just a placeholder for not yet implemented stuff. */ 
-} PolylineItem;
+} PpolygonItem;
 
 
 /*
  * Prototypes for procedures defined in this file:
  */
 
-static void		ComputePolylineBbox(Tk_Canvas canvas, PolylineItem *polylinePtr);
-static int		ConfigurePolyline(Tcl_Interp *interp, Tk_Canvas canvas, 
+static void		ComputePpolygonBbox(Tk_Canvas canvas, PpolygonItem *polylinePtr);
+static int		ConfigurePpolygon(Tcl_Interp *interp, Tk_Canvas canvas, 
                         Tk_Item *itemPtr, int objc,
                         Tcl_Obj *CONST objv[], int flags);
-static int		CreatePolyline(Tcl_Interp *interp,
+static int		CreatePpolygon(Tcl_Interp *interp,
                         Tk_Canvas canvas, struct Tk_Item *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static void		DeletePolyline(Tk_Canvas canvas,
+static void		DeletePpolygon(Tk_Canvas canvas,
                         Tk_Item *itemPtr, Display *display);
-static void		DisplayPolyline(Tk_Canvas canvas,
+static void		DisplayPpolygon(Tk_Canvas canvas,
                         Tk_Item *itemPtr, Display *display, Drawable drawable,
                         int x, int y, int width, int height);
-static int		PolylineCoords(Tcl_Interp *interp,
+static int		PpolygonCoords(Tcl_Interp *interp,
                         Tk_Canvas canvas, Tk_Item *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static int		PolylineToArea(Tk_Canvas canvas,
+static int		PpolygonToArea(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double *rectPtr);
-static double	PolylineToPoint(Tk_Canvas canvas,
+static double	PpolygonToPoint(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double *coordPtr);
-static int		PolylineToPostscript(Tcl_Interp *interp,
+static int		PpolygonToPostscript(Tcl_Interp *interp,
                         Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
-static void		ScalePolyline(Tk_Canvas canvas,
+static void		ScalePpolygon(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double originX, double originY,
                         double scaleX, double scaleY);
-static void		TranslatePolyline(Tk_Canvas canvas,
+static void		TranslatePpolygon(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double deltaX, double deltaY);
 
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(PolylineItem),
-    PATH_CONFIG_SPEC_STYLE_MATRIX(PolylineItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(PolylineItem),
-    PATH_CONFIG_SPEC_CORE(PolylineItem),
+    PATH_CONFIG_SPEC_STYLE_FILL(PpolygonItem),
+    PATH_CONFIG_SPEC_STYLE_MATRIX(PpolygonItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(PpolygonItem),
+    PATH_CONFIG_SPEC_CORE(PpolygonItem),
     PATH_END_CONFIG_SPEC
 };
 
@@ -91,21 +91,21 @@ static Tk_ConfigSpec configSpecs[] = {
  * of procedures that can be invoked by generic item code.
  */
 
-Tk_ItemType tkPolylineType = {
-    "polyline",						/* name */
-    sizeof(PolylineItem),			/* itemSize */
-    CreatePolyline,					/* createProc */
+Tk_ItemType tkPpolygonType = {
+    "ppolygon",						/* name */
+    sizeof(PpolygonItem),			/* itemSize */
+    CreatePpolygon,					/* createProc */
     configSpecs,					/* configSpecs */
-    ConfigurePolyline,				/* configureProc */
-    PolylineCoords,					/* coordProc */
-    DeletePolyline,					/* deleteProc */
-    DisplayPolyline,				/* displayProc */
+    ConfigurePpolygon,				/* configureProc */
+    PpolygonCoords,					/* coordProc */
+    DeletePpolygon,					/* deleteProc */
+    DisplayPpolygon,				/* displayProc */
     TK_CONFIG_OBJS,					/* flags */
-    PolylineToPoint,				/* pointProc */
-    PolylineToArea,					/* areaProc */
-    PolylineToPostscript,			/* postscriptProc */
-    ScalePolyline,					/* scaleProc */
-    TranslatePolyline,				/* translateProc */
+    PpolygonToPoint,				/* pointProc */
+    PpolygonToArea,					/* areaProc */
+    PpolygonToPostscript,			/* postscriptProc */
+    ScalePpolygon,					/* scaleProc */
+    TranslatePpolygon,				/* translateProc */
     (Tk_ItemIndexProc *) NULL,		/* indexProc */
     (Tk_ItemCursorProc *) NULL,		/* icursorProc */
     (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
@@ -117,10 +117,10 @@ Tk_ItemType tkPolylineType = {
  
 
 static int		
-CreatePolyline(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
+CreatePpolygon(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
         int objc, Tcl_Obj *CONST objv[])
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     int	i;
 
     if (objc == 0) {
@@ -150,44 +150,44 @@ CreatePolyline(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     }
     
     /*
-     * Since both PolylineCoords and ConfigurePolyline computes new bbox'es
+     * Since both PpolygonCoords and ConfigurePpolygon computes new bbox'es
      * we skip this and do it ourself below.
      */
-    polylinePtr->flags |= kPolylineItemNoBboxCalculation;
-    if (PolylineCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    polylinePtr->flags |= kPpolygonItemNoBboxCalculation;
+    if (PpolygonCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
         goto error;
     }
-    if (ConfigurePolyline(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
-        polylinePtr->flags &= ~kPolylineItemNoBboxCalculation;
-        ComputePolylineBbox(canvas, polylinePtr);
+    if (ConfigurePpolygon(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
+        polylinePtr->flags &= ~kPpolygonItemNoBboxCalculation;
+        ComputePpolygonBbox(canvas, polylinePtr);
         return TCL_OK;
     }
 
     error:
-    DeletePolyline(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
+    DeletePpolygon(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
     return TCL_ERROR;
 }
 
 static int		
-PolylineCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, 
+PpolygonCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, 
         int objc, Tcl_Obj *CONST objv[])
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     int len;
 
-    if (CoordsForPolygonline(interp, canvas, 0, objc, objv, 
+    if (CoordsForPolygonline(interp, canvas, 1, objc, objv, 
             &(polylinePtr->atomPtr), &len) != TCL_OK) {
         return TCL_ERROR;
     }
     polylinePtr->maxNumSegments = len;
-    if (!(polylinePtr->flags & kPolylineItemNoBboxCalculation)) {
-        ComputePolylineBbox(canvas, polylinePtr);
+    if (!(polylinePtr->flags & kPpolygonItemNoBboxCalculation)) {
+        ComputePpolygonBbox(canvas, polylinePtr);
     }
     return TCL_OK;
 }	
 
 void
-ComputePolylineBbox(Tk_Canvas canvas, PolylineItem *polylinePtr)
+ComputePpolygonBbox(Tk_Canvas canvas, PpolygonItem *polylinePtr)
 {
     Tk_PathStyle *stylePtr = &(polylinePtr->style);
     Tk_State state = polylinePtr->header.state;
@@ -206,10 +206,10 @@ ComputePolylineBbox(Tk_Canvas canvas, PolylineItem *polylinePtr)
 }
 
 static int		
-ConfigurePolyline(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, 
+ConfigurePpolygon(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, 
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(polylinePtr->style);
     Tk_Window tkwin;
     Tk_State state;
@@ -249,16 +249,16 @@ ConfigurePolyline(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     /*
      * Recompute bounding box for path.
      */
-    if (!(polylinePtr->flags & kPolylineItemNoBboxCalculation)) {
-        ComputePolylineBbox(canvas, polylinePtr);
+    if (!(polylinePtr->flags & kPpolygonItemNoBboxCalculation)) {
+        ComputePpolygonBbox(canvas, polylinePtr);
     }
     return TCL_OK;
 }
 
 static void		
-DeletePolyline(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
+DeletePpolygon(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
 
     if (polylinePtr->atomPtr != NULL) {
         TkPathFreeAtoms(polylinePtr->atomPtr);
@@ -267,10 +267,10 @@ DeletePolyline(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
 }
 
 static void		
-DisplayPolyline(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable drawable,
+DisplayPpolygon(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable drawable,
         int x, int y, int width, int height)
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     TMatrix m = GetCanvasTMatrix(canvas);
 
     TkPathDrawPath(display, drawable, polylinePtr->atomPtr, &(polylinePtr->style),
@@ -278,9 +278,9 @@ DisplayPolyline(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable d
 }
 
 static double	
-PolylineToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
+PpolygonToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     PathAtom *atomPtr = polylinePtr->atomPtr;
     Tk_PathStyle *stylePtr = &(polylinePtr->style);
 
@@ -289,22 +289,22 @@ PolylineToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
 }
 
 static int		
-PolylineToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
+PpolygonToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     
     return GenericPathToArea(canvas, itemPtr, &(polylinePtr->style), 
             polylinePtr->atomPtr, polylinePtr->maxNumSegments, areaPtr);
 }
 
 static int		
-PolylineToPostscript(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, int prepass)
+PpolygonToPostscript(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, int prepass)
 {
     return TCL_ERROR;
 }
 
 static void		
-ScalePolyline(Tk_Canvas canvas, Tk_Item *itemPtr, double originX, double originY,
+ScalePpolygon(Tk_Canvas canvas, Tk_Item *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
     /* This doesn't work very well with general affine matrix transforms! Arcs ? */
@@ -312,9 +312,9 @@ ScalePolyline(Tk_Canvas canvas, Tk_Item *itemPtr, double originX, double originY
 }
 
 static void		
-TranslatePolyline(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
+TranslatePpolygon(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
 {
-    PolylineItem *polylinePtr = (PolylineItem *) itemPtr;
+    PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     PathAtom *atomPtr = polylinePtr->atomPtr;
 
     TranslatePathAtoms(atomPtr, deltaX, deltaY);

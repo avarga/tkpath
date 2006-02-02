@@ -4,7 +4,8 @@ TODO for tkpath
 
  o There are a lot of duplicated code for each item which is due to the
    canvas item registration mechanism. Perhaps a simplification with generic
-   handlers.
+   handlers. For instance, tkCanvPolyline.c and tkCanvPolygon.c don't
+   differ by many significant lines; very annoying!
 
  o Optimize segmentation computations used for hittesting in the 'Point'
    functions.
