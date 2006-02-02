@@ -17,10 +17,6 @@
  * $Id$
  */
 
-#include <tcl.h>
-#include <tk.h>
-#include <tkInt.h>
-#include "tkPath.h"
 #include "tkIntPath.h"
 
 extern Tcl_HashTable *	gLinearGradientHashPtr;
@@ -400,14 +396,14 @@ HaveLinearGradientStyleWithName(CONST char *name)
 }
 
 void
-PathPaintLinearGradientFromName(Drawable d, PathRect *bbox, char *name, int fillRule)
+PathPaintLinearGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule)
 {
     LinearGradientFill *fillPtr;
 
     if (GetLinearGradientFromName(name, &fillPtr) != TCL_OK) {
         return;
     }
-    TkPathPaintLinearGradient(d, bbox, fillPtr, fillRule);
+    TkPathPaintLinearGradient(ctx, bbox, fillPtr, fillRule);
 }
 
 void

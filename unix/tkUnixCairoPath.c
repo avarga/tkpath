@@ -3,7 +3,7 @@
  *
  *	This file implements path drawing API's using the Cairo rendering engine.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
@@ -20,46 +20,60 @@
 
 extern int gUseAntiAlias;
 
-static  cairo_t *gctx = NULL;
+/*
+ * This is used as a place holder for platform dependent stuff between each call.
+ */
+typedef struct TkPathContext_ {
+    Drawable 		d;
+    cairo_t*	 	c;
+} TkPathContext_;
 
-void TkPathInit(Display *display, Drawable d)
+
+TkPathContext TkPathInit(Display *display, Drawable d)
 {
-    if (gctx != NULL) {
-        Tcl_Panic("the path drawing context gctx is already in use\n");
-    }
-    gctx = cairo_create();
-    cairo_set_target_drawable(gctx, display, d);
+    cairo_t *c;
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    c = cairo_create();
+    context->c = c;
+    context->d = d;
+    cairo_set_target_drawable(c, display, d);
+    return (TkPathContext) context;
 }
 
 void
-TkPathPushTMatrix(Drawable d, TMatrix *m)
+TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_matrix_t *matrix = cairo_matrix_create();
     cairo_matrix_set_affine(matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
-    cairo_concat_matrix(gctx, matrix);
+    cairo_concat_matrix(context->c, matrix);
 }
 
-void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
+void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
 {
-    cairo_new_path(gctx);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_new_path(context->c);
 }
 
-void TkPathMoveTo(Drawable d, double x, double y)
+void TkPathMoveTo(TkPathContext ctx, double x, double y)
 {
-    cairo_move_to(gctx, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_move_to(context->c, x, y);
 }
 
-void TkPathLineTo(Drawable d, double x, double y)
+void TkPathLineTo(TkPathContext ctx, double x, double y)
 {
-    cairo_line_to(gctx, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_line_to(context->c, x, y);
 }
 
-void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
+void TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     double cx, cy;
     double x31, y31, x32, y32;
     
-    cairo_current_point(gctx, &cx, &cy);
+    cairo_current_point(context->c, &cx, &cy);
 
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
     /* Unchecked! Must be an approximation! */
@@ -68,75 +82,78 @@ void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
 
-    cairo_curve_to(gctx, x31, y31, x32, y32, x, y);
+    cairo_curve_to(context->c, x31, y31, x32, y32, x, y);
 }
 
-void TkPathCurveTo(Drawable d, double x1, double y1, 
+void TkPathCurveTo(TkPathContext ctx, double x1, double y1, 
         double x2, double y2, double x, double y)
 {
-    cairo_curve_to(gctx, x1, y1, x2, y2, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_curve_to(context->c, x1, y1, x2, y2, x, y);
 }
 
-void TkPathArcTo(Drawable d,
+void TkPathArcTo(TkPathContext ctx,
         double rx, double ry, 
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
-    TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
+    TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
-void TkPathClosePath(Drawable d)
+void TkPathClosePath(TkPathContext ctx)
 {
-    cairo_close_path(gctx);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_close_path(context->c);
 }
 
-void TkPathClipToPath(Drawable d, int fillRule)
+void TkPathClipToPath(TkPathContext ctx, int fillRule)
 {
     /* Clipping to path is done by default. */
     /* Note: cairo_clip does not consume the current path */
-    //cairo_clip(gctx);
+    //cairo_clip(context->c);
 }
 
-void TkPathReleaseClipToPath(Drawable d)
+void TkPathReleaseClipToPath(TkPathContext ctx)
 {
-    //cairo_reset_clip(gctx);
+    //cairo_reset_clip(context->c);
 }
 
-void TkPathStroke(Drawable d, Tk_PathStyle *style)
+void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     Tk_Dash *dash;
 
-    cairo_set_rgb_color(gctx,
+    cairo_set_rgb_color(context->c,
             RedDoubleFromXColorPtr(style->strokeColor),
             GreenDoubleFromXColorPtr(style->strokeColor),
             BlueDoubleFromXColorPtr(style->strokeColor));
-    cairo_set_alpha(gctx, style->strokeOpacity);
-    cairo_set_line_width(gctx, style->strokeWidth);
+    cairo_set_alpha(context->c, style->strokeOpacity);
+    cairo_set_line_width(context->c, style->strokeWidth);
 
     switch (style->capStyle) {
         case CapNotLast:
         case CapButt:
-            cairo_set_line_cap(gctx, CAIRO_LINE_CAP_BUTT);
+            cairo_set_line_cap(context->c, CAIRO_LINE_CAP_BUTT);
             break;
         case CapRound:
-            cairo_set_line_cap(gctx, CAIRO_LINE_CAP_ROUND);
+            cairo_set_line_cap(context->c, CAIRO_LINE_CAP_ROUND);
             break;
         default:
-            cairo_set_line_cap(gctx, CAIRO_LINE_CAP_SQUARE);
+            cairo_set_line_cap(context->c, CAIRO_LINE_CAP_SQUARE);
             break;
     }
     switch (style->joinStyle) {
         case JoinMiter: 
-            cairo_set_line_join(gctx, CAIRO_LINE_JOIN_MITER);
+            cairo_set_line_join(context->c, CAIRO_LINE_JOIN_MITER);
             break;
         case JoinRound:
-            cairo_set_line_join(gctx, CAIRO_LINE_JOIN_ROUND);
+            cairo_set_line_join(context->c, CAIRO_LINE_JOIN_ROUND);
             break;
         default:
-            cairo_set_line_join(gctx, CAIRO_LINE_JOIN_BEVEL);
+            cairo_set_line_join(context->c, CAIRO_LINE_JOIN_BEVEL);
             break;
     }
-    cairo_set_miter_limit(gctx, style->miterLimit);
+    cairo_set_miter_limit(context->c, style->miterLimit);
 
     dash = &(style->dash);
     if ((dash != NULL) && (dash->number != 0)) {
@@ -150,48 +167,51 @@ void TkPathStroke(Drawable d, Tk_PathStyle *style)
             for (i = 0; i < len; i++) {
                 dashes[i] = array[i];
             }
-            cairo_set_dash(gctx, dashes, len, style->offset);
+            cairo_set_dash(context->c, dashes, len, style->offset);
             ckfree((char *) dashes);
             ckfree((char *) array);
         }
     }
 
-    cairo_stroke(gctx);
+    cairo_stroke(context->c);
 }
 
-void TkPathFill(Drawable d, Tk_PathStyle *style)
+void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
 {
-    cairo_set_rgb_color(gctx,
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_set_rgb_color(context->c,
             RedDoubleFromXColorPtr(style->fillColor),
             GreenDoubleFromXColorPtr(style->fillColor),
             BlueDoubleFromXColorPtr(style->fillColor));
-    cairo_set_alpha(gctx, style->fillOpacity);
-    cairo_set_fill_rule(gctx, 
+    cairo_set_alpha(context->c, style->fillOpacity);
+    cairo_set_fill_rule(context->c, 
             (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
-    cairo_fill(gctx);
+    cairo_fill(context->c);
 }
 
-void TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
+void TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     /*
      * The current path is consumed by filling.
      * Need therfore to save the current context and restore after.
      */
-    cairo_save(gctx);
+    cairo_save(context->c);
     TkPathFill(d, style);
-    cairo_restore(gctx);
+    cairo_restore(context->c);
     TkPathStroke(d, style);
 }
 
-void TkPathEndPath(Drawable d)
+void TkPathEndPath(TkPathContext ctx)
 {
     /* Empty ??? */
 }
 
-void TkPathFree(Drawable d)
+void TkPathFree(TkPathContext ctx)
 {
-    cairo_destroy(gctx);
-    gctx = NULL;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_destroy(context->c);
+    ckfree((char *) context);
 }
 
 int TkPathDrawingDestroysPath(void)
@@ -200,19 +220,21 @@ int TkPathDrawingDestroysPath(void)
     return 0;
 }
 
-int TkPathGetCurrentPosition(Drawable d, PathPoint *pt)
+int TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *pt)
 {
-    cairo_current_point(gctx, &(pt->x), &(pt->y));
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_current_point(context->c, &(pt->x), &(pt->y));
     return TCL_OK;
 }
 
-int TkPathBoundingBox(PathRect *rPtr)
+int TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
 {
     return TCL_ERROR;
 }
 
-void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {    
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i;
     int					nstops;
     int					fillMethod;
@@ -226,7 +248,7 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
      * The current path is consumed by filling.
      * Need therfore to save the current context and restore after.
      */
-    cairo_save(gctx);
+    cairo_save(context->c);
 
     transition = fillPtr->transition;
     nstops = fillPtr->nstops;
@@ -247,8 +269,8 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
                 BlueDoubleFromXColorPtr(stop->color),
                 stop->opacity);
     }
-    cairo_set_pattern(gctx, pattern);
-    cairo_set_fill_rule(gctx, 
+    cairo_set_pattern(context->c, pattern);
+    cairo_set_fill_rule(context->c, 
             (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
             
     switch (fillMethod) {
@@ -266,9 +288,9 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
             break;
     }
     cairo_pattern_set_extend(pattern, extend);
-    cairo_fill(gctx);
+    cairo_fill(context->c);
     
     cairo_pattern_destroy(pattern);
-    cairo_restore(gctx);
+    cairo_restore(context->c);
 }
             

@@ -3,7 +3,7 @@
  *
  *		This file implements path drawing API's on Windows using the GDI+ lib.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
@@ -29,19 +29,6 @@ extern "C" int gUseAntiAlias;
                                                 (((xc)->pixel & 0xFF)),			\
                                                 (((xc)->pixel >> 8) & 0xFF),	\
                                                 (((xc)->pixel >> 16) & 0xFF))
-/*
-#define ALPHA_SHIFT 24
-#define RED_SHIFT   16
-#define GREEN_SHIFT 8
-#define BLUE_SHIFT  0
-#define ALPHA_MASK  ((ARGB) 0xff << ALPHA_SHIFT)
-
-#define MAKEARGB(a, r, g, b) \
-                (((ARGB) ((a) & 0xff) << ALPHA_SHIFT)| \
-                 ((ARGB) ((r) & 0xff) << RED_SHIFT)  | \
-                 ((ARGB) ((g) & 0xff) << GREEN_SHIFT)| \
-                 ((ARGB) ((b) & 0xff) << BLUE_SHIFT))
-*/
 
 static LookupTable LineCapStyleLookupTable[] = {
     {CapNotLast, 	LineCapFlat},
@@ -62,6 +49,14 @@ static LookupTable LineJoinStyleLookupTable[] = {
     {JoinRound,	LineJoinRound},
     {JoinBevel, LineJoinBevel}
 };
+
+/*
+ * This is used as a place holder for platform dependent stuff between each call.
+ */
+typedef struct TkPathContext_ {
+    Drawable 		d;
+    PathC *		 	c;
+} TkPathContext_;
 
 void PathExit(ClientData clientData);
 
@@ -112,7 +107,7 @@ class PathC {
  * Perhaps some window structure should be augmented???
  */
 
-static PathC *gPathBuilderPtr = NULL;
+//static PathC *gPathBuilderPtr = NULL;
 
 int	PathC::sGdiplusStarted;
 ULONG_PTR PathC::sGdiplusToken;
@@ -441,118 +436,130 @@ void PathExit(ClientData clientData)
  * Is there a smarter way?
  */
  
-void TkPathInit(Display *display, Drawable d)
+TkPathContext TkPathInit(Display *display, Drawable d)
 {
-    if (gPathBuilderPtr != NULL) {
-        Tcl_Panic("the path drawing context gPathBuilder is already in use\n");
-    }
-    gPathBuilderPtr = new PathC(d);
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    context->d = d;
+    context->c = new PathC(d);
+    return (TkPathContext) context;
 }
 
-void
-TkPathPushTMatrix(Drawable d, TMatrix *m)
+void TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
-    gPathBuilderPtr->PushTMatrix(m);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->PushTMatrix(m);
 }
 
-void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
+void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
 {
-    gPathBuilderPtr->BeginPath(d, style);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->BeginPath(d, style);
 }
 
-void TkPathMoveTo(Drawable d, double x, double y)
+void TkPathMoveTo(TkPathContext ctx, double x, double y)
 {
-    gPathBuilderPtr->MoveTo((float) x, (float) y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->MoveTo((float) x, (float) y);
 }
 
-void TkPathLineTo(Drawable d, double x, double y)
+void TkPathLineTo(TkPathContext ctx, double x, double y)
 {
-    gPathBuilderPtr->LineTo((float) x, (float) y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->LineTo((float) x, (float) y);
 }
 
-void TkPathLinesTo(Drawable d, double *pts, int n)
+void TkPathLinesTo(TkPathContext ctx, double *pts, int n)
 {
     /* @@@ TODO */
 }
 
-void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
+void TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     double x31, y31, x32, y32;
     PointF cp;
     
-    gPathBuilderPtr->GetCurrentPoint(&cp);
+    context->c->GetCurrentPoint(&cp);
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
     /* Unchecked! Must be an approximation! */
     x31 = cp.X + (ctrlX - cp.X) * 2 / 3;
     y31 = cp.Y + (ctrlY - cp.Y) * 2 / 3;
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
-    gPathBuilderPtr->CurveTo((float) x31, (float) y31, (float) x32, (float) y32, (float) x, (float) y);
+    context->c->CurveTo((float) x31, (float) y31, (float) x32, (float) y32, (float) x, (float) y);
 }
 
-void TkPathCurveTo(Drawable d, double ctrlX1, double ctrlY1, 
+void TkPathCurveTo(TkPathContext ctx, double ctrlX1, double ctrlY1, 
         double ctrlX2, double ctrlY2, double x, double y)
 {
-    gPathBuilderPtr->CurveTo((float) ctrlX1, (float) ctrlY1, (float) ctrlX2, (float) ctrlY2, (float) x, (float) y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->CurveTo((float) ctrlX1, (float) ctrlY1, (float) ctrlX2, (float) ctrlY2, (float) x, (float) y);
 }
 
 
-void TkPathArcTo(Drawable d,
+void TkPathArcTo(TkPathContext ctx,
         double rx, double ry, 
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
 void
-TkPathClosePath(Drawable d)
+TkPathClosePath(TkPathContext ctx)
 {
-    gPathBuilderPtr->CloseFigure();
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->CloseFigure();
 }
 
 void
-TkPathEndPath(Drawable d)
+TkPathEndPath(TkPathContext ctx)
 {
     // @@@ empty ?
 }
 
 void
-TkPathFree(Drawable d)
+TkPathFree(TkPathContext ctx)
 {
-    delete gPathBuilderPtr;
-    gPathBuilderPtr = NULL;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    delete context->c;
+    ckfree((char *) context);
 }
 
-void TkPathClipToPath(Drawable d, int fillRule)
-{
-    /* empty */
-}
-
-void TkPathReleaseClipToPath(Drawable d)
+void TkPathClipToPath(TkPathContext ctx, int fillRule)
 {
     /* empty */
 }
 
-void TkPathStroke(Drawable d, Tk_PathStyle *style)
+void TkPathReleaseClipToPath(TkPathContext ctx)
+{
+    /* empty */
+}
+
+void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
-    gPathBuilderPtr->Stroke(style);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->Stroke(style);
 }
 
-void TkPathFill(Drawable d, Tk_PathStyle *style)
+void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
 {
-    gPathBuilderPtr->Fill(style);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->Fill(style);
 }
 
-void TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
+void TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 {
-    gPathBuilderPtr->FillAndStroke(style);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->FillAndStroke(style);
 }
 
-int TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
+int TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *ptPtr)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     PointF pf;
-    gPathBuilderPtr->GetCurrentPoint(&pf);
+    context->c->GetCurrentPoint(&pf);
     ptPtr->x = (double) pf.X;
     ptPtr->y = (double) pf.Y;
     return TCL_OK;
@@ -565,8 +572,9 @@ int	TkPathDrawingDestroysPath(void)
 
 /* @@@ INCOMPLETE! We need to consider any padding as well. */
 
-void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int 			i;
     int 			nstops;
     PathRect 		line, transition;
@@ -580,7 +588,7 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
     } else if (nstops == 2) {
     
         /* Use a simplified version in this case. */
-        gPathBuilderPtr->FillSimpleLinearGradient(bbox, fillPtr);
+        context->c->FillSimpleLinearGradient(bbox, fillPtr);
     } else {
     
         /*
@@ -602,7 +610,7 @@ void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *f
             line.y1 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);
             line.x2 = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
             line.y2 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
-            gPathBuilderPtr->FillTwoStopLinearGradient(bbox, &line,
+            context->c->FillTwoStopLinearGradient(bbox, &line,
                     stop1->color, stop2->color, stop1->opacity, stop2->opacity);
         }
     }

@@ -10,8 +10,6 @@
  * $Id$
  */
 
-#include <tkInt.h>
-#include "tkPath.h"
 #include "tkIntPath.h"
 
 /* For debugging. */
@@ -228,7 +226,7 @@ GetPathArcParameters(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *in
  *--------------------------------------------------------------
  */
 
-static PathAtom *
+PathAtom *
 NewMoveToAtom(double x, double y)
 {
     PathAtom *atomPtr;
@@ -243,7 +241,7 @@ NewMoveToAtom(double x, double y)
     return atomPtr;
 }
 
-static PathAtom *
+PathAtom *
 NewLineToAtom(double x, double y)
 {
     PathAtom *atomPtr;
@@ -258,7 +256,7 @@ NewLineToAtom(double x, double y)
     return atomPtr;
 }
 
-static PathAtom *
+PathAtom *
 NewArcAtom(double radX, double radY, 
         double angle, char largeArcFlag, char sweepFlag, double x, double y)
 {
@@ -279,7 +277,7 @@ NewArcAtom(double radX, double radY,
     return atomPtr;
 }
 
-static PathAtom *
+PathAtom *
 NewQuadBezierAtom(double ctrlX, double ctrlY, double anchorX, double anchorY)
 {
     PathAtom *atomPtr;
@@ -296,7 +294,7 @@ NewQuadBezierAtom(double ctrlX, double ctrlY, double anchorX, double anchorY)
     return atomPtr;
 }
 
-static PathAtom *
+PathAtom *
 NewCurveToAtom(double ctrlX1, double ctrlY1, double ctrlX2, double ctrlY2, 
         double anchorX, double anchorY)
 {
@@ -316,7 +314,7 @@ NewCurveToAtom(double ctrlX1, double ctrlY1, double ctrlX2, double ctrlY2,
     return atomPtr;
 }
 
-static PathAtom *
+PathAtom *
 NewCloseAtom(double x, double y)
 {
     PathAtom *atomPtr;
@@ -826,12 +824,11 @@ TkPathNormalize(Tcl_Interp *interp, PathAtom *atomPtr, Tcl_Obj **listObjPtrPtr)
 
 int
 TkPathMakePath(
-    Drawable drawable,		/* Pixmap or window in which to draw
-                             * item. */
+    TkPathContext context,
     PathAtom *atomPtr,
     Tk_PathStyle *stylePtr)
 {
-    TkPathBeginPath(drawable, stylePtr);
+    TkPathBeginPath(context, stylePtr);
 
     while (atomPtr != NULL) {
     
@@ -839,19 +836,19 @@ TkPathMakePath(
             case PATH_ATOM_M: { 
                 MoveToAtom *move = (MoveToAtom *) atomPtr;
                 
-                TkPathMoveTo(drawable, move->x, move->y);
+                TkPathMoveTo(context, move->x, move->y);
                 break;
             }
             case PATH_ATOM_L: {
                 LineToAtom *line = (LineToAtom *) atomPtr;
                 
-                TkPathLineTo(drawable, line->x, line->y);
+                TkPathLineTo(context, line->x, line->y);
                 break;
             }
             case PATH_ATOM_A: {
                 ArcAtom *arc = (ArcAtom *) atomPtr;
                 
-                TkPathArcTo(drawable, arc->radX, arc->radY, arc->angle, 
+                TkPathArcTo(context, arc->radX, arc->radY, arc->angle, 
                         arc->largeArcFlag, arc->sweepFlag,
                         arc->x, arc->y);
                 break;
@@ -859,7 +856,7 @@ TkPathMakePath(
             case PATH_ATOM_Q: {
                 QuadBezierAtom *quad = (QuadBezierAtom *) atomPtr;
                 
-                TkPathQuadBezier(drawable, 
+                TkPathQuadBezier(context, 
                         quad->ctrlX, quad->ctrlY,
                         quad->anchorX, quad->anchorY);
                 break;
@@ -867,20 +864,20 @@ TkPathMakePath(
             case PATH_ATOM_C: {
                 CurveToAtom *curve = (CurveToAtom *) atomPtr;
                 
-                TkPathCurveTo(drawable, 
+                TkPathCurveTo(context, 
                         curve->ctrlX1, curve->ctrlY1,
                         curve->ctrlX2, curve->ctrlY2,
                         curve->anchorX, curve->anchorY);
                 break;
             }
             case PATH_ATOM_Z: {
-                TkPathClosePath(drawable);
+                TkPathClosePath(context);
                 break;
             }
         }
         atomPtr = atomPtr->nextPtr;
     }
-    TkPathEndPath(drawable);
+    TkPathEndPath(context);
     return TCL_OK;
 }
 
@@ -902,7 +899,7 @@ TkPathMakePath(
  */
 
 void
-TkPathArcToUsingBezier(Drawable d,
+TkPathArcToUsingBezier(TkPathContext ctx,
         double rx, double ry, 
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x2, double y2)
@@ -916,7 +913,7 @@ TkPathArcToUsingBezier(Drawable d,
     double delta, t;
     PathPoint pt;
     
-    TkPathGetCurrentPosition(d, &pt);
+    TkPathGetCurrentPosition(ctx, &pt);
     x1 = pt.x;
     y1 = pt.y;
 
@@ -936,7 +933,7 @@ TkPathArcToUsingBezier(Drawable d,
     if (result == kPathArcSkip) {
 		return;
 	} else if (result == kPathArcLine) {
-		TkPathLineTo(d, x2, y2);
+		TkPathLineTo(ctx, x2, y2);
 		return;
     }
     sinPhi = sin(phi);
@@ -966,7 +963,7 @@ TkPathArcToUsingBezier(Drawable d,
         double dye = t * ( sinPhi * rx*sinTheta2 - cosPhi * ry*cosTheta2);
     
         /* c) draw the cubic bezier: */
-        TkPathCurveTo(d, x1+dx1, y1+dy1, xe+dxe, ye+dye, xe, ye);
+        TkPathCurveTo(ctx, x1+dx1, y1+dy1, xe+dxe, ye+dye, xe, ye);
 
         /* do next segment */
         theta1 = theta2;

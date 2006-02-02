@@ -12,6 +12,10 @@
 #ifndef INCLUDED_TKPATH_H
 #define INCLUDED_TKPATH_H
 
+#include <tkInt.h>
+#include "tkPort.h"
+#include "tkCanvas.h"
+
 /*
  * For C++ compilers, use extern "C"
  */
@@ -102,6 +106,12 @@ typedef struct RadialGradientFill {
     GradientStop **stops;
 } RadialGradientFill;
 
+/*
+ * Opaque platform dependent struct.
+ */
+ 
+typedef XID TkPathContext;
+
 /* 
  * Information used for parsing configuration options.
  * Mask bits for options changed.
@@ -109,22 +119,23 @@ typedef struct RadialGradientFill {
  
 enum {
     PATH_STYLE_OPTION_FILL              	= (1L << 0),
-    PATH_STYLE_OPTION_FILLGRADIENT        	= (1L << 1),
-    PATH_STYLE_OPTION_FILLOFFSET        	= (1L << 2),
-    PATH_STYLE_OPTION_FILLOPACITY    		= (1L << 3),
-    PATH_STYLE_OPTION_FILLRULE         		= (1L << 4),
-    PATH_STYLE_OPTION_FILLSTIPPLE      		= (1L << 5),
+    PATH_STYLE_OPTION_FILL_GRADIENT        	= (1L << 1),
+    PATH_STYLE_OPTION_FILL_OFFSET        	= (1L << 2),
+    PATH_STYLE_OPTION_FILL_OPACITY    		= (1L << 3),
+    PATH_STYLE_OPTION_FILL_RULE         	= (1L << 4),
+    PATH_STYLE_OPTION_FILL_STIPPLE      	= (1L << 5),
     PATH_STYLE_OPTION_MATRIX              	= (1L << 6),
     PATH_STYLE_OPTION_STROKE           		= (1L << 7),
-    PATH_STYLE_OPTION_STROKEDASHARRAY    	= (1L << 8),
-    PATH_STYLE_OPTION_STROKELINECAP        	= (1L << 9),
-    PATH_STYLE_OPTION_STROKELINEJOIN       	= (1L << 10),
-    PATH_STYLE_OPTION_STROKEMITERLIMIT     	= (1L << 11),
-    PATH_STYLE_OPTION_STROKEOFFSET        	= (1L << 12),
-    PATH_STYLE_OPTION_STROKEOPACITY	       	= (1L << 13),
-    PATH_STYLE_OPTION_STROKESTIPPLE     	= (1L << 14),
-    PATH_STYLE_OPTION_STROKEWIDTH        	= (1L << 15)
+    PATH_STYLE_OPTION_STROKE_DASHARRAY    	= (1L << 8),
+    PATH_STYLE_OPTION_STROKE_LINECAP        = (1L << 9),
+    PATH_STYLE_OPTION_STROKE_LINEJOIN       = (1L << 10),
+    PATH_STYLE_OPTION_STROKE_MITERLIMIT     = (1L << 11),
+    PATH_STYLE_OPTION_STROKE_OFFSET        	= (1L << 12),
+    PATH_STYLE_OPTION_STROKE_OPACITY	    = (1L << 13),
+    PATH_STYLE_OPTION_STROKE_STIPPLE     	= (1L << 14),
+    PATH_STYLE_OPTION_STROKE_WIDTH        	= (1L << 15)
 };
+
 
 typedef struct Tk_PathStyle {
 	Tk_OptionTable optionTable;	/* Not used for canvas. */
@@ -141,7 +152,7 @@ typedef struct Tk_PathStyle {
     int capStyle;				/* Cap style for stroke. */
     int joinStyle;				/* Join style for stroke. */
     double miterLimit;
-    char *linearGradientStrokeName; /* Unused; for the future. */
+    char *gradientStrokeName; 	/* @@@ TODO. */
 
     GC fillGC;					/* Graphics context for filling path. */
     XColor *fillColor;			/* Foreground color for filling. */
@@ -160,6 +171,20 @@ typedef struct Tk_PathStyle {
 } Tk_PathStyle;
 
 /*
+ * Functions to create path atoms.
+ */
+ 
+PathAtom 	*NewMoveToAtom(double x, double y);
+PathAtom 	*NewLineToAtom(double x, double y);
+PathAtom 	*NewArcAtom(double radX, double radY, 
+                    double angle, char largeArcFlag, char sweepFlag, double x, double y);
+PathAtom 	*NewQuadBezierAtom(double ctrlX, double ctrlY, double anchorX, double anchorY);
+PathAtom 	*NewCurveToAtom(double ctrlX1, double ctrlY1, double ctrlX2, double ctrlY2, 
+                    double anchorX, double anchorY);
+PathAtom 	*NewCloseAtom(double x, double y);
+
+
+/*
  * Functions that process lists and atoms.
  */
  
@@ -172,17 +197,17 @@ int			TkPathMakePath(Drawable drawable, PathAtom *atomPtr, Tk_PathStyle *stylePt
  * Stroke, fill, clip etc.
  */
  
-void		TkPathClipToPath(Drawable d, int fillRule);
-void		TkPathReleaseClipToPath(Drawable d);
-void		TkPathStroke(Drawable d, Tk_PathStyle *style);
-void		TkPathFill(Drawable d, Tk_PathStyle *style);
-void        TkPathFillAndStroke(Drawable d, Tk_PathStyle *style);
-int			TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr);
-int 		TkPathBoundingBox(PathRect *rPtr);
-void		TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
-void    	TkPathFree(Drawable d);
+void		TkPathClipToPath(TkPathContext ctx, int fillRule);
+void		TkPathReleaseClipToPath(TkPathContext ctx);
+void		TkPathStroke(TkPathContext ctx, Tk_PathStyle *style);
+void		TkPathFill(TkPathContext ctx, Tk_PathStyle *style);
+void        TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style);
+int			TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *ptPtr);
+int 		TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr);
+void		TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
+void    	TkPathFree(TkPathContext ctx);
 int			TkPathDrawingDestroysPath();
-void		TkPathPushTMatrix(Drawable d, TMatrix *mPtr);
+void		TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr);
 
 /*
  * Utilities for creating and deleting Tk_PathStyles.

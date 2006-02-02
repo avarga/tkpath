@@ -2,24 +2,28 @@
  * path.c --
  *
  *	This file is main for the tkpath package.
- *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
+ *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
 
-#include <tcl.h>
-#include <tk.h>
 #include "tkIntPath.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-#define TKPATH_VERSION "0.1"
+/* Keep patch level release numbers odd and set even only on release. */
+#define TKPATH_VERSION    "0.2"
+#define TKPATH_PATCHLEVEL "0.2.0"
 
 extern Tk_ItemType tkPathType;
+extern Tk_ItemType tkPrectType;
+extern Tk_ItemType tkPlineType;
+extern Tk_ItemType tkPolylineType;
+
 int gUseAntiAlias = 0;
 
 /*
@@ -63,9 +67,7 @@ extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
     __declspec(dllexport)
 #endif
 
-int 
-Tkpath_Init(
-    Tcl_Interp *interp)		/* Tcl interpreter. */
+int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
 {
         
 #ifdef USE_TCL_STUBS
@@ -80,6 +82,9 @@ Tkpath_Init(
 #endif
 	
     Tk_CreateItemType(&tkPathType);
+    Tk_CreateItemType(&tkPrectType);
+    Tk_CreateItemType(&tkPlineType);
+    Tk_CreateItemType(&tkPolylineType);
     
     /*
      * Link the ::tkpath::antialias variable to control antialiasing. 
@@ -126,11 +131,28 @@ Tkpath_Init(
     __declspec(dllexport)
 #endif
 
-int 
-Tkpath_SafeInit(
-    Tcl_Interp *interp)		/* Tcl interpreter. */
+int Tkpath_SafeInit(Tcl_Interp *interp)
 {
     return Tkpath_Init(interp);
+}
+
+/* This is for the tk based drawing backend. */
+#ifdef _WIN32
+    __declspec(dllexport)
+#endif
+
+int Tkpathtk_Init(Tcl_Interp *interp)
+{
+    return Tkpath_Init(interp);
+}
+
+#ifdef _WIN32
+    __declspec(dllexport)
+#endif
+
+int Tkpathtk_SafeInit(Tcl_Interp *interp)
+{
+    return Tkpath_SafeInit(interp);
 }
 
 /*
@@ -139,18 +161,28 @@ Tkpath_SafeInit(
 #ifdef _WIN32
     __declspec(dllexport)
 
-int 
-Tkpathgdi_Init(
-    Tcl_Interp *interp)		/* Tcl interpreter. */
+int Tkpathgdi_Init(Tcl_Interp *interp)
 {
     return Tkpath_Init(interp);
 }
 
     __declspec(dllexport)
 
-int 
-Tkpathgdiplus_Init(
-    Tcl_Interp *interp)		/* Tcl interpreter. */
+int Tkpathgdi_SafeInit(Tcl_Interp *interp)
+{
+    return Tkpath_SafeInit(interp);
+}
+
+    __declspec(dllexport)
+
+int Tkpathgdiplus_SafeInit(Tcl_Interp *interp)
+{
+    return Tkpath_SafeInit(interp);
+}
+
+    __declspec(dllexport)
+
+int Tkpathgdiplus_Init(Tcl_Interp *interp)
 {
     return Tkpath_Init(interp);
 }

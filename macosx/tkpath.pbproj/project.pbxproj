@@ -83,12 +83,18 @@
 				9AF2FEBB079410DB00AB783C,
 				9A017ED6079FCCE100A80065,
 				9AA1ECEA077FF7CC00A80065,
+				9A66FCF40978E3400086B7B8,
+				9A5B17C7097BA957000B33B2,
 				9AA1ECE8077FF7BF00A80065,
+				9A66FCF20978D8050086B7B8,
+				9A587F03098FA7870094E994,
+				9A587F06098FADFA0094E994,
 				9A58E5420796814B00FBE143,
 				9AA0B6C407DD8C9900A80065,
 				9A5BCDA007E2D8B400B6FA03,
 				9AA54B1507F999B200A80065,
 				9A5BCD9E07E2D81600B6FA03,
+				9A5B17C4097B9322000B33B2,
 			);
 			isa = PBXGroup;
 			name = generic;
@@ -141,8 +147,8 @@
 			indentWidth = 4;
 			isa = PBXFileReference;
 			name = tkPath.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkPath.c;
-			refType = 0;
+			path = ../generic/tkPath.c;
+			refType = 2;
 			tabWidth = 4;
 			usesTabs = 0;
 		};
@@ -157,8 +163,8 @@
 			indentWidth = 4;
 			isa = PBXFileReference;
 			name = tkUnixCairoPath.c;
-			path = /Users/matben/C/cvs/tkpath/unix/tkUnixCairoPath.c;
-			refType = 0;
+			path = ../unix/tkUnixCairoPath.c;
+			refType = 2;
 			tabWidth = 4;
 			usesTabs = 0;
 		};
@@ -166,15 +172,15 @@
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			name = tkUnixLibartPath.c;
-			path = /Users/matben/C/cvs/tkpath/unix/tkUnixLibartPath.c;
-			refType = 0;
+			path = ../unix/tkUnixLibartPath.c;
+			refType = 2;
 		};
 		9A56FF2807A234510091799F = {
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			name = path.c;
-			path = /Users/matben/C/cvs/tkpath/generic/path.c;
-			refType = 0;
+			path = ../generic/path.c;
+			refType = 2;
 		};
 		9A56FF2907A234510091799F = {
 			fileRef = 9A56FF2807A234510091799F;
@@ -244,15 +250,91 @@
 			shellPath = /bin/sh;
 			shellScript = "/usr/bin/install -m 444 -g staff \"${SRCROOT}/pkgIndex.tcl\" \"${TARGET_BUILD_DIR}\"";
 		};
+		9A587F03098FA7870094E994 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkCanvPline.c;
+			path = /Users/matben/C/cvs/tkpath/generic/tkCanvPline.c;
+			refType = 0;
+		};
+		9A587F04098FA7870094E994 = {
+			fileRef = 9A587F03098FA7870094E994;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A587F05098FA7870094E994 = {
+			fileRef = 9A587F03098FA7870094E994;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A587F06098FADFA0094E994 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkCanvPolyline.c;
+			path = /Users/matben/C/cvs/tkpath/generic/tkCanvPolyline.c;
+			refType = 0;
+		};
+		9A587F07098FADFA0094E994 = {
+			fileRef = 9A587F06098FADFA0094E994;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A587F08098FADFA0094E994 = {
+			fileRef = 9A587F06098FADFA0094E994;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		9A58E5420796814B00FBE143 = {
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			name = tkPathGradients.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkPathGradients.c;
-			refType = 0;
+			path = ../generic/tkPathGradients.c;
+			refType = 2;
 		};
 		9A58E5430796814B00FBE143 = {
 			fileRef = 9A58E5420796814B00FBE143;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5B17C4097B9322000B33B2 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkPathCopyTk.h;
+			path = ../generic/tkPathCopyTk.h;
+			refType = 2;
+		};
+		9A5B17C5097B9322000B33B2 = {
+			fileRef = 9A5B17C4097B9322000B33B2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5B17C6097B9322000B33B2 = {
+			fileRef = 9A5B17C4097B9322000B33B2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5B17C7097BA957000B33B2 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkCanvPathUtil.c;
+			path = ../generic/tkCanvPathUtil.c;
+			refType = 2;
+		};
+		9A5B17C8097BA957000B33B2 = {
+			fileRef = 9A5B17C7097BA957000B33B2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5B17C9097BA957000B33B2 = {
+			fileRef = 9A5B17C7097BA957000B33B2;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -261,16 +343,16 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = tkPathCopyTk.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkPathCopyTk.c;
-			refType = 0;
+			path = ../generic/tkPathCopyTk.c;
+			refType = 2;
 		};
 		9A5BCDA007E2D8B400B6FA03 = {
 			fileEncoding = 4;
 			indentWidth = 4;
 			isa = PBXFileReference;
 			name = tkPathUtil.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkPathUtil.c;
-			refType = 0;
+			path = ../generic/tkPathUtil.c;
+			refType = 2;
 			tabWidth = 4;
 			usesTabs = 0;
 		};
@@ -280,13 +362,45 @@
 			settings = {
 			};
 		};
+		9A66FCF20978D8050086B7B8 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkCanvPrect.c;
+			path = ../generic/tkCanvPrect.c;
+			refType = 2;
+		};
+		9A66FCF30978D8050086B7B8 = {
+			fileRef = 9A66FCF20978D8050086B7B8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A66FCF40978E3400086B7B8 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkCanvPathUtil.h;
+			path = ../generic/tkCanvPathUtil.h;
+			refType = 2;
+		};
+		9A66FCF50978E3400086B7B8 = {
+			fileRef = 9A66FCF40978E3400086B7B8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A66FCF60978E3400086B7B8 = {
+			fileRef = 9A66FCF40978E3400086B7B8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		9A6C4D7407AD01B100A80065 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			lineEnding = 2;
 			name = tkWinGDIPlusPath.cpp;
-			path = /Users/matben/C/cvs/tkpath/win/tkWinGDIPlusPath.cpp;
-			refType = 0;
+			path = ../win/tkWinGDIPlusPath.cpp;
+			refType = 2;
 		};
 		9A8794B5078019DB00A80065 = {
 			children = (
@@ -331,17 +445,23 @@
 			isa = PBXFileReference;
 			lineEnding = 2;
 			name = tkWinGDIPath.c;
-			path = /Users/matben/C/cvs/tkpath/win/tkWinGDIPath.c;
-			refType = 0;
+			path = ../win/tkWinGDIPath.c;
+			refType = 2;
 			tabWidth = 4;
 			usesTabs = 0;
+		};
+		9A95DCE20980F5E900C25EDB = {
+			fileRef = 9A66FCF20978D8050086B7B8;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		9AA0B6C407DD8C9900A80065 = {
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			name = tkPathStyle.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkPathStyle.c;
-			refType = 0;
+			path = ../generic/tkPathStyle.c;
+			refType = 2;
 		};
 		9AA0B6C507DD8C9900A80065 = {
 			fileRef = 9AA0B6C407DD8C9900A80065;
@@ -354,7 +474,7 @@
 			indentWidth = 4;
 			isa = PBXFileReference;
 			path = tkMacOSXPath.c;
-			refType = 4;
+			refType = 2;
 			tabWidth = 4;
 			usesTabs = 0;
 		};
@@ -369,8 +489,8 @@
 			indentWidth = 4;
 			isa = PBXFileReference;
 			name = tkCanvPath.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkCanvPath.c;
-			refType = 0;
+			path = ../generic/tkCanvPath.c;
+			refType = 2;
 			tabWidth = 4;
 			usesTabs = 0;
 		};
@@ -384,8 +504,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = tkIntPath.h;
-			path = /Users/matben/C/cvs/tkpath/generic/tkIntPath.h;
-			refType = 0;
+			path = ../generic/tkIntPath.h;
+			refType = 2;
 		};
 		9AA1ECEB077FF7CC00A80065 = {
 			fileRef = 9AA1ECEA077FF7CC00A80065;
@@ -398,8 +518,8 @@
 			indentWidth = 4;
 			isa = PBXFileReference;
 			name = tkPathTkDraw.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkPathTkDraw.c;
-			refType = 0;
+			path = ../generic/tkPathTkDraw.c;
+			refType = 2;
 			tabWidth = 4;
 			usesTabs = 0;
 		};
@@ -428,7 +548,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = tkpath0.1.dylib;
+				PRODUCT_NAME = tkpathtk0.2.dylib;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -459,6 +579,8 @@
 			files = (
 				9AA54B2A07F99AFF00A80065,
 				9AA54B2B07F99AFF00A80065,
+				9A66FCF60978E3400086B7B8,
+				9A5B17C6097B9322000B33B2,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -486,6 +608,10 @@
 				9AA54B3307F99AFF00A80065,
 				9AA54B3407F99AFF00A80065,
 				9AA54B3D07F99B3600A80065,
+				9A5B17C9097BA957000B33B2,
+				9A95DCE20980F5E900C25EDB,
+				9A587F05098FA7870094E994,
+				9A587F08098FADFA0094E994,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -589,7 +715,7 @@
 		};
 		9AA54B3C07F99AFF00A80065 = {
 			isa = PBXLibraryReference;
-			path = tkpath0.1.dylib;
+			path = tkpathtk0.2.dylib;
 			refType = 3;
 		};
 		9AA54B3D07F99B3600A80065 = {
@@ -608,8 +734,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = tkPath.h;
-			path = /Users/matben/C/cvs/tkpath/generic/tkPath.h;
-			refType = 0;
+			path = ../generic/tkPath.h;
+			refType = 2;
 		};
 		9AF2FEBC079410DB00AB783C = {
 			fileRef = 9AF2FEBB079410DB00AB783C;
@@ -632,6 +758,8 @@
 			files = (
 				9AA1ECEB077FF7CC00A80065,
 				9AF2FEBC079410DB00AB783C,
+				9A66FCF50978E3400086B7B8,
+				9A5B17C5097B9322000B33B2,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -647,6 +775,10 @@
 				9AA0B6C507DD8C9900A80065,
 				9A5BCDA107E2D8B400B6FA03,
 				9AA54B3E07F99B9900A80065,
+				9A66FCF30978D8050086B7B8,
+				9A5B17C8097BA957000B33B2,
+				9A587F04098FA7870094E994,
+				9A587F07098FADFA0094E994,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -694,7 +826,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = tkpath0.1.dylib;
+				PRODUCT_NAME = tkpath0.2.dylib;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -709,7 +841,7 @@
 		};
 		F550918E036C35030130931B = {
 			isa = PBXLibraryReference;
-			path = tkpath0.1.dylib;
+			path = tkpath0.2.dylib;
 			refType = 3;
 		};
 		F5509190036C35B40130931B = {

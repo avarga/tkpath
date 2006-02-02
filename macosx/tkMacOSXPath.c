@@ -3,13 +3,12 @@
  *
  *	This file implements path drawing API's using CoreGraphics on Mac OS X.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  *
  */
 
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
 #include "tkPath.h"
 #include "tkIntPath.h"
@@ -30,13 +29,12 @@ extern int gUseAntiAlias;
 extern Tcl_Interp *gInterp;
 
 /*
- * This is perhaps a very stupid thing to do.
- * It limits drawing to this single context at a time.
- * Perhaps the MacWindow structure should be augmented???
+ * This is used as a place holder for platform dependent stuff between each call.
  */
- 
-static CGContextRef gPathCGContext = NULL;
-
+typedef struct TkPathContext_ {
+    Drawable 		d;
+    CGContextRef 	c;
+} TkPathContext_;
 
 void
 PathSetUpCGContext(    
@@ -157,18 +155,22 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     }
 }
 
-void		
+TkPathContext	
 TkPathInit(Display *display, Drawable d)
 {
-    if (gPathCGContext != NULL) {
-        Tcl_Panic("the path drawing context gPathCGContext is already in use\n");
-    }
-    PathSetUpCGContext((MacDrawable *) d, TkMacOSXGetDrawablePort(d), &gPathCGContext);
+    CGContextRef cgContext;
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    
+    PathSetUpCGContext((MacDrawable *) d, TkMacOSXGetDrawablePort(d), &cgContext);
+    context->d = d;
+    context->c = cgContext;
+    return (TkPathContext) context;
 }
 
 void
-TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
+TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGAffineTransform transform;
 
     /* Return the transform [ a b c d tx ty ]. */
@@ -176,121 +178,137 @@ TkPathPushTMatrix(Drawable d, TMatrix *mPtr)
             (float) mPtr->a, (float) mPtr->b,
             (float) mPtr->c, (float) mPtr->d,
             (float) mPtr->tx, (float) mPtr->ty);
-    CGContextConcatCTM(gPathCGContext, transform);    
+    CGContextConcatCTM(context->c, transform);    
 }
 
 void
-TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr)
+TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr)
 {
-    CGContextBeginPath(gPathCGContext);
-    PathSetCGContextStyle(gPathCGContext, stylePtr);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextBeginPath(context->c);
+    PathSetCGContextStyle(context->c, stylePtr);
 }
 
 void
-TkPathMoveTo(Drawable d, double x, double y)
+TkPathMoveTo(TkPathContext ctx, double x, double y)
 {
-    CGContextMoveToPoint(gPathCGContext, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextMoveToPoint(context->c, x, y);
 }
 
 void
-TkPathLineTo(Drawable d, double x, double y)
+TkPathLineTo(TkPathContext ctx, double x, double y)
 {
-    CGContextAddLineToPoint(gPathCGContext, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextAddLineToPoint(context->c, x, y);
 }
 
 void
-TkPathLinesTo(Drawable d, double *pts, int n)
+TkPathLinesTo(TkPathContext ctx, double *pts, int n)
 {
-
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     /* Add a set of lines to the context's path. */
-    //CGContextAddLines(gPathCGContext, const CGPoint points[], size_t count);
+    //CGContextAddLines(context->c, const CGPoint points[], size_t count);
 }
 
 void
-TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
+TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, double y)
 {
-    CGContextAddQuadCurveToPoint(gPathCGContext, ctrlX, ctrlY, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextAddQuadCurveToPoint(context->c, ctrlX, ctrlY, x, y);
 }
 
 void
-TkPathCurveTo(Drawable d, double ctrlX1, double ctrlY1, 
+TkPathCurveTo(TkPathContext ctx, double ctrlX1, double ctrlY1, 
         double ctrlX2, double ctrlY2, double x, double y)
 {
-    CGContextAddCurveToPoint(gPathCGContext, ctrlX1, ctrlY1, ctrlX2, ctrlY2, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextAddCurveToPoint(context->c, ctrlX1, ctrlY1, ctrlX2, ctrlY2, x, y);
 }
 
 void
-TkPathArcTo(Drawable d,
+TkPathArcTo(TkPathContext ctx,
         double rx, double ry, 
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
-    TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    // @@@ Should we try to use the native arc functions here?
+    TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
 void
-TkPathClosePath(Drawable d)
+TkPathClosePath(TkPathContext ctx)
 {
-    CGContextClosePath(gPathCGContext);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextClosePath(context->c);
 }
 
 void		
-TkPathClipToPath(Drawable d, int fillRule)
+TkPathClipToPath(TkPathContext ctx, int fillRule)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
     /* If you need to grow the clipping path after it’s shrunk, you must save the
      * graphics state before you clip, then restore the graphics state to restore the current
      * clipping path. */
-    CGContextSaveGState(gPathCGContext);
+    CGContextSaveGState(context->c);
     if (fillRule == WindingRule) {
-        CGContextClip(gPathCGContext);
+        CGContextClip(context->c);
     } else if (fillRule == EvenOddRule) {
-        CGContextEOClip(gPathCGContext);
+        CGContextEOClip(context->c);
     }
 }
 
 void
-TkPathReleaseClipToPath(Drawable d)
+TkPathReleaseClipToPath(TkPathContext ctx)
 {
-    CGContextRestoreGState(gPathCGContext);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextRestoreGState(context->c);
 }
 
 void
-TkPathStroke(Drawable d, Tk_PathStyle *style)
+TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
-    CGContextStrokePath(gPathCGContext);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextStrokePath(context->c);
 }
 
 void
-TkPathFill(Drawable d, Tk_PathStyle *style)
+TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     if (style->fillRule == WindingRule) {
-        CGContextFillPath(gPathCGContext);
+        CGContextFillPath(context->c);
     } else if (style->fillRule == EvenOddRule) {
-        CGContextEOFillPath(gPathCGContext);
+        CGContextEOFillPath(context->c);
     }
 }
 
 void        
-TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
+TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     if (style->fillRule == WindingRule) {
-        CGContextDrawPath(gPathCGContext, kCGPathFillStroke);
+        CGContextDrawPath(context->c, kCGPathFillStroke);
     } else if (style->fillRule == EvenOddRule) {
-        CGContextDrawPath(gPathCGContext, kCGPathEOFillStroke);
+        CGContextDrawPath(context->c, kCGPathEOFillStroke);
     }
 }
 
 void
-TkPathEndPath(Drawable d)
+TkPathEndPath(TkPathContext ctx)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     /* Empty ??? */
 }
 
 void
-TkPathFree(Drawable d)
+TkPathFree(TkPathContext ctx)
 {
-    PathReleaseCGContext((MacDrawable *) d, TkMacOSXGetDrawablePort(d), &gPathCGContext);
-    gPathCGContext = NULL;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    PathReleaseCGContext((MacDrawable *) context->d, TkMacOSXGetDrawablePort(context->d), &(context->c));
+    ckfree((char *) ctx);
 }
 
 int		
@@ -305,23 +323,25 @@ TkPathDrawingDestroysPath(void)
  */
  
 int		
-TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
+TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *ptPtr)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGPoint cgpt;
     
-    cgpt = CGContextGetPathCurrentPoint(gPathCGContext);
+    cgpt = CGContextGetPathCurrentPoint(context->c);
     ptPtr->x = cgpt.x;
     ptPtr->y = cgpt.y;
     return TCL_OK;
 }
 
 int 
-TkPathBoundingBox(PathRect *rPtr)
+TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGRect cgRect;
     
     /* This one is not very useful since it includes the control points. */
-    cgRect = CGContextGetPathBoundingBox(gPathCGContext);
+    cgRect = CGContextGetPathBoundingBox(context->c);
     rPtr->x1 = cgRect.origin.x;
     rPtr->y1 = cgRect.origin.y;
     rPtr->x2 = cgRect.origin.x + cgRect.size.width;
@@ -367,8 +387,9 @@ ShadeRelease(void *info)
 }
 
 void
-TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i, nstops;
     int					fillMethod;
     bool 				extendStart, extendEnd;
@@ -428,7 +449,7 @@ TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPt
         end.y   = bounds.y1 + stop2->offset * (bounds.y2 - bounds.y1);
     
         shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, extendStart, extendEnd);
-        CGContextDrawShading(gPathCGContext, shading);
+        CGContextDrawShading(context->c, shading);
         CGShadingRelease(shading);
         CGFunctionRelease(function);
     }
@@ -618,7 +639,7 @@ NeedTransitionPadding(PathRect *line)
 }
 
 void
-TkPathPaintLinearGradient2(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+TkPathPaintLinearGradient2(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
     int i;
     int pad;

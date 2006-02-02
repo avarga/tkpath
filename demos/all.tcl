@@ -1,0 +1,1 @@
+set dir [file dirname [info script]]set tail [file tail [info script]]foreach f [glob -nocomplain -directory $dir *.tcl] {    if {[file tail $f] ne $tail} {	source $f    }}

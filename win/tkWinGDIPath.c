@@ -4,7 +4,7 @@
  *		This file implements path drawing API's on Windows using the GDI lib.
  *  	GDI is missing several features found in GDI+.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
@@ -24,23 +24,19 @@
 extern int gUseAntiAlias;
 
 /*
- * This is perhaps a very stupid thing to do.
- * It limits drawing to this single context at a time.
- * Perhaps some window structure should be augmented???
- */
-
-static HDC gMemHdc = NULL;
-static TMatrix gCTM;		/* The context transformation matrix. */
-static int gHaveMatrix;
-
-/*
+ * This is used as a place holder for platform dependent stuff between each call.
  * Since we do the coordinate transforms ourself we cannot rely
  * on the GDI api to get current untransformed point.
  */
+typedef struct TkPathContext_ {
+    Drawable 		d;
+    HDC			 	memHDC;
+    TMatrix			CTM;
+    int				haveMatrix;
+    double 			currentX;
+    double 			currentY;
+} TkPathContext_;
  
-static double gCurrentX;
-static double gCurrentY;
-
 static HPEN
 PathCreatePen(Tk_PathStyle *stylePtr)
 {
@@ -158,90 +154,98 @@ PathCreateBrush(Tk_PathStyle *style)
     }
 }
 
-void		
+TkPathContext		
 TkPathInit(Display *display, Drawable d)
 {
     HDC hdc;
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
-
-    if (gMemHdc != NULL) {
-        Tcl_Panic("the path drawing context gMemHdc is already in use\n");
-    }
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
 
     /* This will only work for bitmaps; need something else! TkWinGetDrawableDC()? */
     hdc = CreateCompatibleDC(NULL);
     SelectObject(hdc, twdPtr->bitmap.handle);
-    gMemHdc = hdc;
-    gHaveMatrix = 0;
-    gCTM = kPathUnitTMatrix;
-    gCurrentX = 0.0;
-    gCurrentY = 0.0;
+    context->d = d;
+    context->memHDC = hdc;
+    context->haveMatrix = 0;
+    context->CTM = kPathUnitTMatrix;
+    context->currentX = 0.0;
+    context->currentY = 0.0;
+    return (TkPathContext) context;
 }
 
 void
-TkPathPushTMatrix(Drawable d, TMatrix *m)
+TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
-    TMatrix tmp = gCTM;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    TMatrix tmp = context->CTM;
+    TMatrix *p = &(context->CTM);
     
-    gHaveMatrix = 1;
-    gCTM.a  = m->a*tmp.a  + m->b*tmp.c;
-    gCTM.b  = m->a*tmp.b  + m->b*tmp.d;
-    gCTM.c  = m->c*tmp.a  + m->d*tmp.c;
-    gCTM.d  = m->c*tmp.b  + m->d*tmp.d;
-    gCTM.tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
-    gCTM.ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
+    context->haveMatrix = 1;
+    p->a  = m->a*tmp.a  + m->b*tmp.c;
+    p->b  = m->a*tmp.b  + m->b*tmp.d;
+    p->c  = m->c*tmp.a  + m->d*tmp.c;
+    p->d  = m->c*tmp.b  + m->d*tmp.d;
+    p->tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
+    p->ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
 }
 
 void
-TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr)
+TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr)
 {
-    BeginPath(gMemHdc);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    BeginPath(context->memHDC);
 }
 
 void
-TkPathMoveTo(Drawable d, double x, double y)
+TkPathMoveTo(TkPathContext ctx, double x, double y)
 {    
-    gCurrentX = x;
-    gCurrentY = y;
-    if (gHaveMatrix) {
-        PathApplyTMatrix(&gCTM, &x, &y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+    context->currentX = x;
+    context->currentY = y;
+    if (context->haveMatrix) {
+        PathApplyTMatrix(&(context->CTM), &x, &y);
     }
-    MoveToEx(gMemHdc, (int) (x + 0.5), (int) (y + 0.5), (LPPOINT) NULL);
+    MoveToEx(context->memHDC, (int) (x + 0.5), (int) (y + 0.5), (LPPOINT) NULL);
 }
 
 void
-TkPathLineTo(Drawable d, double x, double y)
+TkPathLineTo(TkPathContext ctx, double x, double y)
 {
-    gCurrentX = x;
-    gCurrentY = y;
-    if (gHaveMatrix) {
-        PathApplyTMatrix(&gCTM, &x, &y);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+    context->currentX = x;
+    context->currentY = y;
+    if (context->haveMatrix) {
+        PathApplyTMatrix(&(context->CTM), &x, &y);
     }
-    LineTo(gMemHdc, (int) (x + 0.5), (int) (y + 0.5));
+    LineTo(context->memHDC, (int) (x + 0.5), (int) (y + 0.5));
 }
 
 void
-TkPathLinesTo(Drawable d, double *pts, int n)
+TkPathLinesTo(TkPathContext ctx, double *pts, int n)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
 
-    //Polyline(gMemHdc, );
+    //Polyline(context->memHDC, );
 }
 
 void
-TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
+TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     POINT ptc;		/* Current point. */
     POINT pts[3];	/* Control points. */
     
-    gCurrentX = x;
-    gCurrentY = y;
+    context->currentX = x;
+    context->currentY = y;
 
     /* Current in transformed coords. */
-    GetCurrentPositionEx(gMemHdc, &ptc);
+    GetCurrentPositionEx(context->memHDC, &ptc);
 
-    if (gHaveMatrix) {
-        PathApplyTMatrix(&gCTM, &ctrlX, &ctrlY);
-        PathApplyTMatrix(&gCTM, &x, &y);
+    if (context->haveMatrix) {
+        PathApplyTMatrix(&(context->CTM), &ctrlX, &ctrlY);
+        PathApplyTMatrix(&(context->CTM), &x, &y);
     }    
 
     /* Conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg) */
@@ -253,21 +257,22 @@ TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
     pts[1].y = (LONG) (ctrlY + (y - ctrlY) / 3 + 0.5);
     pts[2].x = (LONG) (x + 0.5);
     pts[2].y = (LONG) (y + 0.5);
-    PolyBezierTo(gMemHdc, pts, 3);
+    PolyBezierTo(context->memHDC, pts, 3);
 }
 
 void
-TkPathCurveTo(Drawable d, double ctrlX1, double ctrlY1, 
+TkPathCurveTo(TkPathContext ctx, double ctrlX1, double ctrlY1, 
         double ctrlX2, double ctrlY2, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     POINT pts[3];
 
-    gCurrentX = x;
-    gCurrentY = y;
-    if (gHaveMatrix) {
-        PathApplyTMatrix(&gCTM, &ctrlX1, &ctrlY1);
-        PathApplyTMatrix(&gCTM, &ctrlX2, &ctrlY2);
-        PathApplyTMatrix(&gCTM, &x, &y);
+    context->currentX = x;
+    context->currentY = y;
+    if (context->haveMatrix) {
+        PathApplyTMatrix(&(context->CTM), &ctrlX1, &ctrlY1);
+        PathApplyTMatrix(&(context->CTM), &ctrlX2, &ctrlY2);
+        PathApplyTMatrix(&(context->CTM), &x, &y);
     }    
     pts[0].x = (LONG) (ctrlX1 + 0.5);
     pts[0].y = (LONG) (ctrlY1 + 0.5);
@@ -275,11 +280,11 @@ TkPathCurveTo(Drawable d, double ctrlX1, double ctrlY1,
     pts[1].y = (LONG) (ctrlY2 + 0.5);
     pts[2].x = (LONG) (x + 0.5);
     pts[2].y = (LONG) (y + 0.5);
-    PolyBezierTo(gMemHdc, pts, 3);
+    PolyBezierTo(context->memHDC, pts, 3);
 }
 
 void
-TkPathArcTo(Drawable d,
+TkPathArcTo(TkPathContext ctx,
         double rx, double ry, 
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x2, double y2)
@@ -288,43 +293,49 @@ TkPathArcTo(Drawable d,
 }
 
 void
-TkPathClosePath(Drawable d)
+TkPathClosePath(TkPathContext ctx)
 {
-    CloseFigure(gMemHdc);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CloseFigure(context->memHDC);
 }
 
 void
-TkPathEndPath(Drawable d)
+TkPathEndPath(TkPathContext ctx)
 {
-    EndPath(gMemHdc);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    EndPath(context->memHDC);
 }
 
 void
-TkPathFree(Drawable d)
+TkPathFree(TkPathContext ctx)
 {
-    DeleteDC(gMemHdc);
-    gMemHdc = NULL;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    DeleteDC(context->memHDC);
+    context->memHDC = NULL;
 }
 
 void		
-TkPathClipToPath(Drawable d, int fillRule)
+TkPathClipToPath(TkPathContext ctx, int fillRule)
 {
-    SelectClipPath(gMemHdc, RGN_AND);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    SelectClipPath(context->memHDC, RGN_AND);
 }
 
 void
-TkPathReleaseClipToPath(Drawable d)
+TkPathReleaseClipToPath(TkPathContext ctx)
 {
-    SelectClipRgn(gMemHdc, NULL);
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    SelectClipRgn(context->memHDC, NULL);
 }
 
 void
-TkPathStroke(Drawable d, Tk_PathStyle *style)
+TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     HDC 	hdc;
     HPEN 	hpen, oldHpen;
     
-    hdc = gMemHdc;
+    hdc = context->memHDC;
     hpen = PathCreatePen(style);
     oldHpen = SelectObject(hdc, hpen);
     SetBkMode(hdc, TRANSPARENT);
@@ -336,12 +347,13 @@ TkPathStroke(Drawable d, Tk_PathStyle *style)
 }
 
 void
-TkPathFill(Drawable d, Tk_PathStyle *style)
+TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     HDC 	hdc;
     HBRUSH 	hbrush, oldHbrush;
     
-    hdc = gMemHdc;
+    hdc = context->memHDC;
     hbrush = PathCreateBrush(style);
 	oldHbrush = SelectObject(hdc, hbrush);
     SetPolyFillMode(hdc, (style->fillRule == WindingRule) ? WINDING : ALTERNATE);
@@ -352,13 +364,14 @@ TkPathFill(Drawable d, Tk_PathStyle *style)
 }
 
 void        
-TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
+TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     HDC 	hdc;
     HPEN 	hpen, oldHpen;
     HBRUSH 	hbrush, oldHbrush;
     
-    hdc = gMemHdc;
+    hdc = context->memHDC;
     hpen = PathCreatePen(style);
     hbrush = PathCreateBrush(style);
     oldHpen = SelectObject(hdc, hpen);
@@ -379,15 +392,17 @@ TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
  */
 
 int
-TkPathGetCurrentPosition(Drawable d, PathPoint *ptPtr)
+TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *ptPtr)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
     /*
      * Note that GetCurrentPositionEx() wont work since this returns
      * the coordinates we are actually using for drawing which have 
      * been transformed!
      */
-    ptPtr->x = gCurrentX;
-    ptPtr->y = gCurrentY;
+    ptPtr->x = context->currentX;
+    ptPtr->y = context->currentY;
     return TCL_OK;
 }
 
@@ -467,14 +482,14 @@ FillTwoStopLinearGradient(
      * So far everything has taken place in the untransformed
      * coordinate system.
      */  
-    if (gHaveMatrix) {
+    if (context->haveMatrix) {
         /*
          * This is not a 100% foolproof solution. Tricky!
          */
-        PathApplyTMatrix(&gCTM, &q1x, &q1y);
-        PathApplyTMatrix(&gCTM, &q2x, &q2y);
-        PathApplyTMatrix(&gCTM, &p1x, &p1y);
-        PathApplyTMatrix(&gCTM, &p2x, &p2y);
+        PathApplyTMatrix(&(context->CTM), &q1x, &q1y);
+        PathApplyTMatrix(&(context->CTM), &q2x, &q2y);
+        PathApplyTMatrix(&(context->CTM), &p1x, &p1y);
+        PathApplyTMatrix(&(context->CTM), &p2x, &p2y);
 		ax = p2x - p1x;
 	    ay = p2y - p1y;
         a2 = ax*ax + ay*ay;
@@ -522,11 +537,11 @@ FillTwoStopLinearGradient(
         /* Verify that we don't paint outside. */
         
         
-        hpen = SelectObject(gMemHdc, 
+        hpen = SelectObject(context->memHDC, 
                 CreatePen(PS_SOLID, penWidth, RGB(red, green, blue)));
-        MoveToEx(gMemHdc, (int) (x1 + 0.5), (int) (y1 + 0.5), NULL);
-        LineTo(gMemHdc, (int) (x2 + 0.5), (int) (y2 + 0.5));
-        DeleteObject(SelectObject(gMemHdc, hpen));
+        MoveToEx(context->memHDC, (int) (x1 + 0.5), (int) (y1 + 0.5), NULL);
+        LineTo(context->memHDC, (int) (x2 + 0.5), (int) (y2 + 0.5));
+        DeleteObject(SelectObject(context->memHDC, hpen));
     }
 }
 
@@ -609,8 +624,9 @@ NeedTransitionPadding(PathRect *line)
 }
 
 void
-TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int 			i;
     int 			pad;
     int 			nstops;

@@ -9,17 +9,11 @@
  *		Tk drawing only. It fails in a number of places such as
  *		filled and overlapping subpaths.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
 
-#include <tcl.h>
-#include <tk.h>
-#include <tkInt.h>
-#include "tkPort.h"
-#include "tkCanvas.h"
-#include "tkPath.h"
 #include "tkIntPath.h"
 
 #define _PATH_N_BUFFER_POINTS 		2000
@@ -44,7 +38,7 @@ typedef struct _PathSegments {
  * A placeholder for the context we are working in.
  * The current and lastMove are always original untransformed coordinates.
  */
-typedef struct _PathContext {
+typedef struct TkPathContext_ {
     Display 		*display;
     Drawable 		drawable;
     double 			current[2];
@@ -53,15 +47,14 @@ typedef struct _PathContext {
     TMatrix 		*m;
     _PathSegments 	*segm;
     _PathSegments 	*currentSegm;
-} _PathContext;
+} TkPathContext_;
 
-static _PathContext *gctx = NULL;
 
-static _PathContext* _NewPathContext(Display *display, Drawable drawable)
+static TkPathContext_* _NewPathContext(Display *display, Drawable drawable)
 {
-    _PathContext *ctx;
+    TkPathContext_ *ctx;
     
-    ctx = (_PathContext *) ckalloc(sizeof(_PathContext));
+    ctx = (TkPathContext_ *) ckalloc(sizeof(TkPathContext_));
     ctx->display = display;
     ctx->drawable = drawable;
     ctx->current[0] = 0.0;
@@ -88,7 +81,7 @@ static _PathSegments* _NewPathSegments(void)
     return segm;
 }
 
-static void _PathContextFree(_PathContext *ctx)
+static void _PathContextFree(TkPathContext_ *ctx)
 {
     _PathSegments *tmpSegm, *segm;
 
@@ -114,20 +107,22 @@ static void _CheckCoordSpace(_PathSegments *segm, int numPoints)
     }
 }
 
-void TkPathInit(Display *display, Drawable d)
+TkPathContext TkPathInit(Display *display, Drawable d)
 {
-    gctx = _NewPathContext(display, d);
+    return (TkPathContext) _NewPathContext(display, d);
 }
 
 void
-TkPathPushTMatrix(Drawable d, TMatrix *m)
+TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
-    if (gctx->m == NULL) {
-        gctx->m = (TMatrix *) ckalloc(sizeof(TMatrix));
-        *(gctx->m) = *m;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+    if (context->m == NULL) {
+        context->m = (TMatrix *) ckalloc(sizeof(TMatrix));
+        *(context->m) = *m;
     } else {
-        TMatrix tmp = *(gctx->m);
-        TMatrix *p = gctx->m;
+        TMatrix tmp = *(context->m);
+        TMatrix *p = context->m;
         
         p->a  = m->a*tmp.a  + m->b*tmp.c;
         p->b  = m->a*tmp.b  + m->b*tmp.d;
@@ -138,56 +133,58 @@ TkPathPushTMatrix(Drawable d, TMatrix *m)
     }
 }
 
-void TkPathBeginPath(Drawable d, Tk_PathStyle *style)
+void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     /* empty */
 }
 
-void TkPathMoveTo(Drawable d, double x, double y)
+void TkPathMoveTo(TkPathContext ctx, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     double *coordPtr;
-    _PathSegments *segm, *currentSegm;
+    _PathSegments *segm;
 
     segm = _NewPathSegments();
-    if (gctx->segm == NULL) {
-        gctx->segm = segm;
-        gctx->currentSegm = segm;
+    if (context->segm == NULL) {
+        context->segm = segm;
     } else {
-        currentSegm = gctx->currentSegm;
-        currentSegm->next = segm;
-        gctx->currentSegm = segm;
+        context->currentSegm->next = segm;
     }
-    gctx->hasCurrent = 1;
-    gctx->current[0] = x;
-    gctx->current[1] = y;
-    gctx->lastMove[0] = x;
-    gctx->lastMove[1] = y;
+    context->currentSegm = segm;
+    context->hasCurrent = 1;
+    context->current[0] = x;
+    context->current[1] = y;
+    context->lastMove[0] = x;
+    context->lastMove[1] = y;
     coordPtr = segm->points;
-    PathApplyTMatrixToPoint(gctx->m, gctx->current, coordPtr);
+    PathApplyTMatrixToPoint(context->m, context->current, coordPtr);
     segm->npoints = 1;
 }
 
-void TkPathLineTo(Drawable d, double x, double y)
+void TkPathLineTo(TkPathContext ctx, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     double *coordPtr;
     _PathSegments *segm;
     
-    segm = gctx->currentSegm;
+    segm = context->currentSegm;
     _CheckCoordSpace(segm, 1);
-    gctx->current[0] = x;
-    gctx->current[1] = y;
+    context->current[0] = x;
+    context->current[1] = y;
     coordPtr = segm->points + 2*segm->npoints;
-    PathApplyTMatrixToPoint(gctx->m, gctx->current, coordPtr);    
+    PathApplyTMatrixToPoint(context->m, context->current, coordPtr);    
     (segm->npoints)++;
 }
 
-void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y)
+void TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     double cx, cy;
     double x31, y31, x32, y32;
     
-    cx = gctx->current[0];
-    cy = gctx->current[1];
+    cx = context->current[0];
+    cy = context->current[1];
 
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
     /* Unchecked! Must be an approximation! */
@@ -196,12 +193,13 @@ void TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y
     x32 = ctrlX + (x - ctrlX) / 3;
     y32 = ctrlY + (y - ctrlY) / 3;
 
-    TkPathCurveTo(d, x31, y31, x32, y32, x, y);
+    TkPathCurveTo(ctx, x31, y31, x32, y32, x, y);
 }
 
-void TkPathCurveTo(Drawable d, double x1, double y1, 
+void TkPathCurveTo(TkPathContext ctx, double x1, double y1, 
         double x2, double y2, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int numSteps;
     double *coordPtr;
     double control[8];
@@ -211,10 +209,10 @@ void TkPathCurveTo(Drawable d, double x1, double y1,
     xc = x;
     yc = y;
 
-    PathApplyTMatrixToPoint(gctx->m, gctx->current, control);
-    PathApplyTMatrix(gctx->m, &x1, &y1);
-    PathApplyTMatrix(gctx->m, &x2, &y2);
-    PathApplyTMatrix(gctx->m, &x, &y);
+    PathApplyTMatrixToPoint(context->m, context->current, control);
+    PathApplyTMatrix(context->m, &x1, &y1);
+    PathApplyTMatrix(context->m, &x2, &y2);
+    PathApplyTMatrix(context->m, &x, &y);
     control[2] = x1;
     control[3] = y1;
     control[4] = x2;
@@ -223,44 +221,45 @@ void TkPathCurveTo(Drawable d, double x1, double y1,
     control[7] = y;
 
     numSteps = kPathNumSegmentsCurveTo;
-    segm = gctx->currentSegm;
+    segm = context->currentSegm;
     _CheckCoordSpace(segm, numSteps);
     coordPtr = segm->points + 2*segm->npoints;
     CurveSegments(control, 0, numSteps, coordPtr);
     segm->npoints += numSteps;
-    gctx->current[0] = xc;
-    gctx->current[1] = yc;
+    context->current[0] = xc;
+    context->current[1] = yc;
 }
 
-void TkPathArcTo(Drawable d,
+void TkPathArcTo(TkPathContext ctx,
         double rx, double ry, 
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
-    TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
+    TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
-void TkPathClosePath(Drawable d)
+void TkPathClosePath(TkPathContext ctx)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     double *coordPtr;
     _PathSegments *segm;
 
-    segm = gctx->currentSegm;
+    segm = context->currentSegm;
     _CheckCoordSpace(segm, 1);
     segm->isclosed = 1;
-    gctx->current[0] = gctx->lastMove[0];
-    gctx->current[1] = gctx->lastMove[1];
+    context->current[0] = context->lastMove[0];
+    context->current[1] = context->lastMove[1];
     coordPtr = segm->points + 2*segm->npoints;
-    PathApplyTMatrixToPoint(gctx->m, gctx->current, coordPtr);    
+    PathApplyTMatrixToPoint(context->m, context->current, coordPtr);    
     (segm->npoints)++;
 }
 
-void TkPathClipToPath(Drawable d, int fillRule)
+void TkPathClipToPath(TkPathContext ctx, int fillRule)
 {
     /* empty */
 }
 
-void TkPathReleaseClipToPath(Drawable d)
+void TkPathReleaseClipToPath(TkPathContext ctx)
 {
     /* empty */
 }
@@ -294,71 +293,74 @@ static void _DoubleCoordsToXPointArray(int npoints, double *coordArr, XPoint *ou
     }
 }
 
-void TkPathStroke(Drawable d, Tk_PathStyle *style)
+void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int numPoints;
     XPoint *pointPtr;
     _PathSegments *segm;
     
-    segm = gctx->segm;
+    segm = context->segm;
     while (segm != NULL) {
         numPoints = segm->npoints;
         pointPtr = (XPoint *)ckalloc((unsigned)(numPoints * sizeof(XPoint)));
         _DoubleCoordsToXPointArray(numPoints, segm->points, pointPtr);
-        XDrawLines(gctx->display, gctx->drawable, style->strokeGC, pointPtr, numPoints,
+        XDrawLines(context->display, context->drawable, style->strokeGC, pointPtr, numPoints,
                 CoordModeOrigin);
         ckfree((char *) pointPtr);
         segm = segm->next;
     }
 }
 
-void TkPathFill(Drawable d, Tk_PathStyle *style)
+void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int numPoints;
     XPoint *pointPtr;
     _PathSegments *segm;
     
-    segm = gctx->segm;
+    segm = context->segm;
     while (segm != NULL) {
         numPoints = segm->npoints;
         pointPtr = (XPoint *)ckalloc((unsigned)(numPoints * sizeof(XPoint)));
         _DoubleCoordsToXPointArray(numPoints, segm->points, pointPtr);
-        XFillPolygon(gctx->display, gctx->drawable, style->fillGC, pointPtr, numPoints,
+        XFillPolygon(context->display, context->drawable, style->fillGC, pointPtr, numPoints,
                 Complex, CoordModeOrigin);
         ckfree((char *) pointPtr);
         segm = segm->next;
     }
 }
 
-void TkPathFillAndStroke(Drawable d, Tk_PathStyle *style)
+void TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     int numPoints;
     XPoint *pointPtr;
     _PathSegments *segm;
     
-    segm = gctx->segm;
+    segm = context->segm;
     while (segm != NULL) {
         numPoints = segm->npoints;
         pointPtr = (XPoint *)ckalloc((unsigned)(numPoints * sizeof(XPoint)));
         _DoubleCoordsToXPointArray(numPoints, segm->points, pointPtr);
-        XFillPolygon(gctx->display, gctx->drawable, style->fillGC, pointPtr, numPoints,
+        XFillPolygon(context->display, context->drawable, style->fillGC, pointPtr, numPoints,
                 Complex, CoordModeOrigin);
-        XDrawLines(gctx->display, gctx->drawable, style->strokeGC, pointPtr, numPoints,
+        XDrawLines(context->display, context->drawable, style->strokeGC, pointPtr, numPoints,
                 CoordModeOrigin);
         ckfree((char *) pointPtr);
         segm = segm->next;
     }
 }
 
-void TkPathEndPath(Drawable d)
+void TkPathEndPath(TkPathContext ctx)
 {
     /* empty */
 }
 
-void TkPathFree(Drawable d)
+void TkPathFree(TkPathContext ctx)
 {
-    _PathContextFree(gctx);
-    gctx = NULL;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    _PathContextFree(context);
 }
 
 int TkPathDrawingDestroysPath(void)
@@ -366,20 +368,22 @@ int TkPathDrawingDestroysPath(void)
     return 0;
 }
 
-int TkPathGetCurrentPosition(Drawable d, PathPoint *pt)
+int TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *pt)
 {
-    pt->x = gctx->current[0];
-    pt->y = gctx->current[1];
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    pt->x = context->current[0];
+    pt->y = context->current[1];
     return TCL_OK;
 }
 
-int TkPathBoundingBox(PathRect *rPtr)
+int TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
 {
     return TCL_ERROR;
 }
 
-void TkPathPaintLinearGradient(Drawable d, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {    
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     /* The Tk X11 compatibility layer does not have tha ability to set up
      * clipping to pixmap which is needed here, I believe. 
      */

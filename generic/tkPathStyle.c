@@ -4,7 +4,7 @@
  *	    This file implements style objects used when drawing paths.
  *      See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * Note: It would be best to have this in the canvas widget as a special
  *       object, but I see no way of doing this without touching
@@ -17,10 +17,6 @@
  * $Id$
  */
 
-#include <tcl.h>
-#include <tk.h>
-#include <tkInt.h>
-#include "tkPath.h"
 #include "tkIntPath.h"
 
 static Tcl_HashTable 	*gStyleHashPtr;
@@ -345,19 +341,19 @@ static Tk_OptionSpec styleOptionSpecs[] = {
 	{TK_OPTION_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, gradientFillName),
 		TK_OPTION_NULL_OK, (ClientData) &fillGradientCO, 
-        PATH_STYLE_OPTION_FILLGRADIENT},
+        PATH_STYLE_OPTION_FILL_GRADIENT},
 	{TK_OPTION_STRING_TABLE, "-filloffset", (char *) NULL, (char *) NULL,	/* @@@ TODO */
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, null),
-		0, (ClientData) &nullST, PATH_STYLE_OPTION_FILLOFFSET},
+		0, (ClientData) &nullST, PATH_STYLE_OPTION_FILL_OFFSET},
     {TK_OPTION_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, fillOpacity), 0, 0, 
-        PATH_STYLE_OPTION_FILLOPACITY},
+        PATH_STYLE_OPTION_FILL_OPACITY},
     {TK_OPTION_STRING_TABLE, "-fillrule", (char *) NULL, (char *) NULL,
         "nonzero", -1, Tk_Offset(Tk_PathStyle, fillRule), 
-        0, (ClientData) fillRuleST, PATH_STYLE_OPTION_FILLRULE},
+        0, (ClientData) fillRuleST, PATH_STYLE_OPTION_FILL_RULE},
     {TK_OPTION_BITMAP, "-fillstipple", (char *) NULL, (char *) NULL,
         "", -1, Tk_Offset(Tk_PathStyle, fillStipple), TK_OPTION_NULL_OK, 0, 
-        PATH_STYLE_OPTION_FILLSTIPPLE},
+        PATH_STYLE_OPTION_FILL_STIPPLE},
 	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, matrixPtr),
 		TK_OPTION_NULL_OK, (ClientData) &matrixCO, PATH_STYLE_OPTION_MATRIX},
@@ -366,28 +362,28 @@ static Tk_OptionSpec styleOptionSpecs[] = {
         PATH_STYLE_OPTION_STROKE},
 	{TK_OPTION_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, dash),
-		TK_OPTION_NULL_OK, (ClientData) &dashCO, PATH_STYLE_OPTION_STROKEDASHARRAY},
+		TK_OPTION_NULL_OK, (ClientData) &dashCO, PATH_STYLE_OPTION_STROKE_DASHARRAY},
     {TK_OPTION_STRING_TABLE, "-strokelinecap", (char *) NULL, (char *) NULL,
         "butt", -1, Tk_Offset(Tk_PathStyle, capStyle), 
-        0, (ClientData) lineCapST, PATH_STYLE_OPTION_STROKELINECAP},
+        0, (ClientData) lineCapST, PATH_STYLE_OPTION_STROKE_LINECAP},
     {TK_OPTION_STRING_TABLE, "-strokelinejoin", (char *) NULL, (char *) NULL,
         "round", -1, Tk_Offset(Tk_PathStyle, joinStyle), 
-        0, (ClientData) lineJoinST, PATH_STYLE_OPTION_STROKELINEJOIN},
+        0, (ClientData) lineJoinST, PATH_STYLE_OPTION_STROKE_LINEJOIN},
     {TK_OPTION_DOUBLE, "-strokemiterlimit", (char *) NULL, (char *) NULL,
         "4.0", -1, Tk_Offset(Tk_PathStyle, miterLimit), 0, 0, 
-        PATH_STYLE_OPTION_STROKEMITERLIMIT},
+        PATH_STYLE_OPTION_STROKE_MITERLIMIT},
 	{TK_OPTION_STRING_TABLE, "-strokeoffset", (char *) NULL, (char *) NULL,	/* @@@ TODO */
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, null),
-		0, (ClientData) &nullST, PATH_STYLE_OPTION_STROKEOFFSET},
+		0, (ClientData) &nullST, PATH_STYLE_OPTION_STROKE_OFFSET},
     {TK_OPTION_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, strokeOpacity), 0, 0, 
-        PATH_STYLE_OPTION_STROKEOPACITY},
+        PATH_STYLE_OPTION_STROKE_OPACITY},
     {TK_OPTION_BITMAP, "-strokestipple", (char *) NULL, (char *) NULL,
         "", -1, Tk_Offset(Tk_PathStyle, strokeStipple), TK_OPTION_NULL_OK, 0, 
-        PATH_STYLE_OPTION_STROKESTIPPLE},
+        PATH_STYLE_OPTION_STROKE_STIPPLE},
     {TK_OPTION_DOUBLE, "-strokewidth", (char *) NULL, (char *) NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, strokeWidth), 0, 0, 
-        PATH_STYLE_OPTION_STROKEWIDTH},
+        PATH_STYLE_OPTION_STROKE_WIDTH},
     
     /* @@@ TODO: When this comes into canvas code we should add a -tags option here??? */
     
@@ -547,8 +543,25 @@ CopyOptionString(char **dstPtrPtr, char *srcPtr)
     }
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * PathStyleMergeStyles --
+ *
+ *		Copies the style options set in 'styleName' to the one in 'stylePtr'.
+ *		Depending on 'flags' only fill or stroke options set.
+ *
+ * Results:
+ *		None.
+ *
+ * Side effects:
+ *		Variables in 'stylePtr' set.
+ *
+ *--------------------------------------------------------------
+ */
+
 void
-PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName)
+PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName, long flags)
 {
     int mask;
 	Tcl_HashEntry *hPtr;
@@ -565,56 +578,58 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
      * these into stylePtr.
      */
     mask = srcStylePtr->mask;
-    if (mask & PATH_STYLE_OPTION_FILL) {
-        CopyXColor(tkwin, &(stylePtr->fillColor), srcStylePtr->fillColor);
-    }
-    if (mask & PATH_STYLE_OPTION_FILLGRADIENT) {
-        CopyOptionString(&(stylePtr->gradientFillName), srcStylePtr->gradientFillName);
-    }
-    if (mask & PATH_STYLE_OPTION_FILLOFFSET) {
-        /* @@@ TODO */
-    }
-    if (mask & PATH_STYLE_OPTION_FILLOPACITY) {
-        stylePtr->fillOpacity = srcStylePtr->fillOpacity;
-    }
-    if (mask & PATH_STYLE_OPTION_FILLRULE) {
-        stylePtr->fillRule = srcStylePtr->fillRule;
-    }
-    if (mask & PATH_STYLE_OPTION_FILLSTIPPLE) {
-        /* @@@ TODO */
+    if (!(flags & kPathMergeStyleNotFill)) {
+        if (mask & PATH_STYLE_OPTION_FILL) {
+            CopyXColor(tkwin, &(stylePtr->fillColor), srcStylePtr->fillColor);
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_GRADIENT) {
+            CopyOptionString(&(stylePtr->gradientFillName), srcStylePtr->gradientFillName);
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_OFFSET) {
+            /* @@@ TODO */
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_OPACITY) {
+            stylePtr->fillOpacity = srcStylePtr->fillOpacity;
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_RULE) {
+            stylePtr->fillRule = srcStylePtr->fillRule;
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_STIPPLE) {
+            /* @@@ TODO */
+        }
     }
     if (mask & PATH_STYLE_OPTION_MATRIX) {
         CopyTMatrix(&(stylePtr->matrixPtr), srcStylePtr->matrixPtr);
     }
-    if (mask & PATH_STYLE_OPTION_STROKE) {
-        CopyXColor(tkwin, &(stylePtr->strokeColor), srcStylePtr->strokeColor);
+    if (!(flags & kPathMergeStyleNotStroke)) {
+        if (mask & PATH_STYLE_OPTION_STROKE) {
+            CopyXColor(tkwin, &(stylePtr->strokeColor), srcStylePtr->strokeColor);
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_DASHARRAY) {
+            CopyTkDash(&(stylePtr->dash), &(srcStylePtr->dash));
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_LINECAP) {
+            stylePtr->capStyle = srcStylePtr->capStyle;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_LINEJOIN) {
+            stylePtr->joinStyle = srcStylePtr->joinStyle;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_MITERLIMIT) {
+            stylePtr->miterLimit = srcStylePtr->miterLimit;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_OFFSET) {
+            /* @@@ TODO */
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_OPACITY) {
+            stylePtr->strokeOpacity = srcStylePtr->strokeOpacity;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_STIPPLE) {
+            /* @@@ TODO */
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_WIDTH) {
+            stylePtr->strokeWidth = srcStylePtr->strokeWidth;
+        }
     }
-    if (mask & PATH_STYLE_OPTION_STROKEDASHARRAY) {
-        CopyTkDash(&(stylePtr->dash), &(srcStylePtr->dash));
-    }
-    if (mask & PATH_STYLE_OPTION_STROKELINECAP) {
-        stylePtr->capStyle = srcStylePtr->capStyle;
-    }
-    if (mask & PATH_STYLE_OPTION_STROKELINEJOIN) {
-        stylePtr->joinStyle = srcStylePtr->joinStyle;
-    }
-    if (mask & PATH_STYLE_OPTION_STROKEMITERLIMIT) {
-        stylePtr->miterLimit = srcStylePtr->miterLimit;
-    }
-    if (mask & PATH_STYLE_OPTION_STROKEOFFSET) {
-        /* @@@ TODO */
-    }
-    if (mask & PATH_STYLE_OPTION_STROKEOPACITY) {
-        stylePtr->strokeOpacity = srcStylePtr->strokeOpacity;
-    }
-    if (mask & PATH_STYLE_OPTION_STROKESTIPPLE) {
-        /* @@@ TODO */
-    }
-    if (mask & PATH_STYLE_OPTION_STROKEWIDTH) {
-        stylePtr->strokeWidth = srcStylePtr->strokeWidth;
-    }
-
-    return;
 }
 
 /*

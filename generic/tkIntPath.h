@@ -76,6 +76,8 @@ static int kPathNumSegmentsMax		  = 18;
 
 static const TMatrix kPathUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
+extern int gUseAntiAlias;
+
 /* These MUST be kept in sync with methodST ! */
 enum {
     kPathGradientMethodPad = 		0L,
@@ -168,23 +170,39 @@ typedef struct CloseAtom {
 } CloseAtom;
 
 /*
+ * Flgas for 'PathStyleMergeStyles'.
+ */
+ 
+enum {
+    kPathMergeStyleNotFill = 		0L,
+    kPathMergeStyleNotStroke
+};
+
+/*
  * The actual path drawing commands which are all platform specific.
  */
  
-void		TkPathInit(Display *display, Drawable d);
-void		TkPathBeginPath(Drawable d, Tk_PathStyle *stylePtr);
-void    	TkPathEndPath(Drawable d);
-void		TkPathMoveTo(Drawable d, double x, double y);
-void		TkPathLineTo(Drawable d, double x, double y);
-void		TkPathArcTo(Drawable d, double rx, double ry, double angle, 
+TkPathContext		TkPathInit(Display *display, Drawable d);
+void		TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr);
+void    	TkPathEndPath(TkPathContext ctx);
+void		TkPathMoveTo(TkPathContext ctx, double x, double y);
+void		TkPathLineTo(TkPathContext ctx, double x, double y);
+void		TkPathArcTo(TkPathContext ctx, double rx, double ry, double angle, 
                     char largeArcFlag, char sweepFlag, double x, double y);
-void		TkPathQuadBezier(Drawable d, double ctrlX, double ctrlY, double x, double y);
-void		TkPathCurveTo(Drawable d, double ctrlX1, double ctrlY1, 
+void		TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, double y);
+void		TkPathCurveTo(TkPathContext ctx, double ctrlX1, double ctrlY1, 
                     double ctrlX2, double ctrlY2, double x, double y);
-void		TkPathArcToUsingBezier(Drawable d, double rx, double ry, 
+void		TkPathArcToUsingBezier(TkPathContext ctx, double rx, double ry, 
                     double phiDegrees, char largeArcFlag, char sweepFlag, 
                     double x2, double y2);
-void		TkPathClosePath(Drawable d);
+void		TkPathClosePath(TkPathContext ctx);
+
+/*
+ * General path drawing using linked list of path atoms.
+ */
+void		TkPathDrawPath(Display *display, Drawable drawable,
+                    PathAtom *atomPtr, Tk_PathStyle *stylePtr, TMatrix *mPtr,			
+                    PathRect *bboxPtr);
 
 /* Various stuff. */
 int 		TableLookup(LookupTable *map, int n, int from);
@@ -223,12 +241,7 @@ int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 int			PathStyleHaveWithName(CONST char *name);
 int			HaveLinearGradientStyleWithName(CONST char *name);
-void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName);
-int			PathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
-double		PathThickPolygonToPoint(int joinStyle, int capStyle, double width, 
-                    int isclosed, double *polyPtr, int numPoints, double *pointPtr);
-double		PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, 
-                    int *intersectionsPtr, int *nonzerorulePtr);
+void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName, long flags);
 
 
 /*
