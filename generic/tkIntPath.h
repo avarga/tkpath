@@ -196,6 +196,7 @@ void		TkPathArcToUsingBezier(TkPathContext ctx, double rx, double ry,
                     double phiDegrees, char largeArcFlag, char sweepFlag, 
                     double x2, double y2);
 void		TkPathClosePath(TkPathContext ctx);
+void		TkPathImage(TkPathContext ctx, XImage *image, double x, double y, double width, double height);
 
 /*
  * General path drawing using linked list of path atoms.
