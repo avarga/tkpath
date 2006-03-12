@@ -195,6 +195,8 @@ void		TkPathCurveTo(TkPathContext ctx, double ctrlX1, double ctrlY1,
 void		TkPathArcToUsingBezier(TkPathContext ctx, double rx, double ry, 
                     double phiDegrees, char largeArcFlag, char sweepFlag, 
                     double x2, double y2);
+void		TkPathRect(TkPathContext ctx, double x, double y, double width, double height);
+void		TkPathOval(TkPathContext ctx, double x, double y, double width, double height);
 void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, XImage *image, double x, double y, double width, double height);
 

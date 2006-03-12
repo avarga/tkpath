@@ -237,6 +237,41 @@ TkPathArcTo(TkPathContext ctx,
     TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
+void
+TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGRect r;
+    r = CGRectMake(x, y, width, height);
+    CGContextAddRect(context->c, r);
+}
+
+void
+TkPathOval(TkPathContext ctx, double x, double y, double width, double height)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGRect r;
+    r = CGRectMake(x, y, width, height);
+
+#if 0	// 10.4
+    if (&CGContextAddEllipseInRect != NULL) {
+        CGContextAddEllipseInRect(context->c, r);
+    } else {
+#endif
+    if (width == height) {
+        CGContextMoveToPoint(context->c, x+width/2, y);
+        CGContextAddArc(context->c, CGRectGetMidX(r), CGRectGetMidY(r), 
+                width/2, 0.0, 2*M_PI, 1);
+    } else {
+        CGContextSaveGState(context->c);
+        CGContextTranslateCTM(context->c, CGRectGetMidX(r), CGRectGetMidY(r));
+        CGContextScaleCTM(context->c, width/2, height/2);
+        CGContextMoveToPoint(context->c, 1, 0);
+        CGContextAddArc(context->c, 0.0, 0.0, 1.0, 0.0, 2*M_PI, 1);
+        CGContextRestoreGState(context->c);
+    }
+}
+
 #if 0
 typedef struct _XImage {
     int width, height;		/* size of image */

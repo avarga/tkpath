@@ -87,6 +87,7 @@
 				9A5B17C7097BA957000B33B2,
 				9AA1ECE8077FF7BF00A80065,
 				9A66FCF20978D8050086B7B8,
+				9A6265BF09C474B3009A2B1E,
 				9A587F03098FA7870094E994,
 				9A671A8F099DC683007AF773,
 				9A587F06098FADFA0094E994,
@@ -383,6 +384,25 @@
 			settings = {
 			};
 		};
+		9A6265BF09C474B3009A2B1E = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkCanvEllipse.c;
+			path = /Users/matben/C/cvs/tkpath/generic/tkCanvEllipse.c;
+			refType = 0;
+		};
+		9A6265C009C474B3009A2B1E = {
+			fileRef = 9A6265BF09C474B3009A2B1E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A6265C109C474B3009A2B1E = {
+			fileRef = 9A6265BF09C474B3009A2B1E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		9A66FCF20978D8050086B7B8 = {
 			fileEncoding = 4;
 			isa = PBXFileReference;
@@ -654,6 +674,7 @@
 				9A587F08098FADFA0094E994,
 				9A18020F099244EA00A80065,
 				9A671A91099DC683007AF773,
+				9A6265C109C474B3009A2B1E,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -823,6 +844,7 @@
 				9A587F07098FADFA0094E994,
 				9A18020E099244EA00A80065,
 				9A671A90099DC683007AF773,
+				9A6265C009C474B3009A2B1E,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
