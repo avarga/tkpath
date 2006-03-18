@@ -65,6 +65,17 @@ extern "C" {
  */
 #define ALIGN_TO_PIXEL(x) 	(gUseAntiAlias ? (x) : (((int) x) + 0.5))
 
+/* This can be useful to estimate the segmentation detail necessary.
+ * A conservative measure.
+ */
+#define TMATRIX_ABS_MAX(mPtr)		MAX(fabs(mPtr->a), MAX(fabs(mPtr->b), MAX(fabs(mPtr->c), fabs(mPtr->d))))
+
+/* This can be used for simplifying Area and Point functions.
+ */
+#define TMATRIX_IS_RECTILINEAR(mPtr)   	(fabs(mPtr->b) == 0.0) && (fabs(mPtr->c) == 0.0)
+
+#define TMATRIX_DETERMINANT(mPtr)		(mPtr->a * mPtr->d - mPtr->c * mPtr->d)
+
 /*
  * So far we use a fixed number of straight line segments when
  * doing various things, but it would be better to use the de Castlejau
@@ -169,6 +180,14 @@ typedef struct CloseAtom {
     double y;
 } CloseAtom;
 
+typedef struct EllipseAtom {
+    PathAtom pathAtom;
+    double cx;
+    double cy;
+    double rx;
+    double ry;
+} EllipseAtom;
+
 /*
  * Flgas for 'PathStyleMergeStyles'.
  */
@@ -196,7 +215,8 @@ void		TkPathArcToUsingBezier(TkPathContext ctx, double rx, double ry,
                     double phiDegrees, char largeArcFlag, char sweepFlag, 
                     double x2, double y2);
 void		TkPathRect(TkPathContext ctx, double x, double y, double width, double height);
-void		TkPathOval(TkPathContext ctx, double x, double y, double width, double height);
+//void		TkPathOval(TkPathContext ctx, double x, double y, double width, double height);
+void		TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry);
 void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, XImage *image, double x, double y, double width, double height);
 
@@ -206,6 +226,8 @@ void		TkPathImage(TkPathContext ctx, XImage *image, double x, double y, double w
 void		TkPathDrawPath(Display *display, Drawable drawable,
                     PathAtom *atomPtr, Tk_PathStyle *stylePtr, TMatrix *mPtr,			
                     PathRect *bboxPtr);
+void		TkPathPaintPath(TkPathContext context, PathAtom *atomPtr,
+                    Tk_PathStyle *stylePtr, PathRect *bboxPtr);
 
 /* Various stuff. */
 int 		TableLookup(LookupTable *map, int n, int from);

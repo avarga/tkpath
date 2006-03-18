@@ -37,7 +37,7 @@ TkPathDrawPath(
                              * of PathAtoms. */
     Tk_PathStyle *stylePtr,	/* The paths style. */
     TMatrix *mPtr,			/* Typically used for canvas offsets. */
-    PathRect *bboxPtr)		/* The bare bounding box 
+    PathRect *bboxPtr)		/* The bare (untronsformed) bounding box 
                              * (assuming zero stroke width) */
 {
     TkPathContext context;
@@ -58,9 +58,35 @@ TkPathDrawPath(
     if (TkPathMakePath(context, atomPtr, stylePtr) != TCL_OK) {
         return;
     }
+    TkPathPaintPath(context, atomPtr, stylePtr,	bboxPtr);
+    TkPathFree(context);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkPathPaintPath --
+ *
+ *		This procedure is invoked to paint a path in a given context.
+ *
+ * Results:
+ *		None.
+ *
+ * Side effects:
+ *		Any path defined in the context is painted..
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkPathPaintPath(TkPathContext context, 
+    PathAtom *atomPtr,		/* The actual path as a linked list
+                             * of PathAtoms. */
+    Tk_PathStyle *stylePtr,	/* The paths style. */
+    PathRect *bboxPtr)
+{
     
     /*
-     * And do the necessary paintjob. 
      * What if both -fill and -fillgradient?
      */     
     if (stylePtr->gradientFillName != NULL) {
@@ -88,7 +114,6 @@ TkPathDrawPath(
     } else if (stylePtr->strokeColor != NULL) {
         TkPathStroke(context, stylePtr);
     }
-    TkPathFree(context);
 }
 
 /* from mozilla */
@@ -336,6 +361,7 @@ PathInverseTMatrix(TMatrix *m, TMatrix *mi)
 {
     double det;
     
+    /* @@@ We need error checking for det = 0 */
     det = m->a * m->d - m->b * m->c;
     mi->a  =  m->d/det;
     mi->b  = -m->b/det;

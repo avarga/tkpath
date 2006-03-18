@@ -228,6 +228,62 @@ Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
 /*
  *--------------------------------------------------------------
  *
+ * CoordsForPointItems --
+ *
+ *		Used as coordProc for items that have plain single point coords.
+ *
+ * Results:
+ *		Standard tcl result.
+ *
+ * Side effects:
+ *		May store new coords in rectPtr.
+ *
+ *--------------------------------------------------------------
+ */
+
+int		
+CoordsForPointItems(
+        Tcl_Interp *interp, 
+        Tk_Canvas canvas, 
+        double *pointPtr, 		/* Sets or gets the point here. */
+        int objc, 
+        Tcl_Obj *CONST objv[])
+{
+    if (objc == 0) {
+        Tcl_Obj *obj = Tcl_NewObj();
+        Tcl_Obj *subobj = Tcl_NewDoubleObj(pointPtr[0]);
+        Tcl_ListObjAppendElement(interp, obj, subobj);
+        subobj = Tcl_NewDoubleObj(pointPtr[1]);
+        Tcl_ListObjAppendElement(interp, obj, subobj);
+        Tcl_SetObjResult(interp, obj);
+    } else if ((objc == 1) || (objc == 2)) {
+        double x, y;
+        
+        if (objc==1) {
+            if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+                    (Tcl_Obj ***) &objv) != TCL_OK) {
+                return TCL_ERROR;
+            } else if (objc != 4) {
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
+                return TCL_ERROR;
+            }
+        }
+        if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &x) != TCL_OK)
+            || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1], &y) != TCL_OK)) {
+            return TCL_ERROR;
+        }
+        pointPtr[0] = x;
+        pointPtr[1] = y;
+    } else {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
+        return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * CoordsForRectangularItems --
  *
  *		Used as coordProc for items that have rectangular coords.
@@ -706,6 +762,7 @@ GetGenericPathTotalBboxFromBare(Tk_PathStyle *stylePtr, PathRect *bboxPtr)
  * SetGenericPathHeaderBbox --
  *
  *		This procedure sets the (transformed) bbox in the items header.
+ *		It is a (too?) conservative measure.
  *
  * Results:
  *		None.
@@ -754,7 +811,6 @@ SetGenericPathHeaderBbox(
     headerPtr->y1 = (int) rect.y1;
     headerPtr->y2 = (int) rect.y2;
 }
-
 
 /*
  *--------------------------------------------------------------

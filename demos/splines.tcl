@@ -24,7 +24,7 @@ $w create path "M 55  140 h 10 m -5 -5 v 10" -stroke red
 $w create path "M 95  380 h 10 m -5 -5 v 10" -stroke red
 $w create path "M 135 250 h 10 m -5 -5 v 10" -stroke red
 
-
+$w move all 0.5 0.5
 
 
 

@@ -34,7 +34,10 @@ typedef enum {
     PATH_ATOM_A = 'A',
     PATH_ATOM_Q = 'Q',
     PATH_ATOM_C = 'C',
-    PATH_ATOM_Z = 'Z'
+    PATH_ATOM_Z = 'Z',
+    PATH_ATOM_ELLIPSE = '1'		/* This is not a standard atom
+                                 * since it is more complex (molecule).
+                                 * Not all features supported for these! */
 } PathAtomType;
 
 enum {
@@ -183,7 +186,6 @@ PathAtom 	*NewCurveToAtom(double ctrlX1, double ctrlY1, double ctrlX2, double ct
                     double anchorX, double anchorY);
 PathAtom 	*NewCloseAtom(double x, double y);
 
-
 /*
  * Functions that process lists and atoms.
  */
@@ -215,8 +217,6 @@ void		TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr);
  
 void 		Tk_CreatePathStyle(Tk_PathStyle *style);
 void 		Tk_DeletePathStyle(Display *display, Tk_PathStyle *style);
-
-
 
 /*
  * end block for C++

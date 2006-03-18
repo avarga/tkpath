@@ -100,6 +100,32 @@ void TkPathArcTo(TkPathContext ctx,
     TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
+void
+TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_rectangle(context->c, x, y, width, height);
+}
+
+void
+TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (rx == ry) {
+        cairo_move_to(context->c, cx+rx, cy);
+        cairo_arc(context->c, cx, cy, rx, 0.0, 2*M_PI);
+        cairo_close_path(context->c);
+    } else {
+        cairo_save(context->c);
+        cairo_translate(context->c, cx, cy);
+        cairo_move_to(context->c, 1.0, 0.0;
+        cairo_scale(context->c, rx, ry);
+        cairo_arc(context->c, 0.0, 0.0, 1.0, 0.0, 2*M_PI);
+        cairo_close_path(context->c);
+        cairo_restore(context->c);
+    }
+}
+
 void TkPathClosePath(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;

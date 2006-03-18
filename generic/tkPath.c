@@ -835,19 +835,16 @@ TkPathMakePath(
         switch (atomPtr->type) {
             case PATH_ATOM_M: { 
                 MoveToAtom *move = (MoveToAtom *) atomPtr;
-                
                 TkPathMoveTo(context, move->x, move->y);
                 break;
             }
             case PATH_ATOM_L: {
-                LineToAtom *line = (LineToAtom *) atomPtr;
-                
+                LineToAtom *line = (LineToAtom *) atomPtr;                
                 TkPathLineTo(context, line->x, line->y);
                 break;
             }
             case PATH_ATOM_A: {
                 ArcAtom *arc = (ArcAtom *) atomPtr;
-                
                 TkPathArcTo(context, arc->radX, arc->radY, arc->angle, 
                         arc->largeArcFlag, arc->sweepFlag,
                         arc->x, arc->y);
@@ -855,7 +852,6 @@ TkPathMakePath(
             }
             case PATH_ATOM_Q: {
                 QuadBezierAtom *quad = (QuadBezierAtom *) atomPtr;
-                
                 TkPathQuadBezier(context, 
                         quad->ctrlX, quad->ctrlY,
                         quad->anchorX, quad->anchorY);
@@ -863,7 +859,6 @@ TkPathMakePath(
             }
             case PATH_ATOM_C: {
                 CurveToAtom *curve = (CurveToAtom *) atomPtr;
-                
                 TkPathCurveTo(context, 
                         curve->ctrlX1, curve->ctrlY1,
                         curve->ctrlX2, curve->ctrlY2,
@@ -872,6 +867,11 @@ TkPathMakePath(
             }
             case PATH_ATOM_Z: {
                 TkPathClosePath(context);
+                break;
+            }
+            case PATH_ATOM_ELLIPSE: {
+                EllipseAtom *ell = (EllipseAtom *) atomPtr;
+                TkPathOval(context, ell->cx, ell->cy, ell->rx, ell->ry);
                 break;
             }
         }

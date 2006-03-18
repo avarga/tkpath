@@ -10,8 +10,12 @@ TODO for tkpath
  o Optimize segmentation computations used for hittesting in the 'Point'
    functions.
 
- o Use registration mechanism for styles that item uses so items get redisplayed
+ o Use registration mechanism for styles that item uses so they get redisplayed
    when a style is configured.
 
  o Perhaps an OpenGL renderer.
 
+ o Perhaps lightweight items with no own style options but only a reference
+   to a styleName to save a lot of memory.
+
+ o I have paid no attention to if strokes are transformed or not. Sort out!

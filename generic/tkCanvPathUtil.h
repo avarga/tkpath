@@ -25,6 +25,8 @@ int 		Tk_ConfigStrokePathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
 int 		Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
                     Tk_Item *item, Tk_PathStyle *style);
 
+int			CoordsForPointItems(Tcl_Interp *interp, Tk_Canvas canvas, 
+                    double *pointPtr, int objc, Tcl_Obj *CONST objv[]);
 int			CoordsForRectangularItems(Tcl_Interp *interp, Tk_Canvas canvas, 
                     PathRect *rectPtr, int objc, Tcl_Obj *CONST objv[]);
 int			CoordsForPolygonline(Tcl_Interp *interp, Tk_Canvas canvas, int closed,

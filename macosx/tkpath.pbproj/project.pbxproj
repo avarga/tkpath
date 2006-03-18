@@ -391,12 +391,6 @@
 			path = /Users/matben/C/cvs/tkpath/generic/tkCanvEllipse.c;
 			refType = 0;
 		};
-		9A6265C009C474B3009A2B1E = {
-			fileRef = 9A6265BF09C474B3009A2B1E;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		9A6265C109C474B3009A2B1E = {
 			fileRef = 9A6265BF09C474B3009A2B1E;
 			isa = PBXBuildFile;
@@ -512,6 +506,12 @@
 		};
 		9A95DCE20980F5E900C25EDB = {
 			fileRef = 9A66FCF20978D8050086B7B8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A98808909C9595D00B844F8 = {
+			fileRef = 9A6265BF09C474B3009A2B1E;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -844,7 +844,7 @@
 				9A587F07098FADFA0094E994,
 				9A18020E099244EA00A80065,
 				9A671A90099DC683007AF773,
-				9A6265C009C474B3009A2B1E,
+				9A98808909C9595D00B844F8,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

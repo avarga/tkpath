@@ -75,6 +75,31 @@ PathReleaseCGContext(
     QDEndCGContext(destPort, outContext);
 }
 
+CGColorSpaceRef GetTheColorSpaceRef(void)
+{
+    static CGColorSpaceRef deviceRGB = NULL;
+    if (deviceRGB == NULL) {
+        deviceRGB = CGColorSpaceCreateDeviceRGB();
+    }
+    return deviceRGB;
+}
+
+#if 0	// 10.3
+/* Cache some common colors to speed things up. */
+typedef struct LookupColor {
+    int from;
+    CGColorRef colorRef;
+} LookupTable;
+static LookupColor ColorTable[] = {
+
+};
+void
+PreallocateColorRefs(void)
+{
+
+}
+#endif
+
 static LookupTable LineCapStyleLookupTable[] = {
     {CapNotLast, 		kCGLineCapButt},
     {CapButt, 	 		kCGLineCapButt},
@@ -247,28 +272,29 @@ TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 }
 
 void
-TkPathOval(TkPathContext ctx, double x, double y, double width, double height)
+TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    CGRect r;
-    r = CGRectMake(x, y, width, height);
 
 #if 0	// 10.4
     if (&CGContextAddEllipseInRect != NULL) {
+        CGRect r;
+        r = CGRectMake(cx-rx, cy-ry, 2*rx, 2*ry);
         CGContextAddEllipseInRect(context->c, r);
     } else {
 #endif
-    if (width == height) {
-        CGContextMoveToPoint(context->c, x+width/2, y);
-        CGContextAddArc(context->c, CGRectGetMidX(r), CGRectGetMidY(r), 
-                width/2, 0.0, 2*M_PI, 1);
+    if (rx == ry) {
+        CGContextMoveToPoint(context->c, cx+rx, cy);
+        CGContextAddArc(context->c, cx, cy, rx, 0.0, 2*M_PI, 1);
+        CGContextClosePath(context->c);
     } else {
         CGContextSaveGState(context->c);
-        CGContextTranslateCTM(context->c, CGRectGetMidX(r), CGRectGetMidY(r));
-        CGContextScaleCTM(context->c, width/2, height/2);
+        CGContextTranslateCTM(context->c, cx, cy);
+        CGContextScaleCTM(context->c, rx, ry);
         CGContextMoveToPoint(context->c, 1, 0);
         CGContextAddArc(context->c, 0.0, 0.0, 1.0, 0.0, 2*M_PI, 1);
         CGContextRestoreGState(context->c);
+        CGContextClosePath(context->c);
     }
 }
 
