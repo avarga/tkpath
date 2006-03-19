@@ -31,8 +31,6 @@ typedef struct EllipseItem  {
     double center[2];		/* Center coord. */
     double rx;				/* Radius. Circle uses rx for overall radius. */
     double ry;
-    int maxNumSegments;		/* Max number of straight segments (for subpath)
-                             * needed for Area and Point functions. */
 } EllipseItem;
 
 enum {
@@ -198,7 +196,6 @@ CreateAny(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     ellPtr->canvas = canvas;
     ellPtr->type = type;
     ellPtr->styleName = NULL;
-    ellPtr->maxNumSegments = 100;			/* Crude overestimate. */
     
     for (i = 1; i < objc; i++) {
         char *arg = Tcl_GetString(objv[i]);

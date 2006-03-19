@@ -19,3 +19,6 @@ TODO for tkpath
    to a styleName to save a lot of memory.
 
  o I have paid no attention to if strokes are transformed or not. Sort out!
+
+ o Perhaps it would be useful to allow multiple objects on a single item
+   by supplying many coordinates for pline, prect, circle, and ellipse ?

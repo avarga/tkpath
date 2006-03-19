@@ -293,6 +293,22 @@ TkPathArcTo(TkPathContext ctx,
 }
 
 void
+TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+
+}
+
+void
+TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+
+}
+
+void
 TkPathClosePath(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;

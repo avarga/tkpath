@@ -27,6 +27,7 @@ typedef struct PimageItem  {
     Tk_Canvas canvas;		/* Canvas containing item. */
     Tk_PathStyle style;		/* Contains most drawing info. */
     char *styleName;		/* Name of any inherited style object. */
+    double coord[2];		/* nw coord. */
     char *imageString;		/* String describing -image option (malloc-ed).
                              * NULL means no image right now. */
     Tk_Image image;			/* Image to display in window, or NULL if
@@ -171,8 +172,10 @@ PimageCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     int result;
 
-
-
+	result = CoordsForPointItems(interp, canvas, &(pimagePtr->coord), objc, objv);
+    if ((result == TCL_OK) && (objc == 1) || (objc == 2)) {
+        ComputePimageBbox(canvas, pimagePtr);
+    }
     return result;
 }
 
@@ -182,11 +185,30 @@ ComputePimageBbox(Tk_Canvas canvas, PimageItem *pimagePtr)
     Tk_PathStyle *stylePtr = &(pimagePtr->style);
     Tk_State state = pimagePtr->header.state;
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
     }
-
-
+    if (pimagePtr->image == NULL) {
+        pimagePtr->header.x1 = pimagePtr->header.x2 =
+        pimagePtr->header.y1 = pimagePtr->header.y2 = -1;
+        return;
+    } else {
+        int width = 0, height = 0;
+        PathRect bbox;
+        
+        Tk_SizeOfImage(pimagePtr->image, &width, &height);
+        if (pimagePtr->width > 0.0) {
+            width = (int) (pimagePtr->width + 1.0);
+        }
+        if (pimagePtr->height > 0.0) {
+            height = (int) (pimagePtr->height + 1.0);
+        }
+        bbox.x1 = pimagePtr->coord[0];
+        bbox.y1 = pimagePtr->coord[1];
+        bbox.x2 = bbox.x1 + width;
+        bbox.y2 = bbox.y1 + height;
+        SetGenericPathHeaderBbox(&(pimagePtr->header), stylePtr->matrixPtr, &bbox);
+    }
 }
 
 static int		
@@ -237,7 +259,7 @@ ConfigurePimage(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     pimagePtr->image = image;
     
     /*
-     * Recompute bounding box for path.
+     * Recompute bounding box for image.
      */
     ComputePimageBbox(canvas, pimagePtr);
     return TCL_OK;

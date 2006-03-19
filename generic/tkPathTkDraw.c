@@ -238,6 +238,26 @@ void TkPathArcTo(TkPathContext ctx,
     TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
+void
+TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
+{
+    TkPathMoveTo(ctx, x, y);
+    TkPathLineTo(ctx, x+width, y);
+    TkPathLineTo(ctx, x+width, y+height);
+    TkPathLineTo(ctx, x, y+height);
+    TkPathClosePath(ctx);
+}
+
+void
+TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
+{
+    /* @@@ I'm sure this could be made much more efficient. */
+    TkPathMoveTo(ctx, cx+rx, cy);
+    TkPathArcToUsingBezier(ctx, rx, ry, 0.0, 1, 1, cx-rx, cy);
+    TkPathArcToUsingBezier(ctx, rx, ry, 0.0, 1, 1, cx+rx, cy);
+    TkPathClosePath(ctx);
+}
+
 void TkPathClosePath(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;

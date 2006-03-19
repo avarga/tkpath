@@ -189,7 +189,7 @@ typedef struct EllipseAtom {
 } EllipseAtom;
 
 /*
- * Flgas for 'PathStyleMergeStyles'.
+ * Flags for 'PathStyleMergeStyles'.
  */
  
 enum {
