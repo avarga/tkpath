@@ -370,44 +370,50 @@ CGContextRef context)
 #endif
 
 void
-TkPathImage(TkPathContext ctx, XImage *image, double x, double y, double width, double height)
+TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGRect rectangle;
     CGImageRef cgImage;
     CGDataProviderRef provider;
     CGColorSpaceRef colorspace;
-    size_t bitsPerPixel;
     size_t size;
-    
-    if (width > 0) {
-        width = image->width;
-    }
-    if (height > 0) {
-        height = image->height;
-    }
-    if (image->depth == 1) {
-        bitsPerPixel = 1;
-    } else {
-        bitsPerPixel = 32;
-    }
-    provider = CGDataProviderCreateWithData(NULL, image->data, size, NULL);
+    Tk_PhotoImageBlock block;
+    /*
+typedef struct {
+        unsigned char *pixelPtr;
+        int width;
+        int height;
+        int pitch;
+        int pixelSize;
+        int offset[4];
+} Tk_PhotoImageBlock;
+*/
+    /* Return value? */
+    Tk_PhotoGetImage(photo, &block);
+    size = block.pitch * block.height;
+    provider = CGDataProviderCreateWithData(NULL, block.pixelPtr, size, NULL);
     colorspace = CGColorSpaceCreateDeviceRGB();
 
     //cgImage = CGImageCreate(size_t width, size_t height, size_t bitsPerComponent, size_t bitsPerPixel, size_t bytesPerRow, CGColorSpaceRef colorspace, 		//		CGImageAlphaInfo alphaInfo, CGDataProviderRef provider, const float decode[], bool shouldInterpolate, CGColorRenderingIntent intent);
-    cgImage = CGImageCreate(width, height, 
+    cgImage = CGImageCreate(block.width, block.height, 
             8, 						/* bitsPerComponent */
-            image->bits_per_pixel, 	/* bitsPerPixel */
-            image->bytes_per_line, 	/* bytesPerRow */
+            block.pixelSize*8,	 	/* bitsPerPixel */
+            block.pitch, 			/* bytesPerRow */
             colorspace,				/* colorspace */
-            kCGImageAlphaFirst,		/* alphaInfo */
+            kCGImageAlphaLast,		/* alphaInfo */
             provider, NULL, 
             0, 						/* shouldInterpolate */
             kCGRenderingIntentDefault);
     CGDataProviderRelease(provider);
     CGColorSpaceRelease(colorspace);
-    
-    rectangle = CGRectMake(0, 0, width, height);
+    if (width == 0.0) {
+        width = (double) block.width;
+    }
+    if (height == 0.0) {
+        height = (double) block.height;
+    }
+    rectangle = CGRectMake(x, y, width, height);
     CGContextDrawImage(context->c, rectangle, cgImage);
     CGImageRelease(cgImage);
 }

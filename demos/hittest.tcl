@@ -27,5 +27,5 @@ $w bind $id <Button-1> [list puts "hit $id (blue with evenodd rule)"]
 set id [$w create path "M 220 50 v 100" -strokewidth 36 -strokelinecap round]
 $w bind $id <Button-1> [list puts "hit $id (fat line with rounded caps)"]
 
-
+$w move all 0.5 0.5
 

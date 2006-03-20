@@ -13,3 +13,4 @@ $w move $id 100 0
 $w create text 50 100 -text "nonzero"
 $w create text 150 100 -text "evenodd"
 
+$w move all 0.5 0.5

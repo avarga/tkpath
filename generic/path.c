@@ -26,6 +26,7 @@ extern Tk_ItemType tkPolylineType;
 extern Tk_ItemType tkPpolygonType;
 extern Tk_ItemType tkCircleType;
 extern Tk_ItemType tkEllipseType;
+extern Tk_ItemType tkPimageType;
 
 int gUseAntiAlias = 0;
 
@@ -91,6 +92,7 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     Tk_CreateItemType(&tkPpolygonType);
     Tk_CreateItemType(&tkCircleType);
     Tk_CreateItemType(&tkEllipseType);
+    Tk_CreateItemType(&tkPimageType);
     
     /*
      * Link the ::tkpath::antialias variable to control antialiasing. 

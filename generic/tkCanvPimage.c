@@ -32,6 +32,7 @@ typedef struct PimageItem  {
                              * NULL means no image right now. */
     Tk_Image image;			/* Image to display in window, or NULL if
                              * no image at present. */
+    Tk_PhotoHandle photo;
     double width;			/* If 0 use natural width or height. */
     double height;
     PathRect bbox;			/* Bounding box with zero width outline.
@@ -137,6 +138,8 @@ CreatePimage(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
+     
+    // This seems to be unnecessary???
     Tk_CreatePathStyle(&(pimagePtr->style));
     pimagePtr->canvas = canvas;
     pimagePtr->styleName = NULL;
@@ -221,6 +224,7 @@ ConfigurePimage(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     Tk_State state;
     unsigned long mask;
     Tk_Image image;
+    Tk_PhotoHandle photo;
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
@@ -250,6 +254,11 @@ ConfigurePimage(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
         if (image == NULL) {
             return TCL_ERROR;
         }
+        photo = Tk_FindPhoto(interp, pimagePtr->imageString);
+        if (photo == NULL) {
+            return TCL_ERROR;
+        }
+        pimagePtr->photo = photo;
     } else {
         image = NULL;
     }
@@ -292,8 +301,7 @@ DisplayPimage(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable dra
     if (stylePtr->matrixPtr != NULL) {
         TkPathPushTMatrix(ctx, stylePtr->matrixPtr);
     }
-
-    //TkPathImage(ctx, XImage *image, double x, double y, pimagePtr->width, pimagePtr->height);
+    TkPathImage(ctx, pimagePtr->photo, (double)x, (double)y, pimagePtr->width, pimagePtr->height);
     TkPathFree(ctx);
 }
 
@@ -396,6 +404,8 @@ ImageChangedProc(clientData, x, y, width, height, imgWidth, imgHeight)
      * image.  This is a bit over-conservative, but we need to do
      * something because a size change also means a position change.
      */
+     
+    /* @@@ MUST consider our own width and height settings as well. */
 
     if (((pimagePtr->header.x2 - pimagePtr->header.x1) != imgWidth)
             || ((pimagePtr->header.y2 - pimagePtr->header.y1) != imgHeight)) {
