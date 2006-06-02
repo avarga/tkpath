@@ -126,6 +126,56 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
     }
 }
 
+void
+TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    Tk_PhotoImageBlock block;
+    cairo_surface_t *surface;
+    cairo_format_t format;
+    int iwidth, iheight;
+
+    /* Return value? */
+    Tk_PhotoGetImage(photo, &block);
+    size = block.pitch * block.height;
+    if (width == 0.0) {
+        width = (double) block.width;
+    }
+    if (height == 0.0) {
+        height = (double) block.height;
+    }
+    
+    /*
+     * @format: the format of pixels in the buffer
+     * @width: the width of the image to be stored in the buffer
+     * @height: the eight of the image to be stored in the buffer
+     * @stride: the number of bytes between the start of rows
+     *   in the buffer. Having this be specified separate from @width
+     *   allows for padding at the end of rows, or for writing
+     *   to a subportion of a larger image.
+     */
+    if (block.pixelSize*8 == 32) {
+        if (block.offset[3] == 3) {
+            format = ???;
+        } else if (block.offset[3] == 0) {
+            format = CAIRO_FORMAT_ARGB32;
+        } else {
+            /* @@@ What to do here? */
+            return;
+        }
+    }
+    surface = cairo_surface_create_for_image(
+            (char *) (block.pixelPtr),
+            format, 
+            iwidth, iheight, 
+            block.pitch);				/* stride */
+
+
+    cairo_show_surface(context->c, surface, iwidth, iheight);
+    cairo_surface_destroy(surface);
+
+}
+
 void TkPathClosePath(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;

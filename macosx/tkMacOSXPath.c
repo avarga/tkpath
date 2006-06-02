@@ -60,6 +60,7 @@ PathSetUpCGContext(
     CGContextConcatCTM(outContext, transform);
     
     CGContextSetShouldAntialias(outContext, gUseAntiAlias);
+    CGContextSetInterpolationQuality(outContext, kCGInterpolationHigh);
     
     /* Since we are using Pixmaps only we need no clipping or shifting. */
 }
@@ -298,77 +299,6 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
     }
 }
 
-#if 0
-typedef struct _XImage {
-    int width, height;		/* size of image */
-    int xoffset;		/* number of pixels offset in X direction */
-    int format;			/* XYBitmap, XYPixmap, ZPixmap */
-    char *data;			/* pointer to image data */
-    int byte_order;		/* data byte order, LSBFirst, MSBFirst */
-    int bitmap_unit;		/* quant. of scanline 8, 16, 32 */
-    int bitmap_bit_order;	/* LSBFirst, MSBFirst */
-    int bitmap_pad;		/* 8, 16, 32 either XY or ZPixmap */
-    int depth;			/* depth of image */
-    int bytes_per_line;		/* accelarator to next line */
-    int bits_per_pixel;		/* bits per pixel (ZPixmap) */
-    unsigned long red_mask;	/* bits in z arrangment */
-    unsigned long green_mask;
-    unsigned long blue_mask;
-    XPointer obdata;		/* hook for the object routines to hang on */
-    struct funcs {		/* image manipulation routines */
-        struct _XImage *(*create_image)();
-#if NeedFunctionPrototypes
-        int (*destroy_image)        (struct _XImage *);
-        unsigned long (*get_pixel)  (struct _XImage *, int, int);
-        int (*put_pixel)            (struct _XImage *, int, int, unsigned long);
-        struct _XImage *(*sub_image)(struct _XImage *, int, int, unsigned int, unsigned int);
-        int (*add_pixel)            (struct _XImage *, long);
-#else
-        int (*destroy_image)();
-        unsigned long (*get_pixel)();
-        int (*put_pixel)();
-        struct _XImage *(*sub_image)();
-        int (*add_pixel)();
-#endif
-	} f;
-} XImage;
-
-static void Draw32BitARGBToContext(void * pBits,
-size_t width,
-size_t height,
-size_t bytesPerRow,
-CGContextRef context)
-{
-    CGRect rectangle;
-    CGDataProviderRef provider;
-    CGColorSpaceRef colorspace;
-    size_t size;
-    CGImageRef image;
-    size = bytesPerRow * height;
-    /* Create a data provider with a pointer to the memory bits */
-    provider = CGDataProviderCreateWithData(NULL, pBits, size, NULL);
-    /* Colorspace can be device, calibrated, or ICC profile based */
-    colorspace = CGColorSpaceCreateDeviceRGB();
-    /* Create the image */
-    image = CGImageCreate(width, height, 8 /* bitsPerComponent */,
-        32 /* bitsPerPixel */,
-        bytesPerRow, colorspace,
-        kCGImageAlphaFirst, provider, NULL, 0,
-        kCGRenderingIntentDefault);
-    /* Once the image is created we can release our reference to the
-    provider and the colorspace. They will be retained by the
-    image */
-    CGDataProviderRelease(provider);
-    CGColorSpaceRelease(colorspace);
-    /* Determine the location where the image will be drawn in
-    userspace */
-    rectangle = CGRectMake(0, 0, width, height);
-    /* Draw the image to the Core Graphics context */
-    CGContextDrawImage(context, rectangle, image);
-    CGImageRelease(image);
-}
-#endif
-
 void
 TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
 {
@@ -377,33 +307,38 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
     CGImageRef cgImage;
     CGDataProviderRef provider;
     CGColorSpaceRef colorspace;
+    CGImageAlphaInfo alphaInfo;
     size_t size;
     Tk_PhotoImageBlock block;
-    /*
-typedef struct {
-        unsigned char *pixelPtr;
-        int width;
-        int height;
-        int pitch;
-        int pixelSize;
-        int offset[4];
-} Tk_PhotoImageBlock;
-*/
+
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
     size = block.pitch * block.height;
+    
+    /*
+     * The offset array contains the offsets from the address of a pixel to 
+     * the addresses of the bytes containing the red, green, blue and alpha 
+     * (transparency) components.  These are normally 0, 1, 2 and 3. 
+     * @@@ There are more cases to consider than these!
+     */
+    if (block.offset[3] == 3) {
+        alphaInfo = kCGImageAlphaLast;
+    } else if (block.offset[3] == 0) {
+        alphaInfo = kCGImageAlphaFirst;
+    } else {
+        /* @@@ What to do here? */
+        return;
+    }
     provider = CGDataProviderCreateWithData(NULL, block.pixelPtr, size, NULL);
     colorspace = CGColorSpaceCreateDeviceRGB();
-
-    //cgImage = CGImageCreate(size_t width, size_t height, size_t bitsPerComponent, size_t bitsPerPixel, size_t bytesPerRow, CGColorSpaceRef colorspace, 		//		CGImageAlphaInfo alphaInfo, CGDataProviderRef provider, const float decode[], bool shouldInterpolate, CGColorRenderingIntent intent);
     cgImage = CGImageCreate(block.width, block.height, 
             8, 						/* bitsPerComponent */
             block.pixelSize*8,	 	/* bitsPerPixel */
             block.pitch, 			/* bytesPerRow */
             colorspace,				/* colorspace */
-            kCGImageAlphaLast,		/* alphaInfo */
+            alphaInfo,				/* alphaInfo */
             provider, NULL, 
-            0, 						/* shouldInterpolate */
+            1, 						/* shouldInterpolate */
             kCGRenderingIntentDefault);
     CGDataProviderRelease(provider);
     CGColorSpaceRelease(colorspace);
@@ -413,9 +348,15 @@ typedef struct {
     if (height == 0.0) {
         height = (double) block.height;
     }
-    rectangle = CGRectMake(x, y, width, height);
+    
+    /* Flip back to an upright coordinate system since CGContextDrawImage expect this. */
+    CGContextSaveGState(context->c);
+    CGContextTranslateCTM(context->c, x, y+height);
+    CGContextScaleCTM(context->c, 1, -1);
+    rectangle = CGRectMake(0.0, 0.0, width, height);
     CGContextDrawImage(context->c, rectangle, cgImage);
     CGImageRelease(cgImage);
+    CGContextRestoreGState(context->c);
 }
 
 void

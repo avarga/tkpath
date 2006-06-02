@@ -37,8 +37,6 @@ typedef struct PimageItem  {
     double height;
     PathRect bbox;			/* Bounding box with zero width outline.
                              * Untransformed coordinates. */
-    long flags;				/* Various flags. */
-    char *null;   			/* Just a placeholder for not yet implemented stuff. */ 
 } PimageItem;
 
 
@@ -148,7 +146,6 @@ CreatePimage(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     pimagePtr->height = 0;
     pimagePtr->width = 0;
     pimagePtr->bbox = NewEmptyPathRect();
-    pimagePtr->flags = 0L;
     
     for (i = 1; i < objc; i++) {
         char *arg = Tcl_GetString(objv[i]);
@@ -301,7 +298,8 @@ DisplayPimage(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable dra
     if (stylePtr->matrixPtr != NULL) {
         TkPathPushTMatrix(ctx, stylePtr->matrixPtr);
     }
-    TkPathImage(ctx, pimagePtr->photo, (double)x, (double)y, pimagePtr->width, pimagePtr->height);
+    TkPathImage(ctx, pimagePtr->photo, pimagePtr->coord[0], pimagePtr->coord[1], 
+            pimagePtr->width, pimagePtr->height);
     TkPathFree(ctx);
 }
 
@@ -405,7 +403,7 @@ ImageChangedProc(clientData, x, y, width, height, imgWidth, imgHeight)
      * something because a size change also means a position change.
      */
      
-    /* @@@ MUST consider our own width and height settings as well. */
+    /* @@@ MUST consider our own width and height settings as well and TMatrix. */
 
     if (((pimagePtr->header.x2 - pimagePtr->header.x1) != imgWidth)
             || ((pimagePtr->header.y2 - pimagePtr->header.y1) != imgHeight)) {
