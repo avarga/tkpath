@@ -35,13 +35,11 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     cairo_t *c;
     cairo_surface_t *surface;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
-    /* Incompatible API change for cairo ? -> 1.0 */
     surface = cairo_xlib_surface_create(Tk_Display(tkwin), d, Tk_Visual(tkwin), Tk_Width(tkwin), Tk_ReqHeight(tkwin));
     c = cairo_create(surface);
     context->c = c;
     context->d = d;
     context->surface = surface;
-    //cairo_set_target_drawable(c, display, d);
     return (TkPathContext) context;
 }
 
@@ -49,9 +47,9 @@ void
 TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    cairo_matrix_t *matrix = cairo_matrix_create();
-    cairo_matrix_set_affine(matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
-    cairo_concat_matrix(context->c, matrix);
+    cairo_matrix_t matrix;
+    cairo_matrix_init(&matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
+    cairo_transform(context->c, &matrix);
 }
 
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
@@ -78,7 +76,7 @@ void TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, d
     double cx, cy;
     double x31, y31, x32, y32;
     
-    cairo_current_point(context->c, &cx, &cy);
+    cairo_get_current_point(context->c, &cx, &cy);
 
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
     /* Unchecked! Must be an approximation! */
@@ -138,7 +136,6 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
     Tk_PhotoImageBlock block;
     cairo_surface_t *surface;
     cairo_format_t format;
-    int iwidth, iheight;
     int size;
 
     /* Return value? */
@@ -171,16 +168,30 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
             return;
         }
     }
+    /*
     surface = cairo_surface_create_for_image(
             (char *) (block.pixelPtr),
             format, 
             iwidth, iheight, 
-            block.pitch);				/* stride */
-
-
+            block.pitch);		
+            
     cairo_show_surface(context->c, surface, iwidth, iheight);
     cairo_surface_destroy(surface);
+    cairo_surface_t *
+cairo_image_surface_create_for_data (unsigned char	       *data,
+				     cairo_format_t		format,
+				     int			width,
+				     int			height,
+				     int			stride);
 
+            */
+    surface = cairo_image_surface_create_for_data(
+            (unsigned char *) (block.pixelPtr),
+            format, 
+            (int) width, (int) height, 
+            block.pitch);		/* stride */
+    cairo_set_source_surface(context->c, surface, x, y);
+    cairo_paint(context->c);
 }
 
 void TkPathClosePath(TkPathContext ctx)
@@ -206,11 +217,11 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     Tk_Dash *dash;
 
-    cairo_set_rgb_color(context->c,
+    cairo_set_source_rgba(context->c,             
             RedDoubleFromXColorPtr(style->strokeColor),
             GreenDoubleFromXColorPtr(style->strokeColor),
-            BlueDoubleFromXColorPtr(style->strokeColor));
-    cairo_set_alpha(context->c, style->strokeOpacity);
+            BlueDoubleFromXColorPtr(style->strokeColor), 
+            style->strokeOpacity);
     cairo_set_line_width(context->c, style->strokeWidth);
 
     switch (style->capStyle) {
@@ -262,11 +273,11 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    cairo_set_rgb_color(context->c,
+    cairo_set_source_rgba(context->c,
             RedDoubleFromXColorPtr(style->fillColor),
             GreenDoubleFromXColorPtr(style->fillColor),
-            BlueDoubleFromXColorPtr(style->fillColor));
-    cairo_set_alpha(context->c, style->fillOpacity);
+            BlueDoubleFromXColorPtr(style->fillColor),
+            style->fillOpacity);
     cairo_set_fill_rule(context->c, 
             (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
     cairo_fill(context->c);
@@ -275,13 +286,8 @@ void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
 void TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    /*
-     * The current path is consumed by filling.
-     * Need therfore to save the current context and restore after.
-     */
-    cairo_save(context->c);
+    cairo_fill_preserve(context->c);
     TkPathFill(context->d, style);
-    cairo_restore(context->c);
     TkPathStroke(context->d, style);
 }
 
@@ -347,13 +353,14 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     pattern = cairo_pattern_create_linear(x1, y1, x2, y2);
     for (i = 0; i < nstops; i++) {
         stop = fillPtr->stops[i];
-        cairo_pattern_add_color_stop(pattern, stop->offset, 
+        cairo_pattern_add_color_stop_rgba (pattern, stop->offset, 
                 RedDoubleFromXColorPtr(stop->color),
                 GreenDoubleFromXColorPtr(stop->color),
                 BlueDoubleFromXColorPtr(stop->color),
                 stop->opacity);
     }
-    cairo_set_pattern(context->c, pattern);
+    cairo_set_source(context->c, pattern);
+
     cairo_set_fill_rule(context->c, 
             (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
             
