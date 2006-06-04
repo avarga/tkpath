@@ -357,7 +357,7 @@ DisplayPrect(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     PrectItem *prectPtr = (PrectItem *) itemPtr;
     TMatrix m = GetCanvasTMatrix(canvas);
 
-    TkPathDrawPath(display, drawable, prectPtr->atomPtr, &(prectPtr->style),
+    TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, prectPtr->atomPtr, &(prectPtr->style),
             &m, &(prectPtr->bbox));
 }
 

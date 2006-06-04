@@ -359,7 +359,7 @@ DisplayEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable dr
     ellAtom.ry = ellPtr->ry;
     
     bbox = GetBareBbox(ellPtr);
-    TkPathDrawPath(display, drawable, atomPtr, &(ellPtr->style), &m, &bbox);
+    TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, atomPtr, &(ellPtr->style), &m, &bbox);
 }
 
 static double	

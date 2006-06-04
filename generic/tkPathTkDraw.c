@@ -50,12 +50,12 @@ typedef struct TkPathContext_ {
 } TkPathContext_;
 
 
-static TkPathContext_* _NewPathContext(Display *display, Drawable drawable)
+static TkPathContext_* _NewPathContext(Tk_Window tkwin, Drawable drawable)
 {
     TkPathContext_ *ctx;
     
     ctx = (TkPathContext_ *) ckalloc(sizeof(TkPathContext_));
-    ctx->display = display;
+    ctx->display = Tk_Display(tkwin);
     ctx->drawable = drawable;
     ctx->current[0] = 0.0;
     ctx->current[1] = 0.0;
@@ -107,9 +107,9 @@ static void _CheckCoordSpace(_PathSegments *segm, int numPoints)
     }
 }
 
-TkPathContext TkPathInit(Display *display, Drawable d)
+TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
-    return (TkPathContext) _NewPathContext(display, d);
+    return (TkPathContext) _NewPathContext(tkwin, d);
 }
 
 void
@@ -256,6 +256,12 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
     TkPathArcToUsingBezier(ctx, rx, ry, 0.0, 1, 1, cx-rx, cy);
     TkPathArcToUsingBezier(ctx, rx, ry, 0.0, 1, 1, cx+rx, cy);
     TkPathClosePath(ctx);
+}
+
+void
+TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
+{
+    /* @@@ TODO */
 }
 
 void TkPathClosePath(TkPathContext ctx)

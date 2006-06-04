@@ -273,7 +273,7 @@ DisplayPpolygon(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable d
     PpolygonItem *polylinePtr = (PpolygonItem *) itemPtr;
     TMatrix m = GetCanvasTMatrix(canvas);
 
-    TkPathDrawPath(display, drawable, polylinePtr->atomPtr, &(polylinePtr->style),
+    TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, polylinePtr->atomPtr, &(polylinePtr->style),
             &m, &(polylinePtr->bbox));
 }
 

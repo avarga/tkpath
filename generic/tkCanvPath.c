@@ -778,7 +778,7 @@ DisplayPath(
     TMatrix m = GetCanvasTMatrix(canvas);
 
     if (pathPtr->pathLen > 2) {
-        TkPathDrawPath(display, drawable, pathPtr->atomPtr, &(pathPtr->style),
+        TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, pathPtr->atomPtr, &(pathPtr->style),
                 &m, &(pathPtr->bareBbox));
     }
 }

@@ -1,6 +1,6 @@
 
-                                README for tkpath
-                                _________________
+                           README for tkpath
+                           _________________
 
 This package implements path drawing modelled after its SVG counterpart,
 see http://www.w3.org/TR/SVG11/. See the doc directory for more info.
@@ -21,7 +21,8 @@ The backends:
 
     4) cairo (http://cairographics.org), built using the automake system;
        the configure.in and Makefile.in files are a hack, so please help
-       yourself (and me)
+       yourself (and me). It requires a recent cairo installation since
+       incompatible API changes appeared before 1.0 (libcairo.so.2 ?).
 
     5) Tk drawing, fallback for cairo mainly, very basic
 

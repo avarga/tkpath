@@ -182,7 +182,7 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
 }
 
 TkPathContext	
-TkPathInit(Display *display, Drawable d)
+TkPathInit(Tk_Window tkwin, Drawable d)
 {
     CGContextRef cgContext;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));

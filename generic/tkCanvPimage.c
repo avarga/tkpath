@@ -293,7 +293,7 @@ DisplayPimage(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable dra
     Tk_PathStyle *stylePtr = &(pimagePtr->style);
     TkPathContext ctx;
 
-    ctx = TkPathInit(display, drawable);
+    ctx = TkPathInit(Tk_CanvasTkwin(canvas), drawable);
     TkPathPushTMatrix(ctx, &m);
     if (stylePtr->matrixPtr != NULL) {
         TkPathPushTMatrix(ctx, stylePtr->matrixPtr);

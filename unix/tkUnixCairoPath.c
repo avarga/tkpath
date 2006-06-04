@@ -24,19 +24,24 @@ extern int gUseAntiAlias;
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
-    Drawable 		d;
-    cairo_t*	 	c;
+    Drawable 			d;
+    cairo_t*	 		c;
+    cairo_surface_t* 	surface;
 } TkPathContext_;
 
 
-TkPathContext TkPathInit(Display *display, Drawable d)
+TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
     cairo_t *c;
+    cairo_surface_t *surface;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
-    c = cairo_create();
+    /* Incompatible API change for cairo ? -> 1.0 */
+    surface = cairo_xlib_surface_create(Tk_Display(tkwin), d, Tk_Visual(tkwin), Tk_Width(tkwin), Tk_ReqHeight(tkwin));
+    c = cairo_create(surface);
     context->c = c;
     context->d = d;
-    cairo_set_target_drawable(c, display, d);
+    context->surface = surface;
+    //cairo_set_target_drawable(c, display, d);
     return (TkPathContext) context;
 }
 
@@ -118,8 +123,8 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
     } else {
         cairo_save(context->c);
         cairo_translate(context->c, cx, cy);
-        cairo_move_to(context->c, 1.0, 0.0;
         cairo_scale(context->c, rx, ry);
+        cairo_move_to(context->c, 1.0, 0.0);
         cairo_arc(context->c, 0.0, 0.0, 1.0, 0.0, 2*M_PI);
         cairo_close_path(context->c);
         cairo_restore(context->c);
@@ -134,6 +139,7 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
     cairo_surface_t *surface;
     cairo_format_t format;
     int iwidth, iheight;
+    int size;
 
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
@@ -156,7 +162,8 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
      */
     if (block.pixelSize*8 == 32) {
         if (block.offset[3] == 3) {
-            format = ???;
+            format = CAIRO_FORMAT_ARGB32;
+            //format = ???;
         } else if (block.offset[3] == 0) {
             format = CAIRO_FORMAT_ARGB32;
         } else {
@@ -273,9 +280,9 @@ void TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
      * Need therfore to save the current context and restore after.
      */
     cairo_save(context->c);
-    TkPathFill(d, style);
+    TkPathFill(context->d, style);
     cairo_restore(context->c);
-    TkPathStroke(d, style);
+    TkPathStroke(context->d, style);
 }
 
 void TkPathEndPath(TkPathContext ctx)
@@ -287,6 +294,7 @@ void TkPathFree(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_destroy(context->c);
+    cairo_surface_destroy(context->surface);
     ckfree((char *) context);
 }
 

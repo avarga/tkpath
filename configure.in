@@ -3,7 +3,7 @@
 #
 
 #AC_REVISION($Revision$)
-AC_INIT([tkpath],[0.1])
+AC_INIT([tkpath],[0.2])
 AC_CONFIG_AUX_DIR(tclconfig)
 
 # Usual Tcl stuff:
@@ -61,6 +61,7 @@ case "${TEA_WINDOWINGSYSTEM}" in
         #TEA_ADD_INCLUDES([-I/usr/local/include/freetype2])
         #TEA_ADD_INCLUDES([-I/usr/include/freetype2])
         TEA_ADD_INCLUDES([`freetype-config --cflags`])
+	TEA_ADD_INCLUDES([-I../tk/generic -I/usr/include/cairo])
         TEA_ADD_LIBS([-lcairo])
         TEA_ADD_SOURCES([\$(UNIX_OBJECTS)])
 	;;

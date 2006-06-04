@@ -1,5 +1,5 @@
 /*
- * tkPath.h --
+ * tkPath.c --
  *
  *		This file implements a path drawing model
  *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
@@ -940,7 +940,7 @@ TkPathArcToUsingBezier(TkPathContext ctx,
     cosPhi = cos(phi);
     
     /* Convert into cubic bezier segments <= 90deg (from mozilla/svg; not checked) */
-    segments = (int) ceil(fabs(dtheta/(PI/2.0)));
+    segments = (int) ceil(fabs(dtheta/(M_PI/2.0)));
     delta = dtheta/segments;
     t = 8.0/3.0 * sin(delta/4.0) * sin(delta/4.0) / sin(delta/2.0);
     

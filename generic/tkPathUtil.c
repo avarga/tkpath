@@ -30,7 +30,7 @@
 
 void
 TkPathDrawPath(
-    Display *display,		/* Display on which to draw item. */
+    Tk_Window tkwin,		/* Tk window. */
     Drawable drawable,		/* Pixmap or window in which to draw
                              * item. */
     PathAtom *atomPtr,		/* The actual path as a linked list
@@ -48,7 +48,7 @@ TkPathDrawPath(
      * offset must always be taken into account. Note the order!
      */
      
-    context = TkPathInit(display, drawable);
+    context = TkPathInit(tkwin, drawable);
     if (mPtr != NULL) {
         TkPathPushTMatrix(context, mPtr);
     }
@@ -125,7 +125,7 @@ CalcVectorAngle(double ux, double uy, double vx, double vy)
     if (tb >= ta) {
         return tb-ta;
     } else {
-        return 2.0*PI - (ta-tb);
+        return 2.0*M_PI - (ta-tb);
     }
 }
 
@@ -174,7 +174,7 @@ CentralToEndpointArcParameters(
     *x2Ptr = cx + rx * cosTheta2 * cosPhi - ry * sinTheta2 * sinPhi;
     *y2Ptr = cy + rx * cosTheta2 * sinPhi + ry * sinTheta2 * cosPhi;
 
-    *largeArcFlagPtr = (dtheta > PI) ? 1 : 0;
+    *largeArcFlagPtr = (dtheta > M_PI) ? 1 : 0;
     *sweepFlagPtr = (dtheta > 0.0) ? 1 : 0;
 
     return TCL_OK;
@@ -285,9 +285,9 @@ EndpointToCentralArcParameters(
             (x1dash-cxdash)/rx,  (y1dash-cydash)/ry,
             (-x1dash-cxdash)/rx, (-y1dash-cydash)/ry);
     if (!sweepFlag && (dtheta > 0.0)) {
-        dtheta -= 2.0*PI;
+        dtheta -= 2.0*M_PI;
     } else if (sweepFlag && (dtheta < 0.0)) {
-        dtheta += 2.0*PI;
+        dtheta += 2.0*M_PI;
     }
     *cxPtr = cx;
     *cyPtr = cy;

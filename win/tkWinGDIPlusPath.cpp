@@ -436,7 +436,7 @@ void PathExit(ClientData clientData)
  * Is there a smarter way?
  */
  
-TkPathContext TkPathInit(Display *display, Drawable d)
+TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
     context->d = d;

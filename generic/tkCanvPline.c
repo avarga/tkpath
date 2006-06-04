@@ -326,7 +326,7 @@ DisplayPline(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
-    TkPathDrawPath(display, drawable, plinePtr->atomPtr, &(plinePtr->style), &m, &r);
+    TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, plinePtr->atomPtr, &(plinePtr->style), &m, &r);
 }
 
 static double	

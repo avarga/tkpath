@@ -8,14 +8,24 @@
 
 GENERIC_OBJECTS	= \
     path.$(OBJEXT) \
-    tkPath.$(OBJEXT) \
+    tkCanvEllipse.$(OBJEXT) \
     tkCanvPath.$(OBJEXT) \
+    tkCanvPathUtil.$(OBJEXT) \
+    tkCanvPimage.$(OBJEXT) \
+    tkCanvPline.$(OBJEXT) \
+    tkCanvPolyline.$(OBJEXT) \
+    tkCanvPpolygon.$(OBJEXT) \
+    tkCanvPrect.$(OBJEXT) \
+    tkPath.$(OBJEXT) \
+    tkPathCopyTk.$(OBJEXT) \
     tkPathGradients.$(OBJEXT) \
     tkPathStyle.$(OBJEXT) \
-    tkPathUtil.$(OBJEXT) \
-    tkPathCopyTk.$(OBJEXT)
+    tkPathUtil.$(OBJEXT)
+    
 
 UNIX_OBJECTS	= tkUnixCairoPath.$(OBJEXT)
+
+TKDRAW_OBJECTS  = tkPathTkDraw.$(OBJEXT)
 
 PKG_OBJECTS	= $(GENERIC_OBJECTS) @PKG_OBJECTS@
 

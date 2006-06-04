@@ -30,10 +30,10 @@ extern "C" {
  
 #ifndef WORDS_BIGENDIAN
 #	ifdef HAVE_SYS_TYPES_H
-# Ê Ê	include <sys/types.h>
+#		include <sys/types.h>
 #	endif
 #	ifdef HAVE_SYS_PARAM_H
-# Ê Ê	include <sys/param.h>
+#		include <sys/param.h>
 #	endif
 #   ifdef BYTE_ORDER
 #		ifdef BIG_ENDIAN
@@ -49,12 +49,18 @@ extern "C" {
 #	endif
 #endif
 
-#define MIN(a, b) 	(((a) < (b)) ? (a) : (b))
-#define MAX(a, b) 	(((a) > (b)) ? (a) : (b))
-#define ABS(a)    	(((a) >= 0)  ? (a) : -1*(a))
-#define PI 3.14159265358979323846
-#define DEGREES_TO_RADIANS (PI/180.0)
-#define RADIANS_TO_DEGREES (180.0/PI)
+#ifndef MIN
+#	define MIN(a, b) 	(((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#	define MAX(a, b) 	(((a) > (b)) ? (a) : (b))
+#endif
+#ifndef ABS
+#	define ABS(a)    	(((a) >= 0)  ? (a) : -1*(a))
+#endif
+//#define PI 3.14159265358979323846
+#define DEGREES_TO_RADIANS (M_PI/180.0)
+#define RADIANS_TO_DEGREES (180.0/M_PI)
 
 /* Takes a double and aligns it to the closest pixels center.
  * This is useful when not antialiasing since some systems 
@@ -201,7 +207,7 @@ enum {
  * The actual path drawing commands which are all platform specific.
  */
  
-TkPathContext		TkPathInit(Display *display, Drawable d);
+TkPathContext		TkPathInit(Tk_Window tkwin, Drawable d);
 void		TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr);
 void    	TkPathEndPath(TkPathContext ctx);
 void		TkPathMoveTo(TkPathContext ctx, double x, double y);
@@ -223,7 +229,7 @@ void		TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo,
 /*
  * General path drawing using linked list of path atoms.
  */
-void		TkPathDrawPath(Display *display, Drawable drawable,
+void		TkPathDrawPath(Tk_Window tkwin, Drawable drawable,
                     PathAtom *atomPtr, Tk_PathStyle *stylePtr, TMatrix *mPtr,			
                     PathRect *bboxPtr);
 void		TkPathPaintPath(TkPathContext context, PathAtom *atomPtr,

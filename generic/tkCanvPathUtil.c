@@ -505,16 +505,16 @@ GetBareArcBbox(double cx, double cy, double rx, double ry,
         extent = -1.0*dtheta;
     }
     if (start < 0.0) {
-        start += 2.0*PI;
+        start += 2.0*M_PI;
         if (start < 0.0) {
-            start += 2.0*PI;
+            start += 2.0*M_PI;
         }
     }
-    if (start >= 2.0*PI) {
-        start -= 2.0*PI;
+    if (start >= 2.0*M_PI) {
+        start -= 2.0*M_PI;
     }
     stop = start + extent;
-    stop2PI = stop - 2.0*PI;
+    stop2PI = stop - 2.0*M_PI;
     cosStart = cos(start);
     sinStart = sin(start);
     cosStop = cos(stop);
@@ -531,16 +531,16 @@ GetBareArcBbox(double cx, double cy, double rx, double ry,
                 
     IncludePointInRect(&r, rx*cosStart, ry*sinStart);
     IncludePointInRect(&r, rx*cosStop,  ry*sinStop);
-    if (((start < PI/2.0) && (stop > PI/2.0)) || (stop2PI > PI/2.0)) {
+    if (((start < M_PI/2.0) && (stop > M_PI/2.0)) || (stop2PI > M_PI/2.0)) {
         IncludePointInRect(&r, 0.0, ry);
     }
-    if (((start < PI) && (stop > PI)) || (stop2PI > PI)) {
+    if (((start < M_PI) && (stop > M_PI)) || (stop2PI > M_PI)) {
         IncludePointInRect(&r, -rx, 0.0);
     }
-    if (((start < 3.0*PI/2.0) && (stop > 3.0*PI/2.0)) || (stop2PI > 3.0*PI/2.0)) {
+    if (((start < 3.0*M_PI/2.0) && (stop > 3.0*M_PI/2.0)) || (stop2PI > 3.0*M_PI/2.0)) {
         IncludePointInRect(&r, 0.0, -ry);
     }
-    if (stop > 2.0*PI) {
+    if (stop > 2.0*M_PI) {
         IncludePointInRect(&r, rx, 0.0);
     }
     
