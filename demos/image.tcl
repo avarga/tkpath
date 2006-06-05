@@ -1,9 +1,5 @@
 package require tkpath
 
-set f /Users/matben/Tcl/cvs/coccinella/images/coccinella32.gif
-if {![file exists $f]} {
-    return
-}
 set t .c_image
 toplevel $t
 set w $t.c
