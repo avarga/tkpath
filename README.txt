@@ -21,7 +21,7 @@ The backends:
 
     4) cairo (http://cairographics.org), built using the automake system;
        the configure.in and Makefile.in files are a hack, so please help
-       yourself (and me). It requires a recent cairo installation since
+       yourself (and me). It requires a cairo 1.0 installation since
        incompatible API changes appeared before 1.0 (libcairo.so.2 ?).
 
     5) Tk drawing, fallback for cairo mainly, very basic
@@ -31,6 +31,6 @@ the compatibility layer of Tk, since the fallback is only necessary on unix
 systems anyway.
 
 
-Copyright (c) 2005  Mats Bengtsson
+Copyright (c) 2005-2006  Mats Bengtsson
 
 BSD style license.

@@ -168,23 +168,6 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
             return;
         }
     }
-    /*
-    surface = cairo_surface_create_for_image(
-            (char *) (block.pixelPtr),
-            format, 
-            iwidth, iheight, 
-            block.pitch);		
-            
-    cairo_show_surface(context->c, surface, iwidth, iheight);
-    cairo_surface_destroy(surface);
-    cairo_surface_t *
-cairo_image_surface_create_for_data (unsigned char	       *data,
-				     cairo_format_t		format,
-				     int			width,
-				     int			height,
-				     int			stride);
-
-            */
     surface = cairo_image_surface_create_for_data(
             (unsigned char *) (block.pixelPtr),
             format, 
@@ -270,7 +253,7 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
     cairo_stroke(context->c);
 }
 
-void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
+void CairoSetFill(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_set_source_rgba(context->c,
@@ -280,15 +263,21 @@ void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
             style->fillOpacity);
     cairo_set_fill_rule(context->c, 
             (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
+}
+
+void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CairoSetFill(ctx, style);
     cairo_fill(context->c);
 }
 
 void TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CairoSetFill(ctx, style);
     cairo_fill_preserve(context->c);
-    TkPathFill(context->d, style);
-    TkPathStroke(context->d, style);
+    TkPathStroke(ctx, style);
 }
 
 void TkPathEndPath(TkPathContext ctx)
@@ -306,14 +295,13 @@ void TkPathFree(TkPathContext ctx)
 
 int TkPathDrawingDestroysPath(void)
 {
-    /* We use save/restore instead. */
-    return 0;
+    return 1;
 }
 
 int TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *pt)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    cairo_current_point(context->c, &(pt->x), &(pt->y));
+    cairo_get_current_point(context->c, &(pt->x), &(pt->y));
     return TCL_OK;
 }
 

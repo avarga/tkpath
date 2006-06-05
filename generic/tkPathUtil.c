@@ -95,7 +95,7 @@ TkPathPaintPath(TkPathContext context,
             PathPaintLinearGradientFromName(context, bboxPtr, 
                     stylePtr->gradientFillName, stylePtr->fillRule);
 
-            /* Note: Both CoreGraphics on MacOSX and Win32 GDI clears the current path
+            /* Note: Both CoreGraphics on MacOSX and Win32 GDI (and cairo from 1.0) clear the current path
              *       when setting clipping. Need therefore to redo the path. 
              */
             if (TkPathDrawingDestroysPath()) {
