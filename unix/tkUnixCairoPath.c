@@ -136,6 +136,7 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
     Tk_PhotoImageBlock block;
     cairo_surface_t *surface;
     cairo_format_t format;
+    unsigned char *data;
     int size;
 
     /* Return value? */
@@ -159,17 +160,20 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
      */
     if (block.pixelSize*8 == 32) {
         if (block.offset[3] == 3) {
+            /* This is real fake! But cairo has no RGBA format. */
             format = CAIRO_FORMAT_ARGB32;
             //format = ???;
+            data = (unsigned char *) (block.pixelPtr) + 0;
         } else if (block.offset[3] == 0) {
             format = CAIRO_FORMAT_ARGB32;
+            data = (unsigned char *) (block.pixelPtr);
         } else {
             /* @@@ What to do here? */
             return;
         }
     }
     surface = cairo_image_surface_create_for_data(
-            (unsigned char *) (block.pixelPtr),
+            data,
             format, 
             (int) width, (int) height, 
             block.pitch);		/* stride */

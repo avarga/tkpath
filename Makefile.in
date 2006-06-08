@@ -13,8 +13,7 @@ GENERIC_OBJECTS	= \
     tkCanvPathUtil.$(OBJEXT) \
     tkCanvPimage.$(OBJEXT) \
     tkCanvPline.$(OBJEXT) \
-    tkCanvPolyline.$(OBJEXT) \
-    tkCanvPpolygon.$(OBJEXT) \
+    tkCanvPpoly.$(OBJEXT) \
     tkCanvPrect.$(OBJEXT) \
     tkPath.$(OBJEXT) \
     tkPathCopyTk.$(OBJEXT) \

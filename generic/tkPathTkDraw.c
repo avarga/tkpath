@@ -261,7 +261,15 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 void
 TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
     /* @@@ TODO */
+    /*
+    
+    Tk_RedrawImage(image, x - imgPtr->header.x1, y - imgPtr->header.y1,
+	    width, height, context->drawable, (int) x, (int) y);
+
+    */
 }
 
 void TkPathClosePath(TkPathContext ctx)

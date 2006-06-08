@@ -23,8 +23,8 @@ lset m {2 0} 220
 lset m {2 1} -120
 $w create pimage 100 100 -image $name -matrix $m
 
-set m [::tkpath::transform scale 3 1]
-$w create pimage 10 220 -image $name -matrix $m
+set m [::tkpath::transform scale 2 0.8]
+$w create pimage 10 300 -image $name -matrix $m
 
 
 
