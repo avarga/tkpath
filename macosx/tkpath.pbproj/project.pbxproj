@@ -349,8 +349,8 @@
 			fileEncoding = 4;
 			isa = PBXFileReference;
 			name = tkCanvEllipse.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkCanvEllipse.c;
-			refType = 0;
+			path = ../generic/tkCanvEllipse.c;
+			refType = 2;
 		};
 		9A6265C109C474B3009A2B1E = {
 			fileRef = 9A6265BF09C474B3009A2B1E;
@@ -757,8 +757,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = tkCanvPpoly.c;
-			path = /Users/matben/C/cvs/tkpath/generic/tkCanvPpoly.c;
-			refType = 0;
+			path = ../generic/tkCanvPpoly.c;
+			refType = 2;
 		};
 		9AB087D90A38001400A80065 = {
 			fileRef = 9AB087D80A38001400A80065;

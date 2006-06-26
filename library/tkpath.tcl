@@ -178,4 +178,35 @@ proc ::tkpath::coords {type args} {
     return $path
 }
 
+# ::tkpath::gradient --
+# 
+#       Utility function to create named example gradient definitions.
+#       
+# Arguments:
+#       name      the name of the gradient
+#       args
+#       
+# Results:
+#       the stops list.
+
+proc ::tkpath::gradient {name args} {
+    
+    switch -- $name {
+	rainbow {
+	    set stops {
+		{0.00 "#ff0000"} 
+		{0.15 "#ff7f00"} 
+		{0.30 "#ffff00"}
+		{0.45 "#00ff00"}
+		{0.65 "#0000ff"}
+		{0.90 "#7f00ff"}
+		{1.00 "#7f007f"}
+	    }
+	    return $stops
+	}
+	default {
+	    -return -code error "the named gradient \"$name\" is unknown"
+	}
+    }    
+}
 

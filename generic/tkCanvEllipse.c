@@ -333,8 +333,7 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
 static void		
 DeleteEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
 {
-    EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    /* Anything ? */
+    /* Empty? */
 }
 
 static void		
@@ -396,8 +395,27 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
     if (rectiLinear) {
         dist = TkOvalToPoint(bareOval, width, filled, pointPtr);
     } else {
+        int maxNumSegments = 100;
+        PathAtom *atomPtr;
+        EllipseAtom ellAtom;
     
-        dist = 99.0;
+        /* 
+         * We create the atom on the fly to save some memory.
+         */    
+        atomPtr = (PathAtom *)&ellAtom;
+        atomPtr->nextPtr = NULL;
+        atomPtr->type = PATH_ATOM_ELLIPSE;
+        ellAtom.cx = ellPtr->center[0];
+        ellAtom.cy = ellPtr->center[1];
+        ellAtom.rx = ellPtr->rx;
+        ellAtom.ry = ellPtr->ry;
+        dist = GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
+                maxNumSegments, pointPtr);
+    }
+    {
+        char tmp[256];
+        sprintf(tmp, "EllipseToPoint %8.1f", dist);
+        Tcl_VarEval(gInterp, "puts \"", tmp, "\"", (char *) NULL);
     }
     return dist;
 }

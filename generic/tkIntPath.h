@@ -3,7 +3,7 @@
  *
  *		Header file for the internals of the tkpath package.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
@@ -87,11 +87,12 @@ extern "C" {
  * doing various things, but it would be better to use the de Castlejau
  * algorithm to iterate these segments.
  */
-static int kPathNumSegmentsCurveTo    = 18;
-static int kPathNumSegmentsQuadBezier = 12;
-static int kPathNumSegmentsMax		  = 18;
+#define kPathNumSegmentsCurveTo     	18
+#define kPathNumSegmentsQuadBezier 		12
+#define kPathNumSegmentsMax		  		18
+#define kPathNumSegmentsEllipse         48
 
-static const TMatrix kPathUnitTMatrix = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+#define kPathUnitTMatrix  {1.0, 0.0, 0.0, 1.0, 0.0, 0.0}
 
 extern int gUseAntiAlias;
 
@@ -273,6 +274,8 @@ int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
 int			PathStyleHaveWithName(CONST char *name);
 int			HaveLinearGradientStyleWithName(CONST char *name);
 void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName, long flags);
+
+void		PathPaintLinearGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule);
 
 
 /*

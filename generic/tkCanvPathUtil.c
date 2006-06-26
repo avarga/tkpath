@@ -15,25 +15,17 @@
  * For wider strokes we must make a more detailed analysis
  * when doing hit tests and area tests.
  */
-static double kPathStrokeThicknessLimit = 4.0;
+#define kPathStrokeThicknessLimit 	4.0
 
 #define MAX_NUM_STATIC_SEGMENTS  2000
 /* @@@ Should this be moved inside the function instead? */
 static double staticSpace[2*MAX_NUM_STATIC_SEGMENTS];
 
 
-static int		GetSubpathMaxNumSegments(PathAtom *atomPtr);
 static void		MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr, 
                         int *numPointsPtr, int *numStrokesPtr, TMatrix *matrixPtr);
 static int		SubPathToArea(Tk_PathStyle *stylePtr, double *polyPtr, int numPoints,
                         int	numStrokes,	double *rectPtr, int inside);
-static int		AddArcSegments(TMatrix *matrixPtr, double current[2], ArcAtom *arc,
-                        double *coordPtr);
-static int		AddQuadBezierSegments(TMatrix *matrixPtr, double current[2],		
-                        QuadBezierAtom *quad, double *coordPtr);
-static int		AddCurveToSegments(TMatrix *matrixPtr, double current[2],			
-                        CurveToAtom *curve, double *coordPtr);
-
 
 /*
  *--------------------------------------------------------------
@@ -1143,11 +1135,6 @@ QuadBezierSegments(
     int istart = 1 - includeFirst;
     double u, u2, t, t2;
 
-#if PATH_DEBUG
-    DebugPrintf(gInterp, 2, "QuadBezierSegments %6.0f, %6.0f, %6.0f, %6.0f, %6.0f, %6.0f", 
-            control[0], control[1], control[2], control[3], control[4], control[5]);
-#endif
-
     for (i = istart; i <= numSteps; i++, coordPtr += 2) {
         t = ((double) i)/((double) numSteps);
         t2 = t*t;
@@ -1158,166 +1145,23 @@ QuadBezierSegments(
     }
 }
 
-/*
- *--------------------------------------------------------------
- *
- * MakeSubPathSegments --
- *
- *		Supposed to be a generic segment generator that can be used 
- *		by both Area and Point functions.
- *
- * Results:
- *		Points filled into polyPtr...
- *
- * Side effects:
- *		Pointer *atomPtrPtr may be updated.
- *
- *--------------------------------------------------------------
- */
-
 static void
-MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr, 
-        int *numPointsPtr, int *numStrokesPtr, TMatrix *matrixPtr)
+EllipseSegments(
+    double center[],
+    double rx, double ry,
+    double angle,				/* Angle of rotated ellipse. */
+    int numSteps,				/* Number of curve segments to
+                                 * generate.  */
+    register double *coordPtr)	/* Where to put new points. */
 {
-    int 			first = 1;
-    int				numPoints;
-    int				numStrokes;
-    int				numAdded;
-    int				isclosed = 0;
-    double 			current[2];		/* Current untransformed point. */
-    double			*currentTPtr;	/* Pointer to the transformed current point. */
-    double			*coordPtr;
-    PathAtom 		*atomPtr;
-    MoveToAtom 		*move;
-    LineToAtom 		*line;
-    ArcAtom 		*arc;
-    QuadBezierAtom 	*quad;
-    CurveToAtom 	*curve;
-    CloseAtom		*close;
-    
-    /* @@@ 	Note that for unfilled paths we could have made a progressive
-     *     	area (point) check which may be faster since we may stop when 0 (overlapping).
-     *	   	For filled paths we cannot rely on this since the area rectangle
-     *		may be entirely enclosed in the path and still overlapping.
-     *		(Need better explanation!)
-     */
-    
-    /*
-     * Check each segment of the path.
-     * Any transform matrix is applied at the last stage when comparing to rect.
-     * 'current' is always untransformed coords.
-     */
+    double phi, delta;
 
-    current[0] = 0.0;
-    current[1] = 0.0;
-    numPoints = 0;
-    numStrokes = 0;
-    isclosed = 0;
-    atomPtr = *atomPtrPtr;
-    coordPtr = NULL;
+    delta = 2*M_PI/(numSteps-1);
     
-    while (atomPtr != NULL) {
-
-#if PATH_DEBUG    
-        DebugPrintf(gInterp, 2, "atomPtr->type %c", atomPtr->type);
-#endif
-
-        switch (atomPtr->type) {
-            case PATH_ATOM_M: {
-                move = (MoveToAtom *) atomPtr;
-            
-                /* A 'M' atom must be first, may show up later as well. */
-                
-                if (first) {
-                    coordPtr = polyPtr;
-                    current[0] = move->x;
-                    current[1] = move->y;
-                    PathApplyTMatrixToPoint(matrixPtr, current, coordPtr);
-                    currentTPtr = coordPtr;
-                    coordPtr += 2;
-                    numPoints = 1;
-                } else {
-                
-                    /*  
-                     * We have finalized a subpath.
-                     */
-                    goto done;
-                }
-                first = 0;
-                break;
-            }
-            case PATH_ATOM_L: {
-                line = (LineToAtom *) atomPtr;
-                PathApplyTMatrixToPoint(matrixPtr, &(line->x), coordPtr);
-                current[0] = line->x;
-                current[1] = line->y;
-                currentTPtr = coordPtr;
-                coordPtr += 2;
-                numPoints++;;
-                break;
-            }
-            case PATH_ATOM_A: {
-                arc = (ArcAtom *) atomPtr;
-                numAdded = AddArcSegments(matrixPtr, current, arc, coordPtr);
-                coordPtr += 2 * numAdded;
-                numPoints += numAdded;
-                current[0] = arc->x;
-                current[1] = arc->y;
-                currentTPtr = coordPtr;
-                break;
-            }
-            case PATH_ATOM_Q: {
-                quad = (QuadBezierAtom *) atomPtr;
-                numAdded = AddQuadBezierSegments(matrixPtr, current,
-                        quad, coordPtr);
-                coordPtr += 2 * numAdded;
-                numPoints += numAdded;
-                current[0] = quad->anchorX;
-                current[1] = quad->anchorY;
-                currentTPtr = coordPtr;
-                break;
-            }
-            case PATH_ATOM_C: {
-                curve = (CurveToAtom *) atomPtr;
-                numAdded = AddCurveToSegments(matrixPtr, current,
-                        curve, coordPtr);
-                coordPtr += 2 * numAdded;
-                numPoints += numAdded;
-                current[0] = curve->anchorX;
-                current[1] = curve->anchorY;
-                currentTPtr = coordPtr;
-                break;
-            }
-            case PATH_ATOM_Z: {
-            
-                /* Just add the first point to the end. */
-                close = (CloseAtom *) atomPtr;
-                coordPtr[0] = polyPtr[0];
-                coordPtr[1] = polyPtr[1];
-                coordPtr += 2;
-                numPoints++;
-                current[0]  = close->x;
-                current[1]  = close->y;
-                isclosed = 1;
-                break;
-            }
-        }
-        atomPtr = atomPtr->nextPtr;
+    for (phi = 0.0; phi <= 2*M_PI+1e-6; phi += delta, coordPtr += 2) {
+        coordPtr[0] = center[0] + rx*cos(phi+angle);
+        coordPtr[1] = center[1] + ry*sin(phi+angle);
     }
-
-done:
-    if (numPoints > 1) {
-        if (isclosed) {
-            numStrokes = numPoints;
-        } else {
-            numStrokes = numPoints - 1;
-        }
-    }
-    *numPointsPtr = numPoints;
-    *numStrokesPtr = numStrokes;
-    *atomPtrPtr = atomPtr;
-
-    return;
 }
 
 /*
@@ -1406,17 +1250,6 @@ AddQuadBezierSegments(
 
     numPoints = kPathNumSegmentsQuadBezier;
     QuadBezierSegments(control, 0, numPoints, coordPtr);
-    
-#if PATH_DEBUG
-        {
-            int i;
-            
-            DebugPrintf(gInterp, 2, "AddQuadBezierSegments: numPoints=%d", numPoints);
-            for (i = 0; i < numPoints; i++) {
-                DebugPrintf(gInterp, 2, "\t %6.1f, %6.1f", coordPtr[2*i], coordPtr[2*i+1]);
-            }
-        }
-#endif
 
     return numPoints;
 }
@@ -1441,6 +1274,218 @@ AddCurveToSegments(
     CurveSegments(control, 1, numSteps, coordPtr);
     
     return numSteps;
+}
+
+static int
+AddEllipseToSegments(
+    TMatrix *matrixPtr,
+    EllipseAtom *ellipse,
+    double *coordPtr)
+{
+    int numSteps;
+    double rx, ry, angle;
+    double c[2], crx[2], cry[2];
+    double p[2];
+
+    /* 
+     * We transform the three points: c, c+rx, c+ry
+     * and then compute the parameters for the transformed ellipse.
+     * This is because an affine transform of an ellipse is still an ellipse.
+     */
+    p[0] = ellipse->cx;
+    p[1] = ellipse->cy;
+    PathApplyTMatrixToPoint(matrixPtr, p, c);
+    p[0] = ellipse->cx + ellipse->rx;
+    p[1] = ellipse->cy;
+    PathApplyTMatrixToPoint(matrixPtr, p, crx);
+    p[0] = ellipse->cx;
+    p[1] = ellipse->cy + ellipse->ry;
+    PathApplyTMatrixToPoint(matrixPtr, p, cry);
+    rx = hypot(crx[0]-c[0], crx[1]-c[1]);
+    ry = hypot(cry[0]-c[0], cry[1]-c[1]);
+    angle = atan2(crx[1]-c[1], crx[0]-c[0]);
+    
+    /* Note we add 1 here since we need bothh start and stop points. */
+    numSteps = kPathNumSegmentsEllipse + 1;
+    EllipseSegments(c, rx, ry, angle, numSteps, coordPtr);
+
+    return numSteps;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * MakeSubPathSegments --
+ *
+ *		Supposed to be a generic segment generator that can be used 
+ *		by both Area and Point functions.
+ *
+ * Results:
+ *		Points filled into polyPtr...
+ *
+ * Side effects:
+ *		Pointer *atomPtrPtr may be updated.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr, 
+        int *numPointsPtr, int *numStrokesPtr, TMatrix *matrixPtr)
+{
+    int 			first = 1;
+    int				numPoints;
+    int				numStrokes;
+    int				numAdded;
+    int				isclosed = 0;
+    double 			current[2];		/* Current untransformed point. */
+    double			*currentTPtr;	/* Pointer to the transformed current point. */
+    double			*coordPtr;
+    PathAtom 		*atomPtr;
+    
+    /* @@@ 	Note that for unfilled paths we could have made a progressive
+     *     	area (point) check which may be faster since we may stop when 0 (overlapping).
+     *	   	For filled paths we cannot rely on this since the area rectangle
+     *		may be entirely enclosed in the path and still overlapping.
+     *		(Need better explanation!)
+     */
+    
+    /*
+     * Check each segment of the path.
+     * Any transform matrix is applied at the last stage when comparing to rect.
+     * 'current' is always untransformed coords.
+     */
+
+    current[0] = 0.0;
+    current[1] = 0.0;
+    numPoints = 0;
+    numStrokes = 0;
+    isclosed = 0;
+    atomPtr = *atomPtrPtr;
+    coordPtr = NULL;
+    
+    while (atomPtr != NULL) {
+
+#if PATH_DEBUG    
+        DebugPrintf(gInterp, 2, "atomPtr->type %c", atomPtr->type);
+#endif
+
+        switch (atomPtr->type) {
+            case PATH_ATOM_M: {
+                MoveToAtom *move = (MoveToAtom *) atomPtr;
+            
+                /* A 'M' atom must be first, may show up later as well. */
+                
+                if (first) {
+                    coordPtr = polyPtr;
+                    current[0] = move->x;
+                    current[1] = move->y;
+                    PathApplyTMatrixToPoint(matrixPtr, current, coordPtr);
+                    currentTPtr = coordPtr;
+                    coordPtr += 2;
+                    numPoints = 1;
+                } else {
+                
+                    /*  
+                     * We have finalized a subpath.
+                     */
+                    goto done;
+                }
+                first = 0;
+                break;
+            }
+            case PATH_ATOM_L: {
+                LineToAtom *line = (LineToAtom *) atomPtr;
+                
+                PathApplyTMatrixToPoint(matrixPtr, &(line->x), coordPtr);
+                current[0] = line->x;
+                current[1] = line->y;
+                currentTPtr = coordPtr;
+                coordPtr += 2;
+                numPoints++;;
+                break;
+            }
+            case PATH_ATOM_A: {
+                ArcAtom *arc = (ArcAtom *) atomPtr;
+                
+                numAdded = AddArcSegments(matrixPtr, current, arc, coordPtr);
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
+                current[0] = arc->x;
+                current[1] = arc->y;
+                currentTPtr = coordPtr;
+                break;
+            }
+            case PATH_ATOM_Q: {
+                QuadBezierAtom *quad = (QuadBezierAtom *) atomPtr;
+                
+                numAdded = AddQuadBezierSegments(matrixPtr, current,
+                        quad, coordPtr);
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
+                current[0] = quad->anchorX;
+                current[1] = quad->anchorY;
+                currentTPtr = coordPtr;
+                break;
+            }
+            case PATH_ATOM_C: {
+                CurveToAtom *curve = (CurveToAtom *) atomPtr;
+                
+                numAdded = AddCurveToSegments(matrixPtr, current,
+                        curve, coordPtr);
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
+                current[0] = curve->anchorX;
+                current[1] = curve->anchorY;
+                currentTPtr = coordPtr;
+                break;
+            }
+            case PATH_ATOM_Z: {
+                CloseAtom *close = (CloseAtom *) atomPtr;
+            
+                /* Just add the first point to the end. */
+                coordPtr[0] = polyPtr[0];
+                coordPtr[1] = polyPtr[1];
+                coordPtr += 2;
+                numPoints++;
+                current[0]  = close->x;
+                current[1]  = close->y;
+                isclosed = 1;
+                break;
+            }
+            case PATH_ATOM_ELLIPSE: {
+                EllipseAtom *ellipse = (EllipseAtom *) atomPtr;
+
+                if (first) {
+                    coordPtr = polyPtr;
+                }
+                numAdded = AddEllipseToSegments(matrixPtr, ellipse, coordPtr);
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
+                if (first) {
+                    /* Not sure about this. Never used anyway! */
+                    current[0]  = ellipse->cx + ellipse->rx;
+                    current[1]  = ellipse->cy;
+                }
+                break;
+            }
+        }
+        atomPtr = atomPtr->nextPtr;
+    }
+
+done:
+    if (numPoints > 1) {
+        if (isclosed) {
+            numStrokes = numPoints;
+        } else {
+            numStrokes = numPoints - 1;
+        }
+    }
+    *numPointsPtr = numPoints;
+    *numStrokesPtr = numStrokes;
+    *atomPtrPtr = atomPtr;
+
+    return;
 }
 
 /*
@@ -1681,15 +1726,12 @@ TMatrix
 GetCanvasTMatrix(Tk_Canvas canvas)
 {
     short originX, originY;
-    TMatrix m;
+    TMatrix m = kPathUnitTMatrix;
     
     /* @@@ Any scaling involved as well??? */
     Tk_CanvasDrawableCoords(canvas, 0.0, 0.0, &originX, &originY);
-
-    m = kPathUnitTMatrix;
     m.tx = originX;
-    m.ty = originY;
-    
+    m.ty = originY;    
     return m;
 }
 

@@ -197,6 +197,7 @@ MatrixGetOption(
     return listObj;
 }
 
+#if 0
 static void
 MatrixRestoreOption(
     ClientData clientData,
@@ -206,6 +207,7 @@ MatrixRestoreOption(
 {
     /* @@@ TODO */
 }
+#endif
 
 static void
 MatrixFreeOption(
@@ -726,9 +728,4 @@ Tk_DeletePathStyle(Display *display, Tk_PathStyle *style)
 }
 
 /*-------------------------------------------------------------------*/
-
-
-
-
-
 

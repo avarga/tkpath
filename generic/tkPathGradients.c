@@ -336,6 +336,7 @@ FillInTransitionFromRectObj(Tcl_Interp *interp, LinearGradientStyle *gradientSty
     return TCL_OK;
 }
 
+#if 0
 static int 
 GetGradientStyleFromObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientStyle **stylePtrPtr)
 {
@@ -352,7 +353,9 @@ GetGradientStyleFromObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientStyle **
 	*stylePtrPtr = (LinearGradientStyle *) Tcl_GetHashValue(hPtr);
 	return TCL_OK;
 }
+#endif
 
+#if 0
 static int
 GetLinearGradientFromNameObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientFill **gradientPtrPtr)
 {
@@ -364,6 +367,7 @@ GetLinearGradientFromNameObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientFil
     *gradientPtrPtr = &(gradientStylePtr->fill);
     return TCL_OK;
 }
+#endif
 
 static int
 GetLinearGradientFromName(char *name, LinearGradientFill **gradientPtrPtr)

@@ -14,12 +14,6 @@
 #include "tkPathCopyTk.h"
 
 
-/*
- * For wider strokes we must make a more detailed analysis
- * when doing hit tests and area tests.
- */
-static double kPathStrokeThicknessLimit = 4.0;
-
 int gDebugLevel = 2;
 Tcl_Interp *gInterp;
 
@@ -95,7 +89,6 @@ static int		GetSubpathMaxNumSegments(PathAtom *atomPtr);
 
 extern int 		LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
                         int objc, Tcl_Obj* CONST objv[]);
-extern void		PathPaintLinearGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule);
 
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
@@ -162,6 +155,7 @@ DebugPrintf(Tcl_Interp *interp, int level, char *fmt, ...)
 	va_end (args );
 }
 
+#if 0
 static int
 IsPathRectEmpty(PathRect *r)
 {
@@ -171,6 +165,7 @@ IsPathRectEmpty(PathRect *r)
         return 1;
     }
 }
+#endif
 
 /* Be sure rect is not empty (see above) before doing this. */
 static void

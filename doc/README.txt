@@ -9,7 +9,7 @@ The code is divided into two parts:
 
 1) Generic path drawing which also implements the platform specific parts.
 
-2) A path canvas item.
+2) The items
 
 There are various differences compared to SVG. As a canvas item, it also
 behaves a bit differently than an ordinary item.
@@ -22,26 +22,20 @@ Also, SVG is web oriented and therefore tolerates parameter errors to some
 degree, while tk is a programming tool and typically generates errors
 if paramters are wrong.
 
- o The canvas path item
+ o The options
 
-    The path specification must be a single list and not concateneted with
-    the rest of the command:
+    The options can be separated into a few groups depending on the nature
+    of an item for which they apply. Not all are implemented.
 
-    right:  .c create path {M 10 10 h 10 v 10 h -10 z} -fill blue
-    wrong:  .c create path M 10 10 h 10 v 10 h -10 z -fill blue    ;# Error
-
-    Furthermore, coordinates are pixel coordinates and nothing else.
-
-    Options for the path canvas item command. Not all are implemented:
-
+    Fill (fillOptions):
 	-fill color
 	-fillgradient gradientToken
 	-filloffset
 	-fillopacity float (0,1)
 	-fillrule nonzero|evenodd
 	-fillstipple
-	-matrix {{a b} {c d} {tx ty}}
-	-state
+
+    Stroke (strokeOptions):
 	-stroke color
 	-strokedasharray dashArray
 	-strokelinecap 
@@ -51,6 +45,10 @@ if paramters are wrong.
 	-strokeopacity float (0,1)
 	-strokestipple
 	-strokewidth float
+
+    Generic (genericOptions):
+        -matrix {{a b} {c d} {tx ty}}
+        -state
 	-style styleToken
 	-tags tagList
 
@@ -62,10 +60,66 @@ if paramters are wrong.
     take precedence over any other options set directly. This is how
     SVG works (bad?).
 
+ o The canvas path item
+
+    The path specification must be a single list and not concateneted with
+    the rest of the command:
+
+    right:  .c create path {M 10 10 h 10 v 10 h -10 z} -fill blue
+    wrong:  .c create path M 10 10 h 10 v 10 h -10 z -fill blue    ;# Error
+
+    Furthermore, coordinates are pixel coordinates and nothing else.
+
+    .c create path pathSpec ?fillOptions strokeOptions genericOptions?
+
     All path specifications are normalized initially to the fundamental atoms
     M, L, A, Q, and C, all upper case. When you use the canvas 'coords' command
     it is the normalized path spec that is returned.
 
+ o The prect item
+
+    This is a rectangle item with optionally rounded corners.
+    Item specific options:
+
+        -rx  corner x-radius, or if -ry not given it sets the uniform radius.
+	-ry  corner y-radius
+
+    .c create prect x1 y1 x2 y2 ?-rx -ry fillOptions strokeOptions genericOptions?
+
+ o The circle item
+
+   A plain circle item. Item specific options:
+
+       -r  its radius; defaults to zero
+
+   .c create circle cx cy ?-r fillOptions strokeOptions genericOptions?
+
+ o The ellipse item
+
+    An ellipse item. Item specific options:
+
+        -rx  its x-radius
+	-ry  its y-radius
+
+    .c create ellipse cx cy ?-rx -ry fillOptions strokeOptions genericOptions?
+
+ o The pline item
+
+    Makes a single segment straight line.
+
+    .c create pline x1 y1 x2 y2 ?strokeOptions genericOptions?
+
+ o The polyline item
+
+    Makes a multiple segment line with open ends.
+
+    .c create polyline x1 y1 x2 y2 .... ?strokeOptions genericOptions?
+
+ o The polygon item
+
+    Makes a closed polygon.
+
+    .c create polygon x1 y1 x2 y2 .... ?fillOptions strokeOptions genericOptions?
 
  o Antialiasing, if available, is controlled by the variable:
     ::tkpath::antialias
