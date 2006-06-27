@@ -223,7 +223,7 @@ EllipseCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     int result;
 
-	result = CoordsForPointItems(interp, canvas, &(ellPtr->center), objc, objv);
+	result = CoordsForPointItems(interp, canvas, (double *)&(ellPtr->center), objc, objv);
     if ((result == TCL_OK) && (objc == 1) || (objc == 2)) {
         ComputeEllipseBbox(canvas, ellPtr);
     }
@@ -411,11 +411,6 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
         ellAtom.ry = ellPtr->ry;
         dist = GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
                 maxNumSegments, pointPtr);
-    }
-    {
-        char tmp[256];
-        sprintf(tmp, "EllipseToPoint %8.1f", dist);
-        Tcl_VarEval(gInterp, "puts \"", tmp, "\"", (char *) NULL);
     }
     return dist;
 }

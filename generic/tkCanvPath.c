@@ -454,6 +454,10 @@ GetMiterBbox(PathAtom *atomPtr, double width)
                 }
                 break;
             }
+            case PATH_ATOM_ELLIPSE: {
+                /* Empty. */
+                break;
+            }
         }
         if (npts == 2) {
             CopyPoint(current, second);
@@ -969,6 +973,10 @@ GetSubpathMaxNumSegments(PathAtom *atomPtr)
                 num++;
                 currentX = startX;
                 currentY = startY;
+                break;
+            }
+            case PATH_ATOM_ELLIPSE: {
+                /* Empty. */
                 break;
             }
         }

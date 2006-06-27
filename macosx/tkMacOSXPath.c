@@ -232,7 +232,7 @@ TkPathLineTo(TkPathContext ctx, double x, double y)
 void
 TkPathLinesTo(TkPathContext ctx, double *pts, int n)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    //TkPathContext_ *context = (TkPathContext_ *) ctx;
     /* Add a set of lines to the context's path. */
     //CGContextAddLines(context->c, const CGPoint points[], size_t count);
 }
@@ -258,7 +258,7 @@ TkPathArcTo(TkPathContext ctx,
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    //TkPathContext_ *context = (TkPathContext_ *) ctx;
     // @@@ Should we try to use the native arc functions here?
     TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
@@ -421,7 +421,7 @@ TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style)
 void
 TkPathEndPath(TkPathContext ctx)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    //TkPathContext_ *context = (TkPathContext_ *) ctx;
     /* Empty ??? */
 }
 

@@ -799,6 +799,10 @@ TkPathNormalize(Tcl_Interp *interp, PathAtom *atomPtr, Tcl_Obj **listObjPtrPtr)
                 Tcl_ListObjAppendElement(interp, normObjPtr, Tcl_NewStringObj("Z", -1));
                 break;
             }
+            case PATH_ATOM_ELLIPSE: {
+                /* Empty. */
+                break;
+            }
         }
         atomPtr = atomPtr->nextPtr;
     }

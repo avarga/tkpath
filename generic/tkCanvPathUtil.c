@@ -572,6 +572,10 @@ GetGenericBarePathBbox(PathAtom *atomPtr)
                 /* empty */
                 break;
             }
+            case PATH_ATOM_ELLIPSE: {
+                Tcl_Panic("PATH_ATOM_ELLIPSE is not supported for GetGenericBarePathBbox");
+                break;
+            }
         }
         atomPtr = atomPtr->nextPtr;
     }
@@ -1155,19 +1159,26 @@ EllipseSegments(
     register double *coordPtr)	/* Where to put new points. */
 {
     double phi, delta;
+    double cosA, sinA;
+    double cosPhi, sinPhi;
 
+    cosA = cos(angle);
+    sinA = sin(angle);
     delta = 2*M_PI/(numSteps-1);
     
     for (phi = 0.0; phi <= 2*M_PI+1e-6; phi += delta, coordPtr += 2) {
-        coordPtr[0] = center[0] + rx*cos(phi+angle);
-        coordPtr[1] = center[1] + ry*sin(phi+angle);
+        cosPhi = cos(phi);
+        sinPhi = sin(phi);
+        coordPtr[0] = center[0] + rx*cosA*cosPhi - ry*sinA*sinPhi;
+        coordPtr[1] = center[1] + rx*sinA*cosPhi + ry*cosA*sinPhi;
     }
 }
 
 /*
  *--------------------------------------------------------------
  *
- * AddArcSegments, AddQuadBezierSegments, AddCurveToSegments --
+ * AddArcSegments, AddQuadBezierSegments, AddCurveToSegments,
+ *   AddEllipseToSegments --
  *
  *		Adds a number of points along the arc (curve) to coordPtr
  *		representing straight line segments.
@@ -1305,8 +1316,19 @@ AddEllipseToSegments(
     ry = hypot(cry[0]-c[0], cry[1]-c[1]);
     angle = atan2(crx[1]-c[1], crx[0]-c[0]);
     
-    /* Note we add 1 here since we need bothh start and stop points. */
-    numSteps = kPathNumSegmentsEllipse + 1;
+    /* Note we add 1 here since we need both start and stop points. 
+     * Small things wont need so many segments.
+     * Approximate circumference: 4(rx+ry)
+     */
+    if (rx+ry < 2.1) {
+        numSteps = 1;
+    } else if (rx+ry < 4) {
+        numSteps = 3;
+    } else if (rx+ry < kPathNumSegmentsEllipse) {
+        numSteps = (int)(rx+ry+2);
+    } else {
+        numSteps = kPathNumSegmentsEllipse + 1;
+    }
     EllipseSegments(c, rx, ry, angle, numSteps, coordPtr);
 
     return numSteps;
@@ -1365,10 +1387,6 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
     coordPtr = NULL;
     
     while (atomPtr != NULL) {
-
-#if PATH_DEBUG    
-        DebugPrintf(gInterp, 2, "atomPtr->type %c", atomPtr->type);
-#endif
 
         switch (atomPtr->type) {
             case PATH_ATOM_M: {
@@ -1630,6 +1648,10 @@ TranslatePathAtoms(
                 close->y += deltaY;
                 break;
             }
+            case PATH_ATOM_ELLIPSE: {
+                Tcl_Panic("PATH_ATOM_ELLIPSE is not supported for TranslatePathAtoms");
+                break;
+            }
         }
         atomPtr = atomPtr->nextPtr;
     }
@@ -1713,6 +1735,10 @@ ScalePathAtoms(
                 
                 close->x = originX + scaleX*(close->x - originX);
                 close->y = originY + scaleY*(close->y - originY);
+                break;
+            }
+            case PATH_ATOM_ELLIPSE: {
+                Tcl_Panic("PATH_ATOM_ELLIPSE is not supported for ScalePathAtoms");
                 break;
             }
         }
