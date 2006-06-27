@@ -395,7 +395,6 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
     if (rectiLinear) {
         dist = TkOvalToPoint(bareOval, width, filled, pointPtr);
     } else {
-        int maxNumSegments = 100;
         PathAtom *atomPtr;
         EllipseAtom ellAtom;
     
@@ -410,7 +409,7 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
         ellAtom.rx = ellPtr->rx;
         ellAtom.ry = ellPtr->ry;
         dist = GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
-                maxNumSegments, pointPtr);
+                kPathNumSegmentsEllipse+1, pointPtr);
     }
     return dist;
 }
@@ -485,8 +484,21 @@ EllipseToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
             }
         }
     } else {
+        PathAtom *atomPtr;
+        EllipseAtom ellAtom;
     
-        return 0;
+        /* 
+         * We create the atom on the fly to save some memory.
+         */    
+        atomPtr = (PathAtom *)&ellAtom;
+        atomPtr->nextPtr = NULL;
+        atomPtr->type = PATH_ATOM_ELLIPSE;
+        ellAtom.cx = ellPtr->center[0];
+        ellAtom.cy = ellPtr->center[1];
+        ellAtom.rx = ellPtr->rx;
+        ellAtom.ry = ellPtr->ry;
+        return GenericPathToArea(canvas, itemPtr, stylePtr, atomPtr, 
+                kPathNumSegmentsEllipse+1, areaPtr);
     }
     return result;
 }

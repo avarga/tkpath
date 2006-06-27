@@ -2562,4 +2562,103 @@ PathPolygonToPointEx(
     return bestDist;
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * PathRectToPoint --
+ *
+ *		Computes the distance from a given point to a given
+ *		rectangle, in canvas units.
+ *
+ * Results:
+ *		The return value is 0 if the point whose x and y coordinates
+ *		are pointPtr[0] and pointPtr[1] is inside the rectangle.  If the
+ *		point isn't inside the rectangle then the return value is the
+ *		distance from the point to the rectangle.  If item is filled,
+ *		then anywhere in the interior is considered "inside"; if
+ *		item isn't filled, then "inside" means only the area
+ *		occupied by the outline.
+ *
+ * Side effects:
+ *		None.
+ *
+ *--------------------------------------------------------------
+ */
+
+double
+PathRectToPoint(
+    double rectPtr[], 		/* Bare rectangle. */
+    double width, 			/* Width of stroke, or 0. */
+    int filled, 			/* Is rectangle filled. */
+    double pointPtr[])		/* Pointer to x and y coordinates. */
+{
+    double xDiff, yDiff, x1, y1, x2, y2, inc, tmp;
+
+    /*
+     * Generate a new larger rectangle that includes the border
+     * width, if there is one.
+     */
+
+	inc = width/2.0;
+    x1 = rectPtr[0] - inc;
+    y1 = rectPtr[1] - inc;
+    x2 = rectPtr[2] + inc;
+    y2 = rectPtr[3] + inc;
+
+    /*
+     * If the point is inside the rectangle, handle specially:
+     * distance is 0 if rectangle is filled, otherwise compute
+     * distance to nearest edge of rectangle and subtract width
+     * of edge.
+     */
+
+    if ((pointPtr[0] >= x1) && (pointPtr[0] < x2)
+            && (pointPtr[1] >= y1) && (pointPtr[1] < y2)) {
+        //if (filled || (rectPtr->outline.gc == None)) {
+        if (filled) {
+            return 0.0;
+        }
+        xDiff = pointPtr[0] - x1;
+        tmp = x2 - pointPtr[0];
+        if (tmp < xDiff) {
+            xDiff = tmp;
+        }
+        yDiff = pointPtr[1] - y1;
+        tmp = y2 - pointPtr[1];
+        if (tmp < yDiff) {
+            yDiff = tmp;
+        }
+        if (yDiff < xDiff) {
+            xDiff = yDiff;
+        }
+        xDiff -= width;
+        if (xDiff < 0.0) {
+            return 0.0;
+        }
+        return xDiff;
+    }
+
+    /*
+     * Point is outside rectangle.
+     */
+
+    if (pointPtr[0] < x1) {
+        xDiff = x1 - pointPtr[0];
+    } else if (pointPtr[0] > x2)  {
+        xDiff = pointPtr[0] - x2;
+    } else {
+        xDiff = 0;
+    }
+
+    if (pointPtr[1] < y1) {
+        yDiff = y1 - pointPtr[1];
+    } else if (pointPtr[1] > y2)  {
+        yDiff = pointPtr[1] - y2;
+    } else {
+        yDiff = 0;
+    }
+
+    return hypot(xDiff, yDiff);
+}
+
 /*--------------------------------------------------------------------------*/

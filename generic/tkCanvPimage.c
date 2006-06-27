@@ -307,40 +307,33 @@ static double
 PimageToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    double x1, x2, y1, y2, xDiff, yDiff;
+    Tk_PathStyle *stylePtr = &(pimagePtr->style);
+    TMatrix *mPtr = stylePtr->matrixPtr;
+    int rectiLinear = 0;
+    double dist;
+    double rect[4];
 
-    x1 = pimagePtr->header.x1;
-    y1 = pimagePtr->header.y1;
-    x2 = pimagePtr->header.x2;
-    y2 = pimagePtr->header.y2;
-
-    /*
-     * Point is outside rectangle.
-     */
-
-    if (pointPtr[0] < x1) {
-        xDiff = x1 - pointPtr[0];
-    } else if (pointPtr[0] > x2)  {
-        xDiff = pointPtr[0] - x2;
-    } else {
-        xDiff = 0;
+    /* @@@ Much TODO */
+    if (mPtr == NULL) {
+        rectiLinear = 1;
+        rect[0] = pimagePtr->header.x1;
+        rect[1] = pimagePtr->header.y1;
+        rect[2] = pimagePtr->header.x2;
+        rect[3] = pimagePtr->header.y2;
     }
 
-    if (pointPtr[1] < y1) {
-        yDiff = y1 - pointPtr[1];
-    } else if (pointPtr[1] > y2)  {
-        yDiff = pointPtr[1] - y2;
-    } else {
-        yDiff = 0;
-    }
-
-    return hypot(xDiff, yDiff);
+    dist = PathRectToPoint(&rect, 0.0, 1, pointPtr);
+    
+    
+    return dist;
 }
 
 static int		
 PimageToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
+
+    /* @@@ Much TODO */
     
     if ((areaPtr[2] <= pimagePtr->header.x1)
             || (areaPtr[0] >= pimagePtr->header.x2)
