@@ -227,7 +227,7 @@ if paramters are wrong.
 
     - http://cairographics.org
 
-Copyright (c) 2005  Mats Bengtsson
+Copyright (c) 2005-2006  Mats Bengtsson
 
 BSD style license.
 

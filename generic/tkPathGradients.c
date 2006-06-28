@@ -291,7 +291,7 @@ static Tk_OptionSpec linGradientStyleOptionSpecs[] = {
 		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
 };
 
-
+#if 0
 static void 
 FormatResult(Tcl_Interp *interp, char *fmt, ...)
 {
@@ -303,6 +303,7 @@ FormatResult(Tcl_Interp *interp, char *fmt, ...)
 	va_end(ap);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 }
+#endif
 
 static int
 FillInTransitionFromRectObj(Tcl_Interp *interp, LinearGradientStyle *gradientStylePtr, Tcl_Obj *rectObj)

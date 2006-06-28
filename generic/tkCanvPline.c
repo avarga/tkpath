@@ -36,8 +36,6 @@ typedef struct PlineItem  {
     PathRect coords;		/* Coordinates (unorders bare bbox). */
     PathRect totalBbox;		/* Bounding box including stroke.
                              * Untransformed coordinates. */
-    int maxNumSegments;		/* Max number of straight segments (for subpath)
-                             * needed for Area and Point functions. */
     long flags;				/* Various flags, see enum. */
     char *null;   			/* Just a placeholder for not yet implemented stuff. */ 
 } PlineItem;
@@ -76,7 +74,14 @@ static void		TranslatePline(Tk_Canvas canvas,
 static void		MakePathAtoms(PlineItem *plinePtr);
 
 
-PATH_STYLE_CUSTOM_OPTION_RECORDS
+PATH_STYLE_CUSTOM_OPTION_STATE
+PATH_STYLE_CUSTOM_OPTION_TAGS 
+PATH_STYLE_CUSTOM_OPTION_DASH 
+PATH_STYLE_CUSTOM_OPTION_OFFSET
+PATH_STYLE_CUSTOM_OPTION_PIXEL 
+PATH_STYLE_CUSTOM_OPTION_LINGRAD
+PATH_STYLE_CUSTOM_OPTION_MATRIX
+PATH_STYLE_CUSTOM_OPTION_STYLE
 
 static Tk_ConfigSpec configSpecs[] = {
     PATH_CONFIG_SPEC_STYLE_MATRIX(PlineItem),
@@ -137,7 +142,6 @@ CreatePline(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     plinePtr->styleName = NULL;
     plinePtr->atomPtr = NULL;
     plinePtr->totalBbox = NewEmptyPathRect();
-    plinePtr->maxNumSegments = 2;
     plinePtr->flags = 0L;
     
     for (i = 1; i < objc; i++) {
@@ -333,9 +337,10 @@ static double
 PlineToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-
+    
+    /* @@@ Perhaps we should do a simplified treatment here instead of the generic. */
     return GenericPathToPoint(canvas, itemPtr, &(plinePtr->style), 
-            plinePtr->atomPtr, plinePtr->maxNumSegments, pointPtr);
+            plinePtr->atomPtr, 2, pointPtr);
 }
 
 static int		
@@ -343,8 +348,9 @@ PlineToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
     
+    /* @@@ Perhaps we should do a simplified treatment here instead of the generic. */
     return GenericPathToArea(canvas, itemPtr, &(plinePtr->style), 
-            plinePtr->atomPtr, plinePtr->maxNumSegments, areaPtr);
+            plinePtr->atomPtr, 2, areaPtr);
 }
 
 static int		

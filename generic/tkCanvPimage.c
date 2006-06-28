@@ -75,7 +75,10 @@ static void		ImageChangedProc _ANSI_ARGS_((ClientData clientData,
                         int imgHeight));
 
 
-PATH_STYLE_CUSTOM_OPTION_RECORDS
+PATH_STYLE_CUSTOM_OPTION_STATE
+PATH_STYLE_CUSTOM_OPTION_TAGS 
+PATH_STYLE_CUSTOM_OPTION_MATRIX
+PATH_STYLE_CUSTOM_OPTION_STYLE
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_DOUBLE, "-height", (char *) NULL, (char *) NULL,
@@ -172,7 +175,7 @@ PimageCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     int result;
 
-	result = CoordsForPointItems(interp, canvas, &(pimagePtr->coord), objc, objv);
+	result = CoordsForPointItems(interp, canvas, (double *)&(pimagePtr->coord), objc, objv);
     if ((result == TCL_OK) && (objc == 1) || (objc == 2)) {
         ComputePimageBbox(canvas, pimagePtr);
     }
@@ -207,6 +210,7 @@ ComputePimageBbox(Tk_Canvas canvas, PimageItem *pimagePtr)
         bbox.y1 = pimagePtr->coord[1];
         bbox.x2 = bbox.x1 + width;
         bbox.y2 = bbox.y1 + height;
+        pimagePtr->bbox = bbox;
         SetGenericPathHeaderBbox(&(pimagePtr->header), stylePtr->matrixPtr, &bbox);
     }
 }
@@ -307,22 +311,47 @@ PimageToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(pimagePtr->style);
     TMatrix *mPtr = stylePtr->matrixPtr;
+    PathRect bbox = pimagePtr->bbox;
     int rectiLinear = 0;
     double dist;
     double rect[4];
 
-    /* @@@ Much TODO */
     if (mPtr == NULL) {
         rectiLinear = 1;
-        rect[0] = pimagePtr->header.x1;
-        rect[1] = pimagePtr->header.y1;
-        rect[2] = pimagePtr->header.x2;
-        rect[3] = pimagePtr->header.y2;
+        rect[0] = bbox.x1;
+        rect[1] = bbox.y1;
+        rect[2] = bbox.x2;
+        rect[3] = bbox.y2;
+    } else if (TMATRIX_IS_RECTILINEAR(mPtr)) {
+        rectiLinear = 1;
+        rect[0] = mPtr->a * bbox.x1 + mPtr->tx;
+        rect[1] = mPtr->d * bbox.y1 + mPtr->ty;
+        rect[2] = mPtr->a * bbox.x2 + mPtr->tx;
+        rect[3] = mPtr->d * bbox.y2 + mPtr->ty;
     }
-
-    dist = PathRectToPoint(&rect, 0.0, 1, pointPtr);
+    if (rectiLinear) {
+        dist = PathRectToPoint(&rect, 0.0, 1, pointPtr);
+    } else {
+        int intersections, rule;
+        double polyPtr[10];
+        
+        /* Construct all four corners. */
+        polyPtr[0] = bbox.x1, polyPtr[1] = bbox.y1;
+        polyPtr[2] = bbox.x2, polyPtr[3] = bbox.y1;
+        polyPtr[4] = bbox.x2, polyPtr[5] = bbox.y2;
+        polyPtr[6] = bbox.x1, polyPtr[7] = bbox.y2;
+        polyPtr[8] = bbox.x1, polyPtr[9] = bbox.y1;
+        PathApplyTMatrix(mPtr, polyPtr, polyPtr+1);       
+        PathApplyTMatrix(mPtr, polyPtr+2, polyPtr+3);       
+        PathApplyTMatrix(mPtr, polyPtr+4, polyPtr+5);       
+        PathApplyTMatrix(mPtr, polyPtr+6, polyPtr+7);       
+        PathApplyTMatrix(mPtr, polyPtr+8, polyPtr+9);       
     
-    
+        dist = PathPolygonToPointEx(polyPtr, 5, pointPtr, &intersections, &rule);
+        if (intersections % 2 == 1) {
+            dist = 0.0;
+        }
+    }
     return dist;
 }
 

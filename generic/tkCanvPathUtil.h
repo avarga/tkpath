@@ -87,52 +87,79 @@ int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr
  * values in CreatePath.
  */
 
-#define PATH_STYLE_CUSTOM_OPTION_RECORDS   \
+#define PATH_STYLE_CUSTOM_OPTION_STATE   \
     static Tk_CustomOption stateOption = {                \
         (Tk_OptionParseProc *) PathTkStateParseProc,      \
         PathTkStatePrintProc,                             \
         (ClientData) 2                                    \
-    };                                                    \
+    };
+    
+#define PATH_STYLE_CUSTOM_OPTION_TAGS   \
     static Tk_CustomOption tagsOption = {                 \
         (Tk_OptionParseProc *) PathTk_CanvasTagsParseProc,\
         PathTk_CanvasTagsPrintProc,                       \
         (ClientData) NULL                                 \
-    };                                                    \
+    };
+    
+#define PATH_STYLE_CUSTOM_OPTION_DASH   \
     static Tk_CustomOption dashOption = {                 \
         (Tk_OptionParseProc *) PathTkCanvasDashParseProc, \
         PathTkCanvasDashPrintProc,                        \
         (ClientData) NULL                                 \
-    };                                                    \
+    };
+
+#define PATH_STYLE_CUSTOM_OPTION_OFFSET   \
     static Tk_CustomOption offsetOption = {               \
         (Tk_OptionParseProc *) PathTkOffsetParseProc,     \
         PathTkOffsetPrintProc,                            \
         (ClientData) (TK_OFFSET_RELATIVE|TK_OFFSET_INDEX) \
-    };                                                    \
+    };
+
+#define PATH_STYLE_CUSTOM_OPTION_PIXEL   \
     static Tk_CustomOption pixelOption = {                \
         (Tk_OptionParseProc *) PathTkPixelParseProc,      \
         PathTkPixelPrintProc,                             \
         (ClientData) NULL                                 \
-    };                                                    \
+    };
+
+#define PATH_STYLE_CUSTOM_OPTION_FILLRULE   \
     static Tk_CustomOption fillRuleOption = {             \
         (Tk_OptionParseProc *) FillRuleParseProc,         \
         FillRulePrintProc,                                \
         (ClientData) NULL                                 \
-    };                                                    \
+    };
+
+#define PATH_STYLE_CUSTOM_OPTION_LINGRAD   \
     static Tk_CustomOption linGradOption = {              \
         (Tk_OptionParseProc *) LinearGradientParseProc,   \
         LinearGradientPrintProc,                          \
         (ClientData) NULL                                 \
-    };                                                    \
+    };
+
+#define PATH_STYLE_CUSTOM_OPTION_MATRIX   \
     static Tk_CustomOption matrixOption = {               \
         (Tk_OptionParseProc *) MatrixParseProc,           \
         MatrixPrintProc,                                  \
         (ClientData) NULL                                 \
-    };                                                    \
+    };
+
+#define PATH_STYLE_CUSTOM_OPTION_STYLE   \
     static Tk_CustomOption styleOption = {                \
         (Tk_OptionParseProc *) StyleParseProc,            \
         StylePrintProc,                                   \
         (ClientData) NULL                                 \
     };
+
+#define PATH_STYLE_CUSTOM_OPTION_RECORDS   \
+    PATH_STYLE_CUSTOM_OPTION_STATE                        \
+    PATH_STYLE_CUSTOM_OPTION_TAGS                         \
+    PATH_STYLE_CUSTOM_OPTION_DASH                         \
+    PATH_STYLE_CUSTOM_OPTION_OFFSET                       \
+    PATH_STYLE_CUSTOM_OPTION_PIXEL                        \
+    PATH_STYLE_CUSTOM_OPTION_FILLRULE                     \
+    PATH_STYLE_CUSTOM_OPTION_LINGRAD                      \
+    PATH_STYLE_CUSTOM_OPTION_MATRIX                       \
+    PATH_STYLE_CUSTOM_OPTION_STYLE
 
 
 #define PATH_CONFIG_SPEC_STYLE_FILL(typeName)                               \
