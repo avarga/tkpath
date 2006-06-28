@@ -411,9 +411,44 @@ static int
 PrectToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    
-    return GenericPathToArea(canvas, itemPtr, &(prectPtr->style), 
-            prectPtr->atomPtr, prectPtr->maxNumSegments, areaPtr);
+    Tk_PathStyle *stylePtr = &(prectPtr->style);
+    TMatrix *mPtr = stylePtr->matrixPtr;
+    PathRect *bboxPtr = &(prectPtr->bbox);
+    double bareRect[4];
+    double width;
+    int rectiLinear = 0;
+    int filled;
+
+    filled = stylePtr->fillColor != NULL;
+    width = 0.0;
+    if (stylePtr->strokeColor != NULL) {
+        width = stylePtr->strokeWidth;
+    }
+
+    /* Try to be economical about this for pure rectangles. */
+    if ((prectPtr->rx <= 1.0) && (prectPtr->ry <= 1.0)) {
+        if (mPtr == NULL) {
+            rectiLinear = 1;
+            bareRect[0] = bboxPtr->x1;
+            bareRect[1] = bboxPtr->y1;
+            bareRect[2] = bboxPtr->x2;
+            bareRect[3] = bboxPtr->y2;
+        } else if (TMATRIX_IS_RECTILINEAR(mPtr)) {
+        
+            /* This is a situation we can treat in a simplified way. Apply the transform here. */
+            rectiLinear = 1;
+            bareRect[0] = mPtr->a * bboxPtr->x1 + mPtr->tx;
+            bareRect[1] = mPtr->d * bboxPtr->y1 + mPtr->ty;
+            bareRect[2] = mPtr->a * bboxPtr->x2 + mPtr->tx;
+            bareRect[3] = mPtr->d * bboxPtr->y2 + mPtr->ty;
+        }
+    }
+    if (rectiLinear) {
+        return PathRectToArea(bareRect, width, filled, areaPtr);
+    } else {
+        return GenericPathToArea(canvas, itemPtr, &(prectPtr->style), 
+                prectPtr->atomPtr, prectPtr->maxNumSegments, areaPtr);
+    }
 }
 
 static int		

@@ -218,8 +218,6 @@ ConfigurePimage(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(pimagePtr->style);
     Tk_Window tkwin;
-    Tk_State state;
-    unsigned long mask;
     Tk_Image image;
     Tk_PhotoHandle photo;
 

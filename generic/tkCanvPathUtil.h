@@ -78,6 +78,7 @@ double		PathThickPolygonToPoint(int joinStyle, int capStyle, double width,
 double		PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, 
                     int *intersectionsPtr, int *nonzerorulePtr);
 double		PathRectToPoint(double rectPtr[], double width, int filled, double pointPtr[]);
+int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr);
 
 
 /*

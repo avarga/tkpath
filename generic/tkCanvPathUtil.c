@@ -769,26 +769,13 @@ GenericPathToPoint(
      *		 "holes".
      */
      
-#if PATH_DEBUG
-    DebugPrintf(gInterp, 2, "PathToPoint..........");
-#endif
-    
     while (atomPtr != NULL) {
         MakeSubPathSegments(&atomPtr, polyPtr, &numPoints, &numStrokes, matrixPtr);
         isclosed = 0;
         if (numStrokes == numPoints) {
             isclosed = 1;
         }        
-#if PATH_DEBUG
-        {
-            int i;
-            
-            DebugPrintf(gInterp, 2, "numPoints=%d, isclosed=%d, atomPtr=0x%.8x", numPoints, isclosed, atomPtr);
-            for (i = 0; i < numPoints; i++) {
-                DebugPrintf(gInterp, 2, "\t %6.1f, %6.1f", polyPtr[2*i], polyPtr[2*i+1]);
-            }
-        }
-#endif        
+
         /*
          * This gives the min distance to the *stroke* AND the
          * number of intersections of the two types.
@@ -2659,6 +2646,59 @@ PathRectToPoint(
     }
 
     return hypot(xDiff, yDiff);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * PathRectToArea --
+ *
+ *		This procedure is called to determine whether an rectangle
+ *		lies entirely inside, entirely outside, or overlapping
+ *		another given rectangle.
+ *
+ * Results:
+ *		-1 is returned if the rectangle is entirely outside the area
+ *		given by rectPtr, 0 if it overlaps, and 1 if it is entirely
+ *		inside the given area.
+ *
+ * Side effects:
+ *		None.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+PathRectToArea(    
+    double rectPtr[], 		/* Bare rectangle. */
+    double width, 			/* Width of stroke, or 0. */
+    int filled, 			/* Is rectangle filled. */
+    double *areaPtr)		/* Pointer to array of four coordinates
+                             * (x1, y1, x2, y2) describing rectangular
+                             * area.  */
+{
+    double halfWidth = width/2.0;
+
+    if ((areaPtr[2] <= (rectPtr[0] - halfWidth))
+            || (areaPtr[0] >= (rectPtr[2] + halfWidth))
+            || (areaPtr[3] <= (rectPtr[1] - halfWidth))
+            || (areaPtr[1] >= (rectPtr[3] + halfWidth))) {
+        return -1;
+    }
+    if (!filled && (width > 0.0)
+            && (areaPtr[0] >= (rectPtr[0] + halfWidth))
+            && (areaPtr[1] >= (rectPtr[1] + halfWidth))
+            && (areaPtr[2] <= (rectPtr[2] - halfWidth))
+            && (areaPtr[3] <= (rectPtr[3] - halfWidth))) {
+        return -1;
+    }
+    if ((areaPtr[0] <= (rectPtr[0] - halfWidth))
+            && (areaPtr[1] <= (rectPtr[1] - halfWidth))
+            && (areaPtr[2] >= (rectPtr[2] + halfWidth))
+            && (areaPtr[3] >= (rectPtr[3] + halfWidth))) {
+        return 1;
+    }
+    return 0;
 }
 
 /*--------------------------------------------------------------------------*/

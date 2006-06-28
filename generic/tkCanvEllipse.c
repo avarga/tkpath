@@ -370,6 +370,7 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
     double bareOval[4];
     double width, dist;
     int rectiLinear = 0;
+    int haveDist = 0;
     int filled;
 
     filled = stylePtr->fillColor != NULL;
@@ -383,7 +384,15 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
         bareOval[1] = ellPtr->center[1] - ellPtr->ry;
         bareOval[2] = ellPtr->center[0] + ellPtr->rx;
         bareOval[3] = ellPtr->center[1] + ellPtr->ry;
+        
+        /* For tiny points make it simple. */
+        if ((ellPtr->rx <= 2.0) && (ellPtr->ry <= 2.0)) {
+            dist = hypot(ellPtr->center[0] - pointPtr[0], ellPtr->center[1] - pointPtr[1]);
+            dist = MAX(0.0, dist - (ellPtr->rx + ellPtr->ry)/2.0);
+            haveDist = 1;
+        }
     } else if (TMATRIX_IS_RECTILINEAR(mPtr)) {
+        double rx, ry;
     
         /* This is a situation we can treat in a simplified way. Apply the transform here. */
         rectiLinear = 1;
@@ -391,25 +400,37 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
         bareOval[1] = mPtr->d * (ellPtr->center[1] - ellPtr->ry) + mPtr->ty;
         bareOval[2] = mPtr->a * (ellPtr->center[0] + ellPtr->rx) + mPtr->tx;
         bareOval[3] = mPtr->d * (ellPtr->center[1] + ellPtr->ry) + mPtr->ty;
+
+        /* For tiny points make it simple. */
+        rx = fabs(bareOval[0] - bareOval[2])/2.0;
+        ry = fabs(bareOval[1] - bareOval[3])/2.0;
+        if ((rx <= 2.0) && (ry <= 2.0)) {
+            dist = hypot((bareOval[0] + bareOval[2]/2.0) - pointPtr[0], 
+                    (bareOval[1] + bareOval[3]/2.0) - pointPtr[1]);
+            dist = MAX(0.0, dist - (rx + ry)/2.0);
+            haveDist = 1;
+        }
     }
-    if (rectiLinear) {
-        dist = TkOvalToPoint(bareOval, width, filled, pointPtr);
-    } else {
-        PathAtom *atomPtr;
-        EllipseAtom ellAtom;
-    
-        /* 
-         * We create the atom on the fly to save some memory.
-         */    
-        atomPtr = (PathAtom *)&ellAtom;
-        atomPtr->nextPtr = NULL;
-        atomPtr->type = PATH_ATOM_ELLIPSE;
-        ellAtom.cx = ellPtr->center[0];
-        ellAtom.cy = ellPtr->center[1];
-        ellAtom.rx = ellPtr->rx;
-        ellAtom.ry = ellPtr->ry;
-        dist = GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
-                kPathNumSegmentsEllipse+1, pointPtr);
+    if (!haveDist) {
+        if (rectiLinear) {
+            dist = TkOvalToPoint(bareOval, width, filled, pointPtr);
+        } else {
+            PathAtom *atomPtr;
+            EllipseAtom ellAtom;
+        
+            /* 
+            * We create the atom on the fly to save some memory.
+            */    
+            atomPtr = (PathAtom *)&ellAtom;
+            atomPtr->nextPtr = NULL;
+            atomPtr->type = PATH_ATOM_ELLIPSE;
+            ellAtom.cx = ellPtr->center[0];
+            ellAtom.cy = ellPtr->center[1];
+            ellAtom.rx = ellPtr->rx;
+            ellAtom.ry = ellPtr->ry;
+            dist = GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
+                    kPathNumSegmentsEllipse+1, pointPtr);
+        }
     }
     return dist;
 }
@@ -420,7 +441,7 @@ EllipseToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(ellPtr->style);
     TMatrix *mPtr = stylePtr->matrixPtr;
-    double oval[4], bareOval[4], halfWidth;
+    double bareOval[4], halfWidth;
     int rectiLinear = 0;
     int result;
     
@@ -443,13 +464,16 @@ EllipseToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
         bareOval[2] = mPtr->a * (ellPtr->center[0] + ellPtr->rx) + mPtr->tx;
         bareOval[3] = mPtr->d * (ellPtr->center[1] + ellPtr->ry) + mPtr->ty;
     }
-    /* @@@ Assuming untransformed strokes */
-    oval[0] = bareOval[0] - halfWidth;
-    oval[1] = bareOval[1] - halfWidth;
-    oval[2] = bareOval[2] + halfWidth;
-    oval[3] = bareOval[3] + halfWidth;
     
     if (rectiLinear) {
+        double oval[4];
+        
+        /* @@@ Assuming untransformed strokes */
+        oval[0] = bareOval[0] - halfWidth;
+        oval[1] = bareOval[1] - halfWidth;
+        oval[2] = bareOval[2] + halfWidth;
+        oval[3] = bareOval[3] + halfWidth;
+
         result = TkOvalToArea(oval, areaPtr);
     
         /*

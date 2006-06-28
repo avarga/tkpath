@@ -333,11 +333,9 @@ static double
 PlineToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-    PathAtom *atomPtr = plinePtr->atomPtr;
-    Tk_PathStyle *stylePtr = &(plinePtr->style);
 
-    return GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
-            plinePtr->maxNumSegments, pointPtr);
+    return GenericPathToPoint(canvas, itemPtr, &(plinePtr->style), 
+            plinePtr->atomPtr, plinePtr->maxNumSegments, pointPtr);
 }
 
 static int		
