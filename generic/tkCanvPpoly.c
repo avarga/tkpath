@@ -251,7 +251,8 @@ ComputePpolyBbox(Tk_Canvas canvas, PpolyItem *ppolyPtr)
         return;
     }
     ppolyPtr->bbox = GetGenericBarePathBbox(ppolyPtr->atomPtr);
-    ppolyPtr->totalBbox = GetGenericPathTotalBboxFromBare(stylePtr, &(ppolyPtr->bbox));
+    ppolyPtr->totalBbox = GetGenericPathTotalBboxFromBare(ppolyPtr->atomPtr,
+            stylePtr, &(ppolyPtr->bbox));
     SetGenericPathHeaderBbox(&(ppolyPtr->header), stylePtr->matrixPtr, &(ppolyPtr->totalBbox));
 }
 

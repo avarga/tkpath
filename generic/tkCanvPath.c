@@ -326,243 +326,6 @@ PathCoords(
     }
 }
 
-static void
-CopyPoint(double ptSrc[2], double ptDst[2])
-{
-    ptDst[0] = ptSrc[0];
-    ptDst[1] = ptSrc[1];
-}
-
-static void
-IncludeMiterPointsInRect(double p1[2], double p2[2], double p3[2], PathRect *bounds, double width)
-{
-    double		m1[2], m2[2];
-
-    TkGetMiterPoints(p1, p2, p3, width, m1, m2);
-    IncludePointInRect(bounds, m1[0], m1[1]);
-    IncludePointInRect(bounds, m2[0], m2[1]);
-}
-
-/* Supposed to get the miter extremes since the simple scheme in 
- * SetTotalBboxFromBare fails if sharp line joins using miter.
- *
- * @@@ TODO
- */
- 
-static PathRect
-GetMiterBbox(PathAtom *atomPtr, double width)
-{
-    int			npts;
-    double 		p1[2], p2[2], p3[2];
-    double		current[2], second[2];
-    PathRect	bounds = {1.0e36, 1.0e36, -1.0e36, -1.0e36};
-    
-    npts = 0;
-    current[0] = 0.0;
-    current[1] = 0.0;
-    
-    while (atomPtr != NULL) {
-    
-        switch (atomPtr->type) {
-            case PATH_ATOM_M: { 
-                MoveToAtom *move = (MoveToAtom *) atomPtr;
-                current[0] = move->x;
-                current[1] = move->y;
-                p1[0] = move->x;
-                p1[1] = move->y;
-                npts = 1;
-                break;
-            }
-            case PATH_ATOM_L: {
-                LineToAtom *line = (LineToAtom *) atomPtr;
-                current[0] = line->x;
-                current[1] = line->y;
-                CopyPoint(p2, p3);
-                CopyPoint(p1, p2);
-                p1[0] = line->x;
-                p1[1] = line->y;
-                npts++;
-                if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
-                }
-                break;
-            }
-            case PATH_ATOM_A: {
-                ArcAtom *arc = (ArcAtom *) atomPtr;
-                current[0] = arc->x;
-                current[1] = arc->y;
-                /* @@@ TODO */
-                break;
-            }
-            case PATH_ATOM_Q: {
-                QuadBezierAtom *quad = (QuadBezierAtom *) atomPtr;
-                current[0] = quad->anchorX;
-                current[1] = quad->anchorY;
-                /* The control point(s) form the tangent lines at ends. */
-                CopyPoint(p2, p3);
-                CopyPoint(p1, p2);
-                p1[0] = quad->ctrlX;
-                p1[1] = quad->ctrlY;
-                npts++;
-                if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
-                }
-                CopyPoint(p1, p2);
-                p1[0] = quad->anchorX;
-                p1[1] = quad->anchorY;
-                npts += 2;
-                break;
-            }
-            case PATH_ATOM_C: {
-                CurveToAtom *curve = (CurveToAtom *) atomPtr;
-                current[0] = curve->anchorX;
-                current[1] = curve->anchorY;
-                /* The control point(s) form the tangent lines at ends. */
-                CopyPoint(p2, p3);
-                CopyPoint(p1, p2);
-                p1[0] = curve->ctrlX1;
-                p1[1] = curve->ctrlY1;
-                npts++;
-                if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
-                }
-                p1[0] = curve->ctrlX2;
-                p1[1] = curve->ctrlY2;
-                p1[0] = curve->anchorX;
-                p1[1] = curve->anchorX;
-                npts += 2;
-                break;
-            }
-            case PATH_ATOM_Z: {
-                CloseAtom *close = (CloseAtom *) atomPtr;
-                current[0] = close->x;
-                current[1] = close->y;
-                CopyPoint(p2, p3);
-                CopyPoint(p1, p2);
-                p1[0] = close->x;
-                p1[1] = close->y;
-                npts++;
-                if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
-                }
-                /* Check also the joint of first segment with the last segment. */
-                CopyPoint(p2, p3);
-                CopyPoint(p1, p2);
-                CopyPoint(second, p1);
-                if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
-                }
-                break;
-            }
-            case PATH_ATOM_ELLIPSE: {
-                /* Empty. */
-                break;
-            }
-        }
-        if (npts == 2) {
-            CopyPoint(current, second);
-        }
-        atomPtr = atomPtr->nextPtr;
-    }
-    
-    return bounds;
-}
-
-static void
-SetTotalBboxFromBare(PathItem *pathPtr)
-{
-    Tk_PathStyle *style = &(pathPtr->style);
-    double fudge = 1.0;
-    double width;
-    PathRect rect;
-    
-    rect = pathPtr->bareBbox;
-
-    width = 0.0;
-    if (style->strokeColor != NULL) {
-        width = style->strokeWidth;
-        if (width < 1.0) {
-            width = 1.0;
-        }
-        rect.x1 -= width;
-        rect.x2 += width;
-        rect.y1 -= width;
-        rect.y2 += width;
-    }
-    
-    /* @@@ TODO: We should have a method here to add the necessary space
-     * needed for sharp miter line joins.
-     */
-    
-    /*
-     * Add one (or two if antialiasing) more pixel of fudge factor just to be safe 
-     * (e.g. X may round differently than we do).
-     */
-     
-    if (gUseAntiAlias) {
-        fudge = 2;
-    }
-    rect.x1 -= fudge;
-    rect.x2 += fudge;
-    rect.y1 -= fudge;
-    rect.y2 += fudge;
-    
-    pathPtr->totalBbox = rect;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * SetPathHeaderBbox --
- *
- *		This procedure sets the (transformed) bbox in the items header.
- *
- * Results:
- *		None.
- *
- * Side effects:
- *		The fields x1, y1, x2, and y2 are updated in the header
- *		for itemPtr.
- *
- *--------------------------------------------------------------
- */
-
-static void
-SetPathHeaderBbox(PathItem *pathPtr)
-{
-    Tk_PathStyle *style = &(pathPtr->style);
-    PathRect rect;
-    
-    rect = pathPtr->totalBbox;
-
-    if (style->matrixPtr != NULL) {
-        double x, y;
-        PathRect r = NewEmptyPathRect();
-
-        /* Take each four corners in turn. */
-        x = rect.x1, y = rect.y1;
-        PathApplyTMatrix(style->matrixPtr, &x, &y);
-        IncludePointInRect(&r, x, y);
-
-        x = rect.x2, y = rect.y1;
-        PathApplyTMatrix(style->matrixPtr, &x, &y);
-        IncludePointInRect(&r, x, y);
-
-        x = rect.x1, y = rect.y2;
-        PathApplyTMatrix(style->matrixPtr, &x, &y);
-        IncludePointInRect(&r, x, y);
-
-        x = rect.x2, y = rect.y2;
-        PathApplyTMatrix(style->matrixPtr, &x, &y);
-        IncludePointInRect(&r, x, y);
-        rect = r;  
-    }
-    pathPtr->header.x1 = (int) rect.x1;
-    pathPtr->header.x2 = (int) rect.x2;
-    pathPtr->header.y1 = (int) rect.y1;
-    pathPtr->header.y2 = (int) rect.y2;
-}
-
 /*
  *--------------------------------------------------------------
  *
@@ -647,11 +410,8 @@ ConfigurePath(
 
     /*
      * Recompute bounding box for path.
-     * Do a simplified version here starting from the bare bbox.
-     * Note: This requires that bareBbox already computed!
      */
-    SetTotalBboxFromBare(pathPtr);
-    SetPathHeaderBbox(pathPtr);
+    ComputePathBbox(canvas, pathPtr);
 
     return TCL_OK;
 }
@@ -722,8 +482,8 @@ ComputePathBbox(
     PathItem *pathPtr)			/* Item whose bbox is to be
                                  * recomputed. */
 {
+    Tk_PathStyle *stylePtr = &(pathPtr->style);
     Tk_State state = pathPtr->header.state;
-    PathRect rect;
 
     if(state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
@@ -738,11 +498,11 @@ ComputePathBbox(
      * Get an approximation of the path's bounding box
      * assuming zero width outline (stroke).
      */
-    rect = GetGenericBarePathBbox(pathPtr->atomPtr);
-    pathPtr->bareBbox = rect;
+    pathPtr->bareBbox = GetGenericBarePathBbox(pathPtr->atomPtr);
 
-    SetTotalBboxFromBare(pathPtr);
-    SetPathHeaderBbox(pathPtr);
+    pathPtr->totalBbox = GetGenericPathTotalBboxFromBare(pathPtr->atomPtr,
+            stylePtr, &(pathPtr->bareBbox));
+    SetGenericPathHeaderBbox(&(pathPtr->header), stylePtr->matrixPtr, &(pathPtr->totalBbox));
 }
 
 /*

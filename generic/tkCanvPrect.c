@@ -212,7 +212,7 @@ ComputePrectBbox(Tk_Canvas canvas, PrectItem *prectPtr)
         prectPtr->header.y1 = prectPtr->header.y2 = -1;
         return;
     }
-    prectPtr->totalBbox = GetGenericPathTotalBboxFromBare(stylePtr, &(prectPtr->bbox));
+    prectPtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, stylePtr, &(prectPtr->bbox));
     SetGenericPathHeaderBbox(&(prectPtr->header), stylePtr->matrixPtr, &(prectPtr->totalBbox));
 }
 

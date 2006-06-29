@@ -234,7 +234,7 @@ ComputePlineBbox(Tk_Canvas canvas, PlineItem *plinePtr)
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
-    plinePtr->totalBbox = GetGenericPathTotalBboxFromBare(stylePtr, &r);
+    plinePtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, stylePtr, &r);
     SetGenericPathHeaderBbox(&(plinePtr->header), stylePtr->matrixPtr, &(plinePtr->totalBbox));
 }
 

@@ -175,7 +175,7 @@ PimageCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     int result;
 
-	result = CoordsForPointItems(interp, canvas, (double *)&(pimagePtr->coord), objc, objv);
+	result = CoordsForPointItems(interp, canvas, pimagePtr->coord, objc, objv);
     if ((result == TCL_OK) && (objc == 1) || (objc == 2)) {
         ComputePimageBbox(canvas, pimagePtr);
     }

@@ -223,7 +223,7 @@ EllipseCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     int result;
 
-	result = CoordsForPointItems(interp, canvas, (double *)&(ellPtr->center), objc, objv);
+	result = CoordsForPointItems(interp, canvas, ellPtr->center, objc, objv);
     if ((result == TCL_OK) && (objc == 1) || (objc == 2)) {
         ComputeEllipseBbox(canvas, ellPtr);
     }
@@ -258,7 +258,7 @@ ComputeEllipseBbox(Tk_Canvas canvas, EllipseItem *ellPtr)
         return;
     }
     bbox = GetBareBbox(ellPtr);
-    totalBbox = GetGenericPathTotalBboxFromBare(stylePtr, &bbox);
+    totalBbox = GetGenericPathTotalBboxFromBare(NULL, stylePtr, &bbox);
     SetGenericPathHeaderBbox(&(ellPtr->header), stylePtr->matrixPtr, &totalBbox);
 }
 
