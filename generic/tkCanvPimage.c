@@ -330,22 +330,23 @@ PimageToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
         rect[3] = mPtr->d * bbox.y2 + mPtr->ty;
     }
     if (rectiLinear) {
-        dist = PathRectToPoint(&rect, 0.0, 1, pointPtr);
+        dist = PathRectToPoint(rect, 0.0, 1, pointPtr);
     } else {
         int intersections, rule;
         double polyPtr[10];
         
-        /* Construct all four corners. */
+        /* Construct all four corners. 
+         * First and last must be identical since closed.
+         */
         polyPtr[0] = bbox.x1, polyPtr[1] = bbox.y1;
         polyPtr[2] = bbox.x2, polyPtr[3] = bbox.y1;
         polyPtr[4] = bbox.x2, polyPtr[5] = bbox.y2;
         polyPtr[6] = bbox.x1, polyPtr[7] = bbox.y2;
-        polyPtr[8] = bbox.x1, polyPtr[9] = bbox.y1;
         PathApplyTMatrix(mPtr, polyPtr, polyPtr+1);       
         PathApplyTMatrix(mPtr, polyPtr+2, polyPtr+3);       
         PathApplyTMatrix(mPtr, polyPtr+4, polyPtr+5);       
-        PathApplyTMatrix(mPtr, polyPtr+6, polyPtr+7);       
-        PathApplyTMatrix(mPtr, polyPtr+8, polyPtr+9);       
+        PathApplyTMatrix(mPtr, polyPtr+6, polyPtr+7); 
+        polyPtr[8] = polyPtr[0], polyPtr[9] = polyPtr[1];
     
         dist = PathPolygonToPointEx(polyPtr, 5, pointPtr, &intersections, &rule);
         if (intersections % 2 == 1) {
@@ -359,22 +360,43 @@ static int
 PimageToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
+    Tk_PathStyle *stylePtr = &(pimagePtr->style);
+    TMatrix *mPtr = stylePtr->matrixPtr;
+    PathRect bbox = pimagePtr->bbox;
+    int rectiLinear = 0;
+    double rect[4];
 
-    /* @@@ Much TODO */
+    if (mPtr == NULL) {
+        rectiLinear = 1;
+        rect[0] = bbox.x1;
+        rect[1] = bbox.y1;
+        rect[2] = bbox.x2;
+        rect[3] = bbox.y2;
+    } else if (TMATRIX_IS_RECTILINEAR(mPtr)) {
+        rectiLinear = 1;
+        rect[0] = mPtr->a * bbox.x1 + mPtr->tx;
+        rect[1] = mPtr->d * bbox.y1 + mPtr->ty;
+        rect[2] = mPtr->a * bbox.x2 + mPtr->tx;
+        rect[3] = mPtr->d * bbox.y2 + mPtr->ty;
+    }
+    if (rectiLinear) {
+        return PathRectToArea(rect, 0.0, 1, areaPtr);
+    } else {
+        double polyPtr[10];
     
-    if ((areaPtr[2] <= pimagePtr->header.x1)
-            || (areaPtr[0] >= pimagePtr->header.x2)
-            || (areaPtr[3] <= pimagePtr->header.y1)
-            || (areaPtr[1] >= pimagePtr->header.y2)) {
-        return -1;
+        /* polyPtr: Points to an array coordinates for closed polygon:  x0, y0, x1, y1, ... */
+        /* Construct all four corners. */
+        polyPtr[0] = bbox.x1, polyPtr[1] = bbox.y1;
+        polyPtr[2] = bbox.x2, polyPtr[3] = bbox.y1;
+        polyPtr[4] = bbox.x2, polyPtr[5] = bbox.y2;
+        polyPtr[6] = bbox.x1, polyPtr[7] = bbox.y2;
+        PathApplyTMatrix(mPtr, polyPtr, polyPtr+1);       
+        PathApplyTMatrix(mPtr, polyPtr+2, polyPtr+3);       
+        PathApplyTMatrix(mPtr, polyPtr+4, polyPtr+5);       
+        PathApplyTMatrix(mPtr, polyPtr+6, polyPtr+7); 
+
+        return TkPolygonToArea(polyPtr, 4, areaPtr);
     }
-    if ((areaPtr[0] <= pimagePtr->header.x1)
-            && (areaPtr[1] <= pimagePtr->header.y1)
-            && (areaPtr[2] >= pimagePtr->header.x2)
-            && (areaPtr[3] >= pimagePtr->header.y2)) {
-        return 1;
-    }
-    return 0;
 }
 
 static int		

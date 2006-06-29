@@ -80,6 +80,7 @@ class PathC {
     void MoveTo(float x, float y);
     void LineTo(float x, float y);
     void CurveTo(float x1, float y1, float x2, float y2, float x, float y);
+    void Image(float x, float y, );
     void CloseFigure(void);
     void Stroke(Tk_PathStyle *style);
     void Fill(Tk_PathStyle *style);
@@ -234,6 +235,12 @@ inline void PathC::CurveTo(float x1, float y1, float x2, float y2, float x, floa
             x, y); 			// endpoint
     mCurrentPoint.X = x;
     mCurrentPoint.Y = y;
+}
+
+inline void PathC::Image(float x, float y,  )
+{
+
+
 }
 
 inline void PathC::CloseFigure()
@@ -515,6 +522,13 @@ TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 
 void
 TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->
+}
+
+void
+TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     context->c->
