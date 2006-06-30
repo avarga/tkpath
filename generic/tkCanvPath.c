@@ -155,18 +155,6 @@ DebugPrintf(Tcl_Interp *interp, int level, char *fmt, ...)
 	va_end (args );
 }
 
-#if 0
-static int
-IsPathRectEmpty(PathRect *r)
-{
-    if ((r->x2 > r->x1) && (r->y2 > r->y1)) {
-        return 0;
-    } else {
-        return 1;
-    }
-}
-#endif
-
 /* Be sure rect is not empty (see above) before doing this. */
 static void
 NormalizePathRect(PathRect *r)

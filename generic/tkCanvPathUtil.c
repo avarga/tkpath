@@ -589,51 +589,154 @@ CopyPoint(double ptSrc[2], double ptDst[2])
     ptDst[1] = ptSrc[1];
 }
 
-static void
-IncludeMiterPointsInRect(double p1[2], double p2[2], double p3[2], PathRect *bounds, double width)
-{
-    double		m1[2], m2[2];
+/*
+ *--------------------------------------------------------------
+ *
+ * PathGetMiterPoint --
+ *
+ *		Given three points forming an angle, compute the
+ *		coordinates of the outside point of the mitered corner 
+ *		formed by a line of a given width at that angle.
+ *
+ * Results:
+ *		If the angle formed by the three points is less than
+ *		11 degrees then 0 is returned and m isn't modified.
+ *	  	Otherwise 1 is returned and the point of the "sharp"
+ *		edge is returned.
+ *
+ * Side effects:
+ *		None.
+ *
+ *--------------------------------------------------------------
+ */
 
-    TkGetMiterPoints(p1, p2, p3, width, m1, m2);
-    IncludePointInRect(bounds, m1[0], m1[1]);
-    IncludePointInRect(bounds, m2[0], m2[1]);
-}
-
-#if 0
-static void
-PathGetMiterPoints(
+static int
+PathGetMiterPoint(
     double p1[],		/* Points to x- and y-coordinates of point
                          * before vertex. */
-    double p2[],		/* Points to x- and y-coordinates of vertex
+    double p0[],		/* Points to x- and y-coordinates of vertex
                          * for mitered joint. */
-    double p3[],		/* Points to x- and y-coordinates of point
+    double p2[],		/* Points to x- and y-coordinates of point
                          * after vertex. */
     double width,		/* Width of line.  */
-    double miterLimit,	/* Miter limit. */
-    double m1[],		/* Points to place to put "left" vertex
-                         * point (see as you face from p1 to p2). */
-    double m2[])		/* Points to place to put "right" vertex
-                         * point. */
+    double sinThetaLimit,/* Sinus of theta miter limit. */
+    double m[])			/* The miter point; the sharp edge. */
 {
-
-
+    double n1[2], n2[2];	/* The normalized vectors. */
+    double len1, len2;
+    double sinTheta;
     
+    /*
+     * A little geometry:
+     *          p0
+     *          /\
+     *     n1  /  \ n2
+     *        /    \
+     *       p1    p2
+     *
+     * n1 = (p0-p1)/|p0-p1|
+     * n2 = (p0-p2)/|p0-p2|
+     *
+     * theta is the angle between n1 and n2 which is identical
+     * to the angle of the corner. We keep 0 <= theta <= PI so
+     * that sin(theta) is never negative. If you consider the triangle
+     * formed by the bisection (mid line) and any of the lines,
+     * then theta/2 is the angle of that triangle.
+     * Define:
+     *
+     * n = (n1+n2)/|n1+n2|
+     *
+     * Simple geometry gives: 
+     *
+     * |n1+n2| = 2cos(theta/2)
+     *
+     * and similar if d is the distance from p0 to the miter point:
+     *
+     * d = (w/2)/(sin(theta/2)
+     *
+     * where w is the line width.
+     * For the miter point p we then get:
+     *                   n1+n2            w/2
+     * p = p0 + n*d = ------------- . ------------
+     *                2cos(theta/2)   sin(theta/2)
+     *
+     * Using sin(2a) = 2sin(a)cos(a) we get:
+     *
+     * p = p0 + w/(2sin(theta)) * (n1 + n2)
+     *
+     * Use the cross product to get theta as: a x b = |a| |b| sin(angle) as:
+     *
+     * sin(theta) = |n1x*n2y - n1y*n2x|
+     */
     
+    /* n1 points from p1 to p0. */
+    n1[0] = p0[0] - p1[0];
+    n1[1] = p0[1] - p1[1];
+    len1 = hypot(n1[0], n1[1]);
+    if (len1 < 1e-6) {
+        return 0;
+    }
+    n1[0] /= len1;
+    n1[1] /= len1;
+
+    /* n2 points from p2 to p0. */
+    n2[0] = p0[0] - p2[0];
+    n2[1] = p0[1] - p2[1];
+    len2 = hypot(n2[0], n2[1]);
+    if (len2 < 1e-6) {
+        return 0;
+    }
+    n2[0] /= len2;
+    n2[1] /= len2;
+    
+    sinTheta = fabs(n1[0]*n2[1] - n1[1]*n2[0]);
+    if (sinTheta < sinThetaLimit) {
+        return 0;
+    }
+    m[0] = p0[0] + width/(2.0*sinTheta) * (n1[0] + n2[0]);
+    m[1] = p0[1] + width/(2.0*sinTheta) * (n1[1] + n2[1]);
+    
+    return 1;
 }
-#endif
-
  
+static void
+IncludeMiterPointsInRect(double p1[2], double p2[2], double p3[2], PathRect *bounds, 
+        double width, double sinThetaLimit)
+{
+    double	m[2];
+
+    if (PathGetMiterPoint(p1, p2, p3, width, sinThetaLimit, m)) {
+        IncludePointInRect(bounds, m[0], m[1]);
+    }
+}
+
 static PathRect
-GetMiterBbox(PathAtom *atomPtr, double width)
+GetMiterBbox(PathAtom *atomPtr, double width, double miterLimit)
 {
     int			npts;
     double 		p1[2], p2[2], p3[2];
     double		current[2], second[2];
+    double 		sinThetaLimit;
     PathRect	bounds = {1.0e36, 1.0e36, -1.0e36, -1.0e36};
     
     npts = 0;
     current[0] = 0.0;
     current[1] = 0.0;
+    
+    /* Find sin(thetaLimit) which is needed to get miter points:
+     * miterLimit = 1/sin(theta/2) =approx 2/theta
+     */
+    if (miterLimit > 8) {
+        /* theta:
+         * Exact:  0.250655662336
+         * Approx: 0.25
+         */
+        sinThetaLimit = 2.0/miterLimit;
+    } else if (miterLimit > 2) {
+        sinThetaLimit = sin(2*asin(1.0/miterLimit));
+    } else {
+        return bounds;
+    }
     
     while (atomPtr != NULL) {
     
@@ -657,7 +760,7 @@ GetMiterBbox(PathAtom *atomPtr, double width)
                 p1[1] = line->y;
                 npts++;
                 if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width, sinThetaLimit);
                 }
                 break;
             }
@@ -679,7 +782,7 @@ GetMiterBbox(PathAtom *atomPtr, double width)
                 p1[1] = quad->ctrlY;
                 npts++;
                 if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width, sinThetaLimit);
                 }
                 CopyPoint(p1, p2);
                 p1[0] = quad->anchorX;
@@ -698,7 +801,7 @@ GetMiterBbox(PathAtom *atomPtr, double width)
                 p1[1] = curve->ctrlY1;
                 npts++;
                 if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width, sinThetaLimit);
                 }
                 p1[0] = curve->ctrlX2;
                 p1[1] = curve->ctrlY2;
@@ -717,14 +820,14 @@ GetMiterBbox(PathAtom *atomPtr, double width)
                 p1[1] = close->y;
                 npts++;
                 if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width, sinThetaLimit);
                 }
                 /* Check also the joint of first segment with the last segment. */
                 CopyPoint(p2, p3);
                 CopyPoint(p1, p2);
                 CopyPoint(second, p1);
                 if (npts >= 3) {
-                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width);
+                    IncludeMiterPointsInRect(p1, p2, p3, &bounds, width, sinThetaLimit);
                 }
                 break;
             }
@@ -778,9 +881,14 @@ GetGenericPathTotalBboxFromBare(PathAtom *atomPtr, Tk_PathStyle *stylePtr, PathR
     }
     
     /* Add the miter corners if necessary. */
-    if (atomPtr && (stylePtr->joinStyle == JoinMiter)) {
+    if (atomPtr && (stylePtr->joinStyle == JoinMiter) 
+            && (stylePtr->strokeWidth > 1.0)) {
         PathRect miterBox;
-        miterBox = GetMiterBbox(atomPtr, width);
+        miterBox = GetMiterBbox(atomPtr, width, stylePtr->miterLimit);
+        if (!IsPathRectEmpty(&miterBox)) {
+            IncludePointInRect(&rect, miterBox.x1, miterBox.y1);
+            IncludePointInRect(&rect, miterBox.x2, miterBox.y2);
+        }
     }
     
     /*
@@ -1920,6 +2028,16 @@ NewEmptyPathRect(void)
     r.x2 = -1.0e36;
     r.y2 = -1.0e36;
     return r;
+}
+
+int
+IsPathRectEmpty(PathRect *r)
+{
+    if ((r->x2 >= r->x1) && (r->y2 >= r->y1)) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
 void

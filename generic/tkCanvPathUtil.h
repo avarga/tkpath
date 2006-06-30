@@ -35,6 +35,7 @@ void		SetGenericPathHeaderBbox(Tk_Item *headerPtr, TMatrix *mPtr,
                     PathRect *totalBboxPtr);
 TMatrix		GetCanvasTMatrix(Tk_Canvas canvas);
 PathRect	NewEmptyPathRect(void);
+int			IsPathRectEmpty(PathRect *r);
 void		IncludePointInRect(PathRect *r, double x, double y);
 double		GenericPathToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, Tk_PathStyle *stylePtr,
                     PathAtom *atomPtr, int maxNumSegments, double *pointPtr);
