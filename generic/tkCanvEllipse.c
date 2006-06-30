@@ -224,7 +224,7 @@ EllipseCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     int result;
 
 	result = CoordsForPointItems(interp, canvas, ellPtr->center, objc, objv);
-    if ((result == TCL_OK) && (objc == 1) || (objc == 2)) {
+    if ((result == TCL_OK) && ((objc == 1) || (objc == 2))) {
         ComputeEllipseBbox(canvas, ellPtr);
     }
     return result;

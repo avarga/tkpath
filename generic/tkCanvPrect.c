@@ -189,7 +189,7 @@ PrectCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     int result;
 
     result = CoordsForRectangularItems(interp, canvas, &(prectPtr->bbox), objc, objv);
-    if ((result == TCL_OK) && (objc == 1) || (objc == 4)) {
+    if ((result == TCL_OK) && ((objc == 1) || (objc == 4))) {
         if (!(prectPtr->flags & kPrectItemNoNewPathAtoms)) {
             MakePathAtoms(prectPtr);
             ComputePrectBbox(canvas, prectPtr);

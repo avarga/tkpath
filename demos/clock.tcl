@@ -47,7 +47,8 @@ namespace eval ::clock {
 	    $w itemconfig pointer -m $m
 	}
     }
+    
+    ticker -15
 }
 
-clock::ticker -15
 

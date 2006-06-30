@@ -459,7 +459,7 @@ CoordsForPolygonline(
     } else {
         int 	i;
         double	x, y;
-        double	firstX, firstY;
+        double	firstX = 0.0, firstY = 0.0;
         PathAtom *firstAtomPtr = NULL;
     
         /*
