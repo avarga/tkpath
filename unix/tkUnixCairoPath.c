@@ -136,17 +136,25 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
     Tk_PhotoImageBlock block;
     cairo_surface_t *surface;
     cairo_format_t format;
-    unsigned char *data;
-    int size;
+    unsigned char *data = NULL;
+    unsigned char *srcPtr, *dstPtr;
+    int srcR, srcG, srcB, srcA;		/* The source pixel offsets. */
+    int dstR, dstG, dstB, dstA;		/* The destination pixel offsets. */
+    int size, pitch;
+    int iwidth, iheight;
+    int i, j;
+    int smallEndian = 1;	/* Hardcoded. */
 
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
     size = block.pitch * block.height;
+    iwidth = block.width;
+    iheight = block.height;
     if (width == 0.0) {
-        width = (double) block.width;
+        width = (double) iwidth;
     }
     if (height == 0.0) {
-        height = (double) block.height;
+        height = (double) iheight;
     }
     
     /*
@@ -158,27 +166,63 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
      *   allows for padding at the end of rows, or for writing
      *   to a subportion of a larger image.
      */
+     
+    /**
+     * cairo_format_t
+     * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
+     *   alpha in the upper 8 bits, then red, then green, then blue.
+     *   The 32-bit quantities are stored native-endian. Pre-multiplied
+     *   alpha is used. (That is, 50% transparent red is 0x80800000,
+     *   not 0x80ff0000.)
+     */
     if (block.pixelSize*8 == 32) {
-        if (block.offset[3] == 3) {
-            /* This is real fake! But cairo has no RGBA format. */
-            format = CAIRO_FORMAT_ARGB32;
-            //format = ???;
-            data = (unsigned char *) (block.pixelPtr) + 0;
-        } else if (block.offset[3] == 0) {
-            format = CAIRO_FORMAT_ARGB32;
-            data = (unsigned char *) (block.pixelPtr);
-        } else {
-            /* @@@ What to do here? */
-            return;
+        format = CAIRO_FORMAT_ARGB32;
+        pitch = block.pitch;
+        data = (unsigned char *) ckalloc(pitch*iheight);
+        
+        /* The offset array contains the offsets from the address of a 
+         * pixel to the addresses of the bytes containing the red, green, 
+         * blue and alpha (transparency) components.
+         *
+         * We need to copy pixel data from the source using the photo offsets
+         * to cairos ARGB format which is in *native* endian order; Switch!
+         */
+        srcR = block.offset[0];
+        srcG = block.offset[1]; 
+        srcB = block.offset[2];
+        srcA = block.offset[3];
+        dstR = 1;
+        dstG = 2;
+        dstB = 3;
+        dstA = 0;
+        if (smallEndian) {
+            dstR = 3-dstR, dstG = 3-dstG, dstB = 3-dstB, dstA = 3-dstA;
         }
+        for (i = 0; i < iheight; i++) {
+            srcPtr = block.pixelPtr + i*pitch;
+            dstPtr = data + i*pitch;
+            for (j = 0; j < iwidth; j++) {
+                *(dstPtr+dstR) = *(srcPtr+srcR);
+                *(dstPtr+dstG) = *(srcPtr+srcG);
+                *(dstPtr+dstB) = *(srcPtr+srcB);
+                *(dstPtr+dstA) = *(srcPtr+srcA);
+                srcPtr += 4;
+                dstPtr += 4;
+            }
+        }
+    } else {
+        return;
     }
     surface = cairo_image_surface_create_for_data(
             data,
             format, 
             (int) width, (int) height, 
-            block.pitch);		/* stride */
+            pitch);		/* stride */
     cairo_set_source_surface(context->c, surface, x, y);
     cairo_paint(context->c);
+    if (data) {
+        ckfree((char *)data);
+    }
 }
 
 void TkPathClosePath(TkPathContext ctx)
