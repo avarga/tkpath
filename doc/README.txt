@@ -121,6 +121,13 @@ if paramters are wrong.
 
     .c create polygon x1 y1 x2 y2 .... ?fillOptions strokeOptions genericOptions?
 
+ o The pimage item
+
+   This displays an image in the canvas anchored nw. If -width or -height is
+   nonzero then the image is scaled to this size prior to any affine transform.
+
+   .c create pimage x y ?-width -height?
+
  o Antialiasing, if available, is controlled by the variable:
     ::tkpath::antialias
     Switch on with:

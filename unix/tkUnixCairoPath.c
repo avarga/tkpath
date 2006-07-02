@@ -130,13 +130,15 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 }
 
 void
-TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
+TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
+        double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     Tk_PhotoImageBlock block;
     cairo_surface_t *surface;
     cairo_format_t format;
     unsigned char *data = NULL;
+    unsigned char *ptr = NULL;
     unsigned char *srcPtr, *dstPtr;
     int srcR, srcG, srcB, srcA;		/* The source pixel offsets. */
     int dstR, dstG, dstB, dstA;		/* The destination pixel offsets. */
@@ -178,7 +180,6 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
     if (block.pixelSize*8 == 32) {
         format = CAIRO_FORMAT_ARGB32;
         pitch = block.pitch;
-        data = (unsigned char *) ckalloc(pitch*iheight);
         
         /* The offset array contains the offsets from the address of a 
          * pixel to the addresses of the bytes containing the red, green, 
@@ -198,23 +199,33 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
         if (smallEndian) {
             dstR = 3-dstR, dstG = 3-dstG, dstB = 3-dstB, dstA = 3-dstA;
         }
-        for (i = 0; i < iheight; i++) {
-            srcPtr = block.pixelPtr + i*pitch;
-            dstPtr = data + i*pitch;
-            for (j = 0; j < iwidth; j++) {
-                *(dstPtr+dstR) = *(srcPtr+srcR);
-                *(dstPtr+dstG) = *(srcPtr+srcG);
-                *(dstPtr+dstB) = *(srcPtr+srcB);
-                *(dstPtr+dstA) = *(srcPtr+srcA);
-                srcPtr += 4;
-                dstPtr += 4;
+        if ((srcR == dstR) && (srcG == dstG) && (srcB == dstB) && (srcA == dstA)) {
+            ptr = (unsigned char *) block.pixelPtr;
+        } else {
+            data = (unsigned char *) ckalloc(pitch*iheight);
+            ptr = data;
+            
+            for (i = 0; i < iheight; i++) {
+                srcPtr = block.pixelPtr + i*pitch;
+                dstPtr = ptr + i*pitch;
+                for (j = 0; j < iwidth; j++) {
+                    *(dstPtr+dstR) = *(srcPtr+srcR);
+                    *(dstPtr+dstG) = *(srcPtr+srcG);
+                    *(dstPtr+dstB) = *(srcPtr+srcB);
+                    *(dstPtr+dstA) = *(srcPtr+srcA);
+                    srcPtr += 4;
+                    dstPtr += 4;
+                }
             }
         }
+    } else if (block.pixelSize*8 == 24) {
+        /* Could do something about this? */
+        return;
     } else {
         return;
     }
     surface = cairo_image_surface_create_for_data(
-            data,
+            ptr,
             format, 
             (int) width, (int) height, 
             pitch);		/* stride */
@@ -389,7 +400,7 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     pattern = cairo_pattern_create_linear(x1, y1, x2, y2);
     for (i = 0; i < nstops; i++) {
         stop = fillPtr->stops[i];
-        cairo_pattern_add_color_stop_rgba (pattern, stop->offset, 
+        cairo_pattern_add_color_stop_rgba(pattern, stop->offset, 
                 RedDoubleFromXColorPtr(stop->color),
                 GreenDoubleFromXColorPtr(stop->color),
                 BlueDoubleFromXColorPtr(stop->color),

@@ -300,7 +300,8 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 }
 
 void
-TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
+TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
+        double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGRect rectangle;
@@ -310,7 +311,7 @@ TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double 
     CGImageAlphaInfo alphaInfo;
     size_t size;
     Tk_PhotoImageBlock block;
-
+    
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
     size = block.pitch * block.height;

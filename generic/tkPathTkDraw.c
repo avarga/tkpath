@@ -135,7 +135,7 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    /* TkPathContext_ *context = (TkPathContext_ *) ctx; */
     /* empty */
 }
 
@@ -241,10 +241,24 @@ void TkPathArcTo(TkPathContext ctx,
 void
 TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    double x1, y1, x2, y2, x3, y3;
+
+    x1 = x+width; 
+    y1 = y;
+    x2 = x+width;
+    y2 = y+height;
+    x3 = x;
+    y3 = y+height;
+    PathApplyTMatrix(context->m, &x, &y);
+    PathApplyTMatrix(context->m, &x1, &y1);
+    PathApplyTMatrix(context->m, &x2, &y2);
+    PathApplyTMatrix(context->m, &x3, &y3);
+
     TkPathMoveTo(ctx, x, y);
-    TkPathLineTo(ctx, x+width, y);
-    TkPathLineTo(ctx, x+width, y+height);
-    TkPathLineTo(ctx, x, y+height);
+    TkPathLineTo(ctx, x1, y1);
+    TkPathLineTo(ctx, x2, y2);
+    TkPathLineTo(ctx, x3, y3);
     TkPathClosePath(ctx);
 }
 
@@ -259,17 +273,14 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 }
 
 void
-TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, double x, double y, double width, double height)
+TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    int iwidth, iheight;
 
-    /* @@@ TODO */
-    /*
-    
-    Tk_RedrawImage(image, x - imgPtr->header.x1, y - imgPtr->header.y1,
-	    width, height, context->drawable, (int) x, (int) y);
-
-    */
+    PathApplyTMatrix(context->m, &x, &y);
+    Tk_SizeOfImage(image, &iwidth, &iheight);
+    Tk_RedrawImage(image, 0, 0, iwidth, iheight, context->drawable, (int)x, (int)y);
 }
 
 void TkPathClosePath(TkPathContext ctx)
@@ -417,7 +428,7 @@ int TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
 
 void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {    
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    /* TkPathContext_ *context = (TkPathContext_ *) ctx; */
     /* The Tk X11 compatibility layer does not have tha ability to set up
      * clipping to pixmap which is needed here, I believe. 
      */

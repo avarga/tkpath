@@ -300,7 +300,8 @@ DisplayPimage(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable dra
     if (stylePtr->matrixPtr != NULL) {
         TkPathPushTMatrix(ctx, stylePtr->matrixPtr);
     }
-    TkPathImage(ctx, pimagePtr->photo, pimagePtr->coord[0], pimagePtr->coord[1], 
+    /* @@@ Maybe we should taking care of x, y etc.? */
+    TkPathImage(ctx, pimagePtr->image, pimagePtr->photo, pimagePtr->coord[0], pimagePtr->coord[1], 
             pimagePtr->width, pimagePtr->height);
     TkPathFree(ctx);
 }

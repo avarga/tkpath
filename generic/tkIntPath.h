@@ -224,7 +224,7 @@ void		TkPathArcToUsingBezier(TkPathContext ctx, double rx, double ry,
 void		TkPathRect(TkPathContext ctx, double x, double y, double width, double height);
 void		TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry);
 void		TkPathClosePath(TkPathContext ctx);
-void		TkPathImage(TkPathContext ctx, Tk_PhotoHandle photo, 
+void		TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
                     double x, double y, double width, double height);
 
 /*
