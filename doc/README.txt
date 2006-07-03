@@ -181,9 +181,20 @@ if paramters are wrong.
 	-stops {stopSpec ?stopSpec...?}
 	    where stopSpec is a list {offset color ?opacity?}.
 	    All offsets must be ordered and run from 0 to 1.
-	-transition {x1 y1 x2 y2}
+	-lineartransition {x1 y1 x2 y2}
 	    specifies the transtion vector relative the items bounding box.
 	    Coordinates run from 0 to 1. It defaults to {0 0 1 0}.
+
+
+o Radial gradients are created and configured using:
+
+   ::tkpath::radialgradient cmd ?options?
+
+   Works as the tkpath::lineargradient except that it uses a -radialtransition
+   option instaed of the -lineartransition:
+       -radialtransition {cx cy ?r? ?fx fy?}
+           specifies the transition circles relative the items bounding box
+	   and run from 0 to 1. They default to {0 0 1 0 0}.
 
 
  o Helper function for making transformation matrices:

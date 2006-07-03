@@ -4,7 +4,7 @@
  *		This file implements a path drawing model
  *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
@@ -85,6 +85,7 @@ typedef struct PathAtom {
 
 /*
  * Records for gradient fills.
+ * We need a separate GradientStopArray to simplify option parsing.
  */
  
 typedef struct GradientStop {
@@ -93,20 +94,27 @@ typedef struct GradientStop {
     double opacity;
 } GradientStop;
 
+typedef struct GradientStopArray {
+    int nstops;
+    GradientStop **stops;	/* Array of pointers to GradientStop. */
+} GradientStopArray;
+
 typedef struct LinearGradientFill {
     PathRect transition;	/* Actually not a proper rect but a vector. */
     int method;
     int fillRule;			/* Not yet used. */
-    int nstops;
-    GradientStop **stops;	/* Array of pointers to GradientStop. */
+    GradientStopArray stopArr;
 } LinearGradientFill;
 
 typedef struct RadialGradientFill {
     double centerX;
     double centerY;
     double rad;
-    int nstops;
-    GradientStop **stops;
+    double focalX;
+    double focalY;
+    int method;
+    int fillRule;			/* Not yet used. */
+    GradientStopArray stopArr;
 } RadialGradientFill;
 
 /*

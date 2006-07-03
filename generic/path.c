@@ -30,13 +30,9 @@ extern Tk_ItemType tkPimageType;
 
 int gUseAntiAlias = 0;
 
-/*
- * Hash table to keep track of linear gradient fills.
- */    
-    
-Tcl_HashTable 	*gLinearGradientHashPtr = NULL;
-
 extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
+                    int objc, Tcl_Obj* CONST objv[]);
+extern int 	RadialGradientCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 
 
@@ -104,11 +100,13 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     }
 
     /*
-     * Make a separate gradient object, similar to SVG.
+     * Make separate gradient objects, similar to SVG.
      */
     Tcl_CreateObjCommand(interp, "::tkpath::lineargradient",
             LinearGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    PathLinearGradientInit(interp);
+    Tcl_CreateObjCommand(interp, "::tkpath::radialgradient",
+            RadialGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    PathGradientInit(interp);
 
     /*
      * Style object.

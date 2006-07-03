@@ -610,7 +610,7 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     GradientStop 	*stop1, *stop2;
 
     transition = fillPtr->transition;
-    nstops = fillPtr->nstops;
+    nstops = fillPtr->stopArr.nstops;
     
     if (nstops == 1) {
         /* Fill using solid color. */
@@ -624,8 +624,8 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
          * Paint all stops pairwise.
          */
         for (i = 0; i < nstops - 1; i++) {
-            stop1 = fillPtr->stops[i];
-            stop2 = fillPtr->stops[i+1];
+            stop1 = fillPtr->stopArr.stops[i];
+            stop2 = fillPtr->stopArr.stops[i+1];
             
             /* If the two offsets identical then skip. */
             if (fabs(stop1->offset - stop2->offset) < 1e-6) {

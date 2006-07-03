@@ -650,7 +650,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     GradientStop 	*stop1, *stop2;
 
     transition = fillPtr->transition;
-    nstops = fillPtr->nstops;
+    nstops = fillPtr->stopArr.nstops;
 
     if (fillPtr->method == kPathGradientMethodPad) {
     
@@ -667,7 +667,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
                 line.y1 = transition.y1 - 1.42*(transition.y2 - transition.y1);
                 line.x2 = transition.x1;
                 line.y2 = transition.y1;
-                stop1 = fillPtr->stops[0];
+                stop1 = fillPtr->stopArr.stops[0];
                 FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
             }
@@ -676,7 +676,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
                 line.y1 = transition.y2;
                 line.x2 = transition.x2 + 1.42*(transition.x2 - transition.x1);
                 line.y2 = transition.y2 + 1.42*(transition.y2 - transition.y1);
-                stop1 = fillPtr->stops[nstops - 1];
+                stop1 = fillPtr->stopArr.stops[nstops - 1];
                 FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
             }
@@ -686,7 +686,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
          * What happens if first offset > 0.0 or last offset < 1.0? Pad.
          */
         if (fillPtr->stops[0]->offset > 0.0) {
-            stop1 = fillPtr->stops[0];
+            stop1 = fillPtr->stopArr.stops[0];
             line.x1 = transition.x1;
             line.y1 = transition.y1;
             line.x2 = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
@@ -694,7 +694,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
             FillTwoStopLinearGradient(d, bbox, &line,
                     stop1->color, stop1->color, stop1->opacity, stop1->opacity);
         }
-        if (fillPtr->stops[nstops-1]->offset < 1.0) {
+        if (fillPtr->stopArr.stops[nstops-1]->offset < 1.0) {
             stop2 = fillPtr->stops[nstops-1];
             line.x1 = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
             line.y1 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
@@ -708,8 +708,8 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
          * Paint all stops pairwise.
          */
         for (i = 0; i < nstops - 1; i++) {
-            stop1 = fillPtr->stops[i];
-            stop2 = fillPtr->stops[i+1];
+            stop1 = fillPtr->stopArr.stops[i];
+            stop2 = fillPtr->stopArr.stops[i+1];
             
             /* If the two offsets identical then skip. */
             if (fabs(stop1->offset - stop2->offset) < 1e-6) {

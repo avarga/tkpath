@@ -527,7 +527,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     TwoStopRecord		twoStop;
     
     transition = fillPtr->transition;
-    nstops = fillPtr->nstops;
+    nstops = fillPtr->stopArr.nstops;
     fillMethod = fillPtr->method;
     
     callbacks.version = 0;
@@ -545,8 +545,8 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
      * Paint all stops pairwise.
      */
     for (i = 0; i < nstops - 1; i++) {
-        stop1 = fillPtr->stops[i];
-        stop2 = fillPtr->stops[i+1];
+        stop1 = fillPtr->stopArr.stops[i];
+        stop2 = fillPtr->stopArr.stops[i+1];
         twoStop.stop1 = stop1;
         twoStop.stop2 = stop2;
         function = CGFunctionCreate((void *) &twoStop, 1, NULL, 4, NULL, &callbacks);
@@ -580,6 +580,34 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     CGColorSpaceRelease(colorSpaceRef);
 }
 
+#if 0
+void
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    int					i, nstops;
+    int					fillMethod;
+    bool 				extendStart, extendEnd;
+    CGShadingRef 		shading;
+    CGPoint 			start, end;
+    CGColorSpaceRef 	colorSpaceRef;
+    CGFunctionRef 		function;
+    CGFunctionCallbacks callbacks;
+    GradientStop 		*stop1, *stop2;
+    TwoStopRecord		twoStop;
+
+    nstops = fillPtr->stopArr.nstops;
+    fillMethod = fillPtr->method;
+    
+    callbacks.version = 0;
+    callbacks.evaluate = ShadeEvaluate;
+    callbacks.releaseInfo = ShadeRelease;
+    colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+
+
+
+}
+#endif
 
 /*-------- This is replaced by Shading!!! -----------------*/
 

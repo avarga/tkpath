@@ -388,8 +388,8 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     cairo_save(context->c);
 
     transition = fillPtr->transition;
-    nstops = fillPtr->nstops;
     fillMethod = fillPtr->method;
+    nstops = fillPtr->stopArr.nstops;
     
     /* Scale up 'transition' vector to bbox. */
     x1 = bbox->x1 + (bbox->x2 - bbox->x1)*transition.x1;
@@ -399,7 +399,7 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
 
     pattern = cairo_pattern_create_linear(x1, y1, x2, y2);
     for (i = 0; i < nstops; i++) {
-        stop = fillPtr->stops[i];
+        stop = fillPtr->stopArr.stops[i];
         cairo_pattern_add_color_stop_rgba(pattern, stop->offset, 
                 RedDoubleFromXColorPtr(stop->color),
                 GreenDoubleFromXColorPtr(stop->color),

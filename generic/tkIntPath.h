@@ -268,7 +268,7 @@ int 		PathGenericCmdDispatcher(
                     void (*configNotifyProc)(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]),
                     void (*freeProc)(Tcl_Interp *interp, char *recordPtr));
 void		PathStyleInit(Tcl_Interp* interp);
-void		PathLinearGradientInit(Tcl_Interp* interp);
+void		PathGradientInit(Tcl_Interp* interp);
 int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 int			PathStyleHaveWithName(CONST char *name);
