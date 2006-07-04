@@ -2164,10 +2164,10 @@ FillRulePrintProc(
 /*
  *--------------------------------------------------------------
  *
- * LinearGradientParseProc --
+ * GradientParseProc --
  *
  *		This procedure is invoked during option processing to handle
- *		the "-lineargradient" option.
+ *		the "-fillgradient" option.
  *
  * Results:
  *		A standard Tcl return value.
@@ -2178,7 +2178,7 @@ FillRulePrintProc(
  */
 
 int
-LinearGradientParseProc(
+GradientParseProc(
     ClientData clientData,		/* some flags.*/
     Tcl_Interp *interp,			/* Used for reporting errors. */
     Tk_Window tkwin,			/* Window containing canvas widget. */
@@ -2192,7 +2192,7 @@ LinearGradientParseProc(
     if(value == NULL || *value == 0) {
         new = NULL;
     } else {
-        if (HaveLinearGradientStyleWithName(value) != TCL_OK) {
+        if (HaveGradientStyleWithName(value) != TCL_OK) {
             Tcl_AppendResult(interp, "bad value \"", value, 
                     "\": does not exist",
                     (char *) NULL);
@@ -2215,7 +2215,7 @@ LinearGradientParseProc(
 /*
  *--------------------------------------------------------------
  *
- * LinearGradientPrintProc --
+ * GradientPrintProc --
  *
  *		This procedure is invoked by the Tk configuration code
  *		to produce a printable string for the "-lineargradient"
@@ -2235,7 +2235,7 @@ LinearGradientParseProc(
  */
 
 char *
-LinearGradientPrintProc(
+GradientPrintProc(
     ClientData clientData,		/* Ignored. */
     Tk_Window tkwin,			/* Window containing canvas widget. */
     char *widgRec,			/* Pointer to record for item. */

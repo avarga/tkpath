@@ -162,7 +162,7 @@ static int RadTransitionSet(
 {
     char *internalPtr;
     int objEmpty = 0;
-    double z[5] = {0.0, 0.0, 1.0, 0.0, 0.0};
+    double z[5] = {0.5, 0.5, 0.5, 0.5, 0.5};
     RadialGradientFill *fillPtr = NULL;
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
@@ -482,20 +482,57 @@ GetLinearGradientFillFromName(char *name, LinearGradientFill **gradientPtrPtr)
     }
 }
 
-int
+static int
+GetRadialGradientFillFromName(char *name, RadialGradientFill **gradientPtrPtr)
+{
+	Tcl_HashEntry *hPtr;
+    RadialGradientStyle *gradientStylePtr;
+
+	hPtr = Tcl_FindHashEntry(gRadialGradientHashPtr, name);
+	if (hPtr == NULL) {
+        *gradientPtrPtr = NULL;
+        return TCL_ERROR;
+    } else {
+        gradientStylePtr = (RadialGradientStyle *) Tcl_GetHashValue(hPtr);
+        *gradientPtrPtr = &(gradientStylePtr->fill);
+        return TCL_OK;
+    }
+}
+
+static int
 HaveLinearGradientStyleWithName(CONST char *name)
 {
     return (Tcl_FindHashEntry(gLinearGradientHashPtr, name) == NULL) ? TCL_ERROR : TCL_OK;
 }
 
-void
-PathPaintLinearGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule)
+static int
+HaveRadialGradientStyleWithName(CONST char *name)
 {
-    LinearGradientFill *fillPtr;
-    if (GetLinearGradientFillFromName(name, &fillPtr) != TCL_OK) {
-        return;
+    return (Tcl_FindHashEntry(gRadialGradientHashPtr, name) == NULL) ? TCL_ERROR : TCL_OK;
+}
+
+int
+HaveGradientStyleWithName(CONST char *name)
+{
+    if ((HaveLinearGradientStyleWithName(name) == TCL_OK) 
+            || (HaveRadialGradientStyleWithName(name) == TCL_OK)) {
+        return TCL_OK;
+    } else {
+        return TCL_ERROR;
     }
-    TkPathPaintLinearGradient(ctx, bbox, fillPtr, fillRule);
+}
+
+void
+PathPaintGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule)
+{
+    LinearGradientFill *linearFillPtr;
+    RadialGradientFill *radialFillPtr;
+
+    if (GetLinearGradientFillFromName(name, &linearFillPtr) == TCL_OK) {
+        TkPathPaintLinearGradient(ctx, bbox, linearFillPtr, fillRule);
+    } else if (GetRadialGradientFillFromName(name, &radialFillPtr) == TCL_OK) {
+        TkPathPaintRadialGradient(ctx, bbox, radialFillPtr, fillRule);
+    }
 }
 
 void
@@ -636,11 +673,11 @@ RadGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CO
 	gradientStylePtr->name = Tk_GetUid(name);
     
     /* Set default transition vector in case not set. */
-    gradientStylePtr->fill.centerX = 0.0;
-    gradientStylePtr->fill.centerY = 0.0;
-    gradientStylePtr->fill.rad = 1.0;
-    gradientStylePtr->fill.focalX = 0.0;
-    gradientStylePtr->fill.focalY = 0.0;
+    gradientStylePtr->fill.centerX = 0.5;
+    gradientStylePtr->fill.centerY = 0.5;
+    gradientStylePtr->fill.rad = 0.5;
+    gradientStylePtr->fill.focalX = 0.5;
+    gradientStylePtr->fill.focalY = 0.5;
 
 	return (char *) gradientStylePtr;
 }

@@ -50,11 +50,6 @@ char *	PathTkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
                 char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
     
 
-int 		LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
-                int objc, Tcl_Obj* CONST objv[]);
-void		PathPaintLinearGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule);
-
-
 #ifdef __cplusplus
 }
 #endif

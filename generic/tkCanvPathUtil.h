@@ -54,10 +54,10 @@ int		FillRuleParseProc(ClientData clientData,
                         CONST char *value, char *recordPtr, int offset);
 char *	FillRulePrintProc(ClientData clientData, Tk_Window tkwin, 
                         char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
-int		LinearGradientParseProc(ClientData clientData,
+int		GradientParseProc(ClientData clientData,
                         Tcl_Interp *interp, Tk_Window tkwin,
                         CONST char *value, char *recordPtr, int offset);
-char *	LinearGradientPrintProc(ClientData clientData, Tk_Window tkwin, 
+char *	GradientPrintProc(ClientData clientData, Tk_Window tkwin, 
                         char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 int		MatrixParseProc(ClientData clientData,
                         Tcl_Interp *interp, Tk_Window tkwin,
@@ -131,9 +131,9 @@ int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr
     };
 
 #define PATH_STYLE_CUSTOM_OPTION_LINGRAD   \
-    static Tk_CustomOption linGradOption = {              \
-        (Tk_OptionParseProc *) LinearGradientParseProc,   \
-        LinearGradientPrintProc,                          \
+    static Tk_CustomOption gradientOption = {             \
+        (Tk_OptionParseProc *) GradientParseProc,   	  \
+        GradientPrintProc,                          	  \
         (ClientData) NULL                                 \
     };
 
@@ -168,7 +168,7 @@ int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr
         "", Tk_Offset(typeName, style.fillColor), TK_CONFIG_NULL_OK},       \
     {TK_CONFIG_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,       \
         (char *) NULL, Tk_Offset(typeName, style.gradientFillName),         \
-        TK_CONFIG_NULL_OK, &linGradOption},                                 \
+        TK_CONFIG_NULL_OK, &gradientOption},                                 \
     {TK_CONFIG_CUSTOM, "-filloffset", (char *) NULL, (char *) NULL,         \
         "0,0", Tk_Offset(typeName, style.fillTSOffset),                     \
         TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},                         \
@@ -196,7 +196,7 @@ int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr
     /* @@@ TODO */   \
     {TK_CONFIG_CUSTOM, "-strokegradient", (char *) NULL, (char *) NULL,     \
         (char *) NULL, Tk_Offset(typeName, style.gradientStrokeName),       \
-        TK_CONFIG_NULL_OK, &linGradOption},                                 \
+        TK_CONFIG_NULL_OK, &gradientOption},                                 \
     \
     {TK_CONFIG_CAP_STYLE, "-strokelinecap", (char *) NULL, (char *) NULL,   \
         "butt", Tk_Offset(typeName, style.capStyle),                        \

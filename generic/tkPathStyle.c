@@ -73,7 +73,7 @@ static int FillGradientSetOption(
     if (internalPtr != NULL) {
 		if (valuePtr != NULL) {
 		    name = Tcl_GetStringFromObj(valuePtr, &length);
-            if (HaveLinearGradientStyleWithName(name) != TCL_OK) {
+            if (HaveGradientStyleWithName(name) != TCL_OK) {
                 Tcl_AppendResult(interp, "bad gradient name \"", name, 
                         "\": does not exist",
                         (char *) NULL);

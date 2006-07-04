@@ -272,10 +272,10 @@ void		PathGradientInit(Tcl_Interp* interp);
 int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 int			PathStyleHaveWithName(CONST char *name);
-int			HaveLinearGradientStyleWithName(CONST char *name);
+int			HaveGradientStyleWithName(CONST char *name);
 void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName, long flags);
 
-void		PathPaintLinearGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule);
+void		PathPaintGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule);
 
 
 /*

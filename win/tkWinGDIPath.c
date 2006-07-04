@@ -733,3 +733,9 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         /* @@@ TODO */
     }
 }
+
+void
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+{
+}
+

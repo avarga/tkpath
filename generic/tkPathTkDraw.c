@@ -434,4 +434,8 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
      */
 }
             
+void
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+{
+}
 

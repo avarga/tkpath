@@ -369,17 +369,36 @@ int TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
     return TCL_ERROR;
 }
 
+static int GetCairoExtend(int method)
+{
+    cairo_extend_t extend;
+
+    switch (fillMethod) {
+        case kPathGradientMethodPad: 
+            extend = CAIRO_EXTEND_NONE;
+            break;
+        case kPathGradientMethodRepeat:
+            extend = CAIRO_EXTEND_REPEAT;
+            break;
+        case kPathGradientMethodReflect:
+            extend = CAIRO_EXTEND_REFLECT;
+            break;
+        default:
+            extend = CAIRO_EXTEND_NONE;
+            break;
+    }
+    return extend;
+}
+
 void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {    
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i;
     int					nstops;
-    int					fillMethod;
     double				x1, y1, x2, y2;
     PathRect 			transition;		/* The transition line. */
     GradientStop 		*stop;
     cairo_pattern_t 	*pattern;
-    cairo_extend_t		extend;
     
     /*
      * The current path is consumed by filling.
@@ -411,24 +430,14 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     cairo_set_fill_rule(context->c, 
             (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
             
-    switch (fillMethod) {
-        case kPathGradientMethodPad: 
-            extend = CAIRO_EXTEND_NONE;
-            break;
-        case kPathGradientMethodRepeat:
-            extend = CAIRO_EXTEND_REPEAT;
-            break;
-        case kPathGradientMethodReflect:
-            extend = CAIRO_EXTEND_REFLECT;
-            break;
-        default:
-            extend = CAIRO_EXTEND_NONE;
-            break;
-    }
-    cairo_pattern_set_extend(pattern, extend);
+    cairo_pattern_set_extend(pattern, GetCairoExtend(fillPtr->method));
     cairo_fill(context->c);
     
     cairo_pattern_destroy(pattern);
     cairo_restore(context->c);
 }
             
+void
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+{
+}

@@ -194,7 +194,7 @@ o Radial gradients are created and configured using:
    option instaed of the -lineartransition:
        -radialtransition {cx cy ?r? ?fx fy?}
            specifies the transition circles relative the items bounding box
-	   and run from 0 to 1. They default to {0 0 1 0 0}.
+	   and run from 0 to 1. They default to {0.5 0.5 0.5 0.5 0.5}.
 
 
  o Helper function for making transformation matrices:

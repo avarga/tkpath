@@ -90,9 +90,9 @@ TkPathPaintPath(TkPathContext context,
      * What if both -fill and -fillgradient?
      */     
     if (stylePtr->gradientFillName != NULL) {
-        if (HaveLinearGradientStyleWithName(stylePtr->gradientFillName) == TCL_OK) {
+        if (HaveGradientStyleWithName(stylePtr->gradientFillName) == TCL_OK) {
             TkPathClipToPath(context, stylePtr->fillRule);
-            PathPaintLinearGradientFromName(context, bboxPtr, 
+            PathPaintGradientFromName(context, bboxPtr, 
                     stylePtr->gradientFillName, stylePtr->fillRule);
 
             /* Note: Both CoreGraphics on MacOSX and Win32 GDI (and cairo from 1.0) clear the current path

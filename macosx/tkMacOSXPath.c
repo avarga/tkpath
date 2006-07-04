@@ -476,6 +476,10 @@ TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
  * Using CGShading for fill gradients.
  */
  
+/* @@@ Perhaps it would be better to make the complete shading in a single call
+       instead of dividing it up into two stop calls?
+*/
+ 
 typedef struct TwoStopRecord {
     GradientStop *stop1;
     GradientStop *stop2;
@@ -559,7 +563,8 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         extendEnd = 0;
         if (i == 0) {
             extendStart = 1;
-        } else if (i == nstops-1) {
+        }  
+        if (i == nstops-2) {
             extendEnd = 1;
         }
 
@@ -576,17 +581,17 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         CGShadingRelease(shading);
         CGFunctionRelease(function);
     }
-    
     CGColorSpaceRelease(colorSpaceRef);
 }
 
-#if 0
 void
 TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i, nstops;
     int					fillMethod;
+    float 				startRadius, endRadius;
+    double				cX, cY, rad, fX, fY;
     bool 				extendStart, extendEnd;
     CGShadingRef 		shading;
     CGPoint 			start, end;
@@ -604,10 +609,53 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
     callbacks.releaseInfo = ShadeRelease;
     colorSpaceRef = CGColorSpaceCreateDeviceRGB();
 
+    /* Scale up the transition using bbox. */
+    cX = bbox->x1 + (bbox->x2 - bbox->x1) * fillPtr->centerX;
+    cY = bbox->y1 + (bbox->y2 - bbox->y1) * fillPtr->centerY;
+    fX = bbox->x1 + (bbox->x2 - bbox->x1) * fillPtr->focalX;
+    fY = bbox->y1 + (bbox->y2 - bbox->y1) * fillPtr->focalY;
+    rad = MAX(bbox->x2 - bbox->x1, bbox->y2 - bbox->y1) * fillPtr->rad;
 
+    /*
+     * Paint all stops pairwise.
+     */
+    for (i = 0; i < nstops - 1; i++) {
+        stop1 = fillPtr->stopArr.stops[i];
+        stop2 = fillPtr->stopArr.stops[i+1];
+        twoStop.stop1 = stop1;
+        twoStop.stop2 = stop2;
+        function = CGFunctionCreate((void *) &twoStop, 1, NULL, 4, NULL, &callbacks);
+        
+        /* If the two offsets identical then skip. */
+        if (fabs(stop1->offset - stop2->offset) < 1e-6) {
+            continue;
+        }
+        extendStart = 0;
+        extendEnd = 0;
+        if (i == 0) {
+            extendStart = 1;
+        }  
+        if (i == nstops-2) {
+            extendEnd = 1;
+        }
 
+        /* Construct the gradient 'line' by scaling the transition
+         * using the stop offsets. 
+         */
+        start.x = fX + stop1->offset * (cX - fX);
+        start.y = fY + stop1->offset * (cY - fY);
+        end.x   = fX + stop2->offset * (cX - fX);
+        end.y   = fY + stop2->offset * (cY - fY);
+        startRadius = rad * stop1->offset;
+        endRadius = rad * stop2->offset;
+    
+        shading = CGShadingCreateRadial(colorSpaceRef, start, startRadius, end, endRadius, function, extendStart, extendEnd);
+        CGContextDrawShading(context->c, shading);
+        CGShadingRelease(shading);
+        CGFunctionRelease(function);
+    }    
+    CGColorSpaceRelease(colorSpaceRef);
 }
-#endif
 
 /*-------- This is replaced by Shading!!! -----------------*/
 
