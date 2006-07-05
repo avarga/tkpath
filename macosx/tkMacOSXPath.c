@@ -525,12 +525,14 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     CGColorSpaceRef 	colorSpaceRef;
     CGFunctionRef 		function;
     CGFunctionCallbacks callbacks;
-    PathRect 			transition;		/* The transition line. */
+    PathRect 			*trans;		/* The transition line. */
     GradientStop 		*stop1, *stop2;
     TwoStopRecord		twoStop;
+    GradientStopArray 	*stopArrPtr;
     
-    transition = fillPtr->transition;
-    nstops = fillPtr->stopArr.nstops;
+    trans = fillPtr->transitionPtr;
+    stopArrPtr = fillPtr->stopArrPtr;
+    nstops = stopArrPtr->nstops;
     fillMethod = fillPtr->method;
     
     callbacks.version = 0;
@@ -549,8 +551,8 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
      * Paint all stops pairwise.
      */
     for (i = 0; i < nstops - 1; i++) {
-        stop1 = fillPtr->stopArr.stops[i];
-        stop2 = fillPtr->stopArr.stops[i+1];
+        stop1 = stopArrPtr->stops[i];
+        stop2 = stopArrPtr->stops[i+1];
         twoStop.stop1 = stop1;
         twoStop.stop2 = stop2;
         function = CGFunctionCreate((void *) &twoStop, 1, NULL, 4, NULL, &callbacks);
@@ -567,10 +569,10 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         if (i == nstops-2) {
             extendEnd = 1;
         }
-        start.x = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
-        start.y = transition.y1 + stop1->offset * (transition.y2 - transition.y1);
-        end.x   = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
-        end.y   = transition.y1 + stop2->offset * (transition.y2 - transition.y1);
+        start.x = trans->x1 + stop1->offset * (trans->x2 - trans->x1);
+        start.y = trans->y1 + stop1->offset * (trans->y2 - trans->y1);
+        end.x   = trans->x1 + stop2->offset * (trans->x2 - trans->x1);
+        end.y   = trans->y1 + stop2->offset * (trans->y2 - trans->y1);
     
         shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, extendStart, extendEnd);
         CGContextDrawShading(context->c, shading);
@@ -594,11 +596,14 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
     CGColorSpaceRef 	colorSpaceRef;
     CGFunctionRef 		function;
     CGFunctionCallbacks callbacks;
+    RadialTransition    *tPtr;
     GradientStop 		*stop1, *stop2;
     TwoStopRecord		twoStop;
+    GradientStopArray 	*stopArrPtr;
 
-    nstops = fillPtr->stopArr.nstops;
-    fillMethod = fillPtr->method;
+    stopArrPtr = fillPtr->stopArrPtr;
+    nstops = stopArrPtr->nstops;
+    tPtr = fillPtr->radialPtr;
     
     callbacks.version = 0;
     callbacks.evaluate = ShadeEvaluate;
@@ -616,8 +621,8 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
      * Paint all stops pairwise.
      */
     for (i = 0; i < nstops - 1; i++) {
-        stop1 = fillPtr->stopArr.stops[i];
-        stop2 = fillPtr->stopArr.stops[i+1];
+        stop1 = stopArrPtr->stops[i];
+        stop2 = stopArrPtr->stops[i+1];
         twoStop.stop1 = stop1;
         twoStop.stop2 = stop2;
         function = CGFunctionCreate((void *) &twoStop, 1, NULL, 4, NULL, &callbacks);
@@ -634,12 +639,12 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
         if (i == nstops-2) {
             extendEnd = 1;
         }
-        start.x = fillPtr->focalX + stop1->offset * (fillPtr->centerX - fillPtr->focalX);
-        start.y = fillPtr->focalY + stop1->offset * (fillPtr->centerY - fillPtr->focalY);
-        end.x   = fillPtr->focalX + stop2->offset * (fillPtr->centerX - fillPtr->focalX);
-        end.y   = fillPtr->focalY + stop2->offset * (fillPtr->centerY - fillPtr->focalY);
-        startRadius = fillPtr->rad * stop1->offset;
-        endRadius = fillPtr->rad * stop2->offset;
+        start.x = tPtr->focalX + stop1->offset * (tPtr->centerX - tPtr->focalX);
+        start.y = tPtr->focalY + stop1->offset * (tPtr->centerY - tPtr->focalY);
+        end.x   = tPtr->focalX + stop2->offset * (tPtr->centerX - tPtr->focalX);
+        end.y   = tPtr->focalY + stop2->offset * (tPtr->centerY - tPtr->focalY);
+        startRadius = tPtr->radius * stop1->offset;
+        endRadius = tPtr->radius * stop2->offset;
 
         shading = CGShadingCreateRadial(colorSpaceRef, start, startRadius, end, endRadius, function, extendStart, extendEnd);
         CGContextDrawShading(context->c, shading);

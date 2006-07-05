@@ -646,10 +646,10 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     int 			i;
     int 			pad;
     int 			nstops;
-    PathRect 		line, transition;
+    PathRect 		line, *tPtr;
     GradientStop 	*stop1, *stop2;
 
-    transition = fillPtr->transition;
+    tPtr = fillPtr->transitionPtr;
     nstops = fillPtr->stopArr.nstops;
 
     if (fillPtr->method == kPathGradientMethodPad) {
@@ -663,19 +663,19 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
              * Second pad line is {r2, (r2 + sqrt(2)*(r2 - r1)}
              */
             if ((pad == kPathGradientPadFirst) || (pad == kPathGradientPadBoth)) {
-                line.x1 = transition.x1 - 1.42*(transition.x2 - transition.x1);
-                line.y1 = transition.y1 - 1.42*(transition.y2 - transition.y1);
-                line.x2 = transition.x1;
-                line.y2 = transition.y1;
+                line.x1 = tPtr->x1 - 1.42*(tPtr->x2 - tPtr->x1);
+                line.y1 = tPtr->y1 - 1.42*(tPtr->y2 - tPtr->y1);
+                line.x2 = tPtr->x1;
+                line.y2 = tPtr->y1;
                 stop1 = fillPtr->stopArr.stops[0];
                 FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
             }
             if ((pad == kPathGradientPadSecond) || (pad == kPathGradientPadBoth)) {
-                line.x1 = transition.x2;
-                line.y1 = transition.y2;
-                line.x2 = transition.x2 + 1.42*(transition.x2 - transition.x1);
-                line.y2 = transition.y2 + 1.42*(transition.y2 - transition.y1);
+                line.x1 = tPtr->x2;
+                line.y1 = tPtr->y2;
+                line.x2 = tPtr->x2 + 1.42*(tPtr->x2 - tPtr->x1);
+                line.y2 = tPtr->y2 + 1.42*(tPtr->y2 - tPtr->y1);
                 stop1 = fillPtr->stopArr.stops[nstops - 1];
                 FillTwoStopLinearGradient(d, bbox, &line,
                         stop1->color, stop1->color, stop1->opacity, stop1->opacity);
@@ -687,19 +687,19 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
          */
         if (fillPtr->stops[0]->offset > 0.0) {
             stop1 = fillPtr->stopArr.stops[0];
-            line.x1 = transition.x1;
-            line.y1 = transition.y1;
-            line.x2 = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
-            line.y2 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);            
+            line.x1 = tPtr->x1;
+            line.y1 = tPtr->y1;
+            line.x2 = tPtr->x1 + stop1->offset * (tPtr->x2 - tPtr->x1);
+            line.y2 = tPtr->y1 + stop1->offset * (tPtr->y2 - tPtr->y1);            
             FillTwoStopLinearGradient(d, bbox, &line,
                     stop1->color, stop1->color, stop1->opacity, stop1->opacity);
         }
         if (fillPtr->stopArr.stops[nstops-1]->offset < 1.0) {
             stop2 = fillPtr->stops[nstops-1];
-            line.x1 = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
-            line.y1 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
-            line.x2 = transition.x2;
-            line.y2 = transition.y2;
+            line.x1 = tPtr->x1 + stop2->offset * (tPtr->x2 - tPtr->x1);
+            line.y1 = tPtr->y1 + stop2->offset * (tPtr->y2 - tPtr->y1);            
+            line.x2 = tPtr->x2;
+            line.y2 = tPtr->y2;
             FillTwoStopLinearGradient(d, bbox, &line,
                     stop2->color, stop2->color, stop2->opacity, stop2->opacity);
         }
@@ -718,10 +718,10 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
             
             /* Construct the gradient 'line' by scaling the transition
             * using the stop offsets. */
-            line.x1 = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
-            line.y1 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);
-            line.x2 = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
-            line.y2 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
+            line.x1 = tPtr->x1 + stop1->offset * (tPtr->x2 - tPtr->x1);
+            line.y1 = tPtr->y1 + stop1->offset * (tPtr->y2 - tPtr->y1);
+            line.x2 = tPtr->x1 + stop2->offset * (tPtr->x2 - tPtr->x1);
+            line.y2 = tPtr->y1 + stop2->offset * (tPtr->y2 - tPtr->y1);            
             FillTwoStopLinearGradient(d, bbox, &line,
                     stop1->color, stop2->color, stop1->opacity, stop2->opacity);
         }

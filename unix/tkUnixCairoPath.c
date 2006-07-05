@@ -395,12 +395,14 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i;
     int					nstops;
-    PathRect 			transition;		/* The transition line. */
+    PathRect 			*tPtr;		/* The transition line. */
     GradientStop 		*stop;
     cairo_pattern_t 	*pattern;
-    
-    transition = fillPtr->transition;
-    nstops = fillPtr->stopArr.nstops;
+    GradientStopArray 	*stopArrPtr;
+
+    stopArrPtr = fillPtr->stopArrPtr;    
+    tPtr = fillPtr->transitionPtr;
+    nstops = stopArrPtr->nstops;
 
     /*
      * The current path is consumed by filling.
@@ -408,13 +410,13 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
      */
     cairo_save(context->c);
 
-    pattern = cairo_pattern_create_linear(transition.x1, transition.y1, transition.x2, transition.y2);
+    pattern = cairo_pattern_create_linear(tPtr->x1, tPtr->y1, tPtr->x2, tPtr->y2);
 
     cairo_translate(context->c, bbox->x1, bbox->y1);
     cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
 
     for (i = 0; i < nstops; i++) {
-        stop = fillPtr->stopArr.stops[i];
+        stop = stopArrPtr->stops[i];
         cairo_pattern_add_color_stop_rgba(pattern, stop->offset, 
                 RedDoubleFromXColorPtr(stop->color),
                 GreenDoubleFromXColorPtr(stop->color),
@@ -439,8 +441,12 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
     int					nstops;
     GradientStop 		*stop;
     cairo_pattern_t 	*pattern;
+    GradientStopArray 	*stopArrPtr;
+    RadialTransition    *tPtr;
 
-    nstops = fillPtr->stopArr.nstops;
+    stopArrPtr = fillPtr->stopArrPtr;    
+    nstops = stopArrPtr->nstops;
+    tPtr = fillPtr->radialPtr;
 
     /*
      * The current path is consumed by filling.
@@ -448,14 +454,14 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
      */
     cairo_save(context->c);
     pattern = cairo_pattern_create_radial(
-            fillPtr->focalX, fillPtr->focalY, 0.0,
-            fillPtr->centerX, fillPtr->centerY, fillPtr->rad);
+            tPtr->focalX, tPtr->focalY, 0.0,
+            tPtr->centerX, tPtr->centerY, tPtr->radius);
 
     cairo_translate(context->c, bbox->x1, bbox->y1);
     cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
 
     for (i = 0; i < nstops; i++) {
-        stop = fillPtr->stopArr.stops[i];
+        stop = stopArrPtr->stops[i];
         cairo_pattern_add_color_stop_rgba(pattern, stop->offset, 
                 RedDoubleFromXColorPtr(stop->color),
                 GreenDoubleFromXColorPtr(stop->color),

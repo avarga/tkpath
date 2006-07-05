@@ -288,19 +288,19 @@ void PathC::FillSimpleLinearGradient(
         PathRect *bbox, 		/* The items bounding box in untransformed coords. */
         LinearGradientFill *fillPtr)
 {
-    PathRect 		transition;
+    PathRect 		*tPtr;
     GradientStop 	*stop1, *stop2;
     PointF			p1, p2;
     Color			col1, col2;
 
-    transition = fillPtr->transition;
+    tPtr = fillPtr->transitionPtr;
     stop1 = fillPtr->stops[0];
     stop2 = fillPtr->stops[1];
 
-    p1.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*transition.x1);
-    p1.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*transition.y1);
-    p2.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*transition.x2);
-    p2.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*transition.y2);
+    p1.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*tPtr->x1);
+    p1.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*tPtr->y1);
+    p2.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*tPtr->x2);
+    p2.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*tPtr->y2);
 
     col1 = MakeGDIPlusColor(stop1->color, stop1->opacity);
     col2 = MakeGDIPlusColor(stop2->color, stop2->opacity);
@@ -413,18 +413,6 @@ void PathC::FillTwoStopLinearGradient(
 
     mGraphics->EndContainer(container);
 }
-
-/*
-    LinearGradientBrush linGrBrush(
-        Point(0, 0),
-        Point(200, 100),
-        Color(255, 0, 0, 255),   // opaque blue
-        Color(255, 0, 255, 0));  // opaque green
-    Pen pen(&linGrBrush, 10);
-    
-    graphics.DrawLine(&pen, 0, 0, 600, 300);
-    graphics.FillEllipse(&linGrBrush, 10, 100, 200, 100);
-*/
 
 /* 
  * Exit procedure for Tcl. 
@@ -606,7 +594,7 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int 			i;
     int 			nstops;
-    PathRect 		line, transition;
+    PathRect 		line, *tPtr;
     GradientStop 	*stop1, *stop2;
 
     transition = fillPtr->transition;
@@ -635,10 +623,10 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
             /* Construct the gradient 'line' by scaling the transition
             * using the stop offsets. 
             */
-            line.x1 = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
-            line.y1 = transition.y1 + stop1->offset * (transition.y2 - transition.y1);
-            line.x2 = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
-            line.y2 = transition.y1 + stop2->offset * (transition.y2 - transition.y1);            
+            line.x1 = tPtr->x1 + stop1->offset * (tPtr->x2 - tPtr->x1);
+            line.y1 = tPtr->y1 + stop1->offset * (tPtr->y2 - tPtr->y1);
+            line.x2 = tPtr->x1 + stop2->offset * (tPtr->x2 - tPtr->x1);
+            line.y2 = tPtr->y1 + stop2->offset * (tPtr->y2 - tPtr->y1);            
             context->c->FillTwoStopLinearGradient(bbox, &line,
                     stop1->color, stop2->color, stop1->opacity, stop2->opacity);
         }

@@ -96,25 +96,29 @@ typedef struct GradientStop {
 
 typedef struct GradientStopArray {
     int nstops;
-    GradientStop **stops;	/* Array of pointers to GradientStop. */
+    GradientStop **stops;		/* Array of pointers to GradientStop. */
 } GradientStopArray;
 
 typedef struct LinearGradientFill {
-    PathRect transition;	/* Actually not a proper rect but a vector. */
+    PathRect *transitionPtr;	/* Actually not a proper rect but a vector. */
     int method;
-    int fillRule;			/* Not yet used. */
-    GradientStopArray stopArr;
+    int fillRule;				/* Not yet used. */
+    GradientStopArray *stopArrPtr;
 } LinearGradientFill;
 
-typedef struct RadialGradientFill {
+typedef struct RadialTransition {
     double centerX;
     double centerY;
-    double rad;
+    double radius;
     double focalX;
     double focalY;
+} RadialTransition;
+
+typedef struct RadialGradientFill {
     int method;
-    int fillRule;			/* Not yet used. */
-    GradientStopArray stopArr;
+    int fillRule;				/* Not yet used. */
+    RadialTransition *radialPtr;
+    GradientStopArray *stopArrPtr;
 } RadialGradientFill;
 
 /*

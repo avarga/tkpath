@@ -197,7 +197,6 @@ MatrixGetOption(
     return listObj;
 }
 
-#if 0
 static void
 MatrixRestoreOption(
     ClientData clientData,
@@ -205,9 +204,8 @@ MatrixRestoreOption(
     char *internalPtr,		/* Pointer to storage for value. */
     char *oldInternalPtr)	/* Pointer to old value. */
 {
-    /* @@@ TODO */
+    *(TMatrix **)internalPtr = *(TMatrix **)oldInternalPtr;
 }
-#endif
 
 static void
 MatrixFreeOption(
@@ -226,7 +224,7 @@ static Tk_ObjCustomOption matrixCO =
     "matrix",
     MatrixSetOption,
     MatrixGetOption,
-    NULL,
+    MatrixRestoreOption,
     MatrixFreeOption,
     (ClientData) NULL
 };
