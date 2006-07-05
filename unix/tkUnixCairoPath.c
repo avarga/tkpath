@@ -373,7 +373,7 @@ static int GetCairoExtend(int method)
 {
     cairo_extend_t extend;
 
-    switch (fillMethod) {
+    switch (method) {
         case kPathGradientMethodPad: 
             extend = CAIRO_EXTEND_NONE;
             break;
@@ -395,28 +395,24 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i;
     int					nstops;
-    double				x1, y1, x2, y2;
     PathRect 			transition;		/* The transition line. */
     GradientStop 		*stop;
     cairo_pattern_t 	*pattern;
     
+    transition = fillPtr->transition;
+    nstops = fillPtr->stopArr.nstops;
+
     /*
      * The current path is consumed by filling.
      * Need therfore to save the current context and restore after.
      */
     cairo_save(context->c);
 
-    transition = fillPtr->transition;
-    fillMethod = fillPtr->method;
-    nstops = fillPtr->stopArr.nstops;
-    
-    /* Scale up 'transition' vector to bbox. */
-    x1 = bbox->x1 + (bbox->x2 - bbox->x1)*transition.x1;
-    y1 = bbox->y1 + (bbox->y2 - bbox->y1)*transition.y1;
-    x2 = bbox->x1 + (bbox->x2 - bbox->x1)*transition.x2;
-    y2 = bbox->y1 + (bbox->y2 - bbox->y1)*transition.y2;
+    pattern = cairo_pattern_create_linear(transition.x1, transition.y1, transition.x2, transition.y2);
 
-    pattern = cairo_pattern_create_linear(x1, y1, x2, y2);
+    cairo_translate(context->c, bbox->x1, bbox->y1);
+    cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+
     for (i = 0; i < nstops; i++) {
         stop = fillPtr->stopArr.stops[i];
         cairo_pattern_add_color_stop_rgba(pattern, stop->offset, 
@@ -426,10 +422,8 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
                 stop->opacity);
     }
     cairo_set_source(context->c, pattern);
-
     cairo_set_fill_rule(context->c, 
             (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
-            
     cairo_pattern_set_extend(pattern, GetCairoExtend(fillPtr->method));
     cairo_fill(context->c);
     
@@ -440,4 +434,40 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
 void
 TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    int					i;
+    int					nstops;
+    GradientStop 		*stop;
+    cairo_pattern_t 	*pattern;
+
+    nstops = fillPtr->stopArr.nstops;
+
+    /*
+     * The current path is consumed by filling.
+     * Need therfore to save the current context and restore after.
+     */
+    cairo_save(context->c);
+    pattern = cairo_pattern_create_radial(
+            fillPtr->focalX, fillPtr->focalY, 0.0,
+            fillPtr->centerX, fillPtr->centerY, fillPtr->rad);
+
+    cairo_translate(context->c, bbox->x1, bbox->y1);
+    cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+
+    for (i = 0; i < nstops; i++) {
+        stop = fillPtr->stopArr.stops[i];
+        cairo_pattern_add_color_stop_rgba(pattern, stop->offset, 
+                RedDoubleFromXColorPtr(stop->color),
+                GreenDoubleFromXColorPtr(stop->color),
+                BlueDoubleFromXColorPtr(stop->color),
+                stop->opacity);
+    }
+    cairo_set_source(context->c, pattern);
+    cairo_set_fill_rule(context->c, 
+            (fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
+    cairo_pattern_set_extend(pattern, GetCairoExtend(fillPtr->method));
+    cairo_fill(context->c);
+    
+    cairo_pattern_destroy(pattern);
+    cairo_restore(context->c);
 }

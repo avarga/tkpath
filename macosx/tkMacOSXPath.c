@@ -526,7 +526,6 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     CGFunctionRef 		function;
     CGFunctionCallbacks callbacks;
     PathRect 			transition;		/* The transition line. */
-    PathRect			bounds;			/* transition line scaled to bbox. */
     GradientStop 		*stop1, *stop2;
     TwoStopRecord		twoStop;
     
@@ -538,12 +537,13 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     callbacks.evaluate = ShadeEvaluate;
     callbacks.releaseInfo = ShadeRelease;
     colorSpaceRef = CGColorSpaceCreateDeviceRGB();
-        
-    /* Scale up the transition using bbox. */
-    bounds.x1 = bbox->x1 + (bbox->x2 - bbox->x1) * transition.x1;
-    bounds.y1 = bbox->y1 + (bbox->y2 - bbox->y1) * transition.y1;
-    bounds.x2 = bbox->x1 + (bbox->x2 - bbox->x1) * transition.x2;
-    bounds.y2 = bbox->y1 + (bbox->y2 - bbox->y1) * transition.y2;
+
+    /*
+     * We need to do like this since this is how SVG defines gradient drawing.
+     */
+    CGContextSaveGState(context->c);
+    CGContextTranslateCTM(context->c, bbox->x1, bbox->y1);
+    CGContextScaleCTM(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
     
     /*
      * Paint all stops pairwise.
@@ -567,14 +567,10 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         if (i == nstops-2) {
             extendEnd = 1;
         }
-
-        /* Construct the gradient 'line' by scaling the transition
-         * using the stop offsets. 
-         */
-        start.x = bounds.x1 + stop1->offset * (bounds.x2 - bounds.x1);
-        start.y = bounds.y1 + stop1->offset * (bounds.y2 - bounds.y1);
-        end.x   = bounds.x1 + stop2->offset * (bounds.x2 - bounds.x1);
-        end.y   = bounds.y1 + stop2->offset * (bounds.y2 - bounds.y1);
+        start.x = transition.x1 + stop1->offset * (transition.x2 - transition.x1);
+        start.y = transition.y1 + stop1->offset * (transition.y2 - transition.y1);
+        end.x   = transition.x1 + stop2->offset * (transition.x2 - transition.x1);
+        end.y   = transition.y1 + stop2->offset * (transition.y2 - transition.y1);
     
         shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, extendStart, extendEnd);
         CGContextDrawShading(context->c, shading);
@@ -582,6 +578,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         CGFunctionRelease(function);
     }
     CGColorSpaceRelease(colorSpaceRef);
+    CGContextRestoreGState(context->c);
 }
 
 void
@@ -591,7 +588,6 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
     int					i, nstops;
     int					fillMethod;
     float 				startRadius, endRadius;
-    double				cX, cY, rad, fX, fY;
     bool 				extendStart, extendEnd;
     CGShadingRef 		shading;
     CGPoint 			start, end;
@@ -609,13 +605,13 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
     callbacks.releaseInfo = ShadeRelease;
     colorSpaceRef = CGColorSpaceCreateDeviceRGB();
 
-    /* Scale up the transition using bbox. */
-    cX = bbox->x1 + (bbox->x2 - bbox->x1) * fillPtr->centerX;
-    cY = bbox->y1 + (bbox->y2 - bbox->y1) * fillPtr->centerY;
-    fX = bbox->x1 + (bbox->x2 - bbox->x1) * fillPtr->focalX;
-    fY = bbox->y1 + (bbox->y2 - bbox->y1) * fillPtr->focalY;
-    rad = MAX(bbox->x2 - bbox->x1, bbox->y2 - bbox->y1) * fillPtr->rad;
-
+    /*
+     * We need to do like this since this is how SVG defines gradient drawing.
+     */
+    CGContextSaveGState(context->c);
+    CGContextTranslateCTM(context->c, bbox->x1, bbox->y1);
+    CGContextScaleCTM(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    
     /*
      * Paint all stops pairwise.
      */
@@ -638,23 +634,20 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
         if (i == nstops-2) {
             extendEnd = 1;
         }
+        start.x = fillPtr->focalX + stop1->offset * (fillPtr->centerX - fillPtr->focalX);
+        start.y = fillPtr->focalY + stop1->offset * (fillPtr->centerY - fillPtr->focalY);
+        end.x   = fillPtr->focalX + stop2->offset * (fillPtr->centerX - fillPtr->focalX);
+        end.y   = fillPtr->focalY + stop2->offset * (fillPtr->centerY - fillPtr->focalY);
+        startRadius = fillPtr->rad * stop1->offset;
+        endRadius = fillPtr->rad * stop2->offset;
 
-        /* Construct the gradient 'line' by scaling the transition
-         * using the stop offsets. 
-         */
-        start.x = fX + stop1->offset * (cX - fX);
-        start.y = fY + stop1->offset * (cY - fY);
-        end.x   = fX + stop2->offset * (cX - fX);
-        end.y   = fY + stop2->offset * (cY - fY);
-        startRadius = rad * stop1->offset;
-        endRadius = rad * stop2->offset;
-    
         shading = CGShadingCreateRadial(colorSpaceRef, start, startRadius, end, endRadius, function, extendStart, extendEnd);
         CGContextDrawShading(context->c, shading);
         CGShadingRelease(shading);
         CGFunctionRelease(function);
     }    
     CGColorSpaceRelease(colorSpaceRef);
+    CGContextRestoreGState(context->c);
 }
 
 /*-------- This is replaced by Shading!!! -----------------*/

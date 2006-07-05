@@ -191,10 +191,12 @@ o Radial gradients are created and configured using:
    ::tkpath::radialgradient cmd ?options?
 
    Works as the tkpath::lineargradient except that it uses a -radialtransition
-   option instaed of the -lineartransition:
+   option instead of the -lineartransition:
        -radialtransition {cx cy ?r? ?fx fy?}
            specifies the transition circles relative the items bounding box
 	   and run from 0 to 1. They default to {0.5 0.5 0.5 0.5 0.5}.
+	   cx,cy is the center of the end circle and fx,fy the center of the
+	   start point.
 
 
  o Helper function for making transformation matrices:
@@ -222,7 +224,7 @@ o Radial gradients are created and configured using:
    coordinates using something like: [expr int($x) + 0.5]
 
    WinXP: GDI+. On pre XP systems it should be possible to get the gdiplus.dll
-   to make it work.
+   to make it work. Maybe there is also an issue with the MSCRT.LIB.
 
    Win32: GDI. Features like opacity and antialiasing are missing here.
 
