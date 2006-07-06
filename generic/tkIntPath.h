@@ -58,7 +58,9 @@ extern "C" {
 #ifndef ABS
 #	define ABS(a)    	(((a) >= 0)  ? (a) : -1*(a))
 #endif
-//#define PI 3.14159265358979323846
+#ifndef M_PI
+#	define M_PI 3.14159265358979323846
+#endif
 #define DEGREES_TO_RADIANS (M_PI/180.0)
 #define RADIANS_TO_DEGREES (180.0/M_PI)
 

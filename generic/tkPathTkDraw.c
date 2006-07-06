@@ -241,24 +241,10 @@ void TkPathArcTo(TkPathContext ctx,
 void
 TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
-    double x1, y1, x2, y2, x3, y3;
-
-    x1 = x+width; 
-    y1 = y;
-    x2 = x+width;
-    y2 = y+height;
-    x3 = x;
-    y3 = y+height;
-    PathApplyTMatrix(context->m, &x, &y);
-    PathApplyTMatrix(context->m, &x1, &y1);
-    PathApplyTMatrix(context->m, &x2, &y2);
-    PathApplyTMatrix(context->m, &x3, &y3);
-
     TkPathMoveTo(ctx, x, y);
-    TkPathLineTo(ctx, x1, y1);
-    TkPathLineTo(ctx, x2, y2);
-    TkPathLineTo(ctx, x3, y3);
+    TkPathLineTo(ctx, x+width, y);
+    TkPathLineTo(ctx, x+width, y+height);
+    TkPathLineTo(ctx, x, y+height);
     TkPathClosePath(ctx);
 }
 

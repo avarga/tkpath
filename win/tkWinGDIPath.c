@@ -180,6 +180,18 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
     TMatrix tmp = context->CTM;
     TMatrix *p = &(context->CTM);
     
+#if 0 // @@@ TODO
+    XFORM xForm;
+    
+    xForm.eM11 = (FLOAT) m->a; 
+    xForm.eM12 = (FLOAT) m->b; 
+    xForm.eM21 = (FLOAT) m->c; 
+    xForm.eM22 = (FLOAT) m->d; 
+    xForm.eDx  = (FLOAT) m->tx; 
+    xForm.eDy  = (FLOAT) m->ty; 
+    SetWorldTransform(context->memHDC, &xForm);
+#endif
+    
     context->haveMatrix = 1;
     p->a  = m->a*tmp.a  + m->b*tmp.c;
     p->b  = m->a*tmp.b  + m->b*tmp.d;
@@ -295,17 +307,35 @@ TkPathArcTo(TkPathContext ctx,
 void
 TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
-
-
+    TkPathMoveTo(ctx, x, y);
+    TkPathLineTo(ctx, x+width, y);
+    TkPathLineTo(ctx, x+width, y+height);
+    TkPathLineTo(ctx, x, y+height);
+    TkPathClosePath(ctx);
 }
 
 void
 TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 {
+    /* @@@ I'm sure this could be made much more efficient. */
+    TkPathMoveTo(ctx, cx+rx, cy);
+    TkPathArcToUsingBezier(ctx, rx, ry, 0.0, 1, 1, cx-rx, cy);
+    TkPathArcToUsingBezier(ctx, rx, ry, 0.0, 1, 1, cx+rx, cy);
+    TkPathClosePath(ctx);
+}
+
+void
+TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
+        double x, double y, double width, double height)
+{
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    int iwidth, iheight;
 
-
+    if (context->haveMatrix) {
+        PathApplyTMatrix(&(context->CTM), &x, &y);
+    }
+    Tk_SizeOfImage(image, &iwidth, &iheight);
+    Tk_RedrawImage(image, 0, 0, iwidth, iheight, context->drawable, (int)x, (int)y);
 }
 
 void
@@ -737,5 +767,6 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
 void
 TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
 {
+    /* @@@ TODO */
 }
 

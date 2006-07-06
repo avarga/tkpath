@@ -50,16 +50,7 @@ static LookupTable LineJoinStyleLookupTable[] = {
     {JoinBevel, LineJoinBevel}
 };
 
-/*
- * This is used as a place holder for platform dependent stuff between each call.
- */
-typedef struct TkPathContext_ {
-    Drawable 		d;
-    PathC *		 	c;
-} TkPathContext_;
-
 void PathExit(ClientData clientData);
-
 
 /*
  * This class is a wrapper for path drawing using GDI+ 
@@ -80,7 +71,10 @@ class PathC {
     void MoveTo(float x, float y);
     void LineTo(float x, float y);
     void CurveTo(float x1, float y1, float x2, float y2, float x, float y);
-    void Image(float x, float y, );
+	void AddRectangle(float x, float y, float width, float height);
+	void AddEllipse(float cx, float cy, float rx, float ry);
+    void DrawImage(Tk_Image image, Tk_PhotoHandle photo, 
+        float x, float y, float width, float height);
     void CloseFigure(void);
     void Stroke(Tk_PathStyle *style);
     void Fill(Tk_PathStyle *style);
@@ -101,6 +95,14 @@ class PathC {
     static Pen* PathCreatePen(Tk_PathStyle *style);
     static SolidBrush* PathCreateBrush(Tk_PathStyle *style);
 };
+
+/*
+ * This is used as a place holder for platform dependent stuff between each call.
+ */
+typedef struct TkPathContext_ {
+	Drawable	d;
+	PathC *		c;
+} TkPathContext_;
 
 /*
  * This is perhaps a very stupid thing to do.
@@ -237,9 +239,58 @@ inline void PathC::CurveTo(float x1, float y1, float x2, float y2, float x, floa
     mCurrentPoint.Y = y;
 }
 
-inline void PathC::Image(float x, float y,  )
+inline void PathC::AddRectangle(float x, float y, float width, float height)
 {
+    RectF rect(x, y, width, height);
+    mPath->AddRectangle(rect);
+}
 
+inline void PathC::AddEllipse(float cx, float cy, float rx, float ry)
+{
+    mPath->AddEllipse(cx-rx, cy-ry, cx+rx, cy+ry);
+}
+
+inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo, 
+        float x, float y, float width, float height)
+{
+    int iwidth, iheight;
+    Tk_PhotoImageBlock block;
+    PixelFormat format;
+    INT stride;
+    BYTE *scan0;
+    
+    Tk_PhotoGetImage(photo, &block);
+    iwidth = block.width;
+    iheight = block.height;
+    stride = block.pitch;
+    format = PixelFormat32bppARGB;
+    scan0 = (BYTE *) block.pixelPtr;
+    
+    if (block.pixelSize*8 == 32) {
+    }
+    
+    Bitmap bitmap(iwidth, iheight, stride, format, scan0);
+
+    mGraphics->DrawImage(&bitmap, x, y, width, height);
+
+#if 0
+Bitmap(      
+
+    INT width,
+    INT height,
+    INT stride,
+    PixelFormat format,
+    BYTE *scan0
+);
+Status DrawImage(      
+
+    Image *image,
+    REAL x,
+    REAL y,
+    REAL width,
+    REAL height
+);
+#endif
 
 }
 
@@ -292,10 +343,13 @@ void PathC::FillSimpleLinearGradient(
     GradientStop 	*stop1, *stop2;
     PointF			p1, p2;
     Color			col1, col2;
+	GradientStopArray 	*stopArrPtr;
+    
+    stopArrPtr = fillPtr->stopArrPtr;
 
     tPtr = fillPtr->transitionPtr;
-    stop1 = fillPtr->stops[0];
-    stop2 = fillPtr->stops[1];
+    stop1 = stopArrPtr->stops[0];
+    stop2 = stopArrPtr->stops[1];
 
     p1.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*tPtr->x1);
     p1.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*tPtr->y1);
@@ -448,7 +502,7 @@ void TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->BeginPath(d, style);
+    context->c->BeginPath(context->d, style);
 }
 
 void TkPathMoveTo(TkPathContext ctx, double x, double y)
@@ -498,29 +552,29 @@ void TkPathArcTo(TkPathContext ctx,
         char largeArcFlag, char sweepFlag, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    TkPathArcToUsingBezier(d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
+    TkPathArcToUsingBezier(context->d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
 void
 TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->
+    context->c->AddRectangle((float) x, (float) y, (float) width, (float) height);
 }
 
 void
 TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->
+    context->c->AddEllipse((float) cx, (float) cy, (float) rx, (float) ry);
 }
 
 void
-TkPathImage(TkPathContext ctx, Tk_Image image,Tk_PhotoHandle photo, 
+TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
         double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->
+    context->c->DrawImage(image, photo, (float) x, (float) y, (float) width, (float) height);
 }
 
 void
@@ -596,10 +650,13 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     int 			nstops;
     PathRect 		line, *tPtr;
     GradientStop 	*stop1, *stop2;
+    GradientStopArray 	*stopArrPtr;
+    PathRect 			*trans;		/* The transition line. */
 
-    transition = fillPtr->transition;
-    nstops = fillPtr->stopArr.nstops;
-    
+    trans = fillPtr->transitionPtr;
+    stopArrPtr = fillPtr->stopArrPtr;
+    nstops = stopArrPtr->nstops;
+
     if (nstops == 1) {
         /* Fill using solid color. */
     } else if (nstops == 2) {
@@ -612,8 +669,8 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
          * Paint all stops pairwise.
          */
         for (i = 0; i < nstops - 1; i++) {
-            stop1 = fillPtr->stopArr.stops[i];
-            stop2 = fillPtr->stopArr.stops[i+1];
+			stop1 = stopArrPtr->stops[i];
+		    stop2 = stopArrPtr->stops[i+1];
             
             /* If the two offsets identical then skip. */
             if (fabs(stop1->offset - stop2->offset) < 1e-6) {
