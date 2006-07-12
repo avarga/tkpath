@@ -247,7 +247,7 @@ inline void PathC::AddRectangle(float x, float y, float width, float height)
 
 inline void PathC::AddEllipse(float cx, float cy, float rx, float ry)
 {
-    mPath->AddEllipse(cx-rx, cy-ry, cx+rx, cy+ry);
+    mPath->AddEllipse(cx-rx, cy-ry, 2*rx, 2*ry);
 }
 
 inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo, 
@@ -454,10 +454,10 @@ void PathC::FillTwoStopLinearGradient(
     clipPath.CloseFigure();
     
     GraphicsContainer container = mGraphics->BeginContainer();
-
-    Region region(&clipPath);
+#if 0
+	Region region(&clipPath);
     mGraphics->SetClip(&region);
-
+#endif
     p1 = PointF((float) p1x, (float) p1y);
     p2 = PointF((float) p2x, (float) p2y);
     col1 = MakeGDIPlusColor(color1, opacity1);
@@ -551,8 +551,7 @@ void TkPathArcTo(TkPathContext ctx,
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
-    TkPathArcToUsingBezier(context->d, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
+    TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
 void
@@ -651,9 +650,8 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     PathRect 		line, *tPtr;
     GradientStop 	*stop1, *stop2;
     GradientStopArray 	*stopArrPtr;
-    PathRect 			*trans;		/* The transition line. */
 
-    trans = fillPtr->transitionPtr;
+    tPtr = fillPtr->transitionPtr;
     stopArrPtr = fillPtr->stopArrPtr;
     nstops = stopArrPtr->nstops;
 

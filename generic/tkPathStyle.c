@@ -665,6 +665,7 @@ Tk_CreatePathStyle(Tk_PathStyle *style)
     style->strokeStipple = None;
     style->capStyle = CapButt;
     style->joinStyle = JoinRound;
+    style->gradientStrokeName = NULL;    
 
     style->fillGC = None;
     style->fillColor = NULL;
