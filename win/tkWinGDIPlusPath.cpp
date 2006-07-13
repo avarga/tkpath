@@ -12,9 +12,6 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
-// this just causes problems here!
-#undef Region
-
 #include <windows.h>
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
@@ -25,10 +22,10 @@ using namespace Gdiplus;
 
 extern "C" int gUseAntiAlias;
 
-#define MakeGDIPlusColor(xc, opacity) 	Color((BYTE) (opacity*255), 				\
-                                                (((xc)->pixel & 0xFF)),			\
-                                                (((xc)->pixel >> 8) & 0xFF),	\
-                                                (((xc)->pixel >> 16) & 0xFF))
+#define MakeGDIPlusColor(xc, opacity) 	Color(BYTE(opacity*255), 					\
+                                                BYTE(((xc)->pixel & 0xFF)),			\
+                                                BYTE(((xc)->pixel >> 8) & 0xFF),	\
+                                                BYTE(((xc)->pixel >> 16) & 0xFF))
 
 static LookupTable LineCapStyleLookupTable[] = {
     {CapNotLast, 	LineCapFlat},
@@ -118,8 +115,8 @@ GdiplusStartupOutput PathC::sGdiplusStartupOutput;
 
 PathC::PathC(Drawable d)
 {
-    //TkWinDrawable *twdPtr = (TkWinDrawable *) d;
-    TkWinDrawable *twdPtr = reinterpret_cast<TkWinDrawable*>(d);
+    TkWinDrawable *twdPtr = (TkWinDrawable *) d;
+    //TkWinDrawable *twdPtr = reinterpret_cast<TkWinDrawable*>(d);
 
 	if (!sGdiplusStarted) {
         //Status status;
@@ -267,6 +264,7 @@ inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo,
     PixelFormat format;
     INT stride;
     int iwidth, iheight;
+	int pitch;
     int smallEndian = 1;	/* Hardcoded. */
     unsigned char *data = NULL;
     unsigned char *ptr = NULL;
@@ -279,7 +277,7 @@ inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo,
     iwidth = block.width;
     iheight = block.height;
     stride = block.pitch;
-    scan0 = (BYTE *) block.pixelPtr;
+    pitch = block.pitch;
     if (width == 0.0) {
         width = (float) iwidth;
     }
@@ -487,11 +485,10 @@ void PathC::FillTwoStopLinearGradient(
     clipPath.CloseFigure();
     
     GraphicsContainer container = mGraphics->BeginContainer();
-#if 0
-	Region region(&clipPath);
+	Gdiplus::Region region(&clipPath);
     mGraphics->SetClip(&region);
-#endif
-    p1 = PointF((float) p1x, (float) p1y);
+
+	p1 = PointF((float) p1x, (float) p1y);
     p2 = PointF((float) p2x, (float) p2y);
     col1 = MakeGDIPlusColor(color1, opacity1);
     col2 = MakeGDIPlusColor(color2, opacity2);
@@ -520,7 +517,6 @@ void PathExit(ClientData clientData)
  
 TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
-    //TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
     TkPathContext_ *context = reinterpret_cast<TkPathContext_ *> (ckalloc((unsigned) (sizeof(TkPathContext_))));
     context->d = d;
     context->c = new PathC(d);
