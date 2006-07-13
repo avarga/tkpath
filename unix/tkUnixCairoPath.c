@@ -152,6 +152,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     size = block.pitch * block.height;
     iwidth = block.width;
     iheight = block.height;
+    pitch = block.pitch;
     if (width == 0.0) {
         width = (double) iwidth;
     }
@@ -179,7 +180,6 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
      */
     if (block.pixelSize*8 == 32) {
         format = CAIRO_FORMAT_ARGB32;
-        pitch = block.pitch;
         
         /* The offset array contains the offsets from the address of a 
          * pixel to the addresses of the bytes containing the red, green, 

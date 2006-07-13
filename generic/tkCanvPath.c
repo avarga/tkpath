@@ -217,7 +217,7 @@ CreatePath(
      */
 
     Tk_CreateOutline(&(pathPtr->outline));
-    Tk_CreatePathStyle(&(pathPtr->style));
+    TkPathCreateStyle(&(pathPtr->style));
     pathPtr->canvas = canvas;
     pathPtr->pathObjPtr = NULL;
     pathPtr->pathLen = 0;

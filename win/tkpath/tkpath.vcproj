@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\Tcl\include;&quot;C:\Documents and Settings\Administratör.HEMMA-89PWX7A7Q\Mina dokument\C\tkpath\generic&quot;"
+				AdditionalIncludeDirectories="..\..\generic\;..\..\..\tk8.4.9\win;..\..\..\tk8.4.9\generic;..\..\..\tcl8.4.9\win;..\..\..\tcl8.4.9\generic;C:\Tcl\include"
 				PreprocessorDefinitions="USE_TCL_STUBS;USE_TK_STUBS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -34,7 +34,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="tclstub84.lib tkstub84.lib"
-				OutputFile="$(OutDir)/tkpathgdi01.dll"
+				OutputFile="$(OutDir)/tkpathgdi02.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="C:\Tcl\lib"
 				GenerateDebugInformation="TRUE"
@@ -71,6 +71,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\generic\;&quot;C:\Documents and Settings\mats\Mina dokument\C\tk8.4.9\win&quot;;&quot;C:\Documents and Settings\mats\Mina dokument\C\tk8.4.9\generic&quot;;&quot;C:\Documents and Settings\mats\Mina dokument\C\tcl8.4.9\win&quot;;&quot;C:\Documents and Settings\mats\Mina dokument\C\tcl8.4.9\generic&quot;;C:\Tcl\include"
 				PreprocessorDefinitions="USE_TCL_STUBS;USE_TK_STUBS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -124,7 +125,25 @@
 				RelativePath="..\..\generic\path.c">
 			</File>
 			<File
+				RelativePath="..\..\generic\tkCanvEllipse.c">
+			</File>
+			<File
 				RelativePath="..\..\generic\tkCanvPath.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkCanvPathUtil.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkCanvPimage.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkCanvPline.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkCanvPpoly.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkCanvPrect.c">
 			</File>
 			<File
 				RelativePath="..\..\generic\tkPath.c">
@@ -149,6 +168,9 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath="..\..\generic\tkCanvPathUtil.h">
+			</File>
 			<File
 				RelativePath="..\..\generic\tkIntPath.h">
 			</File>

@@ -441,6 +441,9 @@ StyleCreateAndConfig(
 
 	stylePtr = (Tk_PathStyle *) ckalloc(sizeof(Tk_PathStyle));
 	memset(stylePtr, '\0', sizeof(Tk_PathStyle));
+
+    /* Fill in defaults */
+    TkPathCreateStyle(stylePtr);
     
     /*
      * Create the option table for this class.  If it has already
@@ -449,9 +452,6 @@ StyleCreateAndConfig(
 	stylePtr->optionTable = gStyleOptionTable; 
 	stylePtr->name = Tk_GetUid(name);
     
-    /* Fill in defaults */
-    Tk_CreatePathStyle(stylePtr);
-
     return (char *) stylePtr;
 }
 
@@ -468,7 +468,7 @@ static void
 StyleFree(Tcl_Interp *interp, char *recordPtr) 
 {
     /* @@@ TODO */
-    //Tk_DeletePathStyle(display, (Tk_PathStyle *) recordPtr);
+    //TkPathDeleteStyle(display, (Tk_PathStyle *) recordPtr);
     ckfree(recordPtr);
 }
 
@@ -635,7 +635,7 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
 /*
  *--------------------------------------------------------------
  *
- * Tk_CreatePathStyle
+ * TkPathCreateStyle
  *
  *	This procedure initializes the Tk_PathStyle structure
  *	with default values.
@@ -650,8 +650,10 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
  */
 
 void 
-Tk_CreatePathStyle(Tk_PathStyle *style)
+TkPathCreateStyle(Tk_PathStyle *style)
 {
+	memset(style, '\0', sizeof(Tk_PathStyle));
+
     style->mask = 0;
     style->strokeGC = None;
     style->strokeColor = NULL;
@@ -682,7 +684,7 @@ Tk_CreatePathStyle(Tk_PathStyle *style)
 /*
  *--------------------------------------------------------------
  *
- * Tk_DeletePathStyle
+ * TkPathDeleteStyle
  *
  *	This procedure frees all memory that might be
  *	allocated and referenced in the Tk_PathStyle structure.
@@ -697,7 +699,7 @@ Tk_CreatePathStyle(Tk_PathStyle *style)
  */
 
 void 
-Tk_DeletePathStyle(Display *display, Tk_PathStyle *style)
+TkPathDeleteStyle(Display *display, Tk_PathStyle *style)
 {
     if (style->strokeGC != None) {
         Tk_FreeGC(display, style->strokeGC);

@@ -137,7 +137,7 @@ CreatePline(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    Tk_CreatePathStyle(&(plinePtr->style));
+    TkPathCreateStyle(&(plinePtr->style));
     plinePtr->canvas = canvas;
     plinePtr->styleName = NULL;
     plinePtr->atomPtr = NULL;

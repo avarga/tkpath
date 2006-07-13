@@ -181,7 +181,7 @@ CreateAny(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    Tk_CreatePathStyle(&(ppolyPtr->style));
+    TkPathCreateStyle(&(ppolyPtr->style));
     ppolyPtr->canvas = canvas;
     ppolyPtr->styleName = NULL;
     ppolyPtr->atomPtr = NULL;

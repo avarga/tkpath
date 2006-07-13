@@ -141,7 +141,7 @@ CreatePimage(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
      */
      
     // This seems to be unnecessary???
-    Tk_CreatePathStyle(&(pimagePtr->style));
+    TkPathCreateStyle(&(pimagePtr->style));
     pimagePtr->canvas = canvas;
     pimagePtr->styleName = NULL;
     pimagePtr->imageString = NULL;

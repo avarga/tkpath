@@ -228,8 +228,8 @@ void		TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr);
  * Utilities for creating and deleting Tk_PathStyles.
  */
  
-void 		Tk_CreatePathStyle(Tk_PathStyle *style);
-void 		Tk_DeletePathStyle(Display *display, Tk_PathStyle *style);
+void 		TkPathCreateStyle(Tk_PathStyle *style);
+void 		TkPathDeleteStyle(Display *display, Tk_PathStyle *style);
 
 /*
  * end block for C++

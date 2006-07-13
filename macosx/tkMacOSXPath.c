@@ -588,7 +588,6 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i, nstops;
-    int					fillMethod;
     float 				startRadius, endRadius;
     bool 				extendStart, extendEnd;
     CGShadingRef 		shading;

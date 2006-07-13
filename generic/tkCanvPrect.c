@@ -146,7 +146,7 @@ CreatePrect(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    Tk_CreatePathStyle(&(prectPtr->style));
+    TkPathCreateStyle(&(prectPtr->style));
     prectPtr->canvas = canvas;
     prectPtr->styleName = NULL;
     prectPtr->atomPtr = NULL;

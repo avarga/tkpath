@@ -25,7 +25,7 @@ using namespace Gdiplus;
 
 extern "C" int gUseAntiAlias;
 
-#define MakeGDIPlusColor(xc, opacity) 	Color((int) (opacity*255), 				\
+#define MakeGDIPlusColor(xc, opacity) 	Color((BYTE) (opacity*255), 				\
                                                 (((xc)->pixel & 0xFF)),			\
                                                 (((xc)->pixel >> 8) & 0xFF),	\
                                                 (((xc)->pixel >> 16) & 0xFF))
@@ -118,8 +118,8 @@ GdiplusStartupOutput PathC::sGdiplusStartupOutput;
 
 PathC::PathC(Drawable d)
 {
-    TkWinDrawable *twdPtr = (TkWinDrawable *) d;
-    //TkWinDrawable *twdPtr = static_cast<TkWinDrawable*>(d);
+    //TkWinDrawable *twdPtr = (TkWinDrawable *) d;
+    TkWinDrawable *twdPtr = reinterpret_cast<TkWinDrawable*>(d);
 
 	if (!sGdiplusStarted) {
         //Status status;
@@ -139,6 +139,7 @@ PathC::PathC(Drawable d)
     mMemHdc = CreateCompatibleDC(NULL);
     SelectObject(mMemHdc, twdPtr->bitmap.handle);
     mGraphics = new Graphics(mMemHdc);
+	mPath = NULL;
     if (gUseAntiAlias) {
         mGraphics->SetSmoothingMode(SmoothingModeAntiAlias);
     }
@@ -153,8 +154,12 @@ PathC::PathC(Drawable d)
 
 inline PathC::~PathC(void)
 {
-    delete mPath;
-    delete mGraphics;
+	if (mPath) {
+		delete mPath;
+	}
+    if (mGraphics) {
+        delete mGraphics;
+    }
     DeleteDC(mMemHdc);
 }
 
@@ -198,7 +203,6 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
 inline SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
 {
     SolidBrush 	*brushPtr;
-    
     brushPtr = new SolidBrush(MakeGDIPlusColor(style->fillColor, style->fillOpacity));
     return brushPtr;
 }
@@ -243,55 +247,87 @@ inline void PathC::AddRectangle(float x, float y, float width, float height)
 {
     RectF rect(x, y, width, height);
     mPath->AddRectangle(rect);
+    // @@@ this depends
+    mCurrentPoint.X = x;
+    mCurrentPoint.Y = y;
 }
 
 inline void PathC::AddEllipse(float cx, float cy, float rx, float ry)
 {
     mPath->AddEllipse(cx-rx, cy-ry, 2*rx, 2*ry);
+    // @@@ this depends
+    mCurrentPoint.X = cx+rx;
+    mCurrentPoint.Y = cy;
 }
 
 inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo, 
         float x, float y, float width, float height)
 {
-    int iwidth, iheight;
     Tk_PhotoImageBlock block;
     PixelFormat format;
     INT stride;
-    BYTE *scan0;
+    int iwidth, iheight;
+    int smallEndian = 1;	/* Hardcoded. */
+    unsigned char *data = NULL;
+    unsigned char *ptr = NULL;
+    unsigned char *srcPtr, *dstPtr;
+    int srcR, srcG, srcB, srcA;		/* The source pixel offsets. */
+    int dstR, dstG, dstB, dstA;		/* The destination pixel offsets. */
+    int i, j;
     
     Tk_PhotoGetImage(photo, &block);
     iwidth = block.width;
     iheight = block.height;
     stride = block.pitch;
-    format = PixelFormat32bppARGB;
     scan0 = (BYTE *) block.pixelPtr;
-    
-    if (block.pixelSize*8 == 32) {
+    if (width == 0.0) {
+        width = (float) iwidth;
+    }
+    if (height == 0.0) {
+        height = (float) iheight;
     }
     
-    Bitmap bitmap(iwidth, iheight, stride, format, scan0);
+    if (block.pixelSize*8 == 32) {
+        format = PixelFormat32bppARGB;
 
+        srcR = block.offset[0];
+        srcG = block.offset[1]; 
+        srcB = block.offset[2];
+        srcA = block.offset[3];
+        dstR = 1;
+        dstG = 2;
+        dstB = 3;
+        dstA = 0;
+        if (smallEndian) {
+            dstR = 3-dstR, dstG = 3-dstG, dstB = 3-dstB, dstA = 3-dstA;
+        }
+        if ((srcR == dstR) && (srcG == dstG) && (srcB == dstB) && (srcA == dstA)) {
+            ptr = (unsigned char *) block.pixelPtr;
+        } else {
+            data = (unsigned char *) ckalloc(pitch*iheight);
+            ptr = data;
+            
+            for (i = 0; i < iheight; i++) {
+                srcPtr = block.pixelPtr + i*pitch;
+                dstPtr = ptr + i*pitch;
+                for (j = 0; j < iwidth; j++) {
+                    *(dstPtr+dstR) = *(srcPtr+srcR);
+                    *(dstPtr+dstG) = *(srcPtr+srcG);
+                    *(dstPtr+dstB) = *(srcPtr+srcB);
+                    *(dstPtr+dstA) = *(srcPtr+srcA);
+                    srcPtr += 4;
+                    dstPtr += 4;
+                }
+            }
+        }
+    } else if (block.pixelSize*8 == 24) {
+        /* Could do something about this? */
+        return;
+    } else {
+        return;
+    }
+    Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
     mGraphics->DrawImage(&bitmap, x, y, width, height);
-
-#if 0
-Bitmap(      
-
-    INT width,
-    INT height,
-    INT stride,
-    PixelFormat format,
-    BYTE *scan0
-);
-Status DrawImage(      
-
-    Image *image,
-    REAL x,
-    REAL y,
-    REAL width,
-    REAL height
-);
-#endif
-
 }
 
 inline void PathC::CloseFigure()
@@ -304,7 +340,6 @@ inline void PathC::CloseFigure()
 inline void PathC::Stroke(Tk_PathStyle *style)
 {
     Pen *pen = PathCreatePen(style);
-    
     mGraphics->DrawPath(pen, mPath);
 	delete pen;
 }
@@ -312,7 +347,6 @@ inline void PathC::Stroke(Tk_PathStyle *style)
 inline void PathC::Fill(Tk_PathStyle *style)
 {
     SolidBrush *brush = PathCreateBrush(style);
-    
     mGraphics->FillPath(brush, mPath);
 	delete brush;
 }
@@ -321,7 +355,6 @@ inline void PathC::FillAndStroke(Tk_PathStyle *style)
 {
     Pen 		*pen = PathCreatePen(style);
     SolidBrush 	*brush = PathCreateBrush(style);
-    
     mGraphics->FillPath(brush, mPath);
     mGraphics->DrawPath(pen, mPath);
 	delete pen;
@@ -487,7 +520,8 @@ void PathExit(ClientData clientData)
  
 TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
-    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    //TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    TkPathContext_ *context = reinterpret_cast<TkPathContext_ *> (ckalloc((unsigned) (sizeof(TkPathContext_))));
     context->d = d;
     context->c = new PathC(d);
     return (TkPathContext) context;
