@@ -221,7 +221,8 @@ int 		TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr);
 void		TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
 void		TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule);
 void    	TkPathFree(TkPathContext ctx);
-int			TkPathDrawingDestroysPath();
+int			TkPathDrawingDestroysPath(void);
+int			TkPathPixelAlign(void);
 void		TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr);
 
 /*

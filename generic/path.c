@@ -34,6 +34,8 @@ extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 extern int 	RadialGradientCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
+extern int 	PixelAlignObjCmd(ClientData clientData, Tcl_Interp* interp,
+                    int objc, Tcl_Obj* CONST objv[]);
 
 
 #ifdef _WIN32
@@ -98,6 +100,9 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
             (char *) &gUseAntiAlias, TCL_LINK_BOOLEAN) != TCL_OK) {
         Tcl_ResetResult(interp);
     }
+    
+    Tcl_CreateObjCommand(interp, "::tkpath::pixelalign",
+            PixelAlignObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 
     /*
      * Make separate gradient objects, similar to SVG.

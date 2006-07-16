@@ -399,6 +399,12 @@ int TkPathDrawingDestroysPath(void)
     return 0;
 }
 
+int		
+TkPathPixelAlign(void)
+{
+    return 1;
+}
+
 int TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *pt)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;

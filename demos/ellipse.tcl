@@ -19,7 +19,9 @@ $w create ellipse 100 260 -rx 60 -ry 20 -stroke "#666666" -strokewidth 3 -fill "
 set id [$w create ellipse 280 280 -rx 20 -ry 60]
 $w bind $id <Button-1> [list puts "hit $id"]
 
-$w move all 0.5 0.5
+if {![tkpath::pixelalign]} {
+    $w move all 0.5 0.5
+}
 
 $w create circle 300 220 -r 8 -fill red -stroke ""
 $w create circle 300 240 -r 8 -fill green -stroke ""

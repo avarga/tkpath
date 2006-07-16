@@ -35,7 +35,9 @@ $w create ppolygon 75 237  89 280  134 280  98 307  111 350  75 325  38 350  \
 $w create ppolygon 240 250  283 275  283 325  240 350  196 325  196 275 \
   -stroke "#a19de2" -strokewidth 6 -fill "#d6d6ff"
 
-$w move all 0.5 0.5
+if {![tkpath::pixelalign]} {
+    $w move all 0.5 0.5
+}
 
 $w create text 300  20  -anchor w -text "pline"
 $w create text 300 150  -anchor w -text "polyline"

@@ -440,6 +440,12 @@ TkPathDrawingDestroysPath(void)
     return 1;
 }
 
+int		
+TkPathPixelAlign(void)
+{
+    return 0;
+}
+
 /* TkPathGetCurrentPosition --
  *
  * 		Returns the current pen position in untransformed coordinates!

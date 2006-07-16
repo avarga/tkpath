@@ -5,7 +5,7 @@
  *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *		It contains the generic parts that do not refer to the canvas.
  *
- * Copyright (c) 2005  Mats Bengtsson
+ * Copyright (c) 2005-2006  Mats Bengtsson
  *
  * $Id$
  */
@@ -16,6 +16,15 @@
 extern Tcl_Interp *gInterp;
 
 static const char kPathSyntaxError[] = "syntax error in path definition";
+
+
+int 	
+PixelAlignObjCmd(ClientData clientData, Tcl_Interp* interp,
+        int objc, Tcl_Obj* CONST objv[])
+{
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkPathPixelAlign()));    
+    return TCL_OK;
+}
 
 /*
  *--------------------------------------------------------------

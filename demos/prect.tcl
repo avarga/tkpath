@@ -16,7 +16,9 @@ $w create prect 200 100 260 180 -rx 6 -stroke "#e2a19d" -fill "#ffd6d6"
 $w create prect 20 200 260 380 -stroke "#999999"
 $w create prect 40 220 100 360 -rx 16 -stroke "#666666" -strokewidth 3 -fill "#bdbdbd"
 
-$w move all 0.5 0.5
+if {![tkpath::pixelalign]} {
+    $w move all 0.5 0.5
+}
 
 $w create prect 150 240 170 260 -stroke "" -fill red
 $w create prect 150 270 170 290 -stroke "" -fill green

@@ -71,7 +71,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\mats\Mina dokument\C\tcl8.4.9\win&quot;;&quot;C:\Documents and Settings\mats\Mina dokument\C\tcl8.4.9\generic&quot;;&quot;C:\Documents and Settings\mats\Mina dokument\C\tk8.4.9\generic&quot;;&quot;C:\Documents and Settings\mats\Mina dokument\C\tk8.4.9\win&quot;;&quot;C:\Documents and Settings\mats\Mina dokument\C\tk8.4.9\xlib&quot;"
+				AdditionalIncludeDirectories="..\..\generic;..\..\..\tcl8.4.9\win;..\..\..\tcl8.4.9\generic;..\..\..\tk8.4.9\generic;..\..\..\tk8.4.9\win;..\..\..\tk8.4.9\xlib"
 				PreprocessorDefinitions="USE_TCL_STUBS;USE_TK_STUBS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -82,8 +82,8 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tclstub84.lib tkstub84.lib"
-				OutputFile="$(OutDir)/tkpath01.dll"
+				AdditionalDependencies="tclstub84.lib tkstub84.lib gdiplus.lib"
+				OutputFile="$(OutDir)/tkpathgdiplus02.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="C:\Tcl\lib"
 				GenerateDebugInformation="TRUE"

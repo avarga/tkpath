@@ -5,12 +5,6 @@
 This package implements path drawing modelled after its SVG counterpart,
 see http://www.w3.org/TR/SVG11/.
 
-The code is divided into two parts:
-
-1) Generic path drawing which also implements the platform specific parts.
-
-2) The items
-
 There are various differences compared to SVG. As a canvas item, it also
 behaves a bit differently than an ordinary item.
 
@@ -133,6 +127,11 @@ if paramters are wrong.
     Switch on with:
     set ::tkpath::antialias 1
 
+ o The command ::tkpath::pixelalign returns how pixels are aligned to 
+   coordinates. If 0 then pixels are between the integer coordinates, and if 1
+   they are centered on the integer coordinates. If you draw lines and the
+   graphics lib doesn't do pixel align you may have to draw to half integer
+   coordinates to get sharp 1 pixel width lines.
 
  o Styles are created and configured using:
 

@@ -22,10 +22,10 @@ using namespace Gdiplus;
 
 extern "C" int gUseAntiAlias;
 
-#define MakeGDIPlusColor(xc, opacity) 	Color(BYTE(opacity*255), 					\
-                                                BYTE(((xc)->pixel & 0xFF)),			\
-                                                BYTE(((xc)->pixel >> 8) & 0xFF),	\
-                                                BYTE(((xc)->pixel >> 16) & 0xFF))
+#define MakeGDIPlusColor(xc, opacity) 	Color(BYTE(opacity*255), 				\
+											BYTE(((xc)->pixel & 0xFF)),			\
+											BYTE(((xc)->pixel >> 8) & 0xFF),	\
+											BYTE(((xc)->pixel >> 16) & 0xFF))
 
 static LookupTable LineCapStyleLookupTable[] = {
     {CapNotLast, 	LineCapFlat},
@@ -77,10 +77,9 @@ class PathC {
     void Fill(Tk_PathStyle *style);
     void FillAndStroke(Tk_PathStyle *style);
     void GetCurrentPoint(PointF *pt);
-    void FillTwoStopLinearGradient(PathRect *bbox, PathRect *line,
-            XColor *color1, XColor *color2, double opacity1, double opacity2);
-    void FillSimpleLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr);
-    
+	void FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
+    void FillRadialGradient(PathRect *bbox, RadialGradientFill *fillPtr, int fillRule);
+
   private:  
     HDC 			mMemHdc;
     PointF 			mOrigin;
@@ -101,13 +100,6 @@ typedef struct TkPathContext_ {
 	PathC *		c;
 } TkPathContext_;
 
-/*
- * This is perhaps a very stupid thing to do.
- * It limits drawing to this single context at a time.
- * Perhaps some window structure should be augmented???
- */
-
-//static PathC *gPathBuilderPtr = NULL;
 
 int	PathC::sGdiplusStarted;
 ULONG_PTR PathC::sGdiplusToken;
@@ -364,8 +356,7 @@ inline void PathC::GetCurrentPoint(PointF *pt)
     *pt = mCurrentPoint;
 }
 
-/* ONLY for nstops = 2 */
-
+#if 0
 void PathC::FillSimpleLinearGradient(
         PathRect *bbox, 		/* The items bounding box in untransformed coords. */
         LinearGradientFill *fillPtr)
@@ -408,94 +399,104 @@ void PathC::FillSimpleLinearGradient(
     /* We could also have used brush.SetWrapMode() */
     mGraphics->FillPath(&brush, mPath);
 }
+#endif
 
-void PathC::FillTwoStopLinearGradient(
-        PathRect *bbox, /* The items bounding box in untransformed coords. */
-        PathRect *line,	/* The relative line that defines the
-                         * gradient transition line. 
-                         * We paint perp to this line. */
-        XColor *color1, XColor *color2, double opacity1, double opacity2)
+void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
-    double			p1x, p1y, p2x, p2y;
-    double			ax, ay, a2, alen;
-    double			q1x, q1y, q2x, q2y;
-	double			diag;
-    PointF			p1, p2;
-    PointF			q1, q2, a;
-    Color			col1, col2;
-      
-    /*
-     * Scale up 'line' vector to bbox.
-     * Vectors: 
-     *		p1 = start transition vector
-     *		p2 = end transition vector
-     *		a  = P2 - P1
-     */
-    p1x = bbox->x1 + (bbox->x2 - bbox->x1)*line->x1;
-    p1y = bbox->y1 + (bbox->y2 - bbox->y1)*line->y1;
-    p2x = bbox->x1 + (bbox->x2 - bbox->x1)*line->x2;
-    p2y = bbox->y1 + (bbox->y2 - bbox->y1)*line->y2;
-    ax = p2x - p1x;
-    ay = p2y - p1y;
-    a2 = ax*ax + ay*ay;
-    if (a2 < 0.5) {
-        /* Not much to paint in this case. */
-        return;
-    }
-    alen = sqrt(a2);
-#if 0
-    p1.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*line->x1);
-    p1.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*line->y1);
-    p2.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*line->x2);
-    p2.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*line->y2);
-    a.X = p2.X - p1.X;
-    a.Y = p2.Y - p1.Y;
-    a2 = a.X*a.X + a.Y*a.Y;
-    if (a2 < 0.5) {
-        /* Not much to paint in this case. */
-        return;
-    }
-    alen = sqrt(a2);
-#endif    
-    /* GDI+ has a very awkward way of repeating the gradient pattern
-     * for the complete fill region that can't be switched off.
-     * Need therefore to clip away any region outside the wanted one.
-     */
+    int					i;
+    int					nstops;
+	float				x, y, width, height;
+    GradientStop 		*stop;
+    GradientStopArray 	*stopArrPtr;
+    PathRect			*tPtr;
 
-    /*
-     * Perp translate 'a' to left and right so that they "cover" the bbox.
-     * Vectors: q1 = p1 + (-ay, ax)*diag/|a|
-     *          q2 = p1 + (ay, -ax)*dist/|a|
-     */
-    diag = hypot(bbox->x2 - bbox->x1, bbox->y2 - bbox->y1) + 2.0;
-    q1x = p1x - ay*diag/alen;
-    q1y = p1y + ax*diag/alen;
-    q2x = p1x + ay*diag/alen;
-    q2y = p1y - ax*diag/alen;
-     
-    /* The idea here is to intersect the region formed by q1, q2, q1+a, q2+a,
-     * with the path region. 
-     */
-    /* Smarter? path.AddPolygon(polyPoints, 4); */
-    GraphicsPath 	clipPath;
-    clipPath.StartFigure();
-    clipPath.AddLine((float) q1x, (float) q1y, (float) q2x, (float) q2y);
-    clipPath.AddLine((float) q2x, (float) q2y, (float) (q2x+ax), (float) (q2y+ay));
-    clipPath.AddLine((float) (q2x+ax), (float) (q2y+ay), (float) (q1x+ax), (float) (q1y+ay));
-    clipPath.CloseFigure();
-    
+    stopArrPtr = fillPtr->stopArrPtr;    
+    nstops = stopArrPtr->nstops;
+    tPtr = fillPtr->transitionPtr;
+	x = float(bbox->x1);
+	y = float(bbox->y1);
+	width = float(bbox->x2 - bbox->x1);
+	height = float(bbox->y2 - bbox->y1);
+
     GraphicsContainer container = mGraphics->BeginContainer();
-	Gdiplus::Region region(&clipPath);
-    mGraphics->SetClip(&region);
 
-	p1 = PointF((float) p1x, (float) p1y);
-    p2 = PointF((float) p2x, (float) p2y);
-    col1 = MakeGDIPlusColor(color1, opacity1);
-    col2 = MakeGDIPlusColor(color2, opacity2);
-    LinearGradientBrush brush(p1, p2, col1, col2);
+	PointF p1(float(x + tPtr->x1*width), float(y + tPtr->y1*height));
+	PointF p2(float(x + tPtr->x2*width), float(y + tPtr->y2*height));
+    stop = stopArrPtr->stops[0];
+    Color col1(MakeGDIPlusColor(stop->color, stop->opacity));
+    stop = stopArrPtr->stops[nstops-1];
+    Color col2(MakeGDIPlusColor(stop->color, stop->opacity));
+	LinearGradientBrush brush(p1, p2, col1, col2);
+
+    Color *col = new Color[nstops];
+    REAL *pos = new REAL[nstops];
+	for (i = 0; i < nstops; i++) {
+        stop = stopArrPtr->stops[i];
+        col[i] = MakeGDIPlusColor(stop->color, stop->opacity);
+        pos[i] = REAL(stop->offset);
+    }
+    brush.SetInterpolationColors(col, pos, nstops);
     mGraphics->FillPath(&brush, mPath);
-
     mGraphics->EndContainer(container);
+	delete [] col;
+	delete [] pos;
+}
+
+void PathC::FillRadialGradient(
+        PathRect *bbox, 	/* The items bounding box in untransformed coords. */
+        RadialGradientFill *fillPtr, int fillRule)
+{
+    int					i;
+    int					nstops;
+	float				radius;
+	float				x, y, width, height, cx, cy;
+    GradientStop 		*stop;
+    GradientStopArray 	*stopArrPtr;
+    RadialTransition    *tPtr;
+
+    stopArrPtr = fillPtr->stopArrPtr;    
+    nstops = stopArrPtr->nstops;
+    tPtr = fillPtr->radialPtr;
+	radius = float(tPtr->radius);
+	x = float(bbox->x1);
+	y = float(bbox->y1);
+	width = float(bbox->x2 - bbox->x1);
+	height = float(bbox->y2 - bbox->y1);
+	cx = x + width/2.0;
+	cy = y + height/2.0;
+
+    GraphicsContainer container = mGraphics->BeginContainer();
+    mGraphics->SetClip(mPath);
+	
+    stop = stopArrPtr->stops[nstops-1];
+    SolidBrush solidBrush(MakeGDIPlusColor(stop->color, stop->opacity));
+	mGraphics->FillPath(&solidBrush, mPath);
+
+    GraphicsPath path;
+    path.AddEllipse(cx-radius*width, cy-radius*height, 2*radius*width, 2*radius*height);
+    PathGradientBrush brush(&path);
+    stop = stopArrPtr->stops[0];
+    brush.SetCenterColor(MakeGDIPlusColor(stop->color, stop->opacity));
+	PointF focal(float(x + tPtr->focalX*width), float(y + tPtr->focalY*height));
+    brush.SetCenterPoint(focal);
+    int count = 1;
+    stop = stopArrPtr->stops[nstops-1];
+	Color color = MakeGDIPlusColor(stop->color, stop->opacity);
+    brush.SetSurroundColors(&color, &count);
+    
+	/* gdi+ counts them from the border and not from the center. */
+    Color *col = new Color[nstops];
+    REAL *pos = new REAL[nstops];
+    for (i = nstops-1; i >= 0; i--) {
+        stop = stopArrPtr->stops[i];
+        col[i] = MakeGDIPlusColor(stop->color, stop->opacity);
+        pos[i] = REAL(1.0 - stop->offset);
+    }
+    brush.SetInterpolationColors(col, pos, nstops);
+    mGraphics->FillPath(&brush, &path);
+    mGraphics->EndContainer(container);
+	delete [] col;
+	delete [] pos;
 }
 
 /* 
@@ -669,58 +670,25 @@ int	TkPathDrawingDestroysPath(void)
 {
     return 0;
 }
+int		
+TkPathPixelAlign(void)
+{
+    return 0;
+}
 
 /* @@@ INCOMPLETE! We need to consider any padding as well. */
 
 void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    int 			i;
-    int 			nstops;
-    PathRect 		line, *tPtr;
-    GradientStop 	*stop1, *stop2;
-    GradientStopArray 	*stopArrPtr;
-
-    tPtr = fillPtr->transitionPtr;
-    stopArrPtr = fillPtr->stopArrPtr;
-    nstops = stopArrPtr->nstops;
-
-    if (nstops == 1) {
-        /* Fill using solid color. */
-    } else if (nstops == 2) {
-    
-        /* Use a simplified version in this case. */
-        context->c->FillSimpleLinearGradient(bbox, fillPtr);
-    } else {
-    
-        /*
-         * Paint all stops pairwise.
-         */
-        for (i = 0; i < nstops - 1; i++) {
-			stop1 = stopArrPtr->stops[i];
-		    stop2 = stopArrPtr->stops[i+1];
-            
-            /* If the two offsets identical then skip. */
-            if (fabs(stop1->offset - stop2->offset) < 1e-6) {
-                continue;
-            }
-            
-            /* Construct the gradient 'line' by scaling the transition
-            * using the stop offsets. 
-            */
-            line.x1 = tPtr->x1 + stop1->offset * (tPtr->x2 - tPtr->x1);
-            line.y1 = tPtr->y1 + stop1->offset * (tPtr->y2 - tPtr->y1);
-            line.x2 = tPtr->x1 + stop2->offset * (tPtr->x2 - tPtr->x1);
-            line.y2 = tPtr->y1 + stop2->offset * (tPtr->y2 - tPtr->y1);            
-            context->c->FillTwoStopLinearGradient(bbox, &line,
-                    stop1->color, stop2->color, stop1->opacity, stop2->opacity);
-        }
-    }
+    context->c->FillLinearGradient(bbox, fillPtr, fillRule);
 }
 
 void
 TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    context->c->FillRadialGradient(bbox, fillPtr, fillRule);
 }
 
 

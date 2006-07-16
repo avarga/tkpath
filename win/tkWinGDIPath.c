@@ -459,6 +459,12 @@ TkPathDrawingDestroysPath(void)
     return 1;
 }
 
+int		
+TkPathPixelAlign(void)
+{
+    return 0;
+}
+
 /*
  *----------------------------------------------------------------------
  *
