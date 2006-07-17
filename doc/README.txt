@@ -24,10 +24,10 @@ if paramters are wrong.
     Fill (fillOptions):
 	-fill color
 	-fillgradient gradientToken
-	-filloffset
+	-filloffset                   (unimplemented)
 	-fillopacity float (0,1)
 	-fillrule nonzero|evenodd
-	-fillstipple
+	-fillstipple                  (unimplemented)
 
     Stroke (strokeOptions):
 	-stroke color
@@ -35,9 +35,9 @@ if paramters are wrong.
 	-strokelinecap 
 	-strokelinejoin
 	-strokemiterlimit float
-	-strokeoffset
+	-strokeoffset                 (unimplemented)
 	-strokeopacity float (0,1)
-	-strokestipple
+	-strokestipple                (unimplemented)
 	-strokewidth float
 
     Generic (genericOptions):
@@ -54,7 +54,7 @@ if paramters are wrong.
     take precedence over any other options set directly. This is how
     SVG works (bad?).
 
- o The canvas path item
+ o The path item
 
     The path specification must be a single list and not concateneted with
     the rest of the command:
@@ -109,11 +109,11 @@ if paramters are wrong.
 
     .c create polyline x1 y1 x2 y2 .... ?strokeOptions genericOptions?
 
- o The polygon item
+ o The ppolygon item
 
     Makes a closed polygon.
 
-    .c create polygon x1 y1 x2 y2 .... ?fillOptions strokeOptions genericOptions?
+    .c create ppolygon x1 y1 x2 y2 .... ?fillOptions strokeOptions genericOptions?
 
  o The pimage item
 

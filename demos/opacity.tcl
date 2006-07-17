@@ -17,7 +17,7 @@ namespace eval ::opacity {
     variable rc 100
     
     foreach col {red green blue} {
-	$w create path "M 0 0 A $r $r 0 1 0 0 $d A $r $r 0 1 0 0 0 z" \
+	$w create circle 0 $r -r $r \
 	  -stroke "" -fill $col -fillopacity $opacity -tags $col
     }
     
