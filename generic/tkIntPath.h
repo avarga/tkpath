@@ -98,11 +98,15 @@ extern "C" {
 
 extern int gUseAntiAlias;
 
-/* These MUST be kept in sync with methodST ! */
+/* These MUST be kept in sync with methodST and unitsST! */
 enum {
     kPathGradientMethodPad = 		0L,
     kPathGradientMethodRepeat,
     kPathGradientMethodReflect
+};
+enum {
+    kPathGradientUnitsBoundingBox =	0L,
+    kPathGradientUnitsUserSpace
 };
 
 enum {

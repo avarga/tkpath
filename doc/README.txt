@@ -182,7 +182,13 @@ if paramters are wrong.
 	    All offsets must be ordered and run from 0 to 1.
 	-lineartransition {x1 y1 x2 y2}
 	    specifies the transtion vector relative the items bounding box.
-	    Coordinates run from 0 to 1. It defaults to {0 0 1 0}.
+            Depending on -units it gets interpreted differently.
+	    If -units is 'bbox' coordinates run from 0 to 1 and are relative
+            the items bounding box. If -units is 'userspace' then they are
+            defined in absolute coordinates but in the space of the items
+            coordinate system. It defaults to {0 0 1 0}.
+        -units bbox|userspace sets the units of the transition coordinates.
+	    See above. Defaults to bbox.
 
 
 o Radial gradients are created and configured using:

@@ -103,6 +103,7 @@ typedef struct LinearGradientFill {
     PathRect *transitionPtr;	/* Actually not a proper rect but a vector. */
     int method;
     int fillRule;				/* Not yet used. */
+    int units;
     GradientStopArray *stopArrPtr;
 } LinearGradientFill;
 
@@ -117,6 +118,7 @@ typedef struct RadialTransition {
 typedef struct RadialGradientFill {
     int method;
     int fillRule;				/* Not yet used. */
+    int units;
     RadialTransition *radialPtr;
     GradientStopArray *stopArrPtr;
 } RadialGradientFill;
@@ -218,8 +220,10 @@ void		TkPathFill(TkPathContext ctx, Tk_PathStyle *style);
 void        TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style);
 int			TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *ptPtr);
 int 		TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr);
-void		TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
-void		TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule);
+void		TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, 
+                    LinearGradientFill *fillPtr, int fillRule);
+void		TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, 
+                    RadialGradientFill *fillPtr, int fillRule);
 void    	TkPathFree(TkPathContext ctx);
 int			TkPathDrawingDestroysPath(void);
 int			TkPathPixelAlign(void);

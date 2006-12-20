@@ -37,7 +37,7 @@ TkPathDrawPath(
                              * of PathAtoms. */
     Tk_PathStyle *stylePtr,	/* The paths style. */
     TMatrix *mPtr,			/* Typically used for canvas offsets. */
-    PathRect *bboxPtr)		/* The bare (untronsformed) bounding box 
+    PathRect *bboxPtr)		/* The bare (untransformed) bounding box 
                              * (assuming zero stroke width) */
 {
     TkPathContext context;
@@ -652,8 +652,7 @@ PathGenericCmdDispatcher(
 				return TCL_ERROR;
             }
             
-            if (Tk_InitOptions(interp, recordPtr, optionTable, 
-                    tkwin) != TCL_OK) {
+            if (Tk_InitOptions(interp, recordPtr, optionTable, tkwin) != TCL_OK) {
                 ckfree(recordPtr);
                 return TCL_ERROR;
             }

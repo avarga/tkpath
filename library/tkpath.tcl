@@ -83,6 +83,8 @@ proc ::tkpath::transform {cmd args} {
     return $matrix
 }
 
+# OUTDATED!
+
 # ::tkpath::coords --
 # 
 #       Helper for designing the path specification for some typical items.

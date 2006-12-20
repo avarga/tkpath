@@ -413,15 +413,24 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
     stopArrPtr = fillPtr->stopArrPtr;    
     nstops = stopArrPtr->nstops;
     tPtr = fillPtr->transitionPtr;
-	x = float(bbox->x1);
-	y = float(bbox->y1);
-	width = float(bbox->x2 - bbox->x1);
-	height = float(bbox->y2 - bbox->y1);
 
     GraphicsContainer container = mGraphics->BeginContainer();
 
-	PointF p1(float(x + tPtr->x1*width), float(y + tPtr->y1*height));
-	PointF p2(float(x + tPtr->x2*width), float(y + tPtr->y2*height));
+    /*
+     * We need to do like this since this is how SVG defines gradient drawing
+     * in case the transition vector is in relative coordinates.
+     */
+    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+        x = float(bbox->x1);
+        y = float(bbox->y1);
+        width = float(bbox->x2 - bbox->x1);
+        height = float(bbox->y2 - bbox->y1);
+        PointF p1(float(x + tPtr->x1*width), float(y + tPtr->y1*height));
+        PointF p2(float(x + tPtr->x2*width), float(y + tPtr->y2*height));
+    } else {
+        PointF p1(float(tPtr->x1), float(tPtr->y1));
+        PointF p2(float(tPtr->x2), float(tPtr->y2));
+    }
     stop = stopArrPtr->stops[0];
     Color col1(MakeGDIPlusColor(stop->color, stop->opacity));
     stop = stopArrPtr->stops[nstops-1];

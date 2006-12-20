@@ -500,6 +500,11 @@ FillTwoStopLinearGradient(
     double deltaX, deltaY;
     HPEN hpen;
 
+    /* @@@ TODO
+    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+    }
+    */
+    
     /* Scale up 'line' vector to bbox. */
     p1x = bbox->x1 + (bbox->x2 - bbox->x1)*line->x1;
     p1y = bbox->y1 + (bbox->y2 - bbox->y1)*line->y1;
@@ -691,7 +696,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     stopArrPtr = fillPtr->stopArrPtr;
     nstops = stopArrPtr->nstops;
     tPtr = fillPtr->transitionPtr;
-
+    
     if (fillPtr->method == kPathGradientMethodPad) {
     
         if ((pad = NeedTransitionPadding(tPtr)) != kPathGradientPadNone) {

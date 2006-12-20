@@ -77,7 +77,6 @@ ComputeSlotAddress(recordPtr, offset)
 
 /*
  * Procedures for processing the transition option of the linear gradient fill.
- * Boundaries are from 0.0 to 1.0.
  */
  
 static int LinTransitionSet(
@@ -96,7 +95,7 @@ static int LinTransitionSet(
     char *internalPtr;
     int objEmpty = 0;
     Tcl_Obj *valuePtr;
-    double z[4] = {0.0, 0.0, 1.0, 0.0};
+    double z[4] = {0.0, 0.0, 1.0, 0.0};		/* Defaults according to SVG. */
     PathRect *new = NULL;
     
     valuePtr = *value;
@@ -126,11 +125,13 @@ static int LinTransitionSet(
             if (Tcl_GetDoubleFromObj(interp, objv[i], z+i) != TCL_OK) {
                 return TCL_ERROR;
             }
+            /*
             if ((z[i] < 0.0) || (z[i] > 1.0)) {
                 Tcl_SetObjResult(interp, Tcl_NewStringObj(
                         "-lineartransition elements must be in the range 0.0 to 1.0", -1));
                 return TCL_ERROR;
             }
+            */
         }
         new = (PathRect *) ckalloc(sizeof(PathRect));
         new->x1 = z[0];
@@ -462,11 +463,17 @@ static Tk_ObjCustomOption stopsCO =
 static char *methodST[] = {
     "pad", "repeat", "reflect", (char *) NULL
 };
+static char *unitsST[] = {
+    "bbox", "userspace", (char *) NULL
+};
 
 static Tk_OptionSpec linGradientStyleOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-method", (char *) NULL, (char *) NULL,
         "pad", -1, Tk_Offset(LinearGradientStyle, fill.method), 
         0, (ClientData) methodST, 0},
+    {TK_OPTION_STRING_TABLE, "-units", (char *) NULL, (char *) NULL,
+        "bbox", -1, Tk_Offset(LinearGradientStyle, fill.units), 
+        0, (ClientData) unitsST, 0},
 	{TK_OPTION_CUSTOM, "-stops", (char *) NULL, (char *) NULL,
 		(char *) NULL, Tk_Offset(LinearGradientStyle, stopsObj),
         Tk_Offset(LinearGradientStyle, fill.stopArrPtr),
@@ -483,6 +490,9 @@ static Tk_OptionSpec radGradientStyleOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-method", (char *) NULL, (char *) NULL,
         "pad", -1, Tk_Offset(RadialGradientStyle, fill.method), 
         0, (ClientData) methodST, 0},
+    {TK_OPTION_STRING_TABLE, "-units", (char *) NULL, (char *) NULL,
+        "bbox", -1, Tk_Offset(RadialGradientStyle, fill.units), 
+        0, (ClientData) unitsST, 0},
 	{TK_OPTION_CUSTOM, "-stops", (char *) NULL, (char *) NULL,
 		(char *) NULL, Tk_Offset(RadialGradientStyle, stopsObj),
         Tk_Offset(RadialGradientStyle, fill.stopArrPtr),

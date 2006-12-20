@@ -524,7 +524,6 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i, nstops;
-    int					fillMethod;
     bool 				extendStart, extendEnd;
     CGShadingRef 		shading;
     CGPoint 			start, end;
@@ -539,7 +538,6 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     trans = fillPtr->transitionPtr;
     stopArrPtr = fillPtr->stopArrPtr;
     nstops = stopArrPtr->nstops;
-    fillMethod = fillPtr->method;
     
     callbacks.version = 0;
     callbacks.evaluate = ShadeEvaluate;
@@ -547,11 +545,14 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     colorSpaceRef = CGColorSpaceCreateDeviceRGB();
 
     /*
-     * We need to do like this since this is how SVG defines gradient drawing.
+     * We need to do like this since this is how SVG defines gradient drawing
+     * in case the transition vector is in relative coordinates.
      */
-    CGContextSaveGState(context->c);
-    CGContextTranslateCTM(context->c, bbox->x1, bbox->y1);
-    CGContextScaleCTM(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+        CGContextSaveGState(context->c);
+        CGContextTranslateCTM(context->c, bbox->x1, bbox->y1);
+        CGContextScaleCTM(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    }
     
     /*
      * Paint all stops pairwise.
@@ -586,7 +587,9 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         CGFunctionRelease(function);
     }
     CGColorSpaceRelease(colorSpaceRef);
-    CGContextRestoreGState(context->c);
+    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+        CGContextRestoreGState(context->c);
+    }
 }
 
 void

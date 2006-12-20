@@ -418,8 +418,14 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
 
     pattern = cairo_pattern_create_linear(tPtr->x1, tPtr->y1, tPtr->x2, tPtr->y2);
 
-    cairo_translate(context->c, bbox->x1, bbox->y1);
-    cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    /*
+     * We need to do like this since this is how SVG defines gradient drawing
+     * in case the transition vector is in relative coordinates.
+     */
+    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+        cairo_translate(context->c, bbox->x1, bbox->y1);
+        cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    }
 
     for (i = 0; i < nstops; i++) {
         stop = stopArrPtr->stops[i];
