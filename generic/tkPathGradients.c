@@ -125,13 +125,6 @@ static int LinTransitionSet(
             if (Tcl_GetDoubleFromObj(interp, objv[i], z+i) != TCL_OK) {
                 return TCL_ERROR;
             }
-            /*
-            if ((z[i] < 0.0) || (z[i] > 1.0)) {
-                Tcl_SetObjResult(interp, Tcl_NewStringObj(
-                        "-lineartransition elements must be in the range 0.0 to 1.0", -1));
-                return TCL_ERROR;
-            }
-            */
         }
         new = (PathRect *) ckalloc(sizeof(PathRect));
         new->x1 = z[0];
@@ -219,11 +212,12 @@ static int RadTransitionSet(
             if (Tcl_GetDoubleFromObj(interp, objv[i], z+i) != TCL_OK) {
                 return TCL_ERROR;
             }
+            /*
             if ((z[i] < 0.0) || (z[i] > 1.0)) {
                 Tcl_SetObjResult(interp, Tcl_NewStringObj(
                         "-radialtransition elements must be in the range 0.0 to 1.0", -1));
                 return TCL_ERROR;
-            }
+            }*/
         }
         new = (RadialTransition *) ckalloc(sizeof(RadialTransition));
         new->centerX = z[0];
