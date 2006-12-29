@@ -188,6 +188,11 @@ typedef struct Tk_PathStyle {
     char *null;   				/* Just a placeholder for not yet implemented stuff. */ 
 } Tk_PathStyle;
 
+typedef struct Tk_PathTextStyle {
+    char *fontName;
+    double fontSize;
+} Tk_PathTextStyle;
+
 /*
  * Functions to create path atoms.
  */

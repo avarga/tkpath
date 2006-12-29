@@ -241,6 +241,31 @@ void TkPathClosePath(TkPathContext ctx)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_close_path(context->c);
 }
+void
+TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text)
+{
+
+}
+
+void
+TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, char *text)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+}
+
+void
+TkPathTextFree(Tk_PathTextStyle *textStylePtr)
+{
+
+}
+
+PathRect
+TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text)
+{
+    PathRect r = {0, 0, 0, 0};
+    return r;
+}
 
 void TkPathClipToPath(TkPathContext ctx, int fillRule)
 {

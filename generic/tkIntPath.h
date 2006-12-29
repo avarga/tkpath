@@ -240,6 +240,10 @@ void		TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry);
 void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
                     double x, double y, double width, double height);
+void		TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text);
+void		TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, char *text);
+void		TkPathTextFree(Tk_PathTextStyle *textStylePtr);
+PathRect	TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text);
 
 /*
  * General path drawing using linked list of path atoms.

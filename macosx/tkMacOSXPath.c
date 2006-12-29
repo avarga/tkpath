@@ -13,6 +13,7 @@
 #include "tkPath.h"
 #include "tkIntPath.h"
 
+
 #ifdef WORDS_BIGENDIAN
 #	define BlueFloatFromXColorPtr(xc)   (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
 #	define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
@@ -22,6 +23,8 @@
 #	define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
 #	define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
 #endif
+
+#define FloatToFixed(a) ((Fixed)((float) (a) * fixed1))
 
 extern int gUseAntiAlias;
 
@@ -38,6 +41,11 @@ typedef struct TkPathContext_ {
     Drawable 		d;
     CGContextRef 	c;
 } TkPathContext_;
+
+typedef struct PathATSUIRecord {
+    ATSUStyle 		atsuStyle;
+    ATSUTextLayout 	atsuLayout;
+} PathATSUIRecord;
 
 void
 PathSetUpCGContext(    
@@ -182,6 +190,77 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
         /* @@@ TODO */
         //CGContextSetStrokePattern(c, CGPatternRef pattern, const float color[]);
     }
+}
+
+/* Various ATSUI support functions. */
+
+static OSStatus
+CreateATSUIStyle(const char *fontName, float fontSize, ATSUStyle *atsuStylePtr)
+{
+    OSStatus	err = noErr;
+    ATSUStyle 	style;
+    ATSUFontID	atsuFont;
+    Fixed		atsuSize;
+    ATSUAttributeTag 		tags[2];
+    ByteCount				sizes[2];
+    ATSUAttributeValuePtr	values[2];
+    
+    *atsuStylePtr = NULL;
+    style = NULL;
+    atsuFont = 0;
+    atsuSize = FloatToFixed(fontSize);
+    err = ATSUFindFontFromName((Ptr) fontName, strlen(fontName), kFontPostscriptName,
+            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
+    if (err != noErr) {
+        return err;
+    }
+    tags[0] = kATSUFontTag;
+    sizes[0] = sizeof(ATSUFontID);
+    values[0] = &atsuFont;
+    tags[1] = kATSUSizeTag;
+    sizes[1] = sizeof(Fixed);
+    values[1] = &atsuSize;
+    
+    err = ATSUCreateStyle(&style);
+    if (err != noErr) {
+        if (style) ATSUDisposeStyle(style);
+        return err;
+    }
+    err = ATSUSetAttributes(style, sizeof(tags)/sizeof(tags[0]),
+            tags, sizes, values);
+    if (err != noErr) {
+        if (style) ATSUDisposeStyle(style);
+        return err;
+    }
+    *atsuStylePtr = style;
+    return noErr;
+}
+
+static OSStatus
+CreateLayoutForString(CFStringRef cfString, ATSUStyle atsuStyle, ATSUTextLayout *layoutPtr)
+{
+    ATSUTextLayout layout = NULL;
+    CFIndex length;
+    OSStatus err = noErr;
+    UniChar *buffer;
+    CFRange range;
+    
+    *layoutPtr = NULL;
+    length = CFStringGetLength(cfString);
+    if (length == 0) {
+        return noErr;
+    }
+    range = CFRangeMake(0, length);
+    buffer = (UniChar *) ckalloc(length * sizeof(UniChar));
+    CFStringGetCharacters(cfString, range, buffer);
+    err = ATSUCreateTextLayoutWithTextPtr(buffer, 0, 
+            length, length, 1, (unsigned long *) &length, &atsuStyle, &layout);
+    if (err != noErr) {
+        ckfree((char *)buffer);
+        return noErr;
+    }
+    *layoutPtr = layout;
+    return noErr;
 }
 
 TkPathContext	
@@ -368,6 +447,53 @@ TkPathClosePath(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGContextClosePath(context->c);
+}
+
+void
+TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text)
+{
+    OSStatus err;
+    PathATSUIRecord *recordPtr;
+    ATSUStyle 		atsuStyle = NULL;
+    ATSUTextLayout 	atsuLayout = NULL;
+
+    err = CreateATSUIStyle(textStylePtr->fontName, textStylePtr->fontSize, &atsuStyle);
+    if (err != noErr) {
+        return;
+    }
+    return;
+    //err = CreateLayoutForString(CFStringRef cfString, atsuStyle, ATSUTextLayout &atsuLayout);
+    if (err != noErr) {
+        return;
+    }
+    
+    
+    recordPtr = (PathATSUIRecord *) ckalloc(sizeof(PathATSUIRecord));
+
+
+    recordPtr->atsuStyle = atsuStyle;
+
+    return;
+}
+
+void
+TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, char *text)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+}
+
+void
+TkPathTextFree(Tk_PathTextStyle *textStylePtr)
+{
+
+}
+
+PathRect
+TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text)
+{
+    PathRect r = {0, 0, 0, 0};
+    return r;
 }
 
 void		

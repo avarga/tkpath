@@ -91,6 +91,7 @@
 				9A587F03098FA7870094E994,
 				9A671A8F099DC683007AF773,
 				9AB087D80A38001400A80065,
+				9A5A2A920B45059700496554,
 				9A58E5420796814B00FBE143,
 				9AA0B6C407DD8C9900A80065,
 				9A5BCDA007E2D8B400B6FA03,
@@ -280,6 +281,25 @@
 		};
 		9A58E5430796814B00FBE143 = {
 			fileRef = 9A58E5420796814B00FBE143;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5A2A920B45059700496554 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = tkCanvPtext.c;
+			path = ../generic/tkCanvPtext.c;
+			refType = 2;
+		};
+		9A5A2A930B45059700496554 = {
+			fileRef = 9A5A2A920B45059700496554;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5A2A940B45059700496554 = {
+			fileRef = 9A5A2A920B45059700496554;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -635,6 +655,7 @@
 				9A671A91099DC683007AF773,
 				9A6265C109C474B3009A2B1E,
 				9AB087DA0A38001400A80065,
+				9A5A2A940B45059700496554,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -823,6 +844,7 @@
 				9A671A90099DC683007AF773,
 				9A98808909C9595D00B844F8,
 				9AB087D90A38001400A80065,
+				9A5A2A930B45059700496554,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
