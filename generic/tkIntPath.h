@@ -201,6 +201,14 @@ typedef struct EllipseAtom {
     double ry;
 } EllipseAtom;
 
+typedef struct RectAtom {
+    PathAtom pathAtom;
+    double x;
+    double y;
+    double width;
+    double height;
+} RectAtom;
+
 /*
  * Flags for 'PathStyleMergeStyles'.
  */

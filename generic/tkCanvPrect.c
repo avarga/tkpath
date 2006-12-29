@@ -337,6 +337,8 @@ MakePathAtoms(PrectItem *prectPtr)
         atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+rx, y);
         atomPtr = atomPtr->nextPtr;
     }
+    atomPtr->nextPtr = NewCloseAtom(x, y);
+    atomPtr = atomPtr->nextPtr;
 }
 
 static void		
@@ -357,8 +359,26 @@ DisplayPrect(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     PrectItem *prectPtr = (PrectItem *) itemPtr;
     TMatrix m = GetCanvasTMatrix(canvas);
 
-    TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, prectPtr->atomPtr, &(prectPtr->style),
-            &m, &(prectPtr->bbox));
+    if ((prectPtr->rx > 0.0) || (prectPtr->ry > 0.0)) {
+        TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, prectPtr->atomPtr, 
+                &(prectPtr->style), &m, &(prectPtr->bbox));
+    } else {
+        PathAtom *atomPtr;
+        RectAtom rectAtom;
+        PathRect bbox = prectPtr->bbox;
+        
+        /* 
+        * We create the atom on the fly to save some memory.
+        */    
+        atomPtr = (PathAtom *)&rectAtom;
+        atomPtr->nextPtr = NULL;
+        atomPtr->type = PATH_ATOM_RECT;
+        rectAtom.x = bbox.x1;
+        rectAtom.y = bbox.y1;
+        rectAtom.width = bbox.x2 - bbox.x1;
+        rectAtom.height = bbox.y2 - bbox.y1;
+        TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, atomPtr, &(prectPtr->style), &m, &bbox);
+    }
 }
 
 static double	

@@ -35,9 +35,10 @@ typedef enum {
     PATH_ATOM_Q = 'Q',
     PATH_ATOM_C = 'C',
     PATH_ATOM_Z = 'Z',
-    PATH_ATOM_ELLIPSE = '1'		/* This is not a standard atom
-                                 * since it is more complex (molecule).
+    PATH_ATOM_ELLIPSE = '1',	/* These are not a standard atoms
+                                 * since they are more complex (molecule).
                                  * Not all features supported for these! */
+    PATH_ATOM_RECT = '2'
 } PathAtomType;
 
 enum {

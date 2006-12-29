@@ -723,7 +723,8 @@ GetSubpathMaxNumSegments(PathAtom *atomPtr)
                 currentY = startY;
                 break;
             }
-            case PATH_ATOM_ELLIPSE: {
+            case PATH_ATOM_ELLIPSE:
+            case PATH_ATOM_RECT: {
                 /* Empty. */
                 break;
             }

@@ -2,7 +2,7 @@
 TODO for tkpath
 ---------------
 
- o There are a lot of duplicated code for each item which is due to the
+ x There are a lot of duplicated code for each item which is due to the
    canvas item registration mechanism. Perhaps a simplification with generic
    handlers. For instance, tkCanvPolyline.c and tkCanvPolygon.c don't
    differ by many significant lines; very annoying and embarrasing!
@@ -22,3 +22,5 @@ TODO for tkpath
 
  o Perhaps it would be useful to allow multiple objects on a single item
    by supplying many coordinates for pline, prect, circle, and ellipse ?
+
+ o ptext item

@@ -130,7 +130,7 @@ int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_LINGRAD   \
+#define PATH_STYLE_CUSTOM_OPTION_GRADIENT   \
     static Tk_CustomOption gradientOption = {             \
         (Tk_OptionParseProc *) GradientParseProc,   	  \
         GradientPrintProc,                          	  \
@@ -158,7 +158,7 @@ int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr
     PATH_STYLE_CUSTOM_OPTION_OFFSET                       \
     PATH_STYLE_CUSTOM_OPTION_PIXEL                        \
     PATH_STYLE_CUSTOM_OPTION_FILLRULE                     \
-    PATH_STYLE_CUSTOM_OPTION_LINGRAD                      \
+    PATH_STYLE_CUSTOM_OPTION_GRADIENT                     \
     PATH_STYLE_CUSTOM_OPTION_MATRIX                       \
     PATH_STYLE_CUSTOM_OPTION_STYLE
 
@@ -168,7 +168,7 @@ int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr
         "", Tk_Offset(typeName, style.fillColor), TK_CONFIG_NULL_OK},       \
     {TK_CONFIG_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,       \
         (char *) NULL, Tk_Offset(typeName, style.gradientFillName),         \
-        TK_CONFIG_NULL_OK, &gradientOption},                                 \
+        TK_CONFIG_NULL_OK, &gradientOption},                                \
     {TK_CONFIG_CUSTOM, "-filloffset", (char *) NULL, (char *) NULL,         \
         "0,0", Tk_Offset(typeName, style.fillTSOffset),                     \
         TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},                         \

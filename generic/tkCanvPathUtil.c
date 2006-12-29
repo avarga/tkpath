@@ -572,8 +572,9 @@ GetGenericBarePathBbox(PathAtom *atomPtr)
                 /* empty */
                 break;
             }
-            case PATH_ATOM_ELLIPSE: {
-                Tcl_Panic("PATH_ATOM_ELLIPSE is not supported for GetGenericBarePathBbox");
+            case PATH_ATOM_ELLIPSE:
+            case PATH_ATOM_RECT: {
+                Tcl_Panic("PATH_ATOM_ELLIPSE PATH_ATOM_RECT are not supported for GetGenericBarePathBbox");
                 break;
             }
         }
@@ -831,7 +832,8 @@ GetMiterBbox(PathAtom *atomPtr, double width, double miterLimit)
                 }
                 break;
             }
-            case PATH_ATOM_ELLIPSE: {
+            case PATH_ATOM_ELLIPSE:
+            case PATH_ATOM_RECT: {
                 /* Empty. */
                 break;
             }
@@ -1591,6 +1593,32 @@ AddEllipseToSegments(
     return numSteps;
 }
 
+static int
+AddRectToSegments(
+    TMatrix *matrixPtr,
+    RectAtom *rect,
+    double *coordPtr)
+{
+    int i;
+    double p[8];
+    
+    p[0] = rect->x;
+    p[1] = rect->y;
+    p[2] = rect->x + rect->width;
+    p[3] = rect->y;
+    p[4] = rect->x + rect->width;
+    p[5] = rect->y + rect->height;
+    p[6] = rect->x;
+    p[7] = rect->y + rect->height;
+    
+    for (i = 0; i <= 8; i += 2, coordPtr += 2) {
+        PathApplyTMatrix(matrixPtr, p, p+1);
+        coordPtr[0] = p[0];
+        coordPtr[1] = p[1];
+    }
+    return 4;
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -1742,6 +1770,19 @@ MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
                     current[0]  = ellipse->cx + ellipse->rx;
                     current[1]  = ellipse->cy;
                 }
+                break;
+            }
+            case PATH_ATOM_RECT: {
+                RectAtom *rect = (RectAtom *) atomPtr;
+                
+                if (first) {
+                    coordPtr = polyPtr;
+                }
+                numAdded = AddRectToSegments(matrixPtr, rect, coordPtr);
+                coordPtr += 2 * numAdded;
+                numPoints += numAdded;
+                current[0] = rect->x;
+                current[1] = rect->y;
                 break;
             }
         }
@@ -1905,8 +1946,9 @@ TranslatePathAtoms(
                 close->y += deltaY;
                 break;
             }
-            case PATH_ATOM_ELLIPSE: {
-                Tcl_Panic("PATH_ATOM_ELLIPSE is not supported for TranslatePathAtoms");
+            case PATH_ATOM_ELLIPSE:
+            case PATH_ATOM_RECT: {
+                Tcl_Panic("PATH_ATOM_ELLIPSE PATH_ATOM_RECT are not supported for TranslatePathAtoms");
                 break;
             }
         }
@@ -1994,8 +2036,9 @@ ScalePathAtoms(
                 close->y = originY + scaleY*(close->y - originY);
                 break;
             }
-            case PATH_ATOM_ELLIPSE: {
-                Tcl_Panic("PATH_ATOM_ELLIPSE is not supported for ScalePathAtoms");
+            case PATH_ATOM_ELLIPSE:
+            case PATH_ATOM_RECT: {
+                Tcl_Panic("PATH_ATOM_ELLIPSE PATH_ATOM_RECT are not supported for ScalePathAtoms");
                 break;
             }
         }

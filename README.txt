@@ -14,7 +14,7 @@ The backends:
 
     1) CoreGraphics for MacOSX, built using ProjectBuilder
  
-    2) GDI for Win32, built by VC++7 (.NET)
+    2) GDI for Win32, built by VC++7 (.NET), very basic
 
     3) GDI+ for WinXP, built by VC++7 (.NET), runs also on older system
        using the gdiplus.dll
