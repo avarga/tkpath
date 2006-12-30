@@ -199,26 +199,22 @@ CreateATSUIStyle(const char *fontName, float fontSize, ATSUStyle *atsuStylePtr)
 {
     OSStatus	err = noErr;
     ATSUStyle 	style;
-    ATSUFontID	atsuFont;
+    ATSUFontID	atsuFontID;
     Fixed		atsuSize;
-    ATSUAttributeTag 		tags[2];
-    ByteCount				sizes[2];
+    ATSUAttributeTag		tags[2] = { kATSUFontTag, kATSUSizeTag };
+    ByteCount		    	sizes[2] = { sizeof(ATSUFontID), sizeof(Fixed) };
     ATSUAttributeValuePtr	values[2];
-    
+
     *atsuStylePtr = NULL;
     style = NULL;
-    atsuFont = 0;
+    atsuFontID = 0;
     atsuSize = FloatToFixed(fontSize);
     err = ATSUFindFontFromName((Ptr) fontName, strlen(fontName), kFontPostscriptName,
-            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
+            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFontID);
     if (err != noErr) {
         return err;
     }
-    tags[0] = kATSUFontTag;
-    sizes[0] = sizeof(ATSUFontID);
-    values[0] = &atsuFont;
-    tags[1] = kATSUSizeTag;
-    sizes[1] = sizeof(Fixed);
+    values[0] = &atsuFontID;
     values[1] = &atsuSize;
     
     err = ATSUCreateStyle(&style);
@@ -450,49 +446,81 @@ TkPathClosePath(TkPathContext ctx)
 }
 
 void
-TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text)
+TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text, void **customPtr)
 {
-    OSStatus err;
     PathATSUIRecord *recordPtr;
     ATSUStyle 		atsuStyle = NULL;
     ATSUTextLayout 	atsuLayout = NULL;
+    CFStringRef 	cf;    	    
+    OSStatus 		err;
 
+    TkPathTextFree(textStylePtr, *customPtr);
     err = CreateATSUIStyle(textStylePtr->fontName, textStylePtr->fontSize, &atsuStyle);
     if (err != noErr) {
         return;
     }
-    return;
-    //err = CreateLayoutForString(CFStringRef cfString, atsuStyle, ATSUTextLayout &atsuLayout);
+    cf = CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8);
+    /* 		choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
+            title = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen,
+			kCFStringEncodingUTF8, false);
+    */
+    err = CreateLayoutForString(cf, atsuStyle, &atsuLayout);
+    CFRelease(cf);
     if (err != noErr) {
         return;
     }
-    
-    
     recordPtr = (PathATSUIRecord *) ckalloc(sizeof(PathATSUIRecord));
-
-
     recordPtr->atsuStyle = atsuStyle;
-
+    recordPtr->atsuLayout = atsuLayout;
+    *customPtr = (PathATSUIRecord *) recordPtr;
     return;
 }
 
 void
-TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, char *text)
+TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *text, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-
+    PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
+    ByteCount iSize = sizeof(CGContextRef);
+    ATSUAttributeTag iTag = kATSUCGContextTag;
+    ATSUAttributeValuePtr iValuePtr = &(context->c);
+    
+    ATSUSetLayoutControls(recordPtr->atsuLayout, 1, &iTag, &iSize, &iValuePtr);
+    CGContextSaveGState(context->c);
+    CGContextTranslateCTM(context->c, x, y);
+    CGContextScaleCTM(context->c, 1, -1);
+    ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 
+            FloatToFixed(0.0), FloatToFixed(0.0));
+    CGContextRestoreGState(context->c);
 }
 
 void
-TkPathTextFree(Tk_PathTextStyle *textStylePtr)
+TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom)
 {
-
+    PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
+    if (recordPtr) {
+        if (recordPtr->atsuStyle) {
+            ATSUDisposeStyle(recordPtr->atsuStyle);
+        }
+        if (recordPtr->atsuLayout) {
+            ATSUDisposeTextLayout(recordPtr->atsuLayout);
+        }
+    }
 }
 
 PathRect
-TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text)
+TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text, void *custom)
 {
-    PathRect r = {0, 0, 0, 0};
+    PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
+    ATSUTextMeasurement before, after, ascent, descent;	/* Fixed */
+    PathRect r;
+    
+    ATSUGetUnjustifiedBounds(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 	
+            &before, &after, &ascent, &descent);
+    r.x1 = 0.0;
+    r.y1 = -Fix2X(ascent);
+    r.x2 = Fix2X(after - before);
+    r.y2 = Fix2X(descent);
     return r;
 }
 

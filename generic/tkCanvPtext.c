@@ -29,7 +29,8 @@ typedef struct PtextItem  {
     Tk_PathTextStyle textStyle;
     double x;
     double y;
-    PathRect bbox;			
+    PathRect bbox;			/* Bounding box with zero width outline.
+                             * Untransformed coordinates. */
     char *text;
     void *custom;			/* Place holder for platform dependent stuff. */
 } PtextItem;
@@ -144,7 +145,6 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
             break;
         }
     }
-    
     if (PtextCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
         goto error;
     }
@@ -153,7 +153,7 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
         return TCL_OK;
     }
 
-    error:
+error:
     DeletePtext(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
     return TCL_ERROR;
 }
@@ -208,12 +208,14 @@ ComputePtextBbox(Tk_Canvas canvas, PtextItem *ptextPtr)
         ptextPtr->header.y1 = ptextPtr->header.y2 = -1;
         return;
     }
-    r = TkPathTextMeasureBbox(&(ptextPtr->textStyle), ptextPtr->text);
+    r = TkPathTextMeasureBbox(&(ptextPtr->textStyle), ptextPtr->text, ptextPtr->custom);
     // @@@ stroke width???
+    // anchor???
     bbox.x1 = ptextPtr->x;
-    bbox.y1 = ptextPtr->y;
-    bbox.x2 = r.x2 - r.x1;
-    bbox.y2 = r.y2 - r.y1;
+    bbox.y1 = ptextPtr->y + r.y1;	// y1 is negative!
+    bbox.x2 = ptextPtr->x + r.x2;
+    bbox.y2 = ptextPtr->y + r.y2;
+    ptextPtr->bbox = bbox;
     SetGenericPathHeaderBbox(&(ptextPtr->header), stylePtr->matrixPtr, &bbox);
 }
 
@@ -244,7 +246,7 @@ ConfigurePtext(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     if (state == TK_STATE_HIDDEN) {
         return TCL_OK;
     }
-    TkPathTextConfig(&(ptextPtr->textStyle), ptextPtr->text);
+    TkPathTextConfig(&(ptextPtr->textStyle), ptextPtr->text, &(ptextPtr->custom));
     ComputePtextBbox(canvas, ptextPtr);
     return TCL_OK;
 }
@@ -254,7 +256,7 @@ DeletePtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
 
-    TkPathTextFree(&(ptextPtr->textStyle));
+    TkPathTextFree(&(ptextPtr->textStyle), ptextPtr->custom);
 }
 
 static void		
@@ -265,14 +267,18 @@ DisplayPtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     TMatrix m = GetCanvasTMatrix(canvas);
     Tk_PathStyle *stylePtr = &(ptextPtr->style);
     TkPathContext ctx;
-
+    
+    if (ptextPtr->text == NULL) {
+        return;
+    }
     ctx = TkPathInit(Tk_CanvasTkwin(canvas), drawable);
     TkPathPushTMatrix(ctx, &m);
     if (stylePtr->matrixPtr != NULL) {
         TkPathPushTMatrix(ctx, stylePtr->matrixPtr);
     }
     // @@@ We need to set up th style also!!!
-    TkPathTextDraw(ctx, &(ptextPtr->textStyle), ptextPtr->text);
+    TkPathTextDraw(ctx, &(ptextPtr->textStyle), ptextPtr->x, ptextPtr->y, 
+            ptextPtr->text, ptextPtr->custom);
     TkPathFree(ctx);
 }
 
@@ -280,14 +286,16 @@ static double
 PtextToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    
+    Tk_PathStyle *stylePtr = &(ptextPtr->style);
+    return PathRectToPointWithMatrix(ptextPtr->bbox, stylePtr->matrixPtr, pointPtr);    
 }
 
 static int		
 PtextToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    
+    Tk_PathStyle *stylePtr = &(ptextPtr->style);
+    return PathRectToAreaWithMatrix(ptextPtr->bbox, stylePtr->matrixPtr, areaPtr);
 }
 
 static int		
@@ -300,8 +308,7 @@ static void
 ScalePtext(Tk_Canvas canvas, Tk_Item *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
-    /* This doesn't work very well with general affine matrix transforms! Arcs ? */
-    //     ScalePathAtoms(atomPtr, originX, originY, scaleX, scaleY);
+    /* Skip? */
 }
 
 static void		
