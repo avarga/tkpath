@@ -31,7 +31,7 @@ typedef struct PtextItem  {
     double y;
     PathRect bbox;			/* Bounding box with zero width outline.
                              * Untransformed coordinates. */
-    char *text;
+    char *text;				/* The actual text to display; UTF-8 */
     void *custom;			/* Place holder for platform dependent stuff. */
 } PtextItem;
 
@@ -71,15 +71,16 @@ static void		TranslatePtext(Tk_Canvas canvas,
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_STRING, "-fontname", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PtextItem, textStyle.fontName), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_DOUBLE, "-fontsize", (char *) NULL, (char *) NULL,        \
-        "10.0", Tk_Offset(PtextItem, textStyle.fontSize), 0},                  \
+    {TK_CONFIG_STRING, "-fontfamily", (char *) NULL, (char *) NULL,
+            (char *) NULL, Tk_Offset(PtextItem, textStyle.fontFamily), 
+            TK_CONFIG_NULL_OK},
+    {TK_CONFIG_DOUBLE, "-fontsize", (char *) NULL, (char *) NULL,
+        "10.0", Tk_Offset(PtextItem, textStyle.fontSize), 0},
     {TK_CONFIG_STRING, "-text", (char *) NULL, (char *) NULL,
             (char *) NULL, Tk_Offset(PtextItem, text), TK_CONFIG_NULL_OK},
     PATH_CONFIG_SPEC_STYLE_MATRIX(PtextItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(PtextItem),
-    PATH_CONFIG_SPEC_STYLE_FILL(PtextItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(PtextItem, ""),
+    PATH_CONFIG_SPEC_STYLE_FILL(PtextItem, "black"),
     PATH_CONFIG_SPEC_CORE(PtextItem),
     PATH_END_CONFIG_SPEC
 };
@@ -135,7 +136,7 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     ptextPtr->styleName = NULL;
     ptextPtr->bbox = NewEmptyPathRect();
     ptextPtr->text = NULL;
-    ptextPtr->textStyle.fontName = NULL;
+    ptextPtr->textStyle.fontFamily = NULL;
     ptextPtr->textStyle.fontSize = 0.0;
     ptextPtr->custom = NULL;
     
@@ -209,12 +210,18 @@ ComputePtextBbox(Tk_Canvas canvas, PtextItem *ptextPtr)
         return;
     }
     r = TkPathTextMeasureBbox(&(ptextPtr->textStyle), ptextPtr->text, ptextPtr->custom);
-    // @@@ stroke width???
-    // anchor???
+    // @@@ anchor???
     bbox.x1 = ptextPtr->x;
-    bbox.y1 = ptextPtr->y + r.y1;	// y1 is negative!
+    bbox.y1 = ptextPtr->y + r.y1;	// r.y1 is negative!
     bbox.x2 = ptextPtr->x + r.x2;
     bbox.y2 = ptextPtr->y + r.y2;
+    if (stylePtr->strokeColor) {
+        double halfWidth = stylePtr->strokeWidth;
+        bbox.x1 -= halfWidth;
+        bbox.y1 -= halfWidth;
+        bbox.x2 += halfWidth;
+        bbox.x2 += halfWidth;
+    }
     ptextPtr->bbox = bbox;
     SetGenericPathHeaderBbox(&(ptextPtr->header), stylePtr->matrixPtr, &bbox);
 }
@@ -227,7 +234,6 @@ ConfigurePtext(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     Tk_PathStyle *stylePtr = &(ptextPtr->style);
     Tk_Window tkwin;
     Tk_State state;
-    unsigned long mask;
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
@@ -255,7 +261,7 @@ static void
 DeletePtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-
+    // @@@ Shall the ->text also be freed???
     TkPathTextFree(&(ptextPtr->textStyle), ptextPtr->custom);
 }
 
@@ -276,9 +282,18 @@ DisplayPtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     if (stylePtr->matrixPtr != NULL) {
         TkPathPushTMatrix(ctx, stylePtr->matrixPtr);
     }
-    // @@@ We need to set up th style also!!!
+    TkPathBeginPath(ctx, stylePtr);
+    /* @@@ We need to handle gradients as well here!
+           Wait to see what the other APIs have to see.
+           Quartz:
+    kCGTextFillClip,
+    kCGTextStrokeClip,
+    kCGTextFillStrokeClip,
+    kCGTextClip
+    */
     TkPathTextDraw(ctx, &(ptextPtr->textStyle), ptextPtr->x, ptextPtr->y, 
             ptextPtr->text, ptextPtr->custom);
+    TkPathEndPath(ctx);
     TkPathFree(ctx);
 }
 
@@ -315,14 +330,11 @@ static void
 TranslatePtext(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-
+    Tk_PathStyle *stylePtr = &(ptextPtr->style);
     ptextPtr->x += deltaX;
     ptextPtr->y += deltaY;
-    // @@@ round off errors???
-    ptextPtr->header.x1 = (int) (ptextPtr->header.x1 + deltaX);
-    ptextPtr->header.x2 = (int) (ptextPtr->header.x2 + deltaX);
-    ptextPtr->header.y1 = (int) (ptextPtr->header.y1 + deltaY);
-    ptextPtr->header.y2 = (int) (ptextPtr->header.y2 + deltaY);
+    TranslatePathRect(&(ptextPtr->bbox), deltaX, deltaY);
+    SetGenericPathHeaderBbox(&(ptextPtr->header), stylePtr->matrixPtr, &(ptextPtr->bbox));
 }
 
 /*----------------------------------------------------------------------*/

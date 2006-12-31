@@ -94,9 +94,9 @@ extern int 		LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(PathItem),
+    PATH_CONFIG_SPEC_STYLE_FILL(PathItem, ""),
     PATH_CONFIG_SPEC_STYLE_MATRIX(PathItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(PathItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(PathItem, "black"),
     PATH_CONFIG_SPEC_CORE(PathItem),
     PATH_END_CONFIG_SPEC
 };

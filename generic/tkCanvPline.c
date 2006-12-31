@@ -85,7 +85,7 @@ PATH_STYLE_CUSTOM_OPTION_STYLE
 
 static Tk_ConfigSpec configSpecs[] = {
     PATH_CONFIG_SPEC_STYLE_MATRIX(PlineItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(PlineItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(PlineItem, "black"),
     PATH_CONFIG_SPEC_CORE(PlineItem),
     PATH_END_CONFIG_SPEC
 };

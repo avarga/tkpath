@@ -188,8 +188,9 @@ typedef struct Tk_PathStyle {
     char *null;   				/* Just a placeholder for not yet implemented stuff. */ 
 } Tk_PathStyle;
 
+/* @@@ Much more to be added here! */
 typedef struct Tk_PathTextStyle {
-    char *fontName;
+    char *fontFamily;
     double fontSize;
 } Tk_PathTextStyle;
 

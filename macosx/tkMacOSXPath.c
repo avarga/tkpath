@@ -129,6 +129,7 @@ void
 PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
 {
     Tk_Dash *dash;
+    int fill = 0, stroke = 0;
     
     /** Drawing attribute functions. **/
     
@@ -162,9 +163,10 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     }
     
     /* Set the current fill colorspace in the context `c' to `DeviceRGB' and
-    * set the components of the current fill color to `(red, green, blue,
-    * alpha)'. */
+     * set the components of the current fill color to `(red, green, blue,
+     * alpha)'. */
     if (style->fillColor != NULL) {
+        fill = 1;
         CGContextSetRGBFillColor(c, 
                 RedFloatFromXColorPtr(style->fillColor), 
                 GreenFloatFromXColorPtr(style->fillColor),
@@ -176,12 +178,21 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     * set the components of the current stroke color to `(red, green, blue,
     * alpha)'. */
     if (style->strokeColor != NULL) {
+        stroke = 1;
         CGContextSetRGBStrokeColor(c, 
                 RedFloatFromXColorPtr(style->strokeColor), 
                 GreenFloatFromXColorPtr(style->strokeColor),
                 BlueFloatFromXColorPtr(style->strokeColor),
                 style->strokeOpacity);
     }
+    if (stroke && fill) {
+        CGContextSetTextDrawingMode(c, kCGTextFillStroke);
+    } else if (stroke) {
+        CGContextSetTextDrawingMode(c, kCGTextStroke);
+    } else if (fill) {
+        CGContextSetTextDrawingMode(c, kCGTextFill);    
+    }
+
     if (style->fillStipple != None) {
         /* @@@ TODO */
         //CGContextSetFillPattern(c, CGPatternRef pattern, const float color[]);
@@ -195,11 +206,11 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
 /* Various ATSUI support functions. */
 
 static OSStatus
-CreateATSUIStyle(const char *fontName, float fontSize, ATSUStyle *atsuStylePtr)
+CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr)
 {
     OSStatus	err = noErr;
     ATSUStyle 	style;
-    ATSUFontID	atsuFontID;
+    ATSUFontID	atsuFont;
     Fixed		atsuSize;
     ATSUAttributeTag		tags[2] = { kATSUFontTag, kATSUSizeTag };
     ByteCount		    	sizes[2] = { sizeof(ATSUFontID), sizeof(Fixed) };
@@ -207,14 +218,18 @@ CreateATSUIStyle(const char *fontName, float fontSize, ATSUStyle *atsuStylePtr)
 
     *atsuStylePtr = NULL;
     style = NULL;
-    atsuFontID = 0;
+    atsuFont = 0;
     atsuSize = FloatToFixed(fontSize);
-    err = ATSUFindFontFromName((Ptr) fontName, strlen(fontName), kFontPostscriptName,
-            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFontID);
+    err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontPostscriptName,
+            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
+    /*
+    	status = ATSUFindFontFromName(fontName1, strlen(fontName1), kFontFamilyName, 
+        kFontMacintoshPlatform, kFontRomanScript, kFontNoLanguageCode, &atsuFont);
+    */
     if (err != noErr) {
         return err;
     }
-    values[0] = &atsuFontID;
+    values[0] = &atsuFont;
     values[1] = &atsuSize;
     
     err = ATSUCreateStyle(&style);
@@ -455,7 +470,7 @@ TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text, void **customPtr)
     OSStatus 		err;
 
     TkPathTextFree(textStylePtr, *customPtr);
-    err = CreateATSUIStyle(textStylePtr->fontName, textStylePtr->fontSize, &atsuStyle);
+    err = CreateATSUIStyle(textStylePtr->fontFamily, textStylePtr->fontSize, &atsuStyle);
     if (err != noErr) {
         return;
     }
@@ -489,8 +504,7 @@ TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, doub
     CGContextSaveGState(context->c);
     CGContextTranslateCTM(context->c, x, y);
     CGContextScaleCTM(context->c, 1, -1);
-    ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 
-            FloatToFixed(0.0), FloatToFixed(0.0));
+    ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
     CGContextRestoreGState(context->c);
 }
 

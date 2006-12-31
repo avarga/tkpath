@@ -165,9 +165,9 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
     PATH_STYLE_CUSTOM_OPTION_STYLE
 
 
-#define PATH_CONFIG_SPEC_STYLE_FILL(typeName)                               \
+#define PATH_CONFIG_SPEC_STYLE_FILL(typeName, theColor)                     \
     {TK_CONFIG_COLOR, "-fill", (char *) NULL, (char *) NULL,                \
-        "", Tk_Offset(typeName, style.fillColor), TK_CONFIG_NULL_OK},       \
+        theColor, Tk_Offset(typeName, style.fillColor), TK_CONFIG_NULL_OK}, \
     {TK_CONFIG_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,       \
         (char *) NULL, Tk_Offset(typeName, style.gradientFillName),         \
         TK_CONFIG_NULL_OK, &gradientOption},                                \
@@ -188,9 +188,10 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
         (char *) NULL, Tk_Offset(typeName, style.matrixPtr),                \
         TK_CONFIG_NULL_OK, &matrixOption}
 
-#define PATH_CONFIG_SPEC_STYLE_STROKE(typeName)                             \
+#define PATH_CONFIG_SPEC_STYLE_STROKE(typeName, theColor)                   \
     {TK_CONFIG_COLOR, "-stroke", (char *) NULL, (char *) NULL,              \
-        "black", Tk_Offset(typeName, style.strokeColor), TK_CONFIG_NULL_OK},\
+        theColor, Tk_Offset(typeName, style.strokeColor),                   \
+        TK_CONFIG_NULL_OK},                                                 \
     {TK_CONFIG_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,    \
         (char *) NULL, Tk_Offset(typeName, style.dash),                     \
         TK_CONFIG_NULL_OK, &dashOption},                                    \
@@ -198,7 +199,7 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
     /* @@@ TODO */   \
     {TK_CONFIG_CUSTOM, "-strokegradient", (char *) NULL, (char *) NULL,     \
         (char *) NULL, Tk_Offset(typeName, style.gradientStrokeName),       \
-        TK_CONFIG_NULL_OK, &gradientOption},                                 \
+        TK_CONFIG_NULL_OK, &gradientOption},                                \
     \
     {TK_CONFIG_CAP_STYLE, "-strokelinecap", (char *) NULL, (char *) NULL,   \
         "butt", Tk_Offset(typeName, style.capStyle),                        \

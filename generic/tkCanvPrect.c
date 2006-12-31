@@ -82,9 +82,9 @@ static void		MakePathAtoms(PrectItem *prectPtr);
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(PrectItem),
+    PATH_CONFIG_SPEC_STYLE_FILL(PrectItem, ""),
     PATH_CONFIG_SPEC_STYLE_MATRIX(PrectItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(PrectItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(PrectItem, "black"),
     PATH_CONFIG_SPEC_CORE(PrectItem),
     
     {TK_CONFIG_DOUBLE, "-rx", (char *) NULL, (char *) NULL,

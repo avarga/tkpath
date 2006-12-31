@@ -78,9 +78,9 @@ static void		TranslateEllipse(Tk_Canvas canvas,
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 static Tk_ConfigSpec configSpecsCircle[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(EllipseItem),
+    PATH_CONFIG_SPEC_STYLE_FILL(EllipseItem, ""),
     PATH_CONFIG_SPEC_STYLE_MATRIX(EllipseItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(EllipseItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(EllipseItem, "black"),
     PATH_CONFIG_SPEC_CORE(EllipseItem),
     
     {TK_CONFIG_DOUBLE, "-r", (char *) NULL, (char *) NULL,
@@ -93,9 +93,9 @@ static Tk_ConfigSpec configSpecsCircle[] = {
 #define PELLIPSE_OPTION_INDEX_R 	(sizeof(configSpecsCircle)/sizeof(Tk_ConfigSpec) - 2)
 
 static Tk_ConfigSpec configSpecsEllipse[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(EllipseItem),
+    PATH_CONFIG_SPEC_STYLE_FILL(EllipseItem, ""),
     PATH_CONFIG_SPEC_STYLE_MATRIX(EllipseItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(EllipseItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(EllipseItem, "black"),
     PATH_CONFIG_SPEC_CORE(EllipseItem),
     
     {TK_CONFIG_DOUBLE, "-rx", (char *) NULL, (char *) NULL,
