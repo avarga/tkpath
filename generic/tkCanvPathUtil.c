@@ -118,7 +118,6 @@ Tk_ConfigStrokePathStyleGC(
     double 	width;
     Tk_Dash *dash;
     XColor 	*color;
-    Pixmap 	stipple;
     Tk_State state = item->state;
 
     if (stylePtr->strokeWidth < 0.0) {
@@ -134,7 +133,6 @@ Tk_ConfigStrokePathStyleGC(
     }
     dash = &(stylePtr->dash);
     color = stylePtr->strokeColor;
-    stipple = stylePtr->strokeStipple;
     if (state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
     }
@@ -146,11 +144,6 @@ Tk_ConfigStrokePathStyleGC(
     if (color != NULL) {
         gcValues->foreground = color->pixel;
         mask = GCForeground|GCLineWidth;
-        if (stipple != None) {
-            gcValues->stipple = stipple;
-            gcValues->fill_style = FillStippled;
-            mask |= GCStipple|GCFillStyle;
-        }
     }
     if (mask && (dash->number != 0)) {
         gcValues->line_style = LineOnOffDash;
@@ -200,19 +193,12 @@ Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
 {
     int 	mask = 0;
     XColor 	*color;
-    Pixmap 	stipple;
 
     color = stylePtr->fillColor;
-    stipple = stylePtr->fillStipple;
 
     if (color != NULL) {
         gcValues->foreground = color->pixel;
         mask = GCForeground;
-        if (stipple != None) {
-            gcValues->stipple = stipple;
-            gcValues->fill_style = FillStippled;
-            mask |= GCStipple|GCFillStyle;
-        }
     }
     return mask;
 }
@@ -2199,6 +2185,70 @@ FillRulePrintProc(
         return "nonzero";
     } else if (*fillRulePtr == EvenOddRule) {
         return "evenodd";
+    } else {
+        return "";
+    }
+}
+
+/*** Text Anchor ***/
+
+int
+TextAnchorParseProc(
+    ClientData clientData,		/* some flags.*/
+    Tcl_Interp *interp,			/* Used for reporting errors. */
+    Tk_Window tkwin,			/* Window containing canvas widget. */
+    CONST char *value,			/* Value of option. */
+    char *widgRec,			/* Pointer to record for item. */
+    int offset)				/* Offset into item. */
+{
+    int c;
+    size_t length;    
+    register int *textAnchorPtr = (int *) (widgRec + offset);
+
+    if(value == NULL || *value == 0) {
+        *textAnchorPtr = kPathTextAnchorStart;
+        return TCL_OK;
+    }
+    c = value[0];
+    length = strlen(value);
+    if ((c == 's') && (strncmp(value, "start", length) == 0)) {
+        *textAnchorPtr = kPathTextAnchorStart;
+        return TCL_OK;
+    }
+    if ((c == 'm') && (strncmp(value, "middle", length) == 0)) {
+        *textAnchorPtr = kPathTextAnchorMiddle;
+        return TCL_OK;
+    }
+    if ((c == 'e') && (strncmp(value, "end", length) == 0)) {
+        *textAnchorPtr = kPathTextAnchorEnd;
+        return TCL_OK;
+    }
+    Tcl_AppendResult(interp, "bad value \"", value, 
+            "\": must be \"start\", \"middle\" or \"end\"",
+	    (char *) NULL);
+        *textAnchorPtr = kPathTextAnchorStart;
+    return TCL_ERROR;
+}
+
+char *
+TextAnchorPrintProc(
+    ClientData clientData,		/* Ignored. */
+    Tk_Window tkwin,			/* Window containing canvas widget. */
+    char *widgRec,			/* Pointer to record for item. */
+    int offset,				/* Offset into item. */
+    Tcl_FreeProc **freeProcPtr)		/* Pointer to variable to fill in with
+					 * information about how to reclaim
+					 * storage for return string. */
+{
+    register int *textAnchorPtr = (int *) (widgRec + offset);
+    *freeProcPtr = NULL;
+
+    if (*textAnchorPtr == kPathTextAnchorStart) {
+        return "start";
+    } else if (*textAnchorPtr == kPathTextAnchorMiddle) {
+        return "middle";
+    } else if (*textAnchorPtr == kPathTextAnchorEnd) {
+        return "middle";
     } else {
         return "";
     }

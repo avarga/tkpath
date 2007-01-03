@@ -241,27 +241,31 @@ void TkPathClosePath(TkPathContext ctx)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_close_path(context->c);
 }
-void
-TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text, void **customPtr)
-{
 
+int
+TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr)
+{
+    cairo_select_font_face(context->c, textStylePtr->fontFamily, 
+            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(context->c, textStylePtr->fontSize);
+    return TCL_OK;
 }
 
 void
-TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *text, void *custom)
+TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-
+    cairo_show_text(context->c, utf8);
 }
 
 void
 TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom)
 {
-
+    /* Empty. */
 }
 
 PathRect
-TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text, void *custom)
+TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     PathRect r = {0, 0, 0, 0};
     return r;

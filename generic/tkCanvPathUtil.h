@@ -54,6 +54,11 @@ int		FillRuleParseProc(ClientData clientData,
                         CONST char *value, char *recordPtr, int offset);
 char *	FillRulePrintProc(ClientData clientData, Tk_Window tkwin, 
                         char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+int		TextAnchorParseProc(ClientData clientData,
+                     Tcl_Interp *interp, Tk_Window tkwin,
+                        CONST char *value, char *recordPtr, int offset);
+char *	TextAnchorPrintProc(ClientData clientData, Tk_Window tkwin, 
+                        char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 int		GradientParseProc(ClientData clientData,
                         Tcl_Interp *interp, Tk_Window tkwin,
                         CONST char *value, char *recordPtr, int offset);
@@ -111,13 +116,6 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_OFFSET   \
-    static Tk_CustomOption offsetOption = {               \
-        (Tk_OptionParseProc *) PathTkOffsetParseProc,     \
-        PathTkOffsetPrintProc,                            \
-        (ClientData) (TK_OFFSET_RELATIVE|TK_OFFSET_INDEX) \
-    };
-
 #define PATH_STYLE_CUSTOM_OPTION_PIXEL   \
     static Tk_CustomOption pixelOption = {                \
         (Tk_OptionParseProc *) PathTkPixelParseProc,      \
@@ -157,7 +155,6 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
     PATH_STYLE_CUSTOM_OPTION_STATE                        \
     PATH_STYLE_CUSTOM_OPTION_TAGS                         \
     PATH_STYLE_CUSTOM_OPTION_DASH                         \
-    PATH_STYLE_CUSTOM_OPTION_OFFSET                       \
     PATH_STYLE_CUSTOM_OPTION_PIXEL                        \
     PATH_STYLE_CUSTOM_OPTION_FILLRULE                     \
     PATH_STYLE_CUSTOM_OPTION_GRADIENT                     \
@@ -171,18 +168,12 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
     {TK_CONFIG_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,       \
         (char *) NULL, Tk_Offset(typeName, style.gradientFillName),         \
         TK_CONFIG_NULL_OK, &gradientOption},                                \
-    {TK_CONFIG_CUSTOM, "-filloffset", (char *) NULL, (char *) NULL,         \
-        "0,0", Tk_Offset(typeName, style.fillTSOffset),                     \
-        TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},                         \
     {TK_CONFIG_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,        \
         "1.0", Tk_Offset(typeName, style.fillOpacity), 0},                  \
     {TK_CONFIG_CUSTOM, "-fillrule", (char *) NULL, (char *) NULL,           \
         "nonzero", Tk_Offset(typeName, style.fillRule),                     \
-        TK_CONFIG_DONT_SET_DEFAULT, &fillRuleOption},                       \
-    {TK_CONFIG_BITMAP, "-fillstipple", (char *) NULL, (char *) NULL,        \
-        (char *) NULL, Tk_Offset(typeName, style.fillStipple),              \
-        TK_CONFIG_NULL_OK}
-
+        TK_CONFIG_DONT_SET_DEFAULT, &fillRuleOption}
+        
 #define PATH_CONFIG_SPEC_STYLE_MATRIX(typeName)                             \
     {TK_CONFIG_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,             \
         (char *) NULL, Tk_Offset(typeName, style.matrixPtr),                \
@@ -209,9 +200,6 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
         TK_CONFIG_DONT_SET_DEFAULT},                                        \
     {TK_CONFIG_DOUBLE, "-strokemiterlimit", (char *) NULL, (char *) NULL,   \
         "4.0", Tk_Offset(typeName, style.miterLimit), 0},                   \
-    {TK_CONFIG_CUSTOM, "-strokeoffset", (char *) NULL, (char *) NULL,       \
-        "0,0", Tk_Offset(typeName, style.strokeTSOffset),                   \
-        TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},                         \
     {TK_CONFIG_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,      \
         "1.0", Tk_Offset(typeName, style.strokeOpacity), 0},                \
     {TK_CONFIG_BITMAP, "-strokestipple", (char *) NULL, (char *) NULL,      \

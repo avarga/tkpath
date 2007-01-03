@@ -284,14 +284,20 @@ void TkPathClosePath(TkPathContext ctx)
     PathApplyTMatrixToPoint(context->m, context->current, coordPtr);    
     (segm->npoints)++;
 }
-void
-TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text, void **customPtr)
-{
 
+/*
+ * There is no need to reproduce the Tk drawing code here since we can't do
+ * anything different.
+ */
+ 
+int
+TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr)
+{
+    return TCL_OK;
 }
 
 void
-TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *text, void *custom)
+TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
 
@@ -304,7 +310,7 @@ TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom)
 }
 
 PathRect
-TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text, void *custom)
+TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     PathRect r = {0, 0, 0, 0};
     return r;

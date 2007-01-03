@@ -27,11 +27,12 @@ typedef struct PtextItem  {
     Tk_PathStyle style;		/* Contains most drawing info. */
     char *styleName;		/* Name of any inherited style object. */
     Tk_PathTextStyle textStyle;
+    int textAnchor;
     double x;
     double y;
     PathRect bbox;			/* Bounding box with zero width outline.
                              * Untransformed coordinates. */
-    char *text;				/* The actual text to display; UTF-8 */
+    char *utf8;				/* The actual text to display; UTF-8 */
     void *custom;			/* Place holder for platform dependent stuff. */
 } PtextItem;
 
@@ -67,6 +68,11 @@ static void		ScalePtext(Tk_Canvas canvas,
 static void		TranslatePtext(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double deltaX, double deltaY);
 
+static Tk_CustomOption textAnchorOption = {           \
+    (Tk_OptionParseProc *) TextAnchorParseProc,       \
+    TextAnchorPrintProc,                              \
+    (ClientData) NULL                                 \
+};
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
@@ -77,7 +83,10 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_DOUBLE, "-fontsize", (char *) NULL, (char *) NULL,
         "10.0", Tk_Offset(PtextItem, textStyle.fontSize), 0},
     {TK_CONFIG_STRING, "-text", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PtextItem, text), TK_CONFIG_NULL_OK},
+            (char *) NULL, Tk_Offset(PtextItem, utf8), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-textanchor", (char *) NULL, (char *) NULL,
+        "start", Tk_Offset(PtextItem, textAnchor),
+        TK_CONFIG_DONT_SET_DEFAULT, &textAnchorOption},
     PATH_CONFIG_SPEC_STYLE_MATRIX(PtextItem),
     PATH_CONFIG_SPEC_STYLE_STROKE(PtextItem, ""),
     PATH_CONFIG_SPEC_STYLE_FILL(PtextItem, "black"),
@@ -135,7 +144,7 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     ptextPtr->canvas = canvas;
     ptextPtr->styleName = NULL;
     ptextPtr->bbox = NewEmptyPathRect();
-    ptextPtr->text = NULL;
+    ptextPtr->utf8 = NULL;
     ptextPtr->textStyle.fontFamily = NULL;
     ptextPtr->textStyle.fontSize = 0.0;
     ptextPtr->custom = NULL;
@@ -199,21 +208,34 @@ ComputePtextBbox(Tk_Canvas canvas, PtextItem *ptextPtr)
 {
     Tk_PathStyle *stylePtr = &(ptextPtr->style);
     Tk_State state = ptextPtr->header.state;
+    double width;
     PathRect bbox, r;
 
     if(state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
     }
-    if (ptextPtr->text == NULL || (state == TK_STATE_HIDDEN)) {
+    if (ptextPtr->utf8 == NULL || (state == TK_STATE_HIDDEN)) {
         ptextPtr->header.x1 = ptextPtr->header.x2 =
         ptextPtr->header.y1 = ptextPtr->header.y2 = -1;
         return;
     }
-    r = TkPathTextMeasureBbox(&(ptextPtr->textStyle), ptextPtr->text, ptextPtr->custom);
-    // @@@ anchor???
-    bbox.x1 = ptextPtr->x;
+    r = TkPathTextMeasureBbox(&(ptextPtr->textStyle), ptextPtr->utf8, ptextPtr->custom);
+    width = r.x2 - r.x1;
+    switch (ptextPtr->textAnchor) {
+        case kPathTextAnchorStart: 
+            bbox.x1 = ptextPtr->x;
+            bbox.x2 = bbox.x1 + width;
+            break;
+        case kPathTextAnchorMiddle:
+            bbox.x1 = ptextPtr->x - width/2;
+            bbox.x2 = ptextPtr->x + width/2;
+            break;
+        case kPathTextAnchorEnd:
+            bbox.x1 = ptextPtr->x - width;
+            bbox.x2 = ptextPtr->x;
+            break;
+    }
     bbox.y1 = ptextPtr->y + r.y1;	// r.y1 is negative!
-    bbox.x2 = ptextPtr->x + r.x2;
     bbox.y2 = ptextPtr->y + r.y2;
     if (stylePtr->strokeColor) {
         double halfWidth = stylePtr->strokeWidth;
@@ -252,9 +274,12 @@ ConfigurePtext(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     if (state == TK_STATE_HIDDEN) {
         return TCL_OK;
     }
-    TkPathTextConfig(&(ptextPtr->textStyle), ptextPtr->text, &(ptextPtr->custom));
-    ComputePtextBbox(canvas, ptextPtr);
-    return TCL_OK;
+    if (TkPathTextConfig(interp, &(ptextPtr->textStyle), ptextPtr->utf8, &(ptextPtr->custom)) == TCL_OK) {
+        ComputePtextBbox(canvas, ptextPtr);
+        return TCL_OK;
+    } else {
+        return TCL_ERROR;
+    }
 }
 
 static void		
@@ -274,7 +299,7 @@ DisplayPtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     Tk_PathStyle *stylePtr = &(ptextPtr->style);
     TkPathContext ctx;
     
-    if (ptextPtr->text == NULL) {
+    if (ptextPtr->utf8 == NULL) {
         return;
     }
     ctx = TkPathInit(Tk_CanvasTkwin(canvas), drawable);
@@ -291,8 +316,8 @@ DisplayPtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     kCGTextFillStrokeClip,
     kCGTextClip
     */
-    TkPathTextDraw(ctx, &(ptextPtr->textStyle), ptextPtr->x, ptextPtr->y, 
-            ptextPtr->text, ptextPtr->custom);
+    TkPathTextDraw(ctx, &(ptextPtr->textStyle), ptextPtr->bbox.x1, ptextPtr->y, 
+            ptextPtr->utf8, ptextPtr->custom);
     TkPathEndPath(ctx);
     TkPathFree(ctx);
 }

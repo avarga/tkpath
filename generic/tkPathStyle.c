@@ -351,9 +351,6 @@ static Tk_OptionSpec styleOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-fillrule", (char *) NULL, (char *) NULL,
         "nonzero", -1, Tk_Offset(Tk_PathStyle, fillRule), 
         0, (ClientData) fillRuleST, PATH_STYLE_OPTION_FILL_RULE},
-    {TK_OPTION_BITMAP, "-fillstipple", (char *) NULL, (char *) NULL,
-        "", -1, Tk_Offset(Tk_PathStyle, fillStipple), TK_OPTION_NULL_OK, 0, 
-        PATH_STYLE_OPTION_FILL_STIPPLE},
 	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, matrixPtr),
 		TK_OPTION_NULL_OK, (ClientData) &matrixCO, PATH_STYLE_OPTION_MATRIX},
@@ -661,9 +658,6 @@ TkPathCreateStyle(Tk_PathStyle *style)
     style->strokeOpacity = 1.0;
     style->offset = 0;
     style->dash.number = 0;
-    style->strokeTSOffset.flags = 0;
-    style->strokeTSOffset.xoffset = 0;
-    style->strokeTSOffset.yoffset = 0;
     style->strokeStipple = None;
     style->capStyle = CapButt;
     style->joinStyle = JoinRound;
@@ -672,10 +666,6 @@ TkPathCreateStyle(Tk_PathStyle *style)
     style->fillGC = None;
     style->fillColor = NULL;
     style->fillOpacity = 1.0;
-    style->fillTSOffset.flags = 0;
-    style->fillTSOffset.xoffset = 0;
-    style->fillTSOffset.yoffset = 0;
-    style->fillStipple = None;
     style->fillRule = WindingRule;
     style->gradientFillName = NULL;    
     style->matrixPtr = NULL;
@@ -719,9 +709,6 @@ TkPathDeleteStyle(Display *display, Tk_PathStyle *style)
     }
     if (style->fillColor != NULL) {
         Tk_FreeColor(style->fillColor);
-    }
-    if (style->fillStipple != None) {
-        Tk_FreeBitmap(display, style->fillStipple);
     }
     if (style->matrixPtr != NULL) {
         ckfree((char *) style->matrixPtr);

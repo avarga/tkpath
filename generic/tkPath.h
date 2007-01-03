@@ -165,7 +165,6 @@ typedef struct Tk_PathStyle {
     double strokeOpacity;
     int offset;					/* Dash offset */
     Tk_Dash dash;				/* Dash pattern. */
-    Tk_TSOffset strokeTSOffset;	/* Stipple offset for stroke. */
     Pixmap strokeStipple;		/* Stroke Stipple pattern. */
     int capStyle;				/* Cap style for stroke. */
     int joinStyle;				/* Join style for stroke. */
@@ -175,8 +174,6 @@ typedef struct Tk_PathStyle {
     GC fillGC;					/* Graphics context for filling path. */
     XColor *fillColor;			/* Foreground color for filling. */
     double fillOpacity;
-    Tk_TSOffset fillTSOffset;	/* Stipple offset for filling. */
-    Pixmap fillStipple;			/* Stipple bitmap for filling path. */
     int fillRule;				/* WindingRule or EvenOddRule. */
     char *gradientFillName;  	/* This is the *name* of the linear 
                                  * gradient fill. No fill record since

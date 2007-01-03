@@ -98,6 +98,12 @@ extern "C" {
 
 extern int gUseAntiAlias;
 
+enum {
+    kPathTextAnchorStart = 			0L,
+    kPathTextAnchorMiddle,
+    kPathTextAnchorEnd
+};
+
 /* These MUST be kept in sync with methodST and unitsST! */
 enum {
     kPathGradientMethodPad = 		0L,
@@ -240,11 +246,11 @@ void		TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry);
 void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
                     double x, double y, double width, double height);
-void		TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text, void **customPtr);
+int			TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr);
 void		TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, 
-                    double x, double y, char *text, void *custom);
+                    double x, double y, char *utf8, void *custom);
 void		TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom);
-PathRect	TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text, void *custom);
+PathRect	TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom);
 
 /*
  * General path drawing using linked list of path atoms.

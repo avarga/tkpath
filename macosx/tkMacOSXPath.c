@@ -45,6 +45,7 @@ typedef struct TkPathContext_ {
 typedef struct PathATSUIRecord {
     ATSUStyle 		atsuStyle;
     ATSUTextLayout 	atsuLayout;
+    UniChar 		*buffer;
 } PathATSUIRecord;
 
 void
@@ -192,15 +193,6 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     } else if (fill) {
         CGContextSetTextDrawingMode(c, kCGTextFill);    
     }
-
-    if (style->fillStipple != None) {
-        /* @@@ TODO */
-        //CGContextSetFillPattern(c, CGPatternRef pattern, const float color[]);
-    }
-    if (style->strokeStipple != None) {
-        /* @@@ TODO */
-        //CGContextSetStrokePattern(c, CGPatternRef pattern, const float color[]);
-    }
 }
 
 /* Various ATSUI support functions. */
@@ -220,12 +212,13 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     style = NULL;
     atsuFont = 0;
     atsuSize = FloatToFixed(fontSize);
+/*
     err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontPostscriptName,
             kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
-    /*
-    	status = ATSUFindFontFromName(fontName1, strlen(fontName1), kFontFamilyName, 
-        kFontMacintoshPlatform, kFontRomanScript, kFontNoLanguageCode, &atsuFont);
-    */
+*/
+    err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontFamilyName, 
+            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
+
     if (err != noErr) {
         return err;
     }
@@ -248,30 +241,18 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
 }
 
 static OSStatus
-CreateLayoutForString(CFStringRef cfString, ATSUStyle atsuStyle, ATSUTextLayout *layoutPtr)
+CreateLayoutForString(UniChar *buffer, CFIndex length, ATSUStyle atsuStyle, ATSUTextLayout *layoutPtr)
 {
     ATSUTextLayout layout = NULL;
-    CFIndex length;
     OSStatus err = noErr;
-    UniChar *buffer;
-    CFRange range;
     
     *layoutPtr = NULL;
-    length = CFStringGetLength(cfString);
-    if (length == 0) {
-        return noErr;
-    }
-    range = CFRangeMake(0, length);
-    buffer = (UniChar *) ckalloc(length * sizeof(UniChar));
-    CFStringGetCharacters(cfString, range, buffer);
     err = ATSUCreateTextLayoutWithTextPtr(buffer, 0, 
             length, length, 1, (unsigned long *) &length, &atsuStyle, &layout);
-    if (err != noErr) {
-        ckfree((char *)buffer);
-        return noErr;
+    if (err == noErr) {
+        *layoutPtr = layout;
     }
-    *layoutPtr = layout;
-    return noErr;
+    return err;
 }
 
 TkPathContext	
@@ -460,39 +441,53 @@ TkPathClosePath(TkPathContext ctx)
     CGContextClosePath(context->c);
 }
 
-void
-TkPathTextConfig(Tk_PathTextStyle *textStylePtr, char *text, void **customPtr)
+int
+TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr)
 {
     PathATSUIRecord *recordPtr;
     ATSUStyle 		atsuStyle = NULL;
     ATSUTextLayout 	atsuLayout = NULL;
     CFStringRef 	cf;    	    
+    UniChar 		*buffer;
+    CFRange 		range;
+    CFIndex 		length;
     OSStatus 		err;
-
+    
+    if (utf8 == NULL) {
+        return TCL_OK;
+    }
     TkPathTextFree(textStylePtr, *customPtr);
+
+    cf = CFStringCreateWithCString(NULL, utf8, kCFStringEncodingUTF8);
+    length = CFStringGetLength(cf);
+    if (length == 0) {
+        return TCL_OK;
+    }
+    range = CFRangeMake(0, length);
     err = CreateATSUIStyle(textStylePtr->fontFamily, textStylePtr->fontSize, &atsuStyle);
     if (err != noErr) {
-        return;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("font style couldn't be created", -1));
+        return TCL_ERROR;
     }
-    cf = CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8);
-    /* 		choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-            title = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen,
-			kCFStringEncodingUTF8, false);
-    */
-    err = CreateLayoutForString(cf, atsuStyle, &atsuLayout);
+    buffer = (UniChar *) ckalloc(length * sizeof(UniChar));
+    CFStringGetCharacters(cf, range, buffer);
+    err = CreateLayoutForString(buffer, length, atsuStyle, &atsuLayout);
     CFRelease(cf);
     if (err != noErr) {
-        return;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("text layout couldn't be created", -1));
+        ckfree((char *)buffer);
+        return TCL_ERROR;
     }
     recordPtr = (PathATSUIRecord *) ckalloc(sizeof(PathATSUIRecord));
     recordPtr->atsuStyle = atsuStyle;
     recordPtr->atsuLayout = atsuLayout;
+    recordPtr->buffer = buffer;
     *customPtr = (PathATSUIRecord *) recordPtr;
-    return;
+    return TCL_OK;
 }
 
 void
-TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *text, void *custom)
+TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
@@ -519,11 +514,14 @@ TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom)
         if (recordPtr->atsuLayout) {
             ATSUDisposeTextLayout(recordPtr->atsuLayout);
         }
+        if (recordPtr->buffer) {
+            ckfree((char *) recordPtr->buffer);
+        }
     }
 }
 
 PathRect
-TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *text, void *custom)
+TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
     ATSUTextMeasurement before, after, ascent, descent;	/* Fixed */
