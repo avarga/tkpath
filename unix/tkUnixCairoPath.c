@@ -3,7 +3,7 @@
  *
  *	This file implements path drawing API's using the Cairo rendering engine.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */
@@ -19,6 +19,7 @@
 #define RedDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
 extern int gUseAntiAlias;
+extern Tcl_Interp *gInterp;
 
 /*
  * This is used as a place holder for platform dependent stuff between each call.
@@ -245,9 +246,6 @@ void TkPathClosePath(TkPathContext ctx)
 int
 TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr)
 {
-    cairo_select_font_face(context->c, textStylePtr->fontFamily, 
-            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(context->c, textStylePtr->fontSize);
     return TCL_OK;
 }
 
@@ -255,6 +253,9 @@ void
 TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_select_font_face(context->c, textStylePtr->fontFamily, 
+            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(context->c, textStylePtr->fontSize);
     cairo_show_text(context->c, utf8);
 }
 
@@ -267,7 +268,24 @@ TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom)
 PathRect
 TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
-    PathRect r = {0, 0, 0, 0};
+    cairo_t *c;
+    cairo_surface_t *surface;
+    cairo_text_extents_t extents;
+    PathRect r;
+
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
+    c = cairo_create(surface);
+    cairo_select_font_face(c, textStylePtr->fontFamily, 
+            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(c, textStylePtr->fontSize);
+
+    cairo_text_extents(c, utf8, &extents);
+    r.x1 = 0.0;
+    r.y1 = extents.y_bearing;
+    r.x2 = extents.width - extents.x_bearing;
+    r.y2 = extents.height + extents.y_bearing; 
+    cairo_destroy(c);
+    cairo_surface_destroy(surface);
     return r;
 }
 

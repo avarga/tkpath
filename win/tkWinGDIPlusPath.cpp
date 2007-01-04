@@ -3,7 +3,7 @@
  *
  *		This file implements path drawing API's on Windows using the GDI+ lib.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */

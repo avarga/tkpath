@@ -4,7 +4,7 @@
  *	This file implements a path canvas item modelled after its
  *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */
@@ -15,7 +15,6 @@
 
 
 int gDebugLevel = 2;
-Tcl_Interp *gInterp;
 
 #define PATH_DEBUG 0
 
@@ -208,7 +207,6 @@ CreatePath(
     if (objc == 0) {
         Tcl_Panic("canvas did not pass any coords\n");
     }
-    gInterp = interp;
 
     /*
      * Carry out initialization that is needed to set defaults and to

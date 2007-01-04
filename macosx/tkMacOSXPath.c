@@ -3,7 +3,7 @@
  *
  *	This file implements path drawing API's using CoreGraphics on Mac OS X.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  *
@@ -45,7 +45,7 @@ typedef struct TkPathContext_ {
 typedef struct PathATSUIRecord {
     ATSUStyle 		atsuStyle;
     ATSUTextLayout 	atsuLayout;
-    UniChar 		*buffer;
+    UniChar 		*buffer;	/* @@@ Not sure this needs to be cached! */
 } PathATSUIRecord;
 
 void
@@ -204,9 +204,19 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     ATSUStyle 	style;
     ATSUFontID	atsuFont;
     Fixed		atsuSize;
-    ATSUAttributeTag		tags[2] = { kATSUFontTag, kATSUSizeTag };
-    ByteCount		    	sizes[2] = { sizeof(ATSUFontID), sizeof(Fixed) };
-    ATSUAttributeValuePtr	values[2];
+    static const ATSUAttributeTag tags[] = { 
+        kATSUFontTag, kATSUSizeTag, 
+        kATSUQDBoldfaceTag, kATSUQDItalicTag, kATSUQDUnderlineTag // @@@ didn't help.
+    };
+    static const ByteCount sizes[] = { 
+        sizeof(ATSUFontID), sizeof(Fixed), 
+        sizeof(Boolean), sizeof(Boolean), sizeof(Boolean) 
+    };
+    Boolean isBold = 0, isUnderline = 0, isItalic = 0;
+    const ATSUAttributeValuePtr values[] = {
+        &atsuFont, &atsuSize,
+        &isBold, &isItalic, &isUnderline
+    };
 
     *atsuStylePtr = NULL;
     style = NULL;
@@ -222,8 +232,6 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     if (err != noErr) {
         return err;
     }
-    values[0] = &atsuFont;
-    values[1] = &atsuSize;
     
     err = ATSUCreateStyle(&style);
     if (err != noErr) {
@@ -252,6 +260,7 @@ CreateLayoutForString(UniChar *buffer, CFIndex length, ATSUStyle atsuStyle, ATSU
     if (err == noErr) {
         *layoutPtr = layout;
     }
+    ATSUSetTransientFontMatching(layout, true);
     return err;
 }
 
@@ -440,6 +449,9 @@ TkPathClosePath(TkPathContext ctx)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGContextClosePath(context->c);
 }
+
+// @@@ Problems: don't want Tcl_Interp, finding matching font not while processing options.
+//     Separate font style from layout???
 
 int
 TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr)

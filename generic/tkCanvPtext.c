@@ -33,6 +33,8 @@ typedef struct PtextItem  {
     PathRect bbox;			/* Bounding box with zero width outline.
                              * Untransformed coordinates. */
     char *utf8;				/* The actual text to display; UTF-8 */
+    int numChars;			/* Length of text in characters. */
+    int numBytes;			/* Length of text in bytes. */
     void *custom;			/* Place holder for platform dependent stuff. */
 } PtextItem;
 
@@ -67,6 +69,8 @@ static void		ScalePtext(Tk_Canvas canvas,
                         double scaleX, double scaleY);
 static void		TranslatePtext(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double deltaX, double deltaY);
+static void		PtextDeleteChars(Tk_Canvas canvas, Tk_Item *itemPtr, 
+                        int first, int last);
 
 static Tk_CustomOption textAnchorOption = {           \
     (Tk_OptionParseProc *) TextAnchorParseProc,       \
@@ -118,7 +122,7 @@ Tk_ItemType tkPtextType = {
     (Tk_ItemCursorProc *) NULL,		/* icursorProc */
     (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
     (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
+    PtextDeleteChars,				/* dTextProc */
     (Tk_ItemType *) NULL,			/* nextPtr */
 };
                          
@@ -133,7 +137,6 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     if (objc == 0) {
         Tcl_Panic("canvas did not pass any coords\n");
     }
-    gInterp = interp;
 
     /*
      * Carry out initialization that is needed to set defaults and to
@@ -145,6 +148,8 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     ptextPtr->styleName = NULL;
     ptextPtr->bbox = NewEmptyPathRect();
     ptextPtr->utf8 = NULL;
+    ptextPtr->numChars = 0;
+    ptextPtr->numBytes = 0;
     ptextPtr->textStyle.fontFamily = NULL;
     ptextPtr->textStyle.fontSize = 0.0;
     ptextPtr->custom = NULL;
@@ -271,6 +276,8 @@ ConfigurePtext(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     if(state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
     }
+    ptextPtr->numBytes = strlen(ptextPtr->utf8);
+    ptextPtr->numChars = Tcl_NumUtfChars(ptextPtr->utf8, ptextPtr->numBytes);
     if (state == TK_STATE_HIDDEN) {
         return TCL_OK;
     }
@@ -286,7 +293,10 @@ static void
 DeletePtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    // @@@ Shall the ->text also be freed???
+    // @@@ Shall the ->utf8 also be freed???
+    if (ptextPtr->utf8 != NULL) {
+        ckfree(ptextPtr->utf8);
+    }
     TkPathTextFree(&(ptextPtr->textStyle), ptextPtr->custom);
 }
 
@@ -360,6 +370,42 @@ TranslatePtext(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
     ptextPtr->y += deltaY;
     TranslatePathRect(&(ptextPtr->bbox), deltaX, deltaY);
     SetGenericPathHeaderBbox(&(ptextPtr->header), stylePtr->matrixPtr, &(ptextPtr->bbox));
+}
+
+static void
+PtextDeleteChars(Tk_Canvas canvas, Tk_Item *itemPtr, int first, int last)
+{
+    PtextItem *ptextPtr = (PtextItem *) itemPtr;
+    int byteIndex, byteCount, charsRemoved;
+    char *new, *text;
+
+    text = ptextPtr->utf8;
+    if (first < 0) {
+        first = 0;
+    }
+    if (last >= ptextPtr->numChars) {
+        last = ptextPtr->numChars - 1;
+    }
+    if (first > last) {
+        return;
+    }
+    charsRemoved = last + 1 - first;
+
+    byteIndex = Tcl_UtfAtIndex(text, first) - text;
+    byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved) - (text + byteIndex);
+    
+    new = (char *) ckalloc((unsigned) (ptextPtr->numBytes + 1 - byteCount));
+    memcpy(new, text, (size_t) byteIndex);
+    strcpy(new + byteIndex, text + byteIndex + byteCount);
+
+    ckfree(text);
+    ptextPtr->utf8 = new;
+    ptextPtr->numChars -= charsRemoved;
+    ptextPtr->numBytes -= byteCount;
+    
+    //TkPathTextConfig(interp, &(ptextPtr->textStyle), ptextPtr->utf8, &(ptextPtr->custom));
+    ComputePtextBbox(canvas, ptextPtr);
+    return;
 }
 
 /*----------------------------------------------------------------------*/

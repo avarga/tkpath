@@ -4,7 +4,7 @@
  *	    This file implements style objects used when drawing paths.
  *      See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * Note: It would be best to have this in the canvas widget as a special
  *       object, but I see no way of doing this without touching

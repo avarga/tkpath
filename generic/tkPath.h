@@ -4,7 +4,7 @@
  *		This file implements a path drawing model
  *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */

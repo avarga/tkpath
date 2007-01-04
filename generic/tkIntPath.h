@@ -3,7 +3,7 @@
  *
  *		Header file for the internals of the tkpath package.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */

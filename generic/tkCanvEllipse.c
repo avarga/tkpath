@@ -4,7 +4,7 @@
  *	This file implements the circle and ellipse canvas items modelled after its
  *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2006  Mats Bengtsson
+ * Copyright (c) 2007  Mats Bengtsson
  *
  * $Id$
  */

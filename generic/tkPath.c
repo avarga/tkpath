@@ -5,7 +5,7 @@
  *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *		It contains the generic parts that do not refer to the canvas.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */

@@ -9,7 +9,7 @@
  *		Tk drawing only. It fails in a number of places such as
  *		filled and overlapping subpaths.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */

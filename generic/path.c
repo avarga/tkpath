@@ -4,7 +4,7 @@
  *	This file is main for the tkpath package.
  *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005-2006  Mats Bengtsson
+ * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
  */
@@ -30,6 +30,7 @@ extern Tk_ItemType tkPimageType;
 extern Tk_ItemType tkPtextType;
 
 int gUseAntiAlias = 0;
+Tcl_Interp *gInterp = NULL;
 
 extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
@@ -83,6 +84,8 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
 		return TCL_ERROR;
     }
 #endif
+
+    gInterp = interp;
 	
     Tk_CreateItemType(&tkPathType);
     Tk_CreateItemType(&tkPrectType);
