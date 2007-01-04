@@ -2248,7 +2248,7 @@ TextAnchorPrintProc(
     } else if (*textAnchorPtr == kPathTextAnchorMiddle) {
         return "middle";
     } else if (*textAnchorPtr == kPathTextAnchorEnd) {
-        return "middle";
+        return "end";
     } else {
         return "";
     }

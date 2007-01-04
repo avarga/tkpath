@@ -82,7 +82,7 @@ PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-fontfamily", (char *) NULL, (char *) NULL,
-            (char *) NULL, Tk_Offset(PtextItem, textStyle.fontFamily), 
+            "Helvetica", Tk_Offset(PtextItem, textStyle.fontFamily), 
             TK_CONFIG_NULL_OK},
     {TK_CONFIG_DOUBLE, "-fontsize", (char *) NULL, (char *) NULL,
         "10.0", Tk_Offset(PtextItem, textStyle.fontSize), 0},
@@ -150,6 +150,7 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     ptextPtr->utf8 = NULL;
     ptextPtr->numChars = 0;
     ptextPtr->numBytes = 0;
+    ptextPtr->textAnchor = kPathTextAnchorStart;
     ptextPtr->textStyle.fontFamily = NULL;
     ptextPtr->textStyle.fontSize = 0.0;
     ptextPtr->custom = NULL;
@@ -242,6 +243,12 @@ ComputePtextBbox(Tk_Canvas canvas, PtextItem *ptextPtr)
     }
     bbox.y1 = ptextPtr->y + r.y1;	// r.y1 is negative!
     bbox.y2 = ptextPtr->y + r.y2;
+    
+    /* Fudge for antialiasing etc. */
+    bbox.x1 -= 1.0;
+    bbox.y1 -= 1.0;
+    bbox.x2 += 1.0;
+    bbox.y2 += 1.0;
     if (stylePtr->strokeColor) {
         double halfWidth = stylePtr->strokeWidth;
         bbox.x1 -= halfWidth;
@@ -326,7 +333,7 @@ DisplayPtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     kCGTextFillStrokeClip,
     kCGTextClip
     */
-    TkPathTextDraw(ctx, &(ptextPtr->textStyle), ptextPtr->bbox.x1, ptextPtr->y, 
+    TkPathTextDraw(ctx, stylePtr, &(ptextPtr->textStyle), ptextPtr->bbox.x1, ptextPtr->y, 
             ptextPtr->utf8, ptextPtr->custom);
     TkPathEndPath(ctx);
     TkPathFree(ctx);

@@ -3,6 +3,8 @@
  *
  *	This file implements path drawing API's using the Cairo rendering engine.
  *
+ *  TODO: implement text drawing using glyphs instead of the "toy" text API.
+ *
  * Copyright (c) 2005-2007  Mats Bengtsson
  *
  * $Id$
@@ -30,6 +32,18 @@ typedef struct TkPathContext_ {
     cairo_surface_t* 	surface;
 } TkPathContext_;
 
+
+void CairoSetFill(TkPathContext ctx, Tk_PathStyle *style)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_set_source_rgba(context->c,
+            RedDoubleFromXColorPtr(style->fillColor),
+            GreenDoubleFromXColorPtr(style->fillColor),
+            BlueDoubleFromXColorPtr(style->fillColor),
+            style->fillOpacity);
+    cairo_set_fill_rule(context->c, 
+            (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
+}
 
 TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
@@ -250,13 +264,16 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
 }
 
 void
-TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom)
+TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
+        double x, double y, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_select_font_face(context->c, textStylePtr->fontFamily, 
             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(context->c, textStylePtr->fontSize);
+    cairo_move_to(context->c, x, y);
     cairo_show_text(context->c, utf8);
+    //cairo_text_path(cairo_t *cr, const char *utf8);
 }
 
 void
@@ -273,6 +290,9 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     cairo_text_extents_t extents;
     PathRect r;
 
+    /* @@@ Not very happy about this but it seems that there is no way to 
+     *     measure text without having a surface (drawable) in cairo.
+     */
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
     c = cairo_create(surface);
     cairo_select_font_face(c, textStylePtr->fontFamily, 
@@ -281,8 +301,8 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 
     cairo_text_extents(c, utf8, &extents);
     r.x1 = 0.0;
-    r.y1 = extents.y_bearing;
-    r.x2 = extents.width - extents.x_bearing;
+    r.y1 = extents.y_bearing;		// will usually be negative.
+    r.x2 = extents.width + extents.x_bearing;
     r.y2 = extents.height + extents.y_bearing; 
     cairo_destroy(c);
     cairo_surface_destroy(surface);
@@ -357,18 +377,6 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
     }
 
     cairo_stroke(context->c);
-}
-
-void CairoSetFill(TkPathContext ctx, Tk_PathStyle *style)
-{
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
-    cairo_set_source_rgba(context->c,
-            RedDoubleFromXColorPtr(style->fillColor),
-            GreenDoubleFromXColorPtr(style->fillColor),
-            BlueDoubleFromXColorPtr(style->fillColor),
-            style->fillOpacity);
-    cairo_set_fill_rule(context->c, 
-            (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
 }
 
 void TkPathFill(TkPathContext ctx, Tk_PathStyle *style)

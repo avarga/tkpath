@@ -247,8 +247,8 @@ void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
                     double x, double y, double width, double height);
 int			TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr);
-void		TkPathTextDraw(TkPathContext ctx, Tk_PathTextStyle *textStylePtr, 
-                    double x, double y, char *utf8, void *custom);
+void		TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, 
+                    Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom);
 void		TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom);
 PathRect	TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom);
 
