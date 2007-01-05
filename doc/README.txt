@@ -122,6 +122,17 @@ if paramters are wrong.
 
    .c create pimage x y ?-width -height?
 
+ o The ptext item
+
+   Displays text as expected. Note that the x coordinate mmarks the baseline
+   of the text. Gradient fills unsupported so far. Not implemented in the
+   Tk and GDI backends. Especially the font handling and settings will likely
+   be developed further.
+   
+   .c create ptext x y ?-text string -textanchor start|middle|end?
+       ?-fontfamily fontname -fontsize float?
+       ?fillOptions strokeOptions genericOptions?
+
  o Antialiasing, if available, is controlled by the variable:
     ::tkpath::antialias
     Switch on with:

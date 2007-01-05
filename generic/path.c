@@ -125,7 +125,7 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
             StyleObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathStyleInit(interp);
 
-    return Tcl_PkgProvide(interp, "tkpath", TKPATH_VERSION);
+    return Tcl_PkgProvide(interp, "tkpath", TKPATH_PATCHLEVEL);
 }
 
 /*

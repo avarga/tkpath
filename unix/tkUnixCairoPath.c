@@ -268,12 +268,23 @@ TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textSty
         double x, double y, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    
     cairo_select_font_face(context->c, textStylePtr->fontFamily, 
             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(context->c, textStylePtr->fontSize);
     cairo_move_to(context->c, x, y);
-    cairo_show_text(context->c, utf8);
-    //cairo_text_path(cairo_t *cr, const char *utf8);
+    if ((style->fillColor != NULL) && (style->strokeColor != NULL)) {
+        cairo_text_path(context->c, utf8);
+        TkPathFillAndStroke(ctx, style);
+    } else if (style->fillColor != NULL) {
+    
+        /* This is the normal way to draw text which is likely faster. */
+        CairoSetFill(ctx, style);
+        cairo_show_text(context->c, utf8);
+    } else if (style->strokeColor != NULL) {
+        cairo_text_path(context->c, utf8);
+        TkPathStroke(ctx, style);
+    }
 }
 
 void
@@ -302,8 +313,8 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     cairo_text_extents(c, utf8, &extents);
     r.x1 = 0.0;
     r.y1 = extents.y_bearing;		// will usually be negative.
-    r.x2 = extents.width + extents.x_bearing;
-    r.y2 = extents.height + extents.y_bearing; 
+    r.x2 = extents.x_bearing + extents.width;
+    r.y2 = extents.y_bearing + extents.height; 
     cairo_destroy(c);
     cairo_surface_destroy(surface);
     return r;
