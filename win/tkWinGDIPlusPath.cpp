@@ -20,6 +20,7 @@
 
 using namespace Gdiplus;
 
+extern Tcl_Interp *gInterp;
 extern "C" int gUseAntiAlias;
 
 #define MakeGDIPlusColor(xc, opacity) 	Color(BYTE(opacity*255), 				\
@@ -72,6 +73,8 @@ class PathC {
 	void AddEllipse(float cx, float cy, float rx, float ry);
     void DrawImage(Tk_Image image, Tk_PhotoHandle photo, 
         float x, float y, float width, float height);
+    void DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
+        float x, float y, char *utf8);
     void CloseFigure(void);
     void Stroke(Tk_PathStyle *style);
     void Fill(Tk_PathStyle *style);
@@ -318,6 +321,46 @@ inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo,
     }
     Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
     mGraphics->DrawImage(&bitmap, x, y, width, height);
+}
+
+inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
+        float x, float y, char *utf8)
+{
+    Tcl_DString ds, dsFont;
+    Tcl_UniChar *uniPtr;
+    
+	Tcl_DStringInit(&dsFont);
+    FontFamily fontFamily(Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
+    Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+	Tcl_DStringFree(&dsFont);
+	Tcl_DStringInit(&ds);
+	uniPtr = Tcl_UtfToUniCharDString(utf8, -1, &ds);
+
+    /* The fourth argument is a PointF object that contains the 
+     * coordinates of the upper-left corner of the string.
+     * See GDI+ docs and the FontFamily for translating between
+     * design units and pixels.
+     */
+    //float ascentPixels = font.GetSize() * 
+      //      fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
+    float ascentPixels = textStylePtr->fontSize * 
+            fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
+    PointF point(x, y - ascentPixels);
+    mGraphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
+
+    if (style->fillColor != NULL) {
+        SolidBrush *brush = PathCreateBrush(style);
+        mGraphics->DrawString(uniPtr, Tcl_DStringLength(&ds), &font, point, &brush);
+        delete brush;
+    }
+    if (style->strokeColor != NULL) {
+        Pen	*pen = PathCreatePen(style);
+        mPath->AddString(uniPtr, Tcl_DStringLength(&ds), 
+                &fontFamily, FontStyleRegular, (float) textStylePtr->fontSize, point, NULL);
+        mGraphics->DrawPath(pen, mPath);
+        delete pen;
+    }
+	Tcl_DStringFree(&ds);
 }
 
 inline void PathC::CloseFigure()
@@ -626,7 +669,6 @@ TkPathClosePath(TkPathContext ctx)
 int
 TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr)
 {
-
     return TCL_OK;
 }
 
@@ -634,19 +676,55 @@ void
 TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-
+    context->c->DrawString(style, textStylePtr, (float) x, (float) y, utf8);
 }
 
 void
 TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom)
 {
-
+    /* Empty. */
 }
 
 PathRect
 TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
-    PathRect r = {0, 0, 0, 0};
+    HDC memHdc;
+    Tcl_DString ds, dsFont;
+    Tcl_UniChar *uniPtr;
+    PointF origin(0.0f, 0.0f);
+    RectF bounds;
+    PathRect r;
+    double ascent;
+
+    memHdc = CreateCompatibleDC(NULL);
+    /*
+    HBITMAP CreateCompatibleBitmap(
+  HDC hdc,        // handle to DC
+  int nWidth,     // width of bitmap, in pixels
+  int nHeight     // height of bitmap, in pixels
+);
+    HBITMAP bm = CreateCompatibleBitmap(memHdc, 10, 10);
+    SelectObject(memHdc, bm);
+    */
+    graphics = new Graphics(memHdc);
+    
+	Tcl_DStringInit(&dsFont);
+    FontFamily fontFamily(Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
+    Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+	Tcl_DStringFree(&dsFont);
+	Tcl_DStringInit(&ds);
+	uniPtr = Tcl_UtfToUniCharDString(utf8, -1, &ds);
+	graphics->MeasureString(uniPtr, Tcl_DStringLength(&ds), &font, origin, &bounds);
+	Tcl_DStringFree(&ds);
+    ascent = textStylePtr->fontSize * 
+            fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
+    r.x1 = 0.0;
+    r.y1 = -ascent;
+    r.x2 = bounds.GetRight() - bounds.GetLeft();
+    r.y1 = bounds.GetBottom() - bounds.GetTop() - ascent;
+    delete graphics;
+    // DeleteObject(bm);
+    DeleteDC(memHdc);    
     return r;
 }
 
