@@ -124,10 +124,10 @@ if paramters are wrong.
 
  o The ptext item
 
-   Displays text as expected. Note that the x coordinate mmarks the baseline
+   Displays text as expected. Note that the x coordinate marks the baseline
    of the text. Gradient fills unsupported so far. Not implemented in the
    Tk and GDI backends. Especially the font handling and settings will likely
-   be developed further.
+   be developed further. Editing not implemented.
    
    .c create ptext x y ?-text string -textanchor start|middle|end?
        ?-fontfamily fontname -fontsize float?
@@ -199,7 +199,8 @@ if paramters are wrong.
             defined in absolute coordinates but in the space of the items
             coordinate system. It defaults to {0 0 1 0}.
         -units bbox|userspace sets the units of the transition coordinates.
-	    See above. Defaults to bbox.
+	    See above. Defaults to bbox. Not implemented in the Tk and GDI 
+	    backends. 
 
 
 o Radial gradients are created and configured using:

@@ -430,7 +430,7 @@ void PathC::FillSimpleLinearGradient(
     LinearGradientBrush brush(p1, p2, col1, col2);
     if ((stop1->offset > 1e-6) || (stop2->offset < 1.0-1e-6)) {
     
-        /* This is a trick available in gdi+ we use for padding with a const color. */
+        /* This is a trick available in gdi+ we use for padding with a const color. ??? */
         REAL blendFactors[4];
         REAL blendPositions[4];
         blendFactors[0] = 0.0;

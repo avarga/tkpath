@@ -362,7 +362,7 @@ TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom)
 PathRect
 TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
-    PathRect r = {0, 0, 0, 0};
+    PathRect r = {-1, -1, -1, -1};
     return r;
 }
 

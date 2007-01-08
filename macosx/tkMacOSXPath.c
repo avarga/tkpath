@@ -463,6 +463,7 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
     UniChar 		*buffer;
     CFRange 		range;
     CFIndex 		length;
+    char			family[256];
     OSStatus 		err;
     
     if (utf8 == NULL) {
@@ -475,8 +476,18 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
     if (length == 0) {
         return TCL_OK;
     }
+    
+    /*
+     * Do some primitive font fallback.
+     */
+    strncpy(family, textStylePtr->fontFamily, 255);
+    if (strncmp(family, "Times", 6) == 0) {
+        strcpy(family, "Times New Roman");
+    } else if (strncmp(family, "Helvetica", 10) == 0) {
+        strcpy(family, "Arial");
+    }
     range = CFRangeMake(0, length);
-    err = CreateATSUIStyle(textStylePtr->fontFamily, textStylePtr->fontSize, &atsuStyle);
+    err = CreateATSUIStyle(family, textStylePtr->fontSize, &atsuStyle);
     if (err != noErr) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("font style couldn't be created", -1));
         return TCL_ERROR;
