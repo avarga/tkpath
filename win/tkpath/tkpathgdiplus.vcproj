@@ -34,7 +34,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="tclstub84.lib tkstub84.lib gdiplus.lib"
-				OutputFile="$(OutDir)/tkpathgdiplus02.dll"
+				OutputFile="$(OutDir)/tkpathgdiplus022.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="C:\Tcl\lib"
 				GenerateDebugInformation="TRUE"
@@ -144,6 +144,9 @@
 			</File>
 			<File
 				RelativePath="..\..\generic\tkCanvPrect.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkCanvPtext.c">
 			</File>
 			<File
 				RelativePath="..\..\generic\tkPath.c">

@@ -99,9 +99,6 @@ PathCreatePen(Tk_PathStyle *stylePtr)
     } else {
         penstyle |= PS_SOLID;
     }
-    if (stylePtr->strokeStipple != None) {
-        /* @@@ TODO */
-    }
     if (penstyle & PS_COSMETIC) {
         hpen = CreatePen(penstyle, widthInt, stylePtr->strokeColor->pixel);
     } else {

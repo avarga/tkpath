@@ -202,9 +202,6 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
         "4.0", Tk_Offset(typeName, style.miterLimit), 0},                   \
     {TK_CONFIG_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,      \
         "1.0", Tk_Offset(typeName, style.strokeOpacity), 0},                \
-    {TK_CONFIG_BITMAP, "-strokestipple", (char *) NULL, (char *) NULL,      \
-        (char *) NULL, Tk_Offset(typeName, style.strokeStipple),            \
-        TK_CONFIG_NULL_OK},                                                 \
     {TK_CONFIG_CUSTOM, "-strokewidth", (char *) NULL, (char *) NULL,        \
         "1.0", Tk_Offset(typeName, style.strokeWidth),                      \
         TK_CONFIG_DONT_SET_DEFAULT, &pixelOption}

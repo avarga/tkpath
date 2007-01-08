@@ -165,7 +165,6 @@ typedef struct Tk_PathStyle {
     double strokeOpacity;
     int offset;					/* Dash offset */
     Tk_Dash dash;				/* Dash pattern. */
-    Pixmap strokeStipple;		/* Stroke Stipple pattern. */
     int capStyle;				/* Cap style for stroke. */
     int joinStyle;				/* Join style for stroke. */
     double miterLimit;

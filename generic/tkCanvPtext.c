@@ -85,7 +85,7 @@ static Tk_ConfigSpec configSpecs[] = {
             "Helvetica", Tk_Offset(PtextItem, textStyle.fontFamily), 
             TK_CONFIG_NULL_OK},
     {TK_CONFIG_DOUBLE, "-fontsize", (char *) NULL, (char *) NULL,
-        "10.0", Tk_Offset(PtextItem, textStyle.fontSize), 0},
+        "12.0", Tk_Offset(PtextItem, textStyle.fontSize), 0},
     {TK_CONFIG_STRING, "-text", (char *) NULL, (char *) NULL,
             (char *) NULL, Tk_Offset(PtextItem, utf8), TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-textanchor", (char *) NULL, (char *) NULL,
@@ -122,7 +122,7 @@ Tk_ItemType tkPtextType = {
     (Tk_ItemCursorProc *) NULL,		/* icursorProc */
     (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
     (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    PtextDeleteChars,				/* dTextProc */
+    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
     (Tk_ItemType *) NULL,			/* nextPtr */
 };
                          

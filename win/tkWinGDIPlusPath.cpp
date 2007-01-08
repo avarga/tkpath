@@ -48,7 +48,13 @@ static LookupTable LineJoinStyleLookupTable[] = {
     {JoinBevel, LineJoinBevel}
 };
 
-void PathExit(ClientData clientData);
+static int sGdiplusStarted;
+static ULONG_PTR sGdiplusToken;
+static GdiplusStartupOutput sGdiplusStartupOutput;
+
+static void InitGDIplus(void);
+
+static void PathExit(ClientData clientData);
 
 /*
  * This class is a wrapper for path drawing using GDI+ 
@@ -59,10 +65,6 @@ class PathC {
   public:
     PathC(Drawable d);
     ~PathC(void);
-
-	static int sGdiplusStarted;
-    static ULONG_PTR sGdiplusToken;
-    static GdiplusStartupOutput sGdiplusStartupOutput;
 
     void PushTMatrix(TMatrix *m);
 	void BeginPath(Drawable d, Tk_PathStyle *style);
@@ -103,10 +105,19 @@ typedef struct TkPathContext_ {
 	PathC *		c;
 } TkPathContext_;
 
-
-int	PathC::sGdiplusStarted;
-ULONG_PTR PathC::sGdiplusToken;
-GdiplusStartupOutput PathC::sGdiplusStartupOutput;
+void InitGDIplus(void)
+{
+	//Status status;
+    GdiplusStartupInput gdiplusStartupInput;
+        
+    GdiplusStartup(&sGdiplusToken, &gdiplusStartupInput, &sGdiplusStartupOutput);
+    /*status = GdiplusStartup(&sGdiplusToken, &gdiplusStartupInput, &sGdiplusStartupOutput);
+    if (status != Ok) {
+        return;
+    }*/
+    Tcl_CreateExitHandler(PathExit, NULL);
+    sGdiplusStarted = 1;
+}
 
 PathC::PathC(Drawable d)
 {
@@ -114,16 +125,7 @@ PathC::PathC(Drawable d)
     //TkWinDrawable *twdPtr = reinterpret_cast<TkWinDrawable*>(d);
 
 	if (!sGdiplusStarted) {
-        //Status status;
-        GdiplusStartupInput gdiplusStartupInput;
-        
-        GdiplusStartup(&sGdiplusToken, &gdiplusStartupInput, &sGdiplusStartupOutput);
-        /*status = GdiplusStartup(&sGdiplusToken, &gdiplusStartupInput, &sGdiplusStartupOutput);
-        if (status != Ok) {
-            return;
-        }*/
-        Tcl_CreateExitHandler(PathExit, NULL);
-        sGdiplusStarted = 1;
+		InitGDIplus();
     }
     mD = d;
 
@@ -186,9 +188,6 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
         }
         penPtr->SetDashOffset((float) style->offset);
     }    
-    if (style->strokeStipple != None) {
-        /* @@@ TODO */
-    }
     return penPtr;
 }
 
@@ -331,7 +330,13 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
     
 	Tcl_DStringInit(&dsFont);
     FontFamily fontFamily(Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
-    Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+	if (fontFamily.GetLastStatus() != Ok) {
+		fontFamily.GenericSansSerif();
+	}
+	Gdiplus::Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+	if (font.GetLastStatus() != Ok) {
+		// TODO
+	}
 	Tcl_DStringFree(&dsFont);
 	Tcl_DStringInit(&ds);
 	uniPtr = Tcl_UtfToUniCharDString(utf8, -1, &ds);
@@ -341,21 +346,20 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
      * See GDI+ docs and the FontFamily for translating between
      * design units and pixels.
      */
-    //float ascentPixels = font.GetSize() * 
-      //      fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
-    float ascentPixels = textStylePtr->fontSize * 
+    float ascentPixels = font.GetSize() * 
             fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
     PointF point(x, y - ascentPixels);
-    mGraphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
-
+	if (gUseAntiAlias) {
+		mGraphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
+	}
     if (style->fillColor != NULL) {
         SolidBrush *brush = PathCreateBrush(style);
-        mGraphics->DrawString(uniPtr, Tcl_DStringLength(&ds), &font, point, &brush);
+        mGraphics->DrawString(uniPtr, Tcl_UniCharLen(uniPtr), &font, point, brush);
         delete brush;
     }
     if (style->strokeColor != NULL) {
         Pen	*pen = PathCreatePen(style);
-        mPath->AddString(uniPtr, Tcl_DStringLength(&ds), 
+        mPath->AddString(uniPtr, Tcl_UniCharLen(uniPtr), 
                 &fontFamily, FontStyleRegular, (float) textStylePtr->fontSize, point, NULL);
         mGraphics->DrawPath(pen, mPath);
         delete pen;
@@ -452,6 +456,7 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
     GradientStop 		*stop;
     GradientStopArray 	*stopArrPtr;
     PathRect			*tPtr;
+	PointF				p1, p2;
 
     stopArrPtr = fillPtr->stopArrPtr;    
     nstops = stopArrPtr->nstops;
@@ -468,11 +473,15 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
         y = float(bbox->y1);
         width = float(bbox->x2 - bbox->x1);
         height = float(bbox->y2 - bbox->y1);
-        PointF p1(float(x + tPtr->x1*width), float(y + tPtr->y1*height));
-        PointF p2(float(x + tPtr->x2*width), float(y + tPtr->y2*height));
+		p1.X = float(x + tPtr->x1*width);
+		p1.Y = float(y + tPtr->y1*height);
+        p2.X = float(x + tPtr->x2*width);
+		p2.Y = float(y + tPtr->y2*height);
     } else {
-        PointF p1(float(tPtr->x1), float(tPtr->y1));
-        PointF p2(float(tPtr->x2), float(tPtr->y2));
+        p1.X = float(tPtr->x1);
+		p1.Y = float(tPtr->y1);
+        p2.X = float(tPtr->x2);
+		p2.Y = float(tPtr->y2);
     }
     stop = stopArrPtr->stops[0];
     Color col1(MakeGDIPlusColor(stop->color, stop->opacity));
@@ -557,8 +566,8 @@ void PathC::FillRadialGradient(
 
 void PathExit(ClientData clientData)
 {
-    if (PathC::sGdiplusStarted) {
-        GdiplusShutdown(PathC::sGdiplusToken);
+    if (sGdiplusStarted) {
+        GdiplusShutdown(sGdiplusToken);
     }
 }
 
@@ -669,6 +678,7 @@ TkPathClosePath(TkPathContext ctx)
 int
 TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr)
 {
+	// @@@ We could think of having the FontFamily and Gdiplus::Font cached in custom.
     return TCL_OK;
 }
 
@@ -690,19 +700,18 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     HDC memHdc;
     Tcl_DString ds, dsFont;
-    Tcl_UniChar *uniPtr;
+    Tcl_UniChar *uniPtr = NULL;
     PointF origin(0.0f, 0.0f);
     RectF bounds;
-    PathRect r;
+	PathRect r = {-1, -1, -1, -1};
     double ascent;
+	Graphics *graphics = NULL;
 
+	if (!sGdiplusStarted) {
+		InitGDIplus();
+    }
     memHdc = CreateCompatibleDC(NULL);
-    /*
-    HBITMAP CreateCompatibleBitmap(
-  HDC hdc,        // handle to DC
-  int nWidth,     // width of bitmap, in pixels
-  int nHeight     // height of bitmap, in pixels
-);
+    /* @@@ I thought this was needed but seems not.
     HBITMAP bm = CreateCompatibleBitmap(memHdc, 10, 10);
     SelectObject(memHdc, bm);
     */
@@ -710,18 +719,24 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     
 	Tcl_DStringInit(&dsFont);
     FontFamily fontFamily(Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
-    Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+	if (fontFamily.GetLastStatus() != Ok) {
+		fontFamily.GenericSansSerif();
+	}
+	Gdiplus::Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+	if (font.GetLastStatus() != Ok) {
+		// TODO
+	}
 	Tcl_DStringFree(&dsFont);
 	Tcl_DStringInit(&ds);
 	uniPtr = Tcl_UtfToUniCharDString(utf8, -1, &ds);
-	graphics->MeasureString(uniPtr, Tcl_DStringLength(&ds), &font, origin, &bounds);
+	graphics->MeasureString(uniPtr, Tcl_UniCharLen(uniPtr), &font, origin, &bounds);
 	Tcl_DStringFree(&ds);
-    ascent = textStylePtr->fontSize * 
-            fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
+    ascent = font.GetSize() * 
+           fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
     r.x1 = 0.0;
     r.y1 = -ascent;
-    r.x2 = bounds.GetRight() - bounds.GetLeft();
-    r.y1 = bounds.GetBottom() - bounds.GetTop() - ascent;
+    r.x2 = bounds.Width;
+    r.y2 = bounds.Height - ascent;
     delete graphics;
     // DeleteObject(bm);
     DeleteDC(memHdc);    

@@ -375,9 +375,6 @@ static Tk_OptionSpec styleOptionSpecs[] = {
     {TK_OPTION_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, strokeOpacity), 0, 0, 
         PATH_STYLE_OPTION_STROKE_OPACITY},
-    {TK_OPTION_BITMAP, "-strokestipple", (char *) NULL, (char *) NULL,
-        "", -1, Tk_Offset(Tk_PathStyle, strokeStipple), TK_OPTION_NULL_OK, 0, 
-        PATH_STYLE_OPTION_STROKE_STIPPLE},
     {TK_OPTION_DOUBLE, "-strokewidth", (char *) NULL, (char *) NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, strokeWidth), 0, 0, 
         PATH_STYLE_OPTION_STROKE_WIDTH},
@@ -658,7 +655,6 @@ TkPathCreateStyle(Tk_PathStyle *style)
     style->strokeOpacity = 1.0;
     style->offset = 0;
     style->dash.number = 0;
-    style->strokeStipple = None;
     style->capStyle = CapButt;
     style->joinStyle = JoinRound;
     style->gradientStrokeName = NULL;    
@@ -699,9 +695,6 @@ TkPathDeleteStyle(Display *display, Tk_PathStyle *style)
     }
     if (style->strokeColor != NULL) {
         Tk_FreeColor(style->strokeColor);
-    }
-    if (style->strokeStipple != None) {
-        Tk_FreeBitmap(display, style->strokeStipple);
     }
 
     if (style->fillGC != None) {
