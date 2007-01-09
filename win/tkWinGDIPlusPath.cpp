@@ -488,7 +488,11 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
     stop = stopArrPtr->stops[nstops-1];
     Color col2(MakeGDIPlusColor(stop->color, stop->opacity));
 	LinearGradientBrush brush(p1, p2, col1, col2);
-
+    if (fillPtr->method == kPathGradientMethodReflect) {
+        brush.SetWrapMode(WrapModeTileFlipXY);
+    } else if (fillPtr->method == kPathGradientMethodPad) {
+        brush.SetWrapMode(WrapModeTileFlipXY);
+    }
     Color *col = new Color[nstops];
     REAL *pos = new REAL[nstops];
 	for (i = 0; i < nstops; i++) {
@@ -498,6 +502,26 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
     }
     brush.SetInterpolationColors(col, pos, nstops);
     mGraphics->FillPath(&brush, mPath);
+    
+    /* 
+     * GDI+ seems to miss a simple way to pad with constant colors.
+     */
+    if (fillPtr->method == kPathGradientMethodPad) {
+        PointF pdiff = p2 - p1;
+        PointF perp(-pdiff.Y, pdiff.X);
+		Gdiplus::Region region(mPath);
+        mGraphics->SetClip(&region);
+        SolidBrush brush1(col1);
+        SolidBrush brush2(col2);
+        width = float(bbox->x2 - bbox->x1);
+        height = float(bbox->y2 - bbox->y1);
+        float side = width + height;
+        float angle = atan2(perp.Y, perp.X) * 180.0/M_PI;
+        // Paint only if needed!?
+        // @@@ I anticipate problems here if any color has opacity unequal to 1!
+        mGraphics->FillPie(&brush1, p1.X-side, p1.Y-side, side, side, angle, 180.0);
+        mGraphics->FillPie(&brush2, p2.X-side, p2.Y-side, side, side, angle+180.0, 180.0);
+    }
     mGraphics->EndContainer(container);
 	delete [] col;
 	delete [] pos;
@@ -802,7 +826,7 @@ int	TkPathDrawingDestroysPath(void)
 int		
 TkPathPixelAlign(void)
 {
-    return 0;
+    return 1;
 }
 
 /* @@@ INCOMPLETE! We need to consider any padding as well. */
