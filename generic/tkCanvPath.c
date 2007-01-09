@@ -860,6 +860,7 @@ TranslatePath(
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
     PathAtom *atomPtr = pathPtr->atomPtr;
+    Tk_PathStyle *stylePtr = &(pathPtr->style);
 
     TranslatePathAtoms(atomPtr, deltaX, deltaY);
     
@@ -872,11 +873,7 @@ TranslatePath(
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&(pathPtr->bareBbox), deltaX, deltaY);
     TranslatePathRect(&(pathPtr->totalBbox), deltaX, deltaY);
-
-    pathPtr->header.x1 = (int) pathPtr->totalBbox.x1;
-    pathPtr->header.x2 = (int) pathPtr->totalBbox.x2;
-    pathPtr->header.y1 = (int) pathPtr->totalBbox.y1;
-    pathPtr->header.y2 = (int) pathPtr->totalBbox.y2;
+    SetGenericPathHeaderBbox(&(pathPtr->header), stylePtr->matrixPtr, &(pathPtr->totalBbox));
 }
 
 /*

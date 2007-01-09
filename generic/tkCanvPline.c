@@ -370,16 +370,13 @@ TranslatePline(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
     PathAtom *atomPtr = plinePtr->atomPtr;
+    Tk_PathStyle *stylePtr = &(plinePtr->style);
 
     TranslatePathAtoms(atomPtr, deltaX, deltaY);
 
     /* Just translate the bbox as well. */
     TranslatePathRect(&(plinePtr->totalBbox), deltaX, deltaY);
-
-    plinePtr->header.x1 = (int) plinePtr->totalBbox.x1;
-    plinePtr->header.x2 = (int) plinePtr->totalBbox.x2;
-    plinePtr->header.y1 = (int) plinePtr->totalBbox.y1;
-    plinePtr->header.y2 = (int) plinePtr->totalBbox.y2;
+    SetGenericPathHeaderBbox(&(plinePtr->header), stylePtr->matrixPtr, &(plinePtr->totalBbox));
 }
 
 /*----------------------------------------------------------------------*/

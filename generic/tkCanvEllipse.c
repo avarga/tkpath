@@ -548,7 +548,7 @@ TranslateEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double delta
     /* Just translate the bbox'es as well. */
     ellPtr->center[0] += deltaX;
     ellPtr->center[1] += deltaY;
-
+    /* Beware for cumlated round-off errors! */
     ellPtr->header.x1 += (int) deltaX;
     ellPtr->header.x2 += (int) deltaX;
     ellPtr->header.y1 += (int) deltaY;

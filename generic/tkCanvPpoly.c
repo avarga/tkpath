@@ -366,19 +366,15 @@ TranslatePpoly(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
     PathAtom *atomPtr = ppolyPtr->atomPtr;
+    Tk_PathStyle *stylePtr = &(ppolyPtr->style);
 
     TranslatePathAtoms(atomPtr, deltaX, deltaY);
 
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&(ppolyPtr->bbox), deltaX, deltaY);
     TranslatePathRect(&(ppolyPtr->totalBbox), deltaX, deltaY);
-
-    ppolyPtr->header.x1 = (int) ppolyPtr->totalBbox.x1;
-    ppolyPtr->header.x2 = (int) ppolyPtr->totalBbox.x2;
-    ppolyPtr->header.y1 = (int) ppolyPtr->totalBbox.y1;
-    ppolyPtr->header.y2 = (int) ppolyPtr->totalBbox.y2;
+    SetGenericPathHeaderBbox(&(ppolyPtr->header), stylePtr->matrixPtr, &(ppolyPtr->totalBbox));
 }
-
 
 /*
  *--------------------------------------------------------------

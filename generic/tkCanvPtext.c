@@ -16,6 +16,10 @@
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
+enum {
+    kPtextItemNoBboxCalculation      	= (1L << 0)		/* Inhibit any 'ComputePtextBbox' call. */
+};
+
 /*
  * The structure below defines the record for each path item.
  */
@@ -35,6 +39,7 @@ typedef struct PtextItem  {
     char *utf8;				/* The actual text to display; UTF-8 */
     int numChars;			/* Length of text in characters. */
     int numBytes;			/* Length of text in bytes. */
+    long flags;				/* Various flags, see enum. */
     void *custom;			/* Place holder for platform dependent stuff. */
 } PtextItem;
 
@@ -153,6 +158,7 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     ptextPtr->textAnchor = kPathTextAnchorStart;
     ptextPtr->textStyle.fontFamily = NULL;
     ptextPtr->textStyle.fontSize = 0.0;
+    ptextPtr->flags = 0L;
     ptextPtr->custom = NULL;
     
     for (i = 1; i < objc; i++) {
@@ -161,10 +167,12 @@ CreatePtext(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
             break;
         }
     }
+    ptextPtr->flags |= kPtextItemNoBboxCalculation;
     if (PtextCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
         goto error;
     }
     if (ConfigurePtext(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
+        ptextPtr->flags &= ~kPtextItemNoBboxCalculation;
         ComputePtextBbox(canvas, ptextPtr);
         return TCL_OK;
     }
@@ -201,7 +209,9 @@ PtextCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
             || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1], &(ptextPtr->y)) != TCL_OK)) {
             return TCL_ERROR;
         }
-        ComputePtextBbox(canvas, ptextPtr);
+        if (!(ptextPtr->flags & kPtextItemNoBboxCalculation)) {
+            ComputePtextBbox(canvas, ptextPtr);
+        }
     } else {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
         return TCL_ERROR;
@@ -288,8 +298,11 @@ ConfigurePtext(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     if (state == TK_STATE_HIDDEN) {
         return TCL_OK;
     }
+    // @@@ TkPathTextConfig needs to be reworked!
     if (TkPathTextConfig(interp, &(ptextPtr->textStyle), ptextPtr->utf8, &(ptextPtr->custom)) == TCL_OK) {
-        ComputePtextBbox(canvas, ptextPtr);
+        if (!(ptextPtr->flags & kPtextItemNoBboxCalculation)) {
+            ComputePtextBbox(canvas, ptextPtr);
+        }
         return TCL_OK;
     } else {
         return TCL_ERROR;

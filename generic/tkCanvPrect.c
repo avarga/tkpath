@@ -489,17 +489,14 @@ TranslatePrect(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
     PathAtom *atomPtr = prectPtr->atomPtr;
+    Tk_PathStyle *stylePtr = &(prectPtr->style);
 
     TranslatePathAtoms(atomPtr, deltaX, deltaY);
 
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&(prectPtr->bbox), deltaX, deltaY);
     TranslatePathRect(&(prectPtr->totalBbox), deltaX, deltaY);
-
-    prectPtr->header.x1 = (int) prectPtr->totalBbox.x1;
-    prectPtr->header.x2 = (int) prectPtr->totalBbox.x2;
-    prectPtr->header.y1 = (int) prectPtr->totalBbox.y1;
-    prectPtr->header.y2 = (int) prectPtr->totalBbox.y2;
+    SetGenericPathHeaderBbox(&(prectPtr->header), stylePtr->matrixPtr, &(prectPtr->totalBbox));
 }
 
 /*----------------------------------------------------------------------*/

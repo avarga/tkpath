@@ -338,14 +338,11 @@ static void
 TranslatePimage(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
+    Tk_PathStyle *stylePtr = &(pimagePtr->style);
 
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&(pimagePtr->bbox), deltaX, deltaY);
-
-    pimagePtr->header.x1 = (int) pimagePtr->bbox.x1;
-    pimagePtr->header.x2 = (int) pimagePtr->bbox.x2;
-    pimagePtr->header.y1 = (int) pimagePtr->bbox.y1;
-    pimagePtr->header.y2 = (int) pimagePtr->bbox.y2;
+    SetGenericPathHeaderBbox(&(pimagePtr->header), stylePtr->matrixPtr, &(pimagePtr->bbox));
 }
 
 static void

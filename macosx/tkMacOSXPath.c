@@ -222,17 +222,26 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     style = NULL;
     atsuFont = 0;
     atsuSize = FloatToFixed(fontSize);
-/*
-    err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontPostscriptName,
-            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
-*/
-    err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontFamilyName, 
-            kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
-
+    {
+        /* This is old QuickDraw code. */
+        FMFontFamily iFontFamily;
+        FMFontStyle fbStyle;
+        Str255      str;
+    
+        str[0] = strlen(fontFamily);
+        strcpy(str+1, fontFamily);
+        iFontFamily = FMGetFontFamilyFromName(str);
+        err = FMGetFontFromFontFamilyInstance(iFontFamily, 0, &atsuFont, &fbStyle);
+    }
+#if 0 // fonts come out with bold/italic?
+    {
+        err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontFamilyName, 
+                kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
+    }
+#endif
     if (err != noErr) {
         return err;
     }
-    
     err = ATSUCreateStyle(&style);
     if (err != noErr) {
         if (style) ATSUDisposeStyle(style);
@@ -463,7 +472,6 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
     UniChar 		*buffer;
     CFRange 		range;
     CFIndex 		length;
-    char			family[256];
     OSStatus 		err;
     
     if (utf8 == NULL) {
@@ -476,18 +484,8 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
     if (length == 0) {
         return TCL_OK;
     }
-    
-    /*
-     * Do some primitive font fallback.
-     */
-    strncpy(family, textStylePtr->fontFamily, 255);
-    if (strncmp(family, "Times", 6) == 0) {
-        strcpy(family, "Times New Roman");
-    } else if (strncmp(family, "Helvetica", 10) == 0) {
-        strcpy(family, "Arial");
-    }
     range = CFRangeMake(0, length);
-    err = CreateATSUIStyle(family, textStylePtr->fontSize, &atsuStyle);
+    err = CreateATSUIStyle(textStylePtr->fontFamily, textStylePtr->fontSize, &atsuStyle);
     if (err != noErr) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("font style couldn't be created", -1));
         return TCL_ERROR;
