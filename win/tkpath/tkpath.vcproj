@@ -146,6 +146,9 @@
 				RelativePath="..\..\generic\tkCanvPrect.c">
 			</File>
 			<File
+				RelativePath="..\..\generic\tkCanvPtext.c">
+			</File>
+			<File
 				RelativePath="..\..\generic\tkPath.c">
 			</File>
 			<File
