@@ -329,7 +329,7 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
     Tcl_UniChar *uniPtr;
     
 	Tcl_DStringInit(&dsFont);
-    FontFamily fontFamily(Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
+    FontFamily fontFamily((const WCHAR *)Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
 	if (fontFamily.GetLastStatus() != Ok) {
 		fontFamily.GenericSansSerif();
 	}
@@ -354,12 +354,12 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
 	}
     if (style->fillColor != NULL) {
         SolidBrush *brush = PathCreateBrush(style);
-        mGraphics->DrawString(uniPtr, Tcl_UniCharLen(uniPtr), &font, point, brush);
+        mGraphics->DrawString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr), &font, point, brush);
         delete brush;
     }
     if (style->strokeColor != NULL) {
         Pen	*pen = PathCreatePen(style);
-        mPath->AddString(uniPtr, Tcl_UniCharLen(uniPtr), 
+        mPath->AddString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr), 
                 &fontFamily, FontStyleRegular, (float) textStylePtr->fontSize, point, NULL);
         mGraphics->DrawPath(pen, mPath);
         delete pen;
@@ -742,7 +742,7 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     graphics = new Graphics(memHdc);
     
 	Tcl_DStringInit(&dsFont);
-    FontFamily fontFamily(Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
+    FontFamily fontFamily((const WCHAR *)Tcl_UtfToUniCharDString(textStylePtr->fontFamily, -1, &dsFont));
 	if (fontFamily.GetLastStatus() != Ok) {
 		fontFamily.GenericSansSerif();
 	}
@@ -753,7 +753,7 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 	Tcl_DStringFree(&dsFont);
 	Tcl_DStringInit(&ds);
 	uniPtr = Tcl_UtfToUniCharDString(utf8, -1, &ds);
-	graphics->MeasureString(uniPtr, Tcl_UniCharLen(uniPtr), &font, origin, &bounds);
+	graphics->MeasureString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr), &font, origin, &bounds);
 	Tcl_DStringFree(&ds);
     ascent = font.GetSize() * 
            fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
