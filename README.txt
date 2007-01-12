@@ -45,6 +45,6 @@ There are a number of design choices that I'd like to discuss.
  o What shall the precedence of the -style option compared to the individual
    options be?
 
-Copyright (c) 2005-2006  Mats Bengtsson
+Copyright (c) 2005-2007  Mats Bengtsson
 
 BSD style license.

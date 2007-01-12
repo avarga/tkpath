@@ -54,6 +54,7 @@ GetPathInstruction(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int index, char *c
     str = Tcl_GetStringFromObj(objv[index], &len);
     if (isalpha(str[0])) {
         if (len != 1) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
             result = PATH_NEXT_ERROR;
         } else {
             switch (str[0]) {
@@ -66,6 +67,7 @@ GetPathInstruction(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int index, char *c
                     *c = str[0];
                     break;
                 default:
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
                     result = PATH_NEXT_ERROR;
                     break;
             }
