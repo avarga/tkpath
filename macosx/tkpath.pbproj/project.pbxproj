@@ -589,7 +589,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = tkpathtk0.2.dylib;
+				PRODUCT_NAME = tkpathtk0.2.4.dylib;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -759,7 +759,7 @@
 		};
 		9AA54B3C07F99AFF00A80065 = {
 			isa = PBXLibraryReference;
-			path = tkpathtk0.2.dylib;
+			path = tkpathtk0.2.4.dylib;
 			refType = 3;
 		};
 		9AA54B3D07F99B3600A80065 = {
@@ -892,7 +892,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = tkpath0.2.2.dylib;
+				PRODUCT_NAME = tkpath0.2.4.dylib;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -907,7 +907,7 @@
 		};
 		F550918E036C35030130931B = {
 			isa = PBXLibraryReference;
-			path = tkpath0.2.2.dylib;
+			path = tkpath0.2.4.dylib;
 			refType = 3;
 		};
 		F5509190036C35B40130931B = {

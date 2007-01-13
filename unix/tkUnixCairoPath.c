@@ -246,6 +246,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
             pitch);		/* stride */
     cairo_set_source_surface(context->c, surface, x, y);
     cairo_paint(context->c);
+    cairo_surface_destroy(surface);
     if (data) {
         ckfree((char *)data);
     }

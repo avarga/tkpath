@@ -320,6 +320,9 @@ inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo,
     }
     Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
     mGraphics->DrawImage(&bitmap, x, y, width, height);
+    if (data) {
+        ckfree(data);
+    }
 }
 
 inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
