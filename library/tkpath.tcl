@@ -1,4 +1,10 @@
 # tkpath.tcl --
+# 
+# 03Sep06RT - fixes
+#       - "-return" in named gradient proc
+#       - braces all expressions
+#       - removed to [expr ... calls in side if {..}
+#       - recode polygon helper switch pattern in ::coords (bug fix same as v0.1)
 #
 #       Various support procedures for the tkpath package.
 #       
@@ -26,9 +32,9 @@ proc ::tkpath::transform {cmd args} {
     switch -- $cmd {
 	rotate {
 	    set phi [lindex $args 0]
-	    set cosPhi [expr cos($phi)]
-	    set sinPhi [expr sin($phi)]
-	    set msinPhi [expr -1.0*$sinPhi]
+	    set cosPhi [expr {cos($phi)}]
+	    set sinPhi [expr {sin($phi)}]
+	    set msinPhi [expr {-1.0*$sinPhi}]
 	    if {$len == 1} {
 		set matrix \
 		  [list [list $cosPhi $sinPhi] [list $msinPhi $cosPhi] {0 0}]
@@ -38,8 +44,8 @@ proc ::tkpath::transform {cmd args} {
 		set matrix [list \
 		  [list $cosPhi $sinPhi] \
 		  [list $msinPhi $cosPhi] \
-		  [list [expr -$cx*$cosPhi + $cy*$sinPhi + $cx] \
-		  [expr -$cx*$sinPhi - $cy*$cosPhi + $cy]]]
+		  [list [expr {-$cx*$cosPhi + $cy*$sinPhi + $cx}] \
+		  [expr {-$cx*$sinPhi - $cy*$cosPhi + $cy}]]]
 	    } else {
 		return -code error "usage: transform rotate angle ?centerX centerY?"
 	    }
@@ -60,14 +66,14 @@ proc ::tkpath::transform {cmd args} {
 	    if {$len != 1} {
 		return -code error "usage: transform skewx angle"
 	    }
-	    set sinPhi [expr sin([lindex $args 0])]
+	    set sinPhi [expr {sin([lindex $args 0])}]
 	    set matrix [list {1 0} [list $sinPhi 1] {0 0}]
 	}
 	skewy {
 	    if {$len != 1} {
 		return -code error "usage: transform skewy angle"
 	    }
-	    set sinPhi [expr sin([lindex $args 0])]
+	    set sinPhi [expr {sin([lindex $args 0])}]
 	    set matrix [list [list 1 $sinPhi] {0 1} {0 0}]
 	}
 	translate {
@@ -109,9 +115,9 @@ proc ::tkpath::coords {type args} {
 	    }
 	    foreach {cx cy r} $args {break}
 	    set path [list \
-	      M $cx [expr $cy-$r] \
-	      A $r $r 0 0 1 $cx [expr $cy+$r] \
-	      A $r $r 0 0 1 $cx [expr $cy-$r] Z]
+	      M $cx [expr {$cy-$r}] \
+	      A $r $r 0 0 1 $cx [expr {$cy+$r}] \
+	      A $r $r 0 0 1 $cx [expr {$cy-$r}] Z]
 	}
 	ellipse {
 	    if {$len != 4} {
@@ -119,12 +125,15 @@ proc ::tkpath::coords {type args} {
 	    }
 	    foreach {cx cy rx ry} $args {break}
 	    set path [list \
-	      M $cx [expr $cy-$ry] \
-	      A $rx $ry 0 0 1 $cx [expr $cy+$ry] \
-	      A $rx $ry 0 0 1 $cx [expr $cy-$ry] Z]
+	      M $cx [expr {$cy-$ry}] \
+	      A $rx $ry 0 0 1 $cx [expr {$cy+$ry}] \
+	      A $rx $ry 0 0 1 $cx [expr {$cy-$ry}] Z]
 	}
 	polygon {
-	    set path [concat M [lrange $args 0 1] M [lrange $args 2 end] Z]
+            # 03Sep06RT - original coding seems to be a bug as 4 points in
+            # yields only a triangle out.
+	    # set path [concat M [lrange $args 0 1] M [lrange $args 2 end] Z]
+	    set path [concat M [lrange $args 0 end] Z]
 	}
 	polyline {
 	    set path [concat M [lrange $args 0 1] M [lrange $args 2 end]]
@@ -151,25 +160,25 @@ proc ::tkpath::coords {type args} {
 			}
 		    }
 		}
-		set x2 [expr $x+$width]
-		set y2 [expr $y+$height]
-		if {[expr 2*$rx] > $width} {
-		    set rx [expr $width/2.0]
+		set x2 [expr {$x+$width}]
+		set y2 [expr {$y+$height}]
+		if {2*$rx > $width} {
+		    set rx [expr {$width/2.0}]
 		}
-		if {[expr 2*$ry] > $height} {
-		    set ry [expr $height/2.0]
+		if {2*$ry > $height} {
+		    set ry [expr {$height/2.0}]
 		}
-		set dx [expr $width-2*$rx]
-		set dy [expr $height-2*$ry]
+		set dx [expr {$width-2*$rx}]
+		set dy [expr {$height-2*$ry}]
 		set path [list \
-		  M [expr $x+$rx] $y \
+		  M [expr {$x+$rx}] $y \
 		  h $dx \
 		  a $rx $ry 0 0 1 $rx $ry \
 		  v $dy \
 		  a $rx $ry 0 0 1 -$rx $ry \
-		  h [expr -1*$dx] \
+		  h [expr {-1*$dx}] \
 		  a $rx $ry 0 0 1 -$rx -$ry \
-		  v [expr -1*$dy] \
+		  v [expr {-1*$dy}] \
 		  a $rx $ry 0 0 1 $rx -$ry Z]
 	    }
 	}
@@ -207,8 +216,10 @@ proc ::tkpath::gradient {name args} {
 	    return $stops
 	}
 	default {
-	    -return -code error "the named gradient \"$name\" is unknown"
+	    return -code error "the named gradient \"$name\" is unknown"
 	}
     }    
 }
 
+
+ 	  	 
