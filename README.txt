@@ -42,6 +42,9 @@ There are a number of design choices that I'd like to discuss.
    (-fill & -fillgradient) or a single one (-fill) and decide what to do
    while parsing the option.
 
+ o Shall gradients be created with tkpath::gradient create linear|radial ...
+   and its type shall be available through tkpath::gradient type?
+
  o What shall the precedence of the -style option compared to the individual
    options be?
 
