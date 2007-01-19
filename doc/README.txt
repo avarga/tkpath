@@ -24,10 +24,8 @@ if paramters are wrong.
     Fill (fillOptions):
 	-fill color
 	-fillgradient gradientToken
-	-filloffset                   (unimplemented)
 	-fillopacity float (0,1)
 	-fillrule nonzero|evenodd
-	-fillstipple                  (unimplemented)
 
     Stroke (strokeOptions):
 	-stroke color
@@ -35,9 +33,7 @@ if paramters are wrong.
 	-strokelinecap 
 	-strokelinejoin
 	-strokemiterlimit float
-	-strokeoffset                 (unimplemented)
 	-strokeopacity float (0,1)
-	-strokestipple                (unimplemented)
 	-strokewidth float
 
     Generic (genericOptions):
