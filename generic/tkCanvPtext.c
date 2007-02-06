@@ -293,8 +293,13 @@ ConfigurePtext(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     if(state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
     }
-    ptextPtr->numBytes = strlen(ptextPtr->utf8);
-    ptextPtr->numChars = Tcl_NumUtfChars(ptextPtr->utf8, ptextPtr->numBytes);
+    if (ptextPtr->utf8) {
+        ptextPtr->numBytes = strlen(ptextPtr->utf8);
+        ptextPtr->numChars = Tcl_NumUtfChars(ptextPtr->utf8, ptextPtr->numBytes);
+    } else {
+        ptextPtr->numBytes = 0;
+        ptextPtr->numChars = 0;
+    }
     if (state == TK_STATE_HIDDEN) {
         return TCL_OK;
     }
