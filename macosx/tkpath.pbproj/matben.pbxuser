@@ -14,14 +14,14 @@
 			F5C4047C036D26C701BDBE87,
 		);
 		perUserDictionary = {
-			PBXPerProjectTemplateStateSaveDate = 190392722;
+			PBXPerProjectTemplateStateSaveDate = 192465163;
 			PBXWorkspaceContents = (
 				{
 					LeftSlideOut = {
 						Split0 = {
 							Split0 = {
 								NavContent0 = {
-									bookmark = 9AF1968F0B592E3800A80065;
+									bookmark = 9AC748F70B78CA9500A91D4C;
 									history = (
 										9ACCDAFE0581CCD300D671C7,
 										9ACCDAFF0581CCD300D671C7,
@@ -93,10 +93,8 @@
 										9A58E1A20B52964900A80002,
 										9A58E1A40B52964900A80002,
 										9A58E1A60B52964900A80002,
-										9A58FE050B53924A0019F5EB,
 										9A58FE080B53924A0019F5EB,
 										9A58FE090B53924A0019F5EB,
-										9A35CF510B53CDBE00D3AFFC,
 										9A35CF530B53CDBE00D3AFFC,
 										9A35CF540B53CDBE00D3AFFC,
 										9A35CF550B53CDBE00D3AFFC,
@@ -113,7 +111,9 @@
 										9AF196840B592E3800A80065,
 										9AF196850B592E3800A80065,
 										9AF196860B592E3800A80065,
-										9AF196870B592E3800A80065,
+										9AC748F10B78CA9500A91D4C,
+										9AC748F20B78CA9500A91D4C,
+										9AC748F30B78CA9500A91D4C,
 									);
 									prevStack = (
 										9AA9447305822E1E00D671C7,
@@ -3004,6 +3004,9 @@
 										9AF1968C0B592E3800A80065,
 										9AF1968D0B592E3800A80065,
 										9AF1968E0B592E3800A80065,
+										9AC748F40B78CA9500A91D4C,
+										9AC748F50B78CA9500A91D4C,
+										9AC748F60B78CA9500A91D4C,
 									);
 								};
 								NavCount = 1;
@@ -3173,7 +3176,7 @@
 					WindowLocation = "{0, 4}";
 				},
 			);
-			PBXWorkspaceStateSaveDate = 190392722;
+			PBXWorkspaceStateSaveDate = 192465163;
 		};
 		perUserProjectItems = {
 			9A017EE207A0074300A80065 = 9A017EE207A0074300A80065;
@@ -3540,7 +3543,6 @@
 			9A3149D80794234300EBA013 = 9A3149D80794234300EBA013;
 			9A3149D90794234300EBA013 = 9A3149D90794234300EBA013;
 			9A3149DA0794234300EBA013 = 9A3149DA0794234300EBA013;
-			9A35CF510B53CDBE00D3AFFC = 9A35CF510B53CDBE00D3AFFC;
 			9A35CF530B53CDBE00D3AFFC = 9A35CF530B53CDBE00D3AFFC;
 			9A35CF540B53CDBE00D3AFFC = 9A35CF540B53CDBE00D3AFFC;
 			9A35CF550B53CDBE00D3AFFC = 9A35CF550B53CDBE00D3AFFC;
@@ -4168,7 +4170,6 @@
 			9A58EB8A0B47AC1600065602 = 9A58EB8A0B47AC1600065602;
 			9A58EB8B0B47AC1600065602 = 9A58EB8B0B47AC1600065602;
 			9A58EB8C0B47AC1600065602 = 9A58EB8C0B47AC1600065602;
-			9A58FE050B53924A0019F5EB = 9A58FE050B53924A0019F5EB;
 			9A58FE080B53924A0019F5EB = 9A58FE080B53924A0019F5EB;
 			9A58FE090B53924A0019F5EB = 9A58FE090B53924A0019F5EB;
 			9A58FE0B0B53924A0019F5EB = 9A58FE0B0B53924A0019F5EB;
@@ -5942,6 +5943,13 @@
 			9AC6AEEE0A52C653000D940E = 9AC6AEEE0A52C653000D940E;
 			9AC6AEEF0A52C653000D940E = 9AC6AEEF0A52C653000D940E;
 			9AC6AEF00A52C653000D940E = 9AC6AEF00A52C653000D940E;
+			9AC748F10B78CA9500A91D4C = 9AC748F10B78CA9500A91D4C;
+			9AC748F20B78CA9500A91D4C = 9AC748F20B78CA9500A91D4C;
+			9AC748F30B78CA9500A91D4C = 9AC748F30B78CA9500A91D4C;
+			9AC748F40B78CA9500A91D4C = 9AC748F40B78CA9500A91D4C;
+			9AC748F50B78CA9500A91D4C = 9AC748F50B78CA9500A91D4C;
+			9AC748F60B78CA9500A91D4C = 9AC748F60B78CA9500A91D4C;
+			9AC748F70B78CA9500A91D4C = 9AC748F70B78CA9500A91D4C;
 			9AC94F32078EEB7500A80065 = 9AC94F32078EEB7500A80065;
 			9AC94F36078EEB7500A80065 = 9AC94F36078EEB7500A80065;
 			9AC94F37078EEB7500A80065 = 9AC94F37078EEB7500A80065;
@@ -6119,7 +6127,6 @@
 			9AF196840B592E3800A80065 = 9AF196840B592E3800A80065;
 			9AF196850B592E3800A80065 = 9AF196850B592E3800A80065;
 			9AF196860B592E3800A80065 = 9AF196860B592E3800A80065;
-			9AF196870B592E3800A80065 = 9AF196870B592E3800A80065;
 			9AF196880B592E3800A80065 = 9AF196880B592E3800A80065;
 			9AF196890B592E3800A80065 = 9AF196890B592E3800A80065;
 			9AF1968A0B592E3800A80065 = 9AF1968A0B592E3800A80065;
@@ -6127,7 +6134,6 @@
 			9AF1968C0B592E3800A80065 = 9AF1968C0B592E3800A80065;
 			9AF1968D0B592E3800A80065 = 9AF1968D0B592E3800A80065;
 			9AF1968E0B592E3800A80065 = 9AF1968E0B592E3800A80065;
-			9AF1968F0B592E3800A80065 = 9AF1968F0B592E3800A80065;
 			9AF8C4BA0A61353500A80065 = 9AF8C4BA0A61353500A80065;
 			9AF8C4BB0A61353500A80065 = 9AF8C4BB0A61353500A80065;
 			9AF8C4BC0A61353500A80065 = 9AF8C4BC0A61353500A80065;
@@ -9819,16 +9825,6 @@
 		path = /Developer/Documentation/CoreTechnologies/graphics/Quartz2D/Quartz_2D_Ref/index.html;
 		refType = 0;
 	};
-	9A35CF510B53CDBE00D3AFFC = {
-		fRef = 9AA1ECE6077FF68100A80065;
-		isa = PBXTextBookmark;
-		name = "tkMacOSXPath.c: 244";
-		rLen = 0;
-		rLoc = 7204;
-		rType = 0;
-		vrLen = 1477;
-		vrLoc = 6279;
-	};
 	9A35CF530B53CDBE00D3AFFC = {
 		fRef = 9A671A8F099DC683007AF773;
 		isa = PBXTextBookmark;
@@ -10034,7 +10030,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 415";
 		rLen = 0;
-		rLoc = 14706;
+		rLoc = 14823;
 		rType = 0;
 		vrLen = 1481;
 		vrLoc = 12541;
@@ -10064,7 +10060,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 409";
 		rLen = 0;
-		rLoc = 14615;
+		rLoc = 14732;
 		rType = 0;
 		vrLen = 1496;
 		vrLoc = 12526;
@@ -10490,7 +10486,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: ptextPtr";
 		rLen = 0;
-		rLoc = 11742;
+		rLoc = 11859;
 		rType = 0;
 		vrLen = 1555;
 		vrLoc = 9394;
@@ -13168,7 +13164,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 290";
 		rLen = 15;
-		rLoc = 11643;
+		rLoc = 11760;
 		rType = 0;
 		vrLen = 904;
 		vrLoc = 9700;
@@ -13198,7 +13194,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 322";
 		rLen = 0;
-		rLoc = 12320;
+		rLoc = 12437;
 		rType = 0;
 		vrLen = 1492;
 		vrLoc = 9648;
@@ -13218,7 +13214,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 279";
 		rLen = 0;
-		rLoc = 11008;
+		rLoc = 11125;
 		rType = 0;
 		vrLen = 1595;
 		vrLoc = 8914;
@@ -13268,7 +13264,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 276";
 		rLen = 0;
-		rLoc = 10812;
+		rLoc = 10929;
 		rType = 0;
 		vrLen = 1595;
 		vrLoc = 8914;
@@ -15930,7 +15926,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 283";
 		rLen = 0;
-		rLoc = 11402;
+		rLoc = 11519;
 		rType = 0;
 		vrLen = 895;
 		vrLoc = 9094;
@@ -16223,16 +16219,6 @@
 		path = /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/Headers/SFNTTypes.h;
 		refType = 0;
 	};
-	9A58FE050B53924A0019F5EB = {
-		fRef = 9A5A2A920B45059700496554;
-		isa = PBXTextBookmark;
-		name = "tkCanvPtext.c: 162";
-		rLen = 0;
-		rLoc = 6051;
-		rType = 0;
-		vrLen = 1718;
-		vrLoc = 5493;
-	};
 	9A58FE080B53924A0019F5EB = {
 		fRef = 9A58FE1A0B53924A0019F5EB;
 		isa = PBXTextBookmark;
@@ -16288,7 +16274,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 301";
 		rLen = 0;
-		rLoc = 10757;
+		rLoc = 10874;
 		rType = 0;
 		vrLen = 1603;
 		vrLoc = 10510;
@@ -16308,7 +16294,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 302";
 		rLen = 0;
-		rLoc = 10758;
+		rLoc = 10875;
 		rType = 0;
 		vrLen = 1188;
 		vrLoc = 9835;
@@ -23259,7 +23245,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 295";
 		rLen = 0;
-		rLoc = 11381;
+		rLoc = 11498;
 		rType = 0;
 		vrLen = 1445;
 		vrLoc = 9717;
@@ -32550,7 +32536,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 321";
 		rLen = 0;
-		rLoc = 12016;
+		rLoc = 12133;
 		rType = 0;
 		vrLen = 1532;
 		vrLoc = 10694;
@@ -32620,7 +32606,7 @@
 		isa = PBXTextBookmark;
 		name = "tkCanvPtext.c: 329";
 		rLen = 0;
-		rLoc = 12220;
+		rLoc = 12337;
 		rType = 0;
 		vrLen = 847;
 		vrLoc = 10984;
@@ -34272,6 +34258,76 @@
 		rType = 0;
 		vrLen = 932;
 		vrLoc = 29503;
+	};
+	9AC748F10B78CA9500A91D4C = {
+		fRef = 9A5A2A920B45059700496554;
+		isa = PBXTextBookmark;
+		name = "tkCanvPtext.c: 309";
+		rLen = 0;
+		rLoc = 11073;
+		rType = 0;
+		vrLen = 1690;
+		vrLoc = 9695;
+	};
+	9AC748F20B78CA9500A91D4C = {
+		fRef = 9AA1ECE6077FF68100A80065;
+		isa = PBXTextBookmark;
+		name = "tkMacOSXPath.c: 454";
+		rLen = 0;
+		rLoc = 13744;
+		rType = 0;
+		vrLen = 923;
+		vrLoc = 13470;
+	};
+	9AC748F30B78CA9500A91D4C = {
+		fRef = 9A49B81F07A7AA2F00A80065;
+		isa = PBXTextBookmark;
+		name = "tkUnixCairoPath.c: 228";
+		rLen = 0;
+		rLoc = 7474;
+		rType = 0;
+		vrLen = 978;
+		vrLoc = 7184;
+	};
+	9AC748F40B78CA9500A91D4C = {
+		fRef = 9A49B81F07A7AA2F00A80065;
+		isa = PBXTextBookmark;
+		name = "tkUnixCairoPath.c: 228";
+		rLen = 0;
+		rLoc = 7474;
+		rType = 0;
+		vrLen = 978;
+		vrLoc = 7184;
+	};
+	9AC748F50B78CA9500A91D4C = {
+		fRef = 9A5A2A920B45059700496554;
+		isa = PBXTextBookmark;
+		name = "tkCanvPtext.c: 309";
+		rLen = 0;
+		rLoc = 11073;
+		rType = 0;
+		vrLen = 1690;
+		vrLoc = 9695;
+	};
+	9AC748F60B78CA9500A91D4C = {
+		fRef = 9AA1ECE6077FF68100A80065;
+		isa = PBXTextBookmark;
+		name = "tkMacOSXPath.c: 454";
+		rLen = 0;
+		rLoc = 13744;
+		rType = 0;
+		vrLen = 923;
+		vrLoc = 13470;
+	};
+	9AC748F70B78CA9500A91D4C = {
+		fRef = 9A49B81F07A7AA2F00A80065;
+		isa = PBXTextBookmark;
+		name = "tkUnixCairoPath.c: 228";
+		rLen = 0;
+		rLoc = 7474;
+		rType = 0;
+		vrLen = 1411;
+		vrLoc = 9250;
 	};
 	9AC94F32078EEB7500A80065 = {
 		fRef = 9AC94F3C078EEB7500A80065;
@@ -36054,34 +36110,10 @@
 	9AF196840B592E3800A80065 = {
 		isa = PBXTargetBookmark;
 		trg = 9AA54B2707F99AFF00A80065;
-		uiCtxt = {
-			TOCViewDetailVisibleRect = "{{0, 0}, {733, 233}}";
-			TOCViewExpandedItems = (
-				"com.apple.target-editor-pane.settings",
-				"com.apple.target-editor-pane.settings.simple",
-				"com.apple.target-editor-pane.buildphases",
-			);
-			TOCViewMasterVisibleRect = "{{0, 0}, {293, 665}}";
-			TOCViewSelectedItems = (
-				PBXTargetSummarySettingsModule,
-			);
-		};
 	};
 	9AF196850B592E3800A80065 = {
 		isa = PBXTargetBookmark;
 		trg = F550918D036C35030130931B;
-		uiCtxt = {
-			TOCViewDetailVisibleRect = "{{0, 0}, {693, 233}}";
-			TOCViewExpandedItems = (
-				"com.apple.target-editor-pane.settings",
-				"com.apple.target-editor-pane.settings.simple",
-				"com.apple.target-editor-pane.buildphases",
-			);
-			TOCViewMasterVisibleRect = "{{0, 0}, {276, 400}}";
-			TOCViewSelectedItems = (
-				PBXTargetSummarySettingsModule,
-			);
-		};
 	};
 	9AF196860B592E3800A80065 = {
 		fRef = 9A6C4D7407AD01B100A80065;
@@ -36092,16 +36124,6 @@
 		rType = 0;
 		vrLen = 1620;
 		vrLoc = 7996;
-	};
-	9AF196870B592E3800A80065 = {
-		fRef = 9A49B81F07A7AA2F00A80065;
-		isa = PBXTextBookmark;
-		name = "tkUnixCairoPath.c: 249";
-		rLen = 0;
-		rLoc = 8145;
-		rType = 0;
-		vrLen = 1606;
-		vrLoc = 6725;
 	};
 	9AF196880B592E3800A80065 = {
 		fRef = 9A66FCF40978E3400086B7B8;
@@ -36126,50 +36148,14 @@
 	9AF1968A0B592E3800A80065 = {
 		isa = PBXTargetBookmark;
 		trg = F550918D036C35030130931B;
-		uiCtxt = {
-			TOCViewDetailVisibleRect = "{{0, 0}, {733, 233}}";
-			TOCViewExpandedItems = (
-				"com.apple.target-editor-pane.settings",
-				"com.apple.target-editor-pane.settings.simple",
-				"com.apple.target-editor-pane.buildphases",
-			);
-			TOCViewMasterVisibleRect = "{{0, 0}, {293, 665}}";
-			TOCViewSelectedItems = (
-				PBXTargetSummarySettingsModule,
-			);
-		};
 	};
 	9AF1968B0B592E3800A80065 = {
 		isa = PBXTargetBookmark;
 		trg = 9AA54B2707F99AFF00A80065;
-		uiCtxt = {
-			TOCViewDetailVisibleRect = "{{0, 0}, {733, 233}}";
-			TOCViewExpandedItems = (
-				"com.apple.target-editor-pane.settings",
-				"com.apple.target-editor-pane.settings.simple",
-				"com.apple.target-editor-pane.buildphases",
-			);
-			TOCViewMasterVisibleRect = "{{0, 0}, {293, 665}}";
-			TOCViewSelectedItems = (
-				PBXTargetSummarySettingsModule,
-			);
-		};
 	};
 	9AF1968C0B592E3800A80065 = {
 		isa = PBXTargetBookmark;
 		trg = F550918D036C35030130931B;
-		uiCtxt = {
-			TOCViewDetailVisibleRect = "{{0, 0}, {693, 233}}";
-			TOCViewExpandedItems = (
-				"com.apple.target-editor-pane.settings",
-				"com.apple.target-editor-pane.settings.simple",
-				"com.apple.target-editor-pane.buildphases",
-			);
-			TOCViewMasterVisibleRect = "{{0, 0}, {276, 400}}";
-			TOCViewSelectedItems = (
-				PBXTargetSummarySettingsModule,
-			);
-		};
 	};
 	9AF1968D0B592E3800A80065 = {
 		fRef = 9A49B81F07A7AA2F00A80065;
@@ -36190,16 +36176,6 @@
 		rType = 0;
 		vrLen = 1620;
 		vrLoc = 7996;
-	};
-	9AF1968F0B592E3800A80065 = {
-		fRef = 9A49B81F07A7AA2F00A80065;
-		isa = PBXTextBookmark;
-		name = "tkUnixCairoPath.c: 242";
-		rLen = 35;
-		rLoc = 7875;
-		rType = 0;
-		vrLen = 1426;
-		vrLoc = 7184;
 	};
 	9AF8C4BA0A61353500A80065 = {
 		fRef = 9A5BCDA007E2D8B400B6FA03;
