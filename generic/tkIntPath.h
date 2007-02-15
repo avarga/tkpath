@@ -228,7 +228,8 @@ enum {
  * The actual path drawing commands which are all platform specific.
  */
  
-TkPathContext		TkPathInit(Tk_Window tkwin, Drawable d);
+TkPathContext	TkPathInit(Tk_Window tkwin, Drawable d);
+TkPathContext	TkPathInitSurface(int width, int height);
 void		TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr);
 void    	TkPathEndPath(TkPathContext ctx);
 void		TkPathMoveTo(TkPathContext ctx, double x, double y);
