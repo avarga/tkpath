@@ -38,8 +38,8 @@ const float kValidRange[8] = {0, 1, 0, 1, 0, 1, 0, 1};
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
-    Drawable 		d;
     CGContextRef 	c;
+    CGrafPtr		p;
 } TkPathContext_;
 
 typedef struct PathATSUIRecord {
@@ -50,7 +50,6 @@ typedef struct PathATSUIRecord {
 
 void
 PathSetUpCGContext(    
-        MacDrawable *macWin,
         CGrafPtr destPort,
         CGContextRef *contextPtr)
 {
@@ -79,7 +78,6 @@ PathSetUpCGContext(
 
 void
 PathReleaseCGContext(
-        MacDrawable *macWin,
         CGrafPtr destPort, 
         CGContextRef *outContext)
 {
@@ -277,12 +275,53 @@ TkPathContext
 TkPathInit(Tk_Window tkwin, Drawable d)
 {
     CGContextRef cgContext;
+    CGrafPtr p;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
     
-    PathSetUpCGContext((MacDrawable *) d, TkMacOSXGetDrawablePort(d), &cgContext);
-    context->d = d;
+    p = TkMacOSXGetDrawablePort(d);
+    PathSetUpCGContext(p, &cgContext);
     context->c = cgContext;
+    context->p = p;
     return (TkPathContext) context;
+}
+#if 0
+/* Create a bitmap context.  The context draws into a bitmap which is
+ * `width' pixels wide and `height' pixels high.  The number of components
+ * for each pixel is specified by `colorspace', which also may specify a
+ * destination color profile. The number of bits for each component of a
+ * pixel is specified by `bitsPerComponent', which must be 1, 2, 4, or 8.
+ * Each row of the bitmap consists of `bytesPerRow' bytes, which must be at
+ * least `(width * bitsPerComponent * number of components + 7)/8' bytes.
+ * `data' points a block of memory at least `bytesPerRow * height' bytes.
+ * `alphaInfo' specifies whether the bitmap should contain an alpha
+ * channel, and how it's to be generated. */
+
+CG_EXTERN CGContextRef CGBitmapContextCreate(void *data, size_t width, size_t height, size_t bitsPerComponent, size_t bytesPerRow, CGColorSpaceRef colorspace, CGImageAlphaInfo alphaInfo);
+#endif
+
+TkPathContext
+TkPathInitSurface(int width, int height)
+{
+    CGContextRef cgContext;
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    size_t bytesPerRow;
+    char *data;
+
+    // Move up into own function
+    
+    bytesPerRow = 4*width;
+    // round up to nearest multiple of 16
+
+    data = ckalloc(height*bytesPerRow);
+    
+    /* Make it RGBA with 32 bit depth. */
+    cgContext = CGBitmapContextCreate(data, width, height, 8, bytesPerRow, 
+            GetTheColorSpaceRef(), kCGImageAlphaLast);
+    if (cgContext == NULL) {
+    
+    }
+    context->c = cgContext; 
+    context->p = NULL;
 }
 
 void
@@ -621,7 +660,7 @@ void
 TkPathFree(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    PathReleaseCGContext((MacDrawable *) context->d, TkMacOSXGetDrawablePort(context->d), &(context->c));
+    PathReleaseCGContext(context->p, &(context->c));
     ckfree((char *) ctx);
 }
 

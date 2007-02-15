@@ -94,6 +94,7 @@
 				9A5A2A920B45059700496554,
 				9A58E5420796814B00FBE143,
 				9AA0B6C407DD8C9900A80065,
+				9AB6AB700B835DCD00A80002,
 				9A5BCDA007E2D8B400B6FA03,
 				9AA54B1507F999B200A80065,
 				9A5BCD9E07E2D81600B6FA03,
@@ -656,6 +657,7 @@
 				9A6265C109C474B3009A2B1E,
 				9AB087DA0A38001400A80065,
 				9A5A2A940B45059700496554,
+				9AB6AB720B835DCD00A80002,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -793,6 +795,25 @@
 			settings = {
 			};
 		};
+		9AB6AB700B835DCD00A80002 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = tkPathSurface.c;
+			path = /Users/matben/C/cvs/tkpath/generic/tkPathSurface.c;
+			refType = 0;
+		};
+		9AB6AB710B835DCD00A80002 = {
+			fileRef = 9AB6AB700B835DCD00A80002;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9AB6AB720B835DCD00A80002 = {
+			fileRef = 9AB6AB700B835DCD00A80002;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		9AF2FEBB079410DB00AB783C = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -845,6 +866,7 @@
 				9A98808909C9595D00B844F8,
 				9AB087D90A38001400A80065,
 				9A5A2A930B45059700496554,
+				9AB6AB710B835DCD00A80002,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

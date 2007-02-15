@@ -38,6 +38,7 @@ extern int 	RadialGradientCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 extern int 	PixelAlignObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
+extern int	InitSurface(Tcl_Interp *interp);
 
 
 #ifdef _WIN32
@@ -117,6 +118,7 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     Tcl_CreateObjCommand(interp, "::tkpath::radialgradient",
             RadialGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathGradientInit(interp);
+    InitSurface(interp);
 
     /*
      * Style object.
