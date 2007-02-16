@@ -112,6 +112,11 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     return (TkPathContext) _NewPathContext(tkwin, d);
 }
 
+TkPathContext TkPathInitSurface(int width, int height)
+{
+
+}
+
 void
 TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
@@ -314,6 +319,12 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     PathRect r = {0, 0, 0, 0};
     return r;
+}
+
+void    	
+TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
+{
+
 }
 
 void TkPathClipToPath(TkPathContext ctx, int fillRule)

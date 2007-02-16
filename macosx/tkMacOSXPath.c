@@ -303,6 +303,7 @@ TkPathInitSurface(int width, int height)
     /* Round up to nearest multiple of 16 */
     bytesPerRow = (bytesPerRow + (16-1)) & ~(16-1);
     data = ckalloc(height*bytesPerRow);
+    memset(data, '\0', height*bytesPerRow);		
     
     /* Make it RGBA with 32 bit depth. */
     cgContext = CGBitmapContextCreate(data, width, height, 8, bytesPerRow, 
@@ -588,6 +589,13 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     r.x2 = Fix2X(after - before);
     r.y2 = Fix2X(descent);
     return r;
+}
+
+void    	
+TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextClearRect(context->c, CGRectMake(x, y, width, height));
 }
 
 void		

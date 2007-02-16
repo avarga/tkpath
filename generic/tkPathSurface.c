@@ -26,6 +26,9 @@ static int 	SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, T
 static int 	SurfaceDestroyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr);
 static void	SurfaceDeletedProc(ClientData clientData);
 static int 	SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
+static int 	SurfaceEraseObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
+
+static int	SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) ;
 
 static int	uid = 0;
 static char *kSurfaceNameBase = "tkpath::surface";
@@ -121,22 +124,30 @@ SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONS
             break;
         }
         case kPathSurfaceCmdCreate: {
-            SurfaceCreateObjCmd(interp, surfacePtr, objc, objv);
+            result = SurfaceCreateObjCmd(interp, surfacePtr, objc, objv);
             break;
         }
         case kPathSurfaceCmdDestroy: {
-            SurfaceDestroyObjCmd(interp, surfacePtr);
+            result = SurfaceDestroyObjCmd(interp, surfacePtr);
             break;
         }
         case kPathSurfaceCmdErase: {
-
+            result = SurfaceEraseObjCmd(interp, surfacePtr, objc, objv);
             break;
         }
         case kPathSurfaceCmdHeight: {
+            if (objc != 2) {
+                Tcl_WrongNumArgs(interp, 2, objv, NULL);
+                return TCL_ERROR;
+            }
             Tcl_SetObjResult(interp, Tcl_NewIntObj(surfacePtr->height));
             break;
         }
         case kPathSurfaceCmdWidth: {
+            if (objc != 2) {
+                Tcl_WrongNumArgs(interp, 2, objv, NULL);
+                return TCL_ERROR;
+            }
             Tcl_SetObjResult(interp, Tcl_NewIntObj(surfacePtr->width));
             break;
         }
@@ -148,21 +159,6 @@ static int
 SurfaceDestroyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr)
 {
     Tcl_DeleteCommand(interp, surfacePtr->token);
-    return TCL_OK;
-}
-
-static int 
-SurfaceDestroyObjCmdBUBUBU(Tcl_Interp* interp, PathSurface *surfacePtr)
-{
-    Tcl_HashEntry *hPtr;
-
-    hPtr = Tcl_FindHashEntry(surfaceHashPtr, surfacePtr->token);
-    if (hPtr != NULL) {
-        Tcl_DeleteHashEntry(hPtr);
-    }
-    TkPathFree(surfacePtr->ctx);
-    ckfree(surfacePtr->token);
-    ckfree((char *)surfacePtr);
     return TCL_OK;
 }
 
@@ -209,7 +205,7 @@ SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
 
     switch (index) {
         case kPathSurfaceItemPath: {
-
+            result = SurfaceCreatePath(interp, surfacePtr, objc, objv);
             break;
         }
         case kPathSurfaceItemPrect: {
@@ -219,3 +215,39 @@ SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
     }
     return result;
 }
+
+static int
+SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
+{
+    Tk_PathStyle 	style;
+    PathAtom 		*atomPtr = NULL;
+    int				len;
+    int 			result = TCL_OK;
+
+
+    TkPathCreateStyle(&style);
+    result = TkPathParseToAtoms(interp, objv[3], &atomPtr, &len);
+
+
+    return result;
+}
+
+static int 
+SurfaceEraseObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[])
+{
+    int x, y, width, height;
+    
+    if (objc != 6) {
+        Tcl_WrongNumArgs(interp, 2, objv, "x y width height");
+        return TCL_ERROR;
+    }
+    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK) ||
+            (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) ||
+            (Tcl_GetIntFromObj(interp, objv[4], &width) != TCL_OK) ||
+            (Tcl_GetIntFromObj(interp, objv[5], &height) != TCL_OK)) {
+        return TCL_ERROR;
+    }
+    TkPathSurfaceErase(surfacePtr->ctx, x, y, width, height);
+    return TCL_OK;
+}
+
