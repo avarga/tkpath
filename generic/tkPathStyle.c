@@ -401,6 +401,38 @@ PathStyleInit(Tcl_Interp* interp)
 /*
  *----------------------------------------------------------------------
  *
+ * TkPathConfigStyle --
+ *
+ *		Parses a list of Tcl objects to an already allocated Tk_PathStyle.
+ *
+ * Results:
+ *		Standard Tcl result
+ *
+ * Side effects:
+ *		Options allocated. Use Tk_FreeConfigOptions when finished.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkPathConfigStyle(Tcl_Interp* interp, Tk_PathStyle *stylePtr, int objc, Tcl_Obj* CONST objv[])
+{
+    Tk_Window tkwin = Tk_MainWindow(interp);    
+	stylePtr->optionTable = gStyleOptionTable; 
+    if (Tk_InitOptions(interp, (char *)stylePtr, gStyleOptionTable, tkwin) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (Tk_SetOptions(interp, (char *)stylePtr, gStyleOptionTable, 	
+            objc, objv, tkwin, NULL, NULL) != TCL_OK) {
+        Tk_FreeConfigOptions((char *)stylePtr, gStyleOptionTable, NULL);
+        return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * StyleObjCmd --
  *
  *		This implements the tkpath::style command.  

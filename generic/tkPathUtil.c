@@ -9,6 +9,7 @@
  */
 
 #include "tkIntPath.h"
+#include "tkCanvPathUtil.h"
 
 /*
  *--------------------------------------------------------------
@@ -114,6 +115,16 @@ TkPathPaintPath(TkPathContext context,
     } else if (stylePtr->strokeColor != NULL) {
         TkPathStroke(context, stylePtr);
     }
+}
+
+PathRect
+TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr)
+{
+    PathRect bare, total;
+    
+    bare = GetGenericBarePathBbox(atomPtr);
+    total = GetGenericPathTotalBboxFromBare(atomPtr, stylePtr, &bare);
+    return total;
 }
 
 /* from mozilla */

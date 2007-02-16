@@ -238,6 +238,7 @@ void		TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr);
  
 void 		TkPathCreateStyle(Tk_PathStyle *style);
 void 		TkPathDeleteStyle(Display *display, Tk_PathStyle *style);
+int			TkPathConfigStyle(Tcl_Interp* interp, Tk_PathStyle *stylePtr, int objc, Tcl_Obj* CONST objv[]);
 
 /*
  * end block for C++

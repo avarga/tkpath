@@ -27,7 +27,7 @@ extern Tcl_Interp *gInterp;
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
-    Drawable 			d;
+    //Drawable 			d;
     cairo_t*	 		c;
     cairo_surface_t* 	surface;
 } TkPathContext_;
@@ -53,14 +53,21 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     surface = cairo_xlib_surface_create(Tk_Display(tkwin), d, Tk_Visual(tkwin), Tk_Width(tkwin), Tk_ReqHeight(tkwin));
     c = cairo_create(surface);
     context->c = c;
-    context->d = d;
+    //context->d = d;
     context->surface = surface;
     return (TkPathContext) context;
 }
 
 TkPathContext TkPathInitSurface(int width, int height)
 {
-
+    cairo_t *c;
+    cairo_surface_t *surface;
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    c = cairo_create(surface);
+    context->c = c;
+    context->surface = surface;
+    return (TkPathContext) context;
 }
 
 void
@@ -329,6 +336,12 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 void    	
 TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+    /* TODO */
+    cairo_paint_with_alpha(context->c, 0.0);
+    cairo_rectangle(context->c, x, y, width, height);
+    cairo_fill_preserve(context->c);
 
 }
 

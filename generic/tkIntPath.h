@@ -262,6 +262,7 @@ void		TkPathDrawPath(Tk_Window tkwin, Drawable drawable,
                     PathRect *bboxPtr);
 void		TkPathPaintPath(TkPathContext context, PathAtom *atomPtr,
                     Tk_PathStyle *stylePtr, PathRect *bboxPtr);
+PathRect	TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr);
 
 /* Various stuff. */
 int 		TableLookup(LookupTable *map, int n, int from);

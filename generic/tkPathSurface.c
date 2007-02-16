@@ -219,16 +219,28 @@ SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
 static int
 SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
 {
+    TkPathContext 	context = surfacePtr->ctx;
     Tk_PathStyle 	style;
     PathAtom 		*atomPtr = NULL;
+    PathRect		bbox;
     int				len;
     int 			result = TCL_OK;
 
-
     TkPathCreateStyle(&style);
-    result = TkPathParseToAtoms(interp, objv[3], &atomPtr, &len);
-
-
+    if (TCL_OK != TkPathParseToAtoms(interp, objv[3], &atomPtr, &len)) {
+        return TCL_ERROR;
+    }
+    if (TCL_OK != TkPathConfigStyle(interp, &style, objc-4, objv+4)) {
+        return TCL_ERROR;
+    }
+    if (TkPathMakePath(context, atomPtr, &style) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    bbox = TkPathGetTotalBbox(atomPtr, &style);
+    TkPathPaintPath(context, atomPtr, &style, &bbox);
+    TkPathFree(context);
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &style);
+    TkPathFreeAtoms(atomPtr);
     return result;
 }
 

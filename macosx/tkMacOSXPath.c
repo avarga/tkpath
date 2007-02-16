@@ -303,7 +303,7 @@ TkPathInitSurface(int width, int height)
     /* Round up to nearest multiple of 16 */
     bytesPerRow = (bytesPerRow + (16-1)) & ~(16-1);
     data = ckalloc(height*bytesPerRow);
-    memset(data, '\0', height*bytesPerRow);		
+    //memset(data, '\0', height*bytesPerRow);		
     
     /* Make it RGBA with 32 bit depth. */
     cgContext = CGBitmapContextCreate(data, width, height, 8, bytesPerRow, 
@@ -312,6 +312,7 @@ TkPathInitSurface(int width, int height)
         ckfree((char *) context);
         return NULL;
     }
+    CGContextClearRect(cgContext, CGRectMake(0, 0, width, height));
     context->c = cgContext; 
     context->port = NULL;
     context->data = data;
