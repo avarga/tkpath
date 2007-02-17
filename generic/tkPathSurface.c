@@ -23,6 +23,7 @@ static Tcl_HashTable 	*surfaceHashPtr = NULL;
 
 static int 	NewSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
 static int 	SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
+static int 	SurfaceCopyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 static int 	SurfaceDestroyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr);
 static void	SurfaceDeletedProc(ClientData clientData);
 static int 	SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
@@ -120,7 +121,7 @@ SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONS
 
     switch (index) {
         case kPathSurfaceCmdCopy: {
-
+            result = SurfaceCopyObjCmd(interp, surfacePtr, objc, objv);
             break;
         }
         case kPathSurfaceCmdCreate: {
@@ -155,6 +156,14 @@ SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONS
     
     return result;
 }
+
+static int 
+SurfaceCopyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[])
+{
+
+    return TCL_OK;
+}
+
 static int 
 SurfaceDestroyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr)
 {
@@ -224,7 +233,6 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
     PathAtom 		*atomPtr = NULL;
     PathRect		bbox;
     int				len;
-    int 			result = TCL_OK;
 
     TkPathCreateStyle(&style);
     if (TCL_OK != TkPathParseToAtoms(interp, objv[3], &atomPtr, &len)) {
@@ -241,7 +249,7 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
     TkPathFree(context);
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &style);
     TkPathFreeAtoms(atomPtr);
-    return result;
+    return TCL_OK;
 }
 
 static int 

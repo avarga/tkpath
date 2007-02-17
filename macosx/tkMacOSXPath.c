@@ -599,6 +599,52 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
     CGContextClearRect(context->c, CGRectMake(x, y, width, height));
 }
 
+void
+TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo, int x, int y, int w, int h)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextRef c = context->c;
+    Tk_PhotoImageBlock block;
+    unsigned char *src, *dst, *data;
+    unsigned char *pixel;
+    int width, height;
+    int bytesPerRow;
+    int i, j;
+    
+    width = CGBitmapContextGetWidth(c);
+    height = CGBitmapContextGetHeight(c);
+    data = CGBitmapContextGetData(c);
+    bytesPerRow = CGBitmapContextGetBytesPerRow(c);
+    
+    /* Return value? */
+    Tk_PhotoGetImage(photo, &block);
+    
+    pixel = ckalloc(height*bytesPerRow);
+
+
+    for (i = 0; i < height; i++) {
+        src = data + i*bytesPerRow;
+        dst = pixel + i*bytesPerRow;
+        /* Copy XRGB to RGBX in one shot, alphas in a loop. */
+        /* @@@ Keep ARGB format in photo? */
+        memcpy(dst, src+1, 4*width-1);
+        for (j = 0; j < width; j++, src += 4, dst += 4) {
+            *(dst+3) = *src;
+        }
+    }
+    block.pixelPtr = pixel;
+    block.width = width;
+    block.height = height;
+    block.pitch = bytesPerRow;
+    block.pixelSize = 4;
+    block.offset[0] = 0;
+    block.offset[1] = 1;
+    block.offset[2] = 2;
+    block.offset[3] = 3;
+    //Tk_PhotoPutBlock(photo, &block, x, y, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
+
+}
+
 void		
 TkPathClipToPath(TkPathContext ctx, int fillRule)
 {

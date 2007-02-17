@@ -17,7 +17,7 @@
 
 /* Keep patch level release numbers odd and set even only on release. */
 #define TKPATH_VERSION    "0.2"
-#define TKPATH_PATCHLEVEL "0.2.2"
+#define TKPATH_PATCHLEVEL "0.2.4"
 
 extern Tk_ItemType tkPathType;
 extern Tk_ItemType tkPrectType;
@@ -110,6 +110,7 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     Tcl_CreateObjCommand(interp, "::tkpath::pixelalign",
             PixelAlignObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 
+    // @@@ Move these to Init functions inside the files containing commands
     /*
      * Make separate gradient objects, similar to SVG.
      */
@@ -118,14 +119,14 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     Tcl_CreateObjCommand(interp, "::tkpath::radialgradient",
             RadialGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathGradientInit(interp);
-    InitSurface(interp);
+    //InitSurface(interp);
 
     /*
      * Style object.
      */
     Tcl_CreateObjCommand(interp, "::tkpath::style",
             StyleObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    //PathStyleInit(interp);
+    PathStyleInit(interp);
 
     return Tcl_PkgProvide(interp, "tkpath", TKPATH_PATCHLEVEL);
 }

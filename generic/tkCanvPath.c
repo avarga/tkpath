@@ -287,6 +287,8 @@ PathCoords(
                 Tcl_DecrRefCount(pathPtr->normPathObjPtr);
             }
             TkPathNormalize(interp, pathPtr->atomPtr, &(pathPtr->normPathObjPtr));
+            Tcl_IncrRefCount(pathPtr->normPathObjPtr);
+            pathPtr->flags &= ~kPathItemNeedNewNormalizedPath;
         }
         Tcl_SetObjResult(interp, pathPtr->normPathObjPtr);
         return TCL_OK;
