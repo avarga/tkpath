@@ -160,7 +160,18 @@ SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONS
 static int 
 SurfaceCopyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[])
 {
-
+    Tk_PhotoHandle photo;
+    
+    if (objc != 3) {
+        Tcl_WrongNumArgs(interp, 2, objv, "image");
+        return TCL_ERROR;
+    }
+    photo = Tk_FindPhoto( interp, Tcl_GetString(objv[2]) );
+    if (photo == NULL) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("didn't find that image", -1));
+        return TCL_ERROR;
+    }
+    TkPathSurfaceToPhoto(surfacePtr->ctx, photo);
     return TCL_OK;
 }
 
@@ -246,7 +257,7 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
     }
     bbox = TkPathGetTotalBbox(atomPtr, &style);
     TkPathPaintPath(context, atomPtr, &style, &bbox);
-    TkPathFree(context);
+    TkPathEndPath(context);
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &style);
     TkPathFreeAtoms(atomPtr);
     return TCL_OK;

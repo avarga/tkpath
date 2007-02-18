@@ -303,7 +303,6 @@ TkPathInitSurface(int width, int height)
     /* Round up to nearest multiple of 16 */
     bytesPerRow = (bytesPerRow + (16-1)) & ~(16-1);
     data = ckalloc(height*bytesPerRow);
-    //memset(data, '\0', height*bytesPerRow);		
     
     /* Make it RGBA with 32 bit depth. */
     cgContext = CGBitmapContextCreate(data, width, height, 8, bytesPerRow, 
@@ -313,6 +312,8 @@ TkPathInitSurface(int width, int height)
         return NULL;
     }
     CGContextClearRect(cgContext, CGRectMake(0, 0, width, height));
+    CGContextTranslateCTM(cgContext, 0, height);
+    CGContextScaleCTM(cgContext, 1, -1);
     context->c = cgContext; 
     context->port = NULL;
     context->data = data;
@@ -430,7 +431,6 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    CGRect rectangle;
     CGImageRef cgImage;
     CGDataProviderRef provider;
     CGColorSpaceRef colorspace;
@@ -480,8 +480,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     CGContextSaveGState(context->c);
     CGContextTranslateCTM(context->c, x, y+height);
     CGContextScaleCTM(context->c, 1, -1);
-    rectangle = CGRectMake(0.0, 0.0, width, height);
-    CGContextDrawImage(context->c, rectangle, cgImage);
+    CGContextDrawImage(context->c, CGRectMake(0.0, 0.0, width, height), cgImage);
     CGImageRelease(cgImage);
     CGContextRestoreGState(context->c);
 }
@@ -600,7 +599,7 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
 }
 
 void
-TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo, int x, int y, int w, int h)
+TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGContextRef c = context->c;
@@ -616,12 +615,10 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo, int x, int y, int 
     data = CGBitmapContextGetData(c);
     bytesPerRow = CGBitmapContextGetBytesPerRow(c);
     
-    /* Return value? */
-    Tk_PhotoGetImage(photo, &block);
-    
+    Tk_PhotoGetImage(photo, &block);    
     pixel = ckalloc(height*bytesPerRow);
-
-
+    memcpy(pixel, data, height*bytesPerRow);
+#if 0
     for (i = 0; i < height; i++) {
         src = data + i*bytesPerRow;
         dst = pixel + i*bytesPerRow;
@@ -632,6 +629,7 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo, int x, int y, int 
             *(dst+3) = *src;
         }
     }
+#endif
     block.pixelPtr = pixel;
     block.width = width;
     block.height = height;
@@ -641,8 +639,7 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo, int x, int y, int 
     block.offset[1] = 1;
     block.offset[2] = 2;
     block.offset[3] = 3;
-    //Tk_PhotoPutBlock(photo, &block, x, y, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
-
+    Tk_PhotoPutBlock(photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
 }
 
 void		
