@@ -29,6 +29,7 @@ static void	SurfaceDeletedProc(ClientData clientData);
 static int 	SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 static int 	SurfaceEraseObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 
+static int	SurfaceCreateCircle(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) ;
 static int	SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) ;
 
 static int	uid = 0;
@@ -172,6 +173,7 @@ SurfaceCopyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
         return TCL_ERROR;
     }
     TkPathSurfaceToPhoto(surfacePtr->ctx, photo);
+    Tcl_SetObjResult(interp, objv[2]);
     return TCL_OK;
 }
 
@@ -197,15 +199,51 @@ SurfaceDeletedProc(ClientData clientData)
     ckfree((char *)surfacePtr);
 }
 
+static int	
+GetPointCoords(Tcl_Interp *interp, double *pointPtr, int objc, Tcl_Obj *CONST objv[])
+{
+    if ((objc == 1) || (objc == 2)) {
+        double x, y;
+        
+        if (objc==1) {
+            if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+                    (Tcl_Obj ***) &objv) != TCL_OK) {
+                return TCL_ERROR;
+            } else if (objc != 4) {
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 2", -1));
+                return TCL_ERROR;
+            }
+        }
+        if ((Tcl_GetDoubleFromObj(interp, objv[0], &x) != TCL_OK)
+            || (Tcl_GetDoubleFromObj(interp, objv[1], &y) != TCL_OK)) {
+            return TCL_ERROR;
+        }
+        pointPtr[0] = x;
+        pointPtr[1] = y;
+    } else {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 2", -1));
+        return TCL_ERROR;
+    }
+    return TCL_OK;
+}
 
 static CONST char *surfaceItemCmds[] = {
-    "path", "prect",
+    "circle",    "ellipse",  "path", 
+    "pimage",    "pline",    "polyline", 
+    "ppolygon",  "prect",    "ptext",
     (char *) NULL
 };
 
 enum {
-	kPathSurfaceItemPath						= 0L,
-    kPathSurfaceItemPrect
+	kPathSurfaceItemCircle				= 0L,
+    kPathSurfaceItemEllipse,
+    kPathSurfaceItemPath,
+    kPathSurfaceItemPimage,
+    kPathSurfaceItemPline,
+    kPathSurfaceItemPolyline,
+    kPathSurfaceItemPpolygon,
+    kPathSurfaceItemPrect,
+    kPathSurfaceItemPtext
 };
 
 static int 
@@ -224,16 +262,79 @@ SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
     }
 
     switch (index) {
+        case kPathSurfaceItemCircle: {
+            result = SurfaceCreateCircle(interp, surfacePtr, objc, objv);
+            break;
+        }
+        case kPathSurfaceItemEllipse: {
+
+            break;
         case kPathSurfaceItemPath: {
             result = SurfaceCreatePath(interp, surfacePtr, objc, objv);
+            break;
+        }
+        }
+        case kPathSurfaceItemPimage: {
+
+            break;
+        }
+        case kPathSurfaceItemPline: {
+
+            break;
+        }
+        case kPathSurfaceItemPolyline: {
+
+            break;
+        }
+        case kPathSurfaceItemPpolygon: {
+
             break;
         }
         case kPathSurfaceItemPrect: {
 
             break;
         }
+        case kPathSurfaceItemPtext: {
+
+            break;
+        }
     }
     return result;
+}
+
+static int	
+SurfaceCreateCircle(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[])
+{
+    TkPathContext 	context = surfacePtr->ctx;
+    double			center[2];
+    double			rx, ry;
+    PathAtom 		*atomPtr;
+    EllipseAtom 	ellAtom;
+    Tk_PathStyle 	style;
+    PathRect		bbox;
+
+    TkPathCreateStyle(&style);
+    if (TCL_OK != TkPathConfigStyle(interp, &style, objc-4, objv+4)) {
+        return TCL_ERROR;
+    }
+	if (GetPointCoords(interp, center, objc, objv) != TCL_OK) {
+        return TCL_ERROR;
+    }
+
+
+    atomPtr = (PathAtom *)&ellAtom;
+    atomPtr->nextPtr = NULL;
+    atomPtr->type = PATH_ATOM_ELLIPSE;
+    ellAtom.cx = center[0];
+    ellAtom.cy = center[1];
+    ellAtom.rx = rx;
+    ellAtom.ry = ry;
+    
+    bbox = TkPathGetTotalBbox(atomPtr, &style);
+    TkPathPaintPath(context, atomPtr, &style, &bbox);
+    TkPathEndPath(context);
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &style);
+    return TCL_OK;
 }
 
 static int

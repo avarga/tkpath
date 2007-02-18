@@ -558,9 +558,16 @@ GetGenericBarePathBbox(PathAtom *atomPtr)
                 /* empty */
                 break;
             }
-            case PATH_ATOM_ELLIPSE:
+            case PATH_ATOM_ELLIPSE: {
+                EllipseAtom *ell = (EllipseAtom *) atomPtr;
+                IncludePointInRect(&r, ell->cx - ell->rx, ell->cy - ell->ry);
+                IncludePointInRect(&r, ell->cx + ell->rx, ell->cy + ell->ry);            
+                break;
+            }
             case PATH_ATOM_RECT: {
-                Tcl_Panic("PATH_ATOM_ELLIPSE PATH_ATOM_RECT are not supported for GetGenericBarePathBbox");
+                RectAtom *rect = (RectAtom *) atomPtr;
+                IncludePointInRect(&r, rect->x, rect->y);
+                IncludePointInRect(&r, rect->x + rect->width, rect->y + rect->height);            
                 break;
             }
         }

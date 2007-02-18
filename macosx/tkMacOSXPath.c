@@ -604,11 +604,10 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGContextRef c = context->c;
     Tk_PhotoImageBlock block;
-    unsigned char *src, *dst, *data;
+    unsigned char *data;
     unsigned char *pixel;
     int width, height;
     int bytesPerRow;
-    int i, j;
     
     width = CGBitmapContextGetWidth(c);
     height = CGBitmapContextGetHeight(c);
@@ -619,6 +618,9 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     pixel = ckalloc(height*bytesPerRow);
     memcpy(pixel, data, height*bytesPerRow);
 #if 0
+    unsigned char *src, *dst;
+    int i, j;
+
     for (i = 0; i < height; i++) {
         src = data + i*bytesPerRow;
         dst = pixel + i*bytesPerRow;
