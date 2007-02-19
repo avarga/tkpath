@@ -79,7 +79,7 @@ static void		TranslatePrect(Tk_Canvas canvas,
 static void		MakePathAtoms(PrectItem *prectPtr);
 
 
-PATH_STYLE_CUSTOM_OPTION_RECORDS
+PATH_STYLE_CUSTOM_CONFIG_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {
     PATH_CONFIG_SPEC_STYLE_FILL(PrectItem, ""),

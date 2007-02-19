@@ -75,7 +75,7 @@ static void		TranslateEllipse(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double deltaX, double deltaY);
 
 
-PATH_STYLE_CUSTOM_OPTION_RECORDS
+PATH_STYLE_CUSTOM_CONFIG_RECORDS
 
 static Tk_ConfigSpec configSpecsCircle[] = {
     PATH_CONFIG_SPEC_STYLE_FILL(EllipseItem, ""),

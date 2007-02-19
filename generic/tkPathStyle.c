@@ -18,6 +18,7 @@
  */
 
 #include "tkIntPath.h"
+//#include "tkPathStyle.h"
 
 static Tcl_HashTable 	*gStyleHashPtr;
 static Tk_OptionTable 	gStyleOptionTable;
@@ -42,7 +43,7 @@ static void		StyleFree(Tcl_Interp *interp, char *recordPtr);
  * The -fillgradient custom option.
  */
  
-static int FillGradientSetOption(
+int FillGradientSetOption(
     ClientData clientData,
     Tcl_Interp *interp,		/* Current interp; may be used for errors. */
     Tk_Window tkwin,		/* Window for which option is being set. */
@@ -90,7 +91,7 @@ static int FillGradientSetOption(
     return TCL_OK;
 }
 
-static Tcl_Obj *
+Tcl_Obj *
 FillGradientGetOption(
     ClientData clientData,
     Tk_Window tkwin,
@@ -104,7 +105,7 @@ FillGradientGetOption(
     return Tcl_NewStringObj(*((char **) internalPtr), -1);
 }
 
-static void
+void
 FillGradientFreeOption(
         ClientData clientData,
         Tk_Window tkwin, 
@@ -130,7 +131,7 @@ static Tk_ObjCustomOption fillGradientCO =
  * The -matrix custom option.
  */
 
-static int MatrixSetOption(
+int MatrixSetOption(
     ClientData clientData,
     Tcl_Interp *interp,		/* Current interp; may be used for errors. */
     Tk_Window tkwin,		/* Window for which option is being set. */
@@ -176,7 +177,7 @@ static int MatrixSetOption(
     return TCL_OK;
 }
 
-static Tcl_Obj *
+Tcl_Obj *
 MatrixGetOption(
     ClientData clientData,
     Tk_Window tkwin,
@@ -197,7 +198,7 @@ MatrixGetOption(
     return listObj;
 }
 
-static void
+void
 MatrixRestoreOption(
     ClientData clientData,
     Tk_Window tkwin,
@@ -207,7 +208,7 @@ MatrixRestoreOption(
     *(TMatrix **)internalPtr = *(TMatrix **)oldInternalPtr;
 }
 
-static void
+void
 MatrixFreeOption(
     ClientData clientData,
     Tk_Window tkwin,
@@ -233,7 +234,7 @@ static Tk_ObjCustomOption matrixCO =
  * The -strokedasharray custom option.
  */
 
-static int DashSetOption(
+int DashSetOption(
     ClientData clientData,
     Tcl_Interp *interp,		/* Current interp; may be used for errors. */
     Tk_Window tkwin,		/* Window for which option is being set. */
@@ -258,7 +259,7 @@ static int DashSetOption(
     return Tk_GetDash(interp, string, (Tk_Dash *) internalPtr);
 }
 
-static Tcl_Obj *
+Tcl_Obj *
 DashGetOption(
     ClientData clientData,
     Tk_Window tkwin,
@@ -291,7 +292,7 @@ DashGetOption(
     return Tcl_NewStringObj(buffer, -1);
 }
 
-static void
+void
 DashFreeOption(
     ClientData clientData,
     Tk_Window tkwin,
@@ -493,8 +494,7 @@ StyleConfigNotify(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[])
 static void
 StyleFree(Tcl_Interp *interp, char *recordPtr) 
 {
-    /* @@@ TODO */
-    //TkPathDeleteStyle(display, (Tk_PathStyle *) recordPtr);
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), (Tk_PathStyle *) recordPtr);
     ckfree(recordPtr);
 }
 

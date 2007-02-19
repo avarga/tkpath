@@ -234,7 +234,9 @@ o Radial gradients are created and configured using:
    if not using antialiasing. For instance, a -strokewidth 1 results in
    a 2 pixel wide line. This is by design. If you want to be sure to get
    the exact width when not using antialiasing always pick pixel center
-   coordinates using something like: [expr int($x) + 0.5]
+   coordinates using something like: [expr int($x) + 0.5]. If you fill and
+   not stroke you may need to have integer coordinates to avoid antialiasing
+   effects.
 
    WinXP: GDI+. On pre XP systems it should be possible to get the gdiplus.dll
    to make it work. Maybe there is also an issue with the MSCRT.LIB.
@@ -260,7 +262,7 @@ o Radial gradients are created and configured using:
 
     - http://cairographics.org
 
-Copyright (c) 2005-2006  Mats Bengtsson
+Copyright (c) 2005-2007  Mats Bengtsson
 
 BSD style license.
 

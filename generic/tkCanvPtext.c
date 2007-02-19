@@ -83,7 +83,7 @@ static Tk_CustomOption textAnchorOption = {           \
     (ClientData) NULL                                 \
 };
 
-PATH_STYLE_CUSTOM_OPTION_RECORDS
+PATH_STYLE_CUSTOM_CONFIG_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-fontfamily", (char *) NULL, (char *) NULL,

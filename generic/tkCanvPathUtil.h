@@ -95,71 +95,71 @@ int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
  * values in CreatePath.
  */
 
-#define PATH_STYLE_CUSTOM_OPTION_STATE   \
+#define PATH_STYLE_CUSTOM_CONFIG_STATE   \
     static Tk_CustomOption stateOption = {                \
         (Tk_OptionParseProc *) PathTkStateParseProc,      \
         PathTkStatePrintProc,                             \
         (ClientData) 2                                    \
     };
     
-#define PATH_STYLE_CUSTOM_OPTION_TAGS   \
+#define PATH_STYLE_CUSTOM_CONFIG_TAGS   \
     static Tk_CustomOption tagsOption = {                 \
         (Tk_OptionParseProc *) PathTk_CanvasTagsParseProc,\
         PathTk_CanvasTagsPrintProc,                       \
         (ClientData) NULL                                 \
     };
     
-#define PATH_STYLE_CUSTOM_OPTION_DASH   \
+#define PATH_STYLE_CUSTOM_CONFIG_DASH   \
     static Tk_CustomOption dashOption = {                 \
         (Tk_OptionParseProc *) PathTkCanvasDashParseProc, \
         PathTkCanvasDashPrintProc,                        \
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_PIXEL   \
+#define PATH_STYLE_CUSTOM_CONFIG_PIXEL   \
     static Tk_CustomOption pixelOption = {                \
         (Tk_OptionParseProc *) PathTkPixelParseProc,      \
         PathTkPixelPrintProc,                             \
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_FILLRULE   \
+#define PATH_STYLE_CUSTOM_CONFIG_FILLRULE   \
     static Tk_CustomOption fillRuleOption = {             \
         (Tk_OptionParseProc *) FillRuleParseProc,         \
         FillRulePrintProc,                                \
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_GRADIENT   \
+#define PATH_STYLE_CUSTOM_CONFIG_GRADIENT   \
     static Tk_CustomOption gradientOption = {             \
         (Tk_OptionParseProc *) GradientParseProc,   	  \
         GradientPrintProc,                          	  \
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_MATRIX   \
+#define PATH_STYLE_CUSTOM_CONFIG_MATRIX   \
     static Tk_CustomOption matrixOption = {               \
         (Tk_OptionParseProc *) MatrixParseProc,           \
         MatrixPrintProc,                                  \
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_STYLE   \
+#define PATH_STYLE_CUSTOM_CONFIG_STYLE   \
     static Tk_CustomOption styleOption = {                \
         (Tk_OptionParseProc *) StyleParseProc,            \
         StylePrintProc,                                   \
         (ClientData) NULL                                 \
     };
 
-#define PATH_STYLE_CUSTOM_OPTION_RECORDS   \
-    PATH_STYLE_CUSTOM_OPTION_STATE                        \
-    PATH_STYLE_CUSTOM_OPTION_TAGS                         \
-    PATH_STYLE_CUSTOM_OPTION_DASH                         \
-    PATH_STYLE_CUSTOM_OPTION_PIXEL                        \
-    PATH_STYLE_CUSTOM_OPTION_FILLRULE                     \
-    PATH_STYLE_CUSTOM_OPTION_GRADIENT                     \
-    PATH_STYLE_CUSTOM_OPTION_MATRIX                       \
-    PATH_STYLE_CUSTOM_OPTION_STYLE
+#define PATH_STYLE_CUSTOM_CONFIG_RECORDS   \
+    PATH_STYLE_CUSTOM_CONFIG_STATE                        \
+    PATH_STYLE_CUSTOM_CONFIG_TAGS                         \
+    PATH_STYLE_CUSTOM_CONFIG_DASH                         \
+    PATH_STYLE_CUSTOM_CONFIG_PIXEL                        \
+    PATH_STYLE_CUSTOM_CONFIG_FILLRULE                     \
+    PATH_STYLE_CUSTOM_CONFIG_GRADIENT                     \
+    PATH_STYLE_CUSTOM_CONFIG_MATRIX                       \
+    PATH_STYLE_CUSTOM_CONFIG_STYLE
 
 
 #define PATH_CONFIG_SPEC_STYLE_FILL(typeName, theColor)                     \
