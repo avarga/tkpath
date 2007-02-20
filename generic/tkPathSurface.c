@@ -30,8 +30,11 @@ static void	SurfaceDeletedProc(ClientData clientData);
 static int 	SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 static int 	SurfaceEraseObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 
-static int	SurfaceCreateCircle(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) ;
-static int	SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) ;
+static int	SurfaceCreateEllipse(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int objc, Tcl_Obj* CONST objv[]);
+static int	SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
+static int	SurfaceCreatePline(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
+static int	SurfaceCreatePpoly(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int objc, Tcl_Obj* CONST objv[]);
+static int	SurfaceCreatePrect(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 static void	SurfaceInitOptions(Tcl_Interp* interp);
 
 static int	uid = 0;
@@ -237,36 +240,30 @@ SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
     }
 
     switch (index) {
-        case kPathSurfaceItemCircle: {
-            result = SurfaceCreateCircle(interp, surfacePtr, objc, objv);
+        case kPathSurfaceItemCircle:
+        case kPathSurfaceItemEllipse: {
+            result = SurfaceCreateEllipse(interp, surfacePtr, index, objc, objv);
             break;
         }
-        case kPathSurfaceItemEllipse: {
-
-            break;
         case kPathSurfaceItemPath: {
             result = SurfaceCreatePath(interp, surfacePtr, objc, objv);
             break;
-        }
         }
         case kPathSurfaceItemPimage: {
 
             break;
         }
         case kPathSurfaceItemPline: {
-
+            result = SurfaceCreatePline(interp, surfacePtr, objc, objv);
             break;
         }
-        case kPathSurfaceItemPolyline: {
-
-            break;
-        }
+        case kPathSurfaceItemPolyline:
         case kPathSurfaceItemPpolygon: {
-
+            result = SurfaceCreatePpoly(interp, surfacePtr, index, objc, objv);
             break;
         }
         case kPathSurfaceItemPrect: {
-
+            result = SurfaceCreatePrect(interp, surfacePtr, objc, objv);
             break;
         }
         case kPathSurfaceItemPtext: {
@@ -287,7 +284,6 @@ static Tk_OptionTable 	gOptionTablePpolygon;
 static Tk_OptionTable 	gOptionTablePrect;
 static Tk_OptionTable 	gOptionTablePtext;
 
-
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 #define PATH_OPTION_SPEC_STYLENAME(typeName)							\
@@ -296,7 +292,7 @@ PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 #define PATH_OPTION_SPEC_R(typeName)									\
     {TK_OPTION_DOUBLE, "-r", (char *) NULL, (char *) NULL,  			\
-        "0.0", -1, Tk_Offset(typeName, r), 0, 0, 0}
+        "0.0", -1, Tk_Offset(typeName, rx), 0, 0, 0}
 
 #define PATH_OPTION_SPEC_RX(typeName)									\
     {TK_OPTION_DOUBLE, "-rx", (char *) NULL, (char *) NULL,  			\
@@ -306,6 +302,10 @@ PATH_STYLE_CUSTOM_OPTION_RECORDS
     {TK_OPTION_DOUBLE, "-ry", (char *) NULL, (char *) NULL,  			\
         "0.0", -1, Tk_Offset(typeName, ry), 0, 0, 0}
 
+typedef struct SurfGenericItem {
+    char *styleName;
+    Tk_PathStyle style;
+} SurfGenericItem;
 
 static int	
 GetPointCoords(Tcl_Interp *interp, double *pointPtr, int objc, Tcl_Obj *CONST objv[])
@@ -317,7 +317,7 @@ GetPointCoords(Tcl_Interp *interp, double *pointPtr, int objc, Tcl_Obj *CONST ob
             if (Tcl_ListObjGetElements(interp, objv[0], &objc,
                     (Tcl_Obj ***) &objv) != TCL_OK) {
                 return TCL_ERROR;
-            } else if (objc != 4) {
+            } else if (objc != 2) {
                 Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 2", -1));
                 return TCL_ERROR;
             }
@@ -331,6 +331,85 @@ GetPointCoords(Tcl_Interp *interp, double *pointPtr, int objc, Tcl_Obj *CONST ob
     } else {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 2", -1));
         return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+static int
+GetTwoPointsCoords(Tcl_Interp *interp, double *pointsPtr, int objc, Tcl_Obj *CONST objv[])
+{
+    if ((objc == 1) || (objc == 4)) {
+        double x1, y1, x2, y2;
+        
+        if (objc==1) {
+            if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+                    (Tcl_Obj ***) &objv) != TCL_OK) {
+                return TCL_ERROR;
+            } else if (objc != 4) {
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 4", -1));
+                return TCL_ERROR;
+            }
+        }
+        if ((Tcl_GetDoubleFromObj(interp, objv[0], &x1) != TCL_OK)
+            || (Tcl_GetDoubleFromObj(interp, objv[1], &y1) != TCL_OK)
+            || (Tcl_GetDoubleFromObj(interp, objv[2], &x2) != TCL_OK)
+            || (Tcl_GetDoubleFromObj(interp, objv[3], &y2) != TCL_OK)) {
+            return TCL_ERROR;
+        }
+        pointsPtr[0] = x1;
+        pointsPtr[1] = y1;
+        pointsPtr[2] = x2;
+        pointsPtr[3] = y2;
+    } else {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 4", -1));
+        return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+static int
+MakePolyAtoms(Tcl_Interp *interp, int closed, int objc, Tcl_Obj *CONST objv[], PathAtom **atomPtrPtr)
+{
+    PathAtom *atomPtr = NULL;
+
+    if (objc == 1) {
+        if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+            (Tcl_Obj ***) &objv) != TCL_OK) {
+            return TCL_ERROR;
+        }
+    }
+    if (objc & 1) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected an even number", -1));
+        return TCL_ERROR;
+    } else if (objc < 4) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected at least 4", -1));
+        return TCL_ERROR;
+    } else {
+        int 	i;
+        double	x, y;
+        double	firstX = 0.0, firstY = 0.0;
+        PathAtom *firstAtomPtr = NULL;
+
+        for (i = 0; i < objc; i += 2) {
+            if ((Tcl_GetDoubleFromObj(interp, objv[i], &x) != TCL_OK)
+                    || (Tcl_GetDoubleFromObj(interp, objv[i+1], &y) != TCL_OK)) {
+                TkPathFreeAtoms(atomPtr);
+                return TCL_ERROR;
+            }
+            if (i == 0) {
+                firstX = x;
+                firstY = y;
+                atomPtr = NewMoveToAtom(x, y);
+                firstAtomPtr = atomPtr;
+            } else {
+                atomPtr->nextPtr = NewLineToAtom(x, y);
+                atomPtr = atomPtr->nextPtr;
+            }
+        }
+        if (closed) {
+            atomPtr->nextPtr = NewCloseAtom(firstX, firstY);
+        }
+        *atomPtrPtr = firstAtomPtr;
     }
     return TCL_OK;
 }
@@ -364,70 +443,77 @@ SurfaceParseOptions(Tcl_Interp *interp, char *recordPtr,
     return TCL_OK;
 }
 
-typedef struct SurfCircleItem {
+typedef struct SurfEllipseItem {
     char *styleName;
     Tk_PathStyle style;
-    double r;
-} SurfCircleItem;
+    double rx, ry;
+} SurfEllipseItem;
 
 static Tk_OptionSpec circleOptionSpecs[] = {
-    PATH_OPTION_SPEC_STYLENAME(SurfCircleItem),
-    PATH_OPTION_SPEC_STYLE_FILL(SurfCircleItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(SurfCircleItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(SurfCircleItem, "black"),
-    PATH_OPTION_SPEC_R(SurfCircleItem),
+    PATH_OPTION_SPEC_STYLENAME(SurfEllipseItem),
+    PATH_OPTION_SPEC_STYLE_FILL(SurfEllipseItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfEllipseItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfEllipseItem, "black"),
+    PATH_OPTION_SPEC_R(SurfEllipseItem),
+    PATH_OPTION_SPEC_END
+};
+
+static Tk_OptionSpec ellipseOptionSpecs[] = {
+    PATH_OPTION_SPEC_STYLENAME(SurfEllipseItem),
+    PATH_OPTION_SPEC_STYLE_FILL(SurfEllipseItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfEllipseItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfEllipseItem, "black"),
+    PATH_OPTION_SPEC_RX(SurfEllipseItem),
+    PATH_OPTION_SPEC_RY(SurfEllipseItem),
     PATH_OPTION_SPEC_END
 };
 
 static int	
-SurfaceCreateCircle(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[])
+SurfaceCreateEllipse(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int objc, Tcl_Obj* CONST objv[])
 {
     TkPathContext 	context = surfacePtr->ctx;
     int				i;
     double			center[2];
-    double			rx, ry;
     PathAtom 		*atomPtr;
     EllipseAtom 	ellAtom;
     PathRect		bbox;
-    SurfCircleItem  circle;
+    SurfEllipseItem ellipse;
 
-    circle.styleName = NULL;
+    ellipse.styleName = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(&(circle.style));
+    TkPathCreateStyle(&(ellipse.style));
 	if (GetPointCoords(interp, center, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
     }
-    if (SurfaceParseOptions(interp, (char *)&circle, gOptionTableCircle, objc-i, objv+i) != TCL_OK) {
+    if (SurfaceParseOptions(interp, (char *)&ellipse, 
+            (type == kPathSurfaceItemCircle) ? gOptionTableCircle : gOptionTableEllipse, 
+            objc-i, objv+i) != TCL_OK) {
         return TCL_ERROR;
     }
-    if (circle.styleName != NULL) {
-        PathStyleMergeStyles(Tk_MainWindow(interp), &(circle.style), circle.styleName, 0);
-    } 
+    PathStyleMergeStyles(Tk_MainWindow(interp), &(ellipse.style), ellipse.styleName, 0);
+    ellipse.rx = MAX(0.0, ellipse.rx);
+    ellipse.ry = MAX(0.0, ellipse.ry);
     atomPtr = (PathAtom *)&ellAtom;
     atomPtr->nextPtr = NULL;
     atomPtr->type = PATH_ATOM_ELLIPSE;
     ellAtom.cx = center[0];
     ellAtom.cy = center[1];
-    ellAtom.rx = circle.r;
-    ellAtom.ry = circle.r;
-    
-    bbox = TkPathGetTotalBbox(atomPtr, &(circle.style));
-    TkPathPaintPath(context, atomPtr, &(circle.style), &bbox);
-    TkPathEndPath(context);
-    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(circle.style));
+    ellAtom.rx = ellipse.rx;
+    ellAtom.ry = (type == kPathSurfaceItemCircle) ? ellipse.rx : ellipse.ry;
+    if (TkPathMakePath(context, atomPtr, &(ellipse.style)) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    bbox = TkPathGetTotalBbox(atomPtr, &(ellipse.style));
+    TkPathPaintPath(context, atomPtr, &(ellipse.style), &bbox);
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(ellipse.style));
     return TCL_OK;
 }
 
-typedef struct SurfPathItem {
-    char *styleName;
-    Tk_PathStyle style;
-} SurfPathItem;
-
 static Tk_OptionSpec pathOptionSpecs[] = {
-    PATH_OPTION_SPEC_STYLENAME(SurfPathItem),
-    PATH_OPTION_SPEC_STYLE_FILL(SurfPathItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(SurfPathItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(SurfPathItem, "black"),
+    PATH_OPTION_SPEC_STYLENAME(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_FILL(SurfGenericItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfGenericItem, "black"),
     PATH_OPTION_SPEC_END
 };
 
@@ -437,47 +523,192 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
     TkPathContext 	context = surfacePtr->ctx;
     PathAtom 		*atomPtr = NULL;
     PathRect		bbox;
-    SurfPathItem	path;
+    SurfGenericItem	item;
     int				len;
+    int				result = TCL_OK;
     
-    path.styleName = NULL;
-    TkPathCreateStyle(&(path.style));
+    item.styleName = NULL;
+    TkPathCreateStyle(&(item.style));
     if (TkPathParseToAtoms(interp, objv[3], &atomPtr, &len) != TCL_OK) {
         return TCL_ERROR;
     }
-    if (SurfaceParseOptions(interp, (char *)&path, gOptionTablePath, objc-4, objv+4) != TCL_OK) {
-        return TCL_ERROR;
+    if (SurfaceParseOptions(interp, (char *)&item, gOptionTablePath, objc-4, objv+4) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
     }
-    if (path.styleName != NULL) {
-        PathStyleMergeStyles(Tk_MainWindow(interp), &(path.style), path.styleName, 0);
-    } 
-    if (TkPathMakePath(context, atomPtr, &(path.style)) != TCL_OK) {
-        return TCL_ERROR;
+    PathStyleMergeStyles(Tk_MainWindow(interp), &(item.style), item.styleName, 0);
+    if (TkPathMakePath(context, atomPtr, &(item.style)) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
     }
-    bbox = TkPathGetTotalBbox(atomPtr, &(path.style));
-    TkPathPaintPath(context, atomPtr, &(path.style), &bbox);
-    TkPathEndPath(context);
-    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(path.style));
+    bbox = TkPathGetTotalBbox(atomPtr, &(item.style));
+    TkPathPaintPath(context, atomPtr, &(item.style), &bbox);
+bail:
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
     TkPathFreeAtoms(atomPtr);
     // CRASH!!!
-    //Tk_FreeConfigOptions((char *)&path, gOptionTablePath, Tk_MainWindow(interp));
-    return TCL_OK;
+    //Tk_FreeConfigOptions((char *)&item, gOptionTablePath, Tk_MainWindow(interp));
+    return result;
+}
+
+static Tk_OptionSpec plineOptionSpecs[] = {
+    PATH_OPTION_SPEC_STYLENAME(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfGenericItem, "black"),
+    PATH_OPTION_SPEC_END
+};
+
+static int
+SurfaceCreatePline(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
+{
+    TkPathContext 	context = surfacePtr->ctx;
+    int				i;
+    PathRect		bbox;
+    SurfGenericItem	item;
+    PathAtom 		*atomPtr = NULL;
+    double			points[4];
+    int				result = TCL_OK;
+    
+    item.styleName = NULL;
+    i = GetFirstOptionIndex(objc, objv);
+    TkPathCreateStyle(&(item.style));
+    if (GetTwoPointsCoords(interp, points, i-3, objv+3) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (SurfaceParseOptions(interp, (char *)&item, gOptionTablePline, objc-i, objv+i) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    PathStyleMergeStyles(Tk_MainWindow(interp), &(item.style), item.styleName, 0);
+    atomPtr = NewMoveToAtom(points[0], points[1]);
+    atomPtr->nextPtr = NewLineToAtom(points[2], points[3]);
+    if (TkPathMakePath(context, atomPtr, &(item.style)) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    bbox = TkPathGetTotalBbox(atomPtr, &(item.style));
+    TkPathPaintPath(context, atomPtr, &(item.style), &bbox);
+bail:
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
+    TkPathFreeAtoms(atomPtr);
+    return result;
+}
+
+static Tk_OptionSpec polylineOptionSpecs[] = {
+    PATH_OPTION_SPEC_STYLENAME(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfGenericItem, "black"),
+    PATH_OPTION_SPEC_END
+};
+
+static Tk_OptionSpec ppolygonOptionSpecs[] = {
+    PATH_OPTION_SPEC_STYLENAME(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_FILL(SurfGenericItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfGenericItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfGenericItem, "black"),
+    PATH_OPTION_SPEC_END
+};
+
+static int	
+SurfaceCreatePpoly(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int objc, Tcl_Obj* CONST objv[])
+{
+    TkPathContext 	context = surfacePtr->ctx;
+    int				i;
+    PathRect		bbox;
+    SurfGenericItem item;
+    PathAtom 		*atomPtr = NULL;
+    int				result = TCL_OK;
+
+    item.styleName = NULL;
+    i = GetFirstOptionIndex(objc, objv);
+    TkPathCreateStyle(&(item.style));
+    if (MakePolyAtoms(interp, (type == kPathSurfaceItemPolyline) ? 0 : 1, 
+            i-3, objv+3, &atomPtr) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (SurfaceParseOptions(interp, (char *)&item, 
+            (type == kPathSurfaceItemPolyline) ? gOptionTablePolyline : gOptionTablePpolygon, 
+            objc-i, objv+i) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    PathStyleMergeStyles(Tk_MainWindow(interp), &(item.style), item.styleName, 0);
+    if (TkPathMakePath(context, atomPtr, &(item.style)) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    bbox = TkPathGetTotalBbox(atomPtr, &(item.style));
+    TkPathPaintPath(context, atomPtr, &(item.style), &bbox);
+bail:
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
+    TkPathFreeAtoms(atomPtr);
+    return result;
+}
+
+typedef struct SurfPrectItem {
+    char *styleName;
+    Tk_PathStyle style;
+    double rx, ry;
+} SurfPrectItem;
+
+static Tk_OptionSpec prectOptionSpecs[] = {
+    PATH_OPTION_SPEC_STYLENAME(SurfPrectItem),
+    PATH_OPTION_SPEC_STYLE_FILL(SurfPrectItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfPrectItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfPrectItem, "black"),
+    PATH_OPTION_SPEC_RX(SurfPrectItem),
+    PATH_OPTION_SPEC_RY(SurfPrectItem),
+    PATH_OPTION_SPEC_END
+};
+
+static int	
+SurfaceCreatePrect(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[])
+{
+    TkPathContext 	context = surfacePtr->ctx;
+    int				i;
+    SurfPrectItem	prect;
+    PathRect		bbox;
+    PathAtom 		*atomPtr = NULL;
+    double			points[4];
+    int				result = TCL_OK;
+
+    prect.styleName = NULL;
+    i = GetFirstOptionIndex(objc, objv);
+    TkPathCreateStyle(&(prect.style));
+    if (GetTwoPointsCoords(interp, points, i-3, objv+3) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (SurfaceParseOptions(interp, (char *)&prect, gOptionTablePrect, objc-i, objv+i) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    PathStyleMergeStyles(Tk_MainWindow(interp), &(prect.style), prect.styleName, 0);
+    prect.rx = MAX(0.0, prect.rx);
+    prect.ry = MAX(0.0, prect.ry);
+    TkPathMakePrectAtoms(points, prect.rx, prect.ry, &atomPtr);
+    if (TkPathMakePath(context, atomPtr, &(prect.style)) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    bbox = TkPathGetTotalBbox(atomPtr, &(prect.style));
+    TkPathPaintPath(context, atomPtr, &(prect.style), &bbox);
+bail:
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(prect.style));
+    TkPathFreeAtoms(atomPtr);
+    return result;
 }
 
 static void
 SurfaceInitOptions(Tcl_Interp* interp)
 {
     gOptionTableCircle = Tk_CreateOptionTable(interp, circleOptionSpecs);
-    //gOptionTableEllipse = Tk_CreateOptionTable(interp, ellipseOptionSpecs);
+    gOptionTableEllipse = Tk_CreateOptionTable(interp, ellipseOptionSpecs);
     gOptionTablePath = Tk_CreateOptionTable(interp, pathOptionSpecs);
-    /*
-    gOptionTablePimage = Tk_CreateOptionTable(interp, pimageOptionSpecs);
+    //gOptionTablePimage = Tk_CreateOptionTable(interp, pimageOptionSpecs);
     gOptionTablePline = Tk_CreateOptionTable(interp, plineOptionSpecs);
     gOptionTablePolyline = Tk_CreateOptionTable(interp, polylineOptionSpecs);
     gOptionTablePpolygon = Tk_CreateOptionTable(interp, ppolygonOptionSpecs);
     gOptionTablePrect = Tk_CreateOptionTable(interp, prectOptionSpecs);
-    gOptionTablePtext = Tk_CreateOptionTable(interp, ptextOptionSpecs);
-    */
+    //gOptionTablePtext = Tk_CreateOptionTable(interp, ptextOptionSpecs);
 }
 
 static int 
@@ -498,4 +729,3 @@ SurfaceEraseObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     TkPathSurfaceErase(surfacePtr->ctx, x, y, width, height);
     return TCL_OK;
 }
-

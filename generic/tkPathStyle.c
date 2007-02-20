@@ -593,6 +593,9 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
 	Tcl_HashEntry *hPtr;
     Tk_PathStyle *srcStylePtr;
 
+    if (styleName == NULL) {
+        return;
+    }
 	hPtr = Tcl_FindHashEntry(gStyleHashPtr, styleName);
 	if (hPtr == NULL) {
         return;

@@ -278,66 +278,17 @@ ConfigurePrect(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
 static void
 MakePathAtoms(PrectItem *prectPtr)
 {
-    PathAtom *atomPtr = NULL;
-    int round = 1;
-    double epsilon = 1e-6;
-    double rx = prectPtr->rx;
-    double ry = prectPtr->ry;
-    double x = prectPtr->bbox.x1;
-    double y = prectPtr->bbox.y1;
-    double width = prectPtr->bbox.x2 - x;
-    double height = prectPtr->bbox.y2 - y;
+    double points[4];
     
-    /* If only one of rx or ry is zero this implies that both shall be nonzero. */
-    if (rx < epsilon && ry < epsilon) {
-        round = 0;
-    } else if (rx < epsilon) {
-        rx = ry;
-    } else if (ry < epsilon) {
-        ry = rx;
-    }
-    
-    /* There are certain constraints on rx and ry. */
-    rx = MIN(rx, width/2.0);
-    ry = MIN(ry, height/2.0);
-    
-    /*
-     * Free any old stuff.
-     */
     if (prectPtr->atomPtr != NULL) {
         TkPathFreeAtoms(prectPtr->atomPtr);
         prectPtr->atomPtr = NULL;
     }
-        
-    prectPtr->atomPtr = NewMoveToAtom(x+rx, y);
-    atomPtr = prectPtr->atomPtr;
-
-    atomPtr->nextPtr = NewLineToAtom(x+width-rx, y);
-    atomPtr = atomPtr->nextPtr;
-    if (round) {
-        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+width, y+ry);
-        atomPtr = atomPtr->nextPtr;
-    }
-    atomPtr->nextPtr = NewLineToAtom(x+width, y+height-ry);
-    atomPtr = atomPtr->nextPtr;
-    if (round) {
-        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+width-rx, y+height);
-        atomPtr = atomPtr->nextPtr;
-    }
-    atomPtr->nextPtr = NewLineToAtom(x+rx, y+height);
-    atomPtr = atomPtr->nextPtr;
-    if (round) {
-        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x, y+height-ry);
-        atomPtr = atomPtr->nextPtr;
-    }
-    atomPtr->nextPtr = NewLineToAtom(x, y+ry);
-    atomPtr = atomPtr->nextPtr;
-    if (round) {
-        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+rx, y);
-        atomPtr = atomPtr->nextPtr;
-    }
-    atomPtr->nextPtr = NewCloseAtom(x, y);
-    atomPtr = atomPtr->nextPtr;
+    points[0] = prectPtr->bbox.x1;
+    points[1] = prectPtr->bbox.y1;
+    points[2] = prectPtr->bbox.x2;
+    points[3] = prectPtr->bbox.y2;
+    TkPathMakePrectAtoms(points, prectPtr->rx, prectPtr->ry, &(prectPtr->atomPtr));
 }
 
 static void		

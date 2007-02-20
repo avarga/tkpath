@@ -212,6 +212,39 @@ o Radial gradients are created and configured using:
 	   start point.
 
 
+ o In memory drawing surfaces:
+
+    ::tkpath::surface width height
+
+    creates an in memory drawing surface. Its format is platform dependent.
+    It returns a token which is a new command:
+
+    $token copy image
+
+    copies the surface to an existing image (photo) and returns the name of
+    the image so you can do: set image [$token copy [image create photo]]
+    See Tk_PhotoPutBlock for how it affects the existing image.
+
+    $token create type coords ?options?
+
+    draws the item of type to the surface. All item types and the corresponding
+    options as described above are supported, except the canvas specific -tags
+    and -state.
+
+    $token destroy
+
+    destroys surface.
+
+    $token erase x y width height
+
+    erases the indicated area to transparent.
+
+    $token height 
+    $token width
+
+    returns height and width respectively.
+
+
  o Helper function for making transformation matrices:
 
     ::tkpath::transform cmd ?args?

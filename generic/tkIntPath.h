@@ -265,6 +265,8 @@ void		TkPathPaintPath(TkPathContext context, PathAtom *atomPtr,
                     Tk_PathStyle *stylePtr, PathRect *bboxPtr);
 PathRect	TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr);
 
+void		TkPathMakePrectAtoms(double *pointsPtr, double rx, double ry, PathAtom **atomPtrPtr);
+
 /* Various stuff. */
 int 		TableLookup(LookupTable *map, int n, int from);
 void		PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayPtrPtr);

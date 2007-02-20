@@ -14,6 +14,77 @@
 /*
  *--------------------------------------------------------------
  *
+ * TkPathMakePrectAtoms --
+ *
+ *		Makes the path atoms for a rounded rectangle, prect.
+ *
+ * Results:
+ *		None. Path atoms in atomPtrPtr.
+ *
+ * Side effects:
+ *		Path atom memory allocated.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkPathMakePrectAtoms(double *pointsPtr, double rx, double ry, PathAtom **atomPtrPtr)
+{
+    PathAtom *atomPtr = NULL;
+    PathAtom *firstAtomPtr = NULL;
+    int round = 1;
+    double epsilon = 1e-6;
+    double x = MIN(pointsPtr[0], pointsPtr[2]);
+    double y = MIN(pointsPtr[1], pointsPtr[3]);
+    double width = fabs(pointsPtr[0] - pointsPtr[2]);
+    double height = fabs(pointsPtr[1] - pointsPtr[3]);
+
+    /* If only one of rx or ry is zero this implies that both shall be nonzero. */
+    if (rx < epsilon && ry < epsilon) {
+        round = 0;
+    } else if (rx < epsilon) {
+        rx = ry;
+    } else if (ry < epsilon) {
+        ry = rx;
+    }
+    
+    /* There are certain constraints on rx and ry. */
+    rx = MIN(rx, width/2.0);
+    ry = MIN(ry, height/2.0);
+
+    atomPtr = NewMoveToAtom(x+rx, y);
+    firstAtomPtr = atomPtr;
+    atomPtr->nextPtr = NewLineToAtom(x+width-rx, y);
+    atomPtr = atomPtr->nextPtr;
+    if (round) {
+        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+width, y+ry);
+        atomPtr = atomPtr->nextPtr;
+    }
+    atomPtr->nextPtr = NewLineToAtom(x+width, y+height-ry);
+    atomPtr = atomPtr->nextPtr;
+    if (round) {
+        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+width-rx, y+height);
+        atomPtr = atomPtr->nextPtr;
+    }
+    atomPtr->nextPtr = NewLineToAtom(x+rx, y+height);
+    atomPtr = atomPtr->nextPtr;
+    if (round) {
+        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x, y+height-ry);
+        atomPtr = atomPtr->nextPtr;
+    }
+    atomPtr->nextPtr = NewLineToAtom(x, y+ry);
+    atomPtr = atomPtr->nextPtr;
+    if (round) {
+        atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+rx, y);
+        atomPtr = atomPtr->nextPtr;
+    }
+    atomPtr->nextPtr = NewCloseAtom(x, y);
+    *atomPtrPtr = firstAtomPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * TkPathDrawPath --
  *
  *		This procedure is invoked to draw a line item in a given

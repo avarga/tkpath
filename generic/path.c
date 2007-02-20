@@ -119,7 +119,7 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     Tcl_CreateObjCommand(interp, "::tkpath::radialgradient",
             RadialGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathGradientInit(interp);
-    //InitSurface(interp);
+    InitSurface(interp);
 
     /*
      * Style object.

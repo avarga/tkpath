@@ -7,7 +7,6 @@ pack [canvas $w -width 400 -height 400 -bg white]
 
 set ::tkpath::antialias 1
 
-
 $w create pline 20  20 180 20
 $w create pline 200 20 260 20 -stroke blue
 
@@ -26,8 +25,7 @@ $w create polyline 20 200 30 200 30 180 50 180 50 200  \
   130 200
 
 $w create polyline 150 200  200 120  150 120  200 200  -stroke gray50 -strokewidth 4
-$w create polyline 220 200  270 120  220 120  270 200  -stroke gray50 -strokewidth 4 \
-  -fill gray80
+$w create polyline 220 200  270 120  220 120  270 200  -stroke gray50 -strokewidth 4
 
 $w create ppolygon 75 237  89 280  134 280  98 307  111 350  75 325  38 350  \
   51 307  15 280  60 280 -stroke "#9ac790" -strokewidth 4 -fill "#cae2c5"
