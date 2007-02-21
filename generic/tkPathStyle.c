@@ -18,7 +18,7 @@
  */
 
 #include "tkIntPath.h"
-//#include "tkPathStyle.h"
+#include "tkPathStyle.h"
 
 static Tcl_HashTable 	*gStyleHashPtr;
 static Tk_OptionTable 	gStyleOptionTable;
@@ -117,16 +117,6 @@ FillGradientFreeOption(
     }
 }
 
-static Tk_ObjCustomOption fillGradientCO = 
-{
-    "fillgradient",
-    FillGradientSetOption,
-    FillGradientGetOption,
-    NULL,
-    FillGradientFreeOption,
-    (ClientData) NULL
-};
-
 /*
  * The -matrix custom option.
  */
@@ -220,16 +210,6 @@ MatrixFreeOption(
     }
 }
 
-static Tk_ObjCustomOption matrixCO = 
-{
-    "matrix",
-    MatrixSetOption,
-    MatrixGetOption,
-    MatrixRestoreOption,
-    MatrixFreeOption,
-    (ClientData) NULL
-};
-
 /*
  * The -strokedasharray custom option.
  */
@@ -307,33 +287,15 @@ DashFreeOption(
     }
 }
 
-static Tk_ObjCustomOption dashCO = 
-{
-    "dash",
-    DashSetOption,
-    DashGetOption,
-    NULL,
-    DashFreeOption,
-    (ClientData) NULL
-};
-
-/* 
- * These must be kept in sync with defines in X.h! 
- */
-static char *fillRuleST[] = {
-    "evenodd", "nonzero", (char *) NULL
-};
-static char *lineCapST[] = {
-    "notlast", "butt", "round", "projecting", (char *) NULL
-};
-static char *lineJoinST[] = {
-    "miter", "round", "bevel", (char *) NULL
-};
+PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 /* Just a placeholder for not yet implemented stuff. */
 static char *nullST[] = {
     "", (char *) NULL
 };
+
+// @@@ BAD I had to duplicate this record here and in tkPathStyle.h.
+//     Else I get problems with Tk_Offset and records.
 
 static Tk_OptionSpec styleOptionSpecs[] = {
     {TK_OPTION_COLOR, "-fill", (char *) NULL, (char *) NULL,
@@ -385,7 +347,6 @@ static Tk_OptionSpec styleOptionSpecs[] = {
 	{TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
 		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
 };
-
 
 void
 PathStyleInit(Tcl_Interp* interp) 

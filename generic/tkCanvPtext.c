@@ -344,12 +344,7 @@ DisplayPtext(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     }
     TkPathBeginPath(ctx, stylePtr);
     /* @@@ We need to handle gradients as well here!
-           Wait to see what the other APIs have to see.
-           Quartz:
-    kCGTextFillClip,
-    kCGTextStrokeClip,
-    kCGTextFillStrokeClip,
-    kCGTextClip
+           Wait to see what the other APIs have to say.
     */
     TkPathTextDraw(ctx, stylePtr, &(ptextPtr->textStyle), ptextPtr->bbox.x1, ptextPtr->y, 
             ptextPtr->utf8, ptextPtr->custom);

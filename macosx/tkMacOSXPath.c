@@ -326,6 +326,9 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGAffineTransform transform;
 
+    if (mPtr == NULL) {
+        return;
+    }
     /* Return the transform [ a b c d tx ty ]. */
     transform = CGAffineTransformMake(
             (float) mPtr->a, (float) mPtr->b,

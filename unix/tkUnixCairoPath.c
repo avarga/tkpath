@@ -27,7 +27,6 @@ extern Tcl_Interp *gInterp;
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
-    //Drawable 			d;
     cairo_t*	 		c;
     cairo_surface_t* 	surface;
 } TkPathContext_;
@@ -53,7 +52,6 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     surface = cairo_xlib_surface_create(Tk_Display(tkwin), d, Tk_Visual(tkwin), Tk_Width(tkwin), Tk_ReqHeight(tkwin));
     c = cairo_create(surface);
     context->c = c;
-    //context->d = d;
     context->surface = surface;
     return (TkPathContext) context;
 }
@@ -75,6 +73,9 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_matrix_t matrix;
+    if (m == NULL) {
+        return;
+    }
     cairo_matrix_init(&matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
     cairo_transform(context->c, &matrix);
 }
@@ -338,11 +339,54 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
 
-    /* TODO */
+    /* @@@ TODO */
     cairo_paint_with_alpha(context->c, 0.0);
     cairo_rectangle(context->c, x, y, width, height);
     cairo_fill_preserve(context->c);
 
+}
+
+void
+TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_surface_t *surface = context->surface;
+    Tk_PhotoImageBlock block;
+    unsigned char *data;
+    unsigned char *pixel;
+    int width, height;
+    int stride;					/* Bytes per row. */
+    unsigned char *src, *dst;
+    int i, j;
+    
+    width = cairo_image_surface_get_width(surface);
+    height = cairo_image_surface_get_height(surface);
+    //data = CGBitmapContextGetData(c);
+    //stride = CGBitmapContextGetBytesPerRow(c);
+    
+    Tk_PhotoGetImage(photo, &block);    
+    pixel = ckalloc(height*stride);
+
+    for (i = 0; i < height; i++) {
+        src = data + i*stride;
+        dst = pixel + i*stride;
+        /* Copy XRGB to RGBX in one shot, alphas in a loop. */
+        /* @@@ Keep ARGB format in photo? */
+        memcpy(dst, src+1, 4*width-1);
+        for (j = 0; j < width; j++, src += 4, dst += 4) {
+            *(dst+3) = *src;
+        }
+    }
+    block.pixelPtr = pixel;
+    block.width = width;
+    block.height = height;
+    block.pitch = stride;
+    block.pixelSize = 4;
+    block.offset[0] = 0;
+    block.offset[1] = 1;
+    block.offset[2] = 2;
+    block.offset[3] = 3;
+    Tk_PhotoPutBlock(photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
 }
 
 void TkPathClipToPath(TkPathContext ctx, int fillRule)

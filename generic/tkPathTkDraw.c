@@ -122,6 +122,9 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
 
+    if (m == NULL) {
+        return;
+    }
     if (context->m == NULL) {
         context->m = (TMatrix *) ckalloc(sizeof(TMatrix));
         *(context->m) = *m;
@@ -269,6 +272,9 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, double x, d
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int iwidth, iheight;
 
+    if (image == NULL) {
+        return;
+    }
     PathApplyTMatrix(context->m, &x, &y);
     Tk_SizeOfImage(image, &iwidth, &iheight);
     Tk_RedrawImage(image, 0, 0, iwidth, iheight, context->drawable, (int)x, (int)y);
@@ -324,6 +330,13 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 void    	
 TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
 {
+
+}
+
+void
+TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
 
 }
 

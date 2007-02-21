@@ -73,8 +73,7 @@ class PathC {
     void CurveTo(float x1, float y1, float x2, float y2, float x, float y);
 	void AddRectangle(float x, float y, float width, float height);
 	void AddEllipse(float cx, float cy, float rx, float ry);
-    void DrawImage(Tk_Image image, Tk_PhotoHandle photo, 
-        float x, float y, float width, float height);
+    void DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height);
     void DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
         float x, float y, char *utf8);
     void CloseFigure(void);
@@ -251,8 +250,7 @@ inline void PathC::AddEllipse(float cx, float cy, float rx, float ry)
     mCurrentPoint.Y = cy;
 }
 
-inline void PathC::DrawImage(Tk_Image image, Tk_PhotoHandle photo, 
-        float x, float y, float width, float height)
+inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height)
 {
     Tk_PhotoImageBlock block;
     PixelFormat format;
@@ -620,6 +618,9 @@ TkPathContext TkPathInitSurface(int width, int height)
 void TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (m == NULL) {
+        return;
+    }
     context->c->PushTMatrix(m);
 }
 
@@ -697,7 +698,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->DrawImage(image, photo, (float) x, (float) y, (float) width, (float) height);
+    context->c->DrawImage(photo, (float) x, (float) y, (float) width, (float) height);
 }
 
 void
@@ -778,6 +779,13 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 void    	
 TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
 {
+
+}
+
+void
+TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
 
 }
 

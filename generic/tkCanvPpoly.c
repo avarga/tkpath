@@ -90,7 +90,14 @@ static void		TranslatePpoly(Tk_Canvas canvas,
 
 PATH_STYLE_CUSTOM_CONFIG_RECORDS
 
-static Tk_ConfigSpec configSpecs[] = {
+static Tk_ConfigSpec polylineConfigSpecs[] = {
+    PATH_CONFIG_SPEC_STYLE_MATRIX(PpolyItem),
+    PATH_CONFIG_SPEC_STYLE_STROKE(PpolyItem, "black"),
+    PATH_CONFIG_SPEC_CORE(PpolyItem),
+    PATH_END_CONFIG_SPEC
+};
+
+static Tk_ConfigSpec ppolygonConfigSpecs[] = {
     PATH_CONFIG_SPEC_STYLE_FILL(PpolyItem, ""),
     PATH_CONFIG_SPEC_STYLE_MATRIX(PpolyItem),
     PATH_CONFIG_SPEC_STYLE_STROKE(PpolyItem, "black"),
@@ -107,7 +114,7 @@ Tk_ItemType tkPolylineType = {
     "polyline",						/* name */
     sizeof(PpolyItem),				/* itemSize */
     CreatePolyline,					/* createProc */
-    configSpecs,					/* configSpecs */
+    polylineConfigSpecs,			/* configSpecs */
     ConfigurePpoly,					/* configureProc */
     PpolyCoords,					/* coordProc */
     DeletePpoly,					/* deleteProc */
@@ -130,7 +137,7 @@ Tk_ItemType tkPpolygonType = {
     "ppolygon",						/* name */
     sizeof(PpolyItem),				/* itemSize */
     CreatePpolygon,					/* createProc */
-    configSpecs,					/* configSpecs */
+    ppolygonConfigSpecs,			/* configSpecs */
     ConfigurePpoly,					/* configureProc */
     PpolyCoords,					/* coordProc */
     DeletePpoly,					/* deleteProc */
@@ -266,8 +273,9 @@ ConfigurePpoly(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     unsigned long mask;
 
     tkwin = Tk_CanvasTkwin(canvas);
-    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-            (CONST char **) objv, (char *) ppolyPtr, flags|TK_CONFIG_OBJS)) {
+    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, 
+            (ppolyPtr->type == kPpolyTypePolyline) ? polylineConfigSpecs : ppolygonConfigSpecs, 
+            objc, (CONST char **) objv, (char *) ppolyPtr, flags|TK_CONFIG_OBJS)) {
         return TCL_ERROR;
     }
     

@@ -179,7 +179,10 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     TMatrix tmp = context->CTM;
     TMatrix *p = &(context->CTM);
-    
+
+    if (m == NULL) {
+        return;
+    }    
 #if 0 // @@@ TODO
     XFORM xForm;
     
@@ -331,6 +334,9 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int iwidth, iheight;
 
+    if (image == NULL) {
+        return;
+    }
     if (context->haveMatrix) {
         PathApplyTMatrix(&(context->CTM), &x, &y);
     }
@@ -374,6 +380,13 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 void    	
 TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
 {
+
+}
+
+void
+TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
 
 }
 

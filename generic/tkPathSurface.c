@@ -32,9 +32,11 @@ static int 	SurfaceEraseObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int 
 
 static int	SurfaceCreateEllipse(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int objc, Tcl_Obj* CONST objv[]);
 static int	SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
+static int	SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 static int	SurfaceCreatePline(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 static int	SurfaceCreatePpoly(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int objc, Tcl_Obj* CONST objv[]);
 static int	SurfaceCreatePrect(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
+static int	SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
 static void	SurfaceInitOptions(Tcl_Interp* interp);
 
 static int	uid = 0;
@@ -250,7 +252,7 @@ SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
             break;
         }
         case kPathSurfaceItemPimage: {
-
+            result = SurfaceCreatePimage(interp, surfacePtr, objc, objv);
             break;
         }
         case kPathSurfaceItemPline: {
@@ -267,7 +269,7 @@ SurfaceCreateObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
             break;
         }
         case kPathSurfaceItemPtext: {
-
+            result = SurfaceCreatePtext(interp, surfacePtr, objc, objv);
             break;
         }
     }
@@ -551,6 +553,60 @@ bail:
     return result;
 }
 
+typedef struct SurfPimageItem {
+    char *imageName;
+    double height;
+    double width;
+    TMatrix *matrixPtr;
+} SurfPimageItem;
+
+static Tk_OptionSpec pimageOptionSpecs[] = {
+    {TK_OPTION_DOUBLE, "-height", (char *) NULL, (char *) NULL,
+        "0", -1, Tk_Offset(SurfPimageItem, height), 0, 0, 0},
+	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
+		(char *) NULL, -1, Tk_Offset(SurfPimageItem, matrixPtr),
+		TK_OPTION_NULL_OK, (ClientData) &matrixCO, 0},
+    {TK_OPTION_STRING, "-image", (char *) NULL, (char *) NULL,
+        "", -1, Tk_Offset(SurfPimageItem, imageName), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_DOUBLE, "-width", (char *) NULL, (char *) NULL,
+        "0", -1, Tk_Offset(SurfPimageItem, width), 0, 0, 0},
+    PATH_OPTION_SPEC_END
+};
+
+static int
+SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
+{
+    TkPathContext 	context = surfacePtr->ctx;
+    int				i;
+    double			point[2];
+    SurfPimageItem	item;
+    Tk_Image		image;
+    Tk_PhotoHandle	photo;
+
+    item.imageName = NULL;
+    i = GetFirstOptionIndex(objc, objv);
+	if (GetPointCoords(interp, point, i-3, objv+3) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (SurfaceParseOptions(interp, (char *)&item, gOptionTablePimage, objc-i, objv+i) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (item.imageName != NULL) {
+        photo = Tk_FindPhoto(interp, item.imageName);
+        if (photo == NULL) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj("no photo with the given name", -1));
+            return TCL_ERROR;
+        }
+        image = Tk_GetImage(interp, Tk_MainWindow(interp), item.imageName, NULL, (ClientData) NULL);
+        if (item.matrixPtr != NULL) {
+            TkPathPushTMatrix(context, item.matrixPtr);
+        }
+        TkPathImage(context, image, photo, point[0], point[1], item.width, item.height);
+        Tk_FreeImage(image);
+    }
+    return TCL_OK;
+}
+
 static Tk_OptionSpec plineOptionSpecs[] = {
     PATH_OPTION_SPEC_STYLENAME(SurfGenericItem),
     PATH_OPTION_SPEC_STYLE_MATRIX(SurfGenericItem),
@@ -697,18 +753,99 @@ bail:
     return result;
 }
 
+typedef struct SurfPtextItem {
+    char *styleName;
+    Tk_PathStyle style;
+    Tk_PathTextStyle textStyle;
+    int textAnchor;
+    double x;
+    double y;
+    char *utf8;				/* The actual text to display; UTF-8 */
+} SurfPtextItem;
+
+static char *textAnchorST[] = {
+    "start", "middle", "end", (char *) NULL
+};
+
+static Tk_OptionSpec ptextOptionSpecs[] = {
+    {TK_OPTION_STRING, "-fontfamily", (char *) NULL, (char *) NULL,
+        "Helvetica", -1, Tk_Offset(SurfPtextItem, textStyle.fontFamily), 
+        TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_DOUBLE, "-fontsize", (char *) NULL, (char *) NULL,
+        "12.0", -1, Tk_Offset(SurfPtextItem,  textStyle.fontSize), 0, 0, 0},
+    {TK_OPTION_STRING, "-text", (char *) NULL, (char *) NULL,
+        "", -1, Tk_Offset(SurfPtextItem, utf8), 
+        TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-textanchor", (char *) NULL, (char *) NULL,
+        "start", -1, Tk_Offset(SurfPtextItem, textAnchor),
+        0, (ClientData) textAnchorST, 0},
+    PATH_OPTION_SPEC_STYLENAME(SurfPtextItem),
+    PATH_OPTION_SPEC_STYLE_FILL(SurfPtextItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(SurfPtextItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfPtextItem, "black"),
+    PATH_OPTION_SPEC_END
+};
+
+static int
+SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
+{
+    TkPathContext 	context = surfacePtr->ctx;
+    int 			i;
+    double 			point[2];
+    SurfPtextItem 	item;
+    PathRect		r;
+    void 			*custom = NULL;
+    int				result = TCL_OK;
+        
+    item.styleName = NULL;
+    item.textAnchor = kPathTextAnchorStart;
+    item.utf8 = NULL;
+    item.textStyle.fontFamily = NULL;
+    i = GetFirstOptionIndex(objc, objv);
+    TkPathCreateStyle(&(item.style));
+	if (GetPointCoords(interp, point, i-3, objv+3) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (SurfaceParseOptions(interp, (char *)&item, gOptionTablePtext, objc-i, objv+i) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    PathStyleMergeStyles(Tk_MainWindow(interp), &(item.style), item.styleName, 0);
+    if (TkPathTextConfig(interp, &(item.textStyle), item.utf8, &custom) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    r = TkPathTextMeasureBbox(&(item.textStyle), item.utf8, custom);
+    switch (item.textAnchor) {
+        case kPathTextAnchorMiddle:
+            point[0] -= (r.x2 - r.x1)/2;
+            break;
+        case kPathTextAnchorEnd:
+            point[0] -= (r.x2 - r.x1);
+            break;
+    }
+    TkPathPushTMatrix(context, item.style.matrixPtr);
+    TkPathBeginPath(context, &(item.style));
+    TkPathTextDraw(context, &(item.style), &(item.textStyle), point[0], point[1], item.utf8, custom);
+    TkPathEndPath(context);
+    TkPathTextFree(&(item.textStyle), custom);
+bail:
+    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
+    return result;
+}
+
 static void
 SurfaceInitOptions(Tcl_Interp* interp)
 {
     gOptionTableCircle = Tk_CreateOptionTable(interp, circleOptionSpecs);
     gOptionTableEllipse = Tk_CreateOptionTable(interp, ellipseOptionSpecs);
     gOptionTablePath = Tk_CreateOptionTable(interp, pathOptionSpecs);
-    //gOptionTablePimage = Tk_CreateOptionTable(interp, pimageOptionSpecs);
+    gOptionTablePimage = Tk_CreateOptionTable(interp, pimageOptionSpecs);
     gOptionTablePline = Tk_CreateOptionTable(interp, plineOptionSpecs);
     gOptionTablePolyline = Tk_CreateOptionTable(interp, polylineOptionSpecs);
     gOptionTablePpolygon = Tk_CreateOptionTable(interp, ppolygonOptionSpecs);
     gOptionTablePrect = Tk_CreateOptionTable(interp, prectOptionSpecs);
-    //gOptionTablePtext = Tk_CreateOptionTable(interp, ptextOptionSpecs);
+    gOptionTablePtext = Tk_CreateOptionTable(interp, ptextOptionSpecs);
 }
 
 static int 
