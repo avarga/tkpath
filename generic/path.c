@@ -30,7 +30,7 @@ extern Tk_ItemType tkPimageType;
 extern Tk_ItemType tkPtextType;
 
 int gUseAntiAlias = 0;
-int gSurfaceNoPremultiplyAlpha = 1;
+int gSurfaceNoPremultiplyAlpha = 0;
 Tcl_Interp *gInterp = NULL;
 
 extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,

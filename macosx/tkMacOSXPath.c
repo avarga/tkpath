@@ -644,10 +644,12 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
         for (i = 0; i < height; i++) {
             src = data + i*bytesPerRow;
             dst = pixel + i*bytesPerRow;
-            for (j = 0; j < width; j++, src += 4, dst += 4) {
+            for (j = 0; j < width; j++) {
                 alpha = *(src+3);
                 if (alpha == 0xFF) {
                     memcpy(dst, src, 3);
+                    src += 3;
+                    dst += 3;
                 } else {
                     *dst = ((*src << 8) - *src)/alpha;
                     dst++, src++;
@@ -657,6 +659,7 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
                     dst++, src++;
                 }
                 *dst = alpha;
+                dst++, src++;
             }
         }
     }

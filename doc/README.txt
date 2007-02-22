@@ -232,6 +232,14 @@ o Radial gradients are created and configured using:
     set image [$token copy [image create photo]]
     See Tk_PhotoPutBlock for how it affects the existing image.
 
+    The boolean variable ::tkpath::nopremultiplyalpha controls how the copy
+    action handles surfaces with the alpha component premultiplied. If 1 the
+    copy process correctly handles any format with premultiplied alpha. This
+    gets the highest quality for antialiasing and correct results for partial
+    transparency. It is also slower. If 0 the alpha values are not remultiplied
+    and the result is wrong for transparent regions, and gives poor antialiasing
+    effects. But it is faster. The default is 1.
+
     $token create type coords ?options?
 
     draws the item of type to the surface. All item types and the corresponding
