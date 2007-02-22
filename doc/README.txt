@@ -214,15 +214,22 @@ o Radial gradients are created and configured using:
 
  o In memory drawing surfaces:
 
-    ::tkpath::surface width height
+    ::tkpath::surface new width height
 
     creates an in memory drawing surface. Its format is platform dependent.
-    It returns a token which is a new command:
+    It returns a token which is a new command.
+
+    ::tkpath::surface names
+
+    lists the existing surface tokens.
+
+    The surface token commands are:
 
     $token copy image
 
     copies the surface to an existing image (photo) and returns the name of
-    the image so you can do: set image [$token copy [image create photo]]
+    the image so you can do: 
+    set image [$token copy [image create photo]]
     See Tk_PhotoPutBlock for how it affects the existing image.
 
     $token create type coords ?options?

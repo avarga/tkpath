@@ -141,6 +141,16 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
     }
 }
 
+void TkPathSaveState(TkPathContext ctx)
+{
+
+}
+
+void TkPathRestoreState(TkPathContext ctx)
+{
+
+}
+
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
 {
     /* TkPathContext_ *context = (TkPathContext_ *) ctx; */

@@ -23,12 +23,25 @@
 extern int gUseAntiAlias;
 extern Tcl_Interp *gInterp;
 
+/* @@@ Need to use cairo_image_surface_create_for_data() here since prior to 1.2
+ *     there doesn't exist any cairo_image_surface_get_data() accessor. 
+ */
+typedef struct PathSurfaceCairoRecord {
+    unsigned char 	*data;
+    cairo_format_t 	format;
+    int 			width;
+    int				height;
+    int 			stride;		/* the number of bytes between the start of rows in the buffer */
+} PathSurfaceCairoRecord;
+
 /*
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
-    cairo_t*	 		c;
-    cairo_surface_t* 	surface;
+    cairo_t*	 			c;
+    cairo_surface_t* 		surface;
+    PathSurfaceCairoRecord*	record;		/* NULL except for memory surfaces. 
+                                         * Skip when cairo 1.2 widely spread. */
 } TkPathContext_;
 
 
@@ -53,10 +66,43 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     c = cairo_create(surface);
     context->c = c;
     context->surface = surface;
+    context->record = NULL;
     return (TkPathContext) context;
 }
 
 TkPathContext TkPathInitSurface(int width, int height)
+{
+    cairo_t *c;
+    cairo_surface_t *surface;
+    unsigned char *data;
+    int stride;
+    PathSurfaceCairoRecord *record; 
+    
+    /* @@@ Need to use cairo_image_surface_create_for_data() here since prior to 1.2
+     *     there doesn't exist any cairo_image_surface_get_data() accessor. 
+     */
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    PathSurfaceCairoRecord *record = (PathSurfaceCairoRecord *) ckalloc((unsigned) (sizeof(PathSurfaceCairoRecord)));
+    stride = 4*width;
+    /* Round up to nearest multiple of 16 */
+    stride = (stride + (16-1)) & ~(16-1);
+    data = ckalloc(height*stride);
+    memset(data, '\0', height*stride);
+    surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, width, height, stride);
+    record->data = data;
+    record->format = CAIRO_FORMAT_ARGB32;
+    record->width = width;
+    record->height = height;
+    record->stride = stride;
+    c = cairo_create(surface);
+    context->c = c;
+    context->surface = surface;
+    context->record = record;
+    return (TkPathContext) context;
+}
+
+#if 0
+TkPathContext TkPathInitSurfaceBUBUBU(int width, int height)
 {
     cairo_t *c;
     cairo_surface_t *surface;
@@ -67,9 +113,9 @@ TkPathContext TkPathInitSurface(int width, int height)
     context->surface = surface;
     return (TkPathContext) context;
 }
+#endif
 
-void
-TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
+void TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_matrix_t matrix;
@@ -78,6 +124,18 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
     }
     cairo_matrix_init(&matrix, m->a, m->b, m->c, m->d, m->tx, m->ty);
     cairo_transform(context->c, &matrix);
+}
+
+void TkPathSaveState(TkPathContext ctx)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_save(context->c);
+}
+
+void TkPathRestoreState(TkPathContext ctx)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_restore(context->c);
 }
 
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
@@ -339,11 +397,12 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
 
-    /* @@@ TODO */
+    /* @@@ TODO Not sure about this. */
+    /*
     cairo_paint_with_alpha(context->c, 0.0);
     cairo_rectangle(context->c, x, y, width, height);
     cairo_fill_preserve(context->c);
-
+    */
 }
 
 void
@@ -361,8 +420,8 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     
     width = cairo_image_surface_get_width(surface);
     height = cairo_image_surface_get_height(surface);
-    //data = CGBitmapContextGetData(c);
-    //stride = CGBitmapContextGetBytesPerRow(c);
+    data = context->record->data;
+    stride = context->record->stride;
     
     Tk_PhotoGetImage(photo, &block);    
     pixel = ckalloc(height*stride);
@@ -484,6 +543,10 @@ void TkPathFree(TkPathContext ctx)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_destroy(context->c);
     cairo_surface_destroy(context->surface);
+    if (context->record) {
+        ckfree(context->record->data);
+        ckfree((char *) context->record);
+    }
     ckfree((char *) context);
 }
 

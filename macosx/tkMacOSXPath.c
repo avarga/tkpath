@@ -27,6 +27,7 @@
 #define FloatToFixed(a) ((Fixed)((float) (a) * fixed1))
 
 extern int gUseAntiAlias;
+extern int gSurfaceNoPremultiplyAlpha;
 
 /* For debugging. */
 extern Tcl_Interp *gInterp;
@@ -338,6 +339,20 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr)
 }
 
 void
+TkPathSaveState(TkPathContext ctx)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextSaveGState(context->c);
+}
+
+void
+TkPathRestoreState(TkPathContext ctx)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    CGContextRestoreGState(context->c);
+}
+
+void
 TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
@@ -619,22 +634,32 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     
     Tk_PhotoGetImage(photo, &block);    
     pixel = ckalloc(height*bytesPerRow);
-    memcpy(pixel, data, height*bytesPerRow);
-#if 0
-    unsigned char *src, *dst;
-    int i, j;
-
-    for (i = 0; i < height; i++) {
-        src = data + i*bytesPerRow;
-        dst = pixel + i*bytesPerRow;
-        /* Copy XRGB to RGBX in one shot, alphas in a loop. */
-        /* @@@ Keep ARGB format in photo? */
-        memcpy(dst, src+1, 4*width-1);
-        for (j = 0; j < width; j++, src += 4, dst += 4) {
-            *(dst+3) = *src;
+    if (gSurfaceNoPremultiplyAlpha) {
+        memcpy(pixel, data, height*bytesPerRow);
+    } else {
+        unsigned char *src, *dst, alpha;
+        int i, j;
+    
+        /* Copy src RGBA with premulitplied alpha to "plain" RGBA. */
+        for (i = 0; i < height; i++) {
+            src = data + i*bytesPerRow;
+            dst = pixel + i*bytesPerRow;
+            for (j = 0; j < width; j++, src += 4, dst += 4) {
+                alpha = *(src+3);
+                if (alpha == 0xFF) {
+                    memcpy(dst, src, 3);
+                } else {
+                    *dst = ((*src << 8) - *src)/alpha;
+                    dst++, src++;
+                    *dst = ((*src << 8) - *src)/alpha;
+                    dst++, src++;
+                    *dst = ((*src << 8) - *src)/alpha;
+                    dst++, src++;
+                }
+                *dst = alpha;
+            }
         }
     }
-#endif
     block.pixelPtr = pixel;
     block.width = width;
     block.height = height;

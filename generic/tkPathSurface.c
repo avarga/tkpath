@@ -22,6 +22,8 @@ typedef struct PathSurface {
 
 static Tcl_HashTable 	*surfaceHashPtr = NULL;
 
+static int 	StaticSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
+static int 	NamesSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
 static int 	NewSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
 static int 	SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
 static int 	SurfaceCopyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]);
@@ -42,21 +44,6 @@ static void	SurfaceInitOptions(Tcl_Interp* interp);
 static int	uid = 0;
 static char *kSurfaceNameBase = "tkpath::surface";
 
-static CONST char *surfaceCmds[] = {
-    "copy", 	"create", 	"destroy", 
-    "erase", 	"height", 	"width",
-    (char *) NULL
-};
-
-enum {
-	kPathSurfaceCmdCopy						= 0L,
-    kPathSurfaceCmdCreate,
-    kPathSurfaceCmdDestroy,
-    kPathSurfaceCmdErase,
-    kPathSurfaceCmdHeight,
-    kPathSurfaceCmdWidth
-};
-
 int
 InitSurface(Tcl_Interp *interp)
 {
@@ -64,8 +51,68 @@ InitSurface(Tcl_Interp *interp)
     Tcl_InitHashTable(surfaceHashPtr, TCL_STRING_KEYS);
 
     Tcl_CreateObjCommand(interp, "::tkpath::surface",
-            NewSurfaceObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+            StaticSurfaceObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     SurfaceInitOptions(interp);
+    return TCL_OK;
+}
+
+static CONST char *staticSurfaceCmds[] = {
+    "names", 	"new", 
+    (char *) NULL
+};
+
+enum {
+	kPathStaticSurfaceCmdNames						= 0L,
+    kPathStaticSurfaceCmdNew
+};
+
+static int 
+StaticSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[])
+{
+    int 		index;
+    int 		result = TCL_OK;
+
+    if (objc < 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "command ?arg arg...?");
+        return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObj(interp, objv[1], staticSurfaceCmds, "command", 0,
+            &index) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    switch (index) {
+        case kPathStaticSurfaceCmdNames: {
+            result = NamesSurfaceObjCmd(clientData, interp, objc, objv);
+            break;
+        }
+        case kPathStaticSurfaceCmdNew: {
+            result = NewSurfaceObjCmd(clientData, interp, objc, objv);
+            break;
+        }
+    }
+    return result;
+}
+
+static int 	
+NamesSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[])
+{
+    char   		*name;
+    Tcl_HashEntry *hPtr;
+    Tcl_Obj *listObj;
+    Tcl_HashSearch search;
+
+    if (objc != 2) {
+        Tcl_WrongNumArgs(interp, 2, objv, NULL);
+        return TCL_ERROR;
+    }
+    listObj = Tcl_NewListObj(0, NULL);
+    hPtr = Tcl_FirstHashEntry(surfaceHashPtr, &search);
+    while (hPtr != NULL) {
+        name = Tcl_GetHashKey(surfaceHashPtr, hPtr);
+        Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(name, -1));
+        hPtr = Tcl_NextHashEntry(&search);
+    }
+    Tcl_SetObjResult(interp, listObj);
     return TCL_OK;
 }
 
@@ -80,14 +127,14 @@ NewSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* C
     int isNew;
     int result = TCL_OK;
 
-    if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "width height");
+    if (objc != 4) {
+        Tcl_WrongNumArgs(interp, 2, objv, "width height");
         return TCL_ERROR;
     }
-    if (Tcl_GetIntFromObj(interp, objv[1], &width) != TCL_OK) {
+    if (Tcl_GetIntFromObj(interp, objv[2], &width) != TCL_OK) {
         return TCL_ERROR;
     }
-    if (Tcl_GetIntFromObj(interp, objv[2], &height) != TCL_OK) {
+    if (Tcl_GetIntFromObj(interp, objv[3], &height) != TCL_OK) {
         return TCL_ERROR;
     }
     
@@ -112,6 +159,21 @@ NewSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* C
     return result;
 }
 
+static CONST char *surfaceCmds[] = {
+    "copy", 	"create", 	"destroy", 
+    "erase", 	"height", 	"width",
+    (char *) NULL
+};
+
+enum {
+	kPathSurfaceCmdCopy						= 0L,
+    kPathSurfaceCmdCreate,
+    kPathSurfaceCmdDestroy,
+    kPathSurfaceCmdErase,
+    kPathSurfaceCmdHeight,
+    kPathSurfaceCmdWidth
+};
+
 static int 
 SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[])
 {
@@ -127,7 +189,6 @@ SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONS
             &index) != TCL_OK) {
         return TCL_ERROR;
     }
-
     switch (index) {
         case kPathSurfaceCmdCopy: {
             result = SurfaceCopyObjCmd(interp, surfacePtr, objc, objv);
@@ -502,12 +563,16 @@ SurfaceCreateEllipse(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int 
     ellAtom.cy = center[1];
     ellAtom.rx = ellipse.rx;
     ellAtom.ry = (type == kPathSurfaceItemCircle) ? ellipse.rx : ellipse.ry;
+    TkPathSaveState(context);
+    TkPathPushTMatrix(context, ellipse.style.matrixPtr);
     if (TkPathMakePath(context, atomPtr, &(ellipse.style)) != TCL_OK) {
+        TkPathRestoreState(context);
         return TCL_ERROR;
     }
     bbox = TkPathGetTotalBbox(atomPtr, &(ellipse.style));
     TkPathPaintPath(context, atomPtr, &(ellipse.style), &bbox);
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(ellipse.style));
+    TkPathRestoreState(context);
     return TCL_OK;
 }
 
@@ -539,6 +604,8 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
         goto bail;
     }
     PathStyleMergeStyles(Tk_MainWindow(interp), &(item.style), item.styleName, 0);
+    TkPathSaveState(context);
+    TkPathPushTMatrix(context, item.style.matrixPtr);
     if (TkPathMakePath(context, atomPtr, &(item.style)) != TCL_OK) {
         result = TCL_ERROR;
         goto bail;
@@ -548,6 +615,7 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
 bail:
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
     TkPathFreeAtoms(atomPtr);
+    TkPathRestoreState(context);
     // CRASH!!!
     //Tk_FreeConfigOptions((char *)&item, gOptionTablePath, Tk_MainWindow(interp));
     return result;
@@ -598,11 +666,11 @@ SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
             return TCL_ERROR;
         }
         image = Tk_GetImage(interp, Tk_MainWindow(interp), item.imageName, NULL, (ClientData) NULL);
-        if (item.matrixPtr != NULL) {
-            TkPathPushTMatrix(context, item.matrixPtr);
-        }
+        TkPathSaveState(context);
+        TkPathPushTMatrix(context, item.matrixPtr);
         TkPathImage(context, image, photo, point[0], point[1], item.width, item.height);
         Tk_FreeImage(image);
+        TkPathRestoreState(context);
     }
     return TCL_OK;
 }
@@ -637,6 +705,8 @@ SurfaceCreatePline(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     PathStyleMergeStyles(Tk_MainWindow(interp), &(item.style), item.styleName, 0);
     atomPtr = NewMoveToAtom(points[0], points[1]);
     atomPtr->nextPtr = NewLineToAtom(points[2], points[3]);
+    TkPathSaveState(context);
+    TkPathPushTMatrix(context, item.style.matrixPtr);
     if (TkPathMakePath(context, atomPtr, &(item.style)) != TCL_OK) {
         result = TCL_ERROR;
         goto bail;
@@ -646,6 +716,7 @@ SurfaceCreatePline(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
 bail:
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
     TkPathFreeAtoms(atomPtr);
+    TkPathRestoreState(context);
     return result;
 }
 
@@ -688,6 +759,8 @@ SurfaceCreatePpoly(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int ob
         goto bail;
     }
     PathStyleMergeStyles(Tk_MainWindow(interp), &(item.style), item.styleName, 0);
+    TkPathSaveState(context);
+    TkPathPushTMatrix(context, item.style.matrixPtr);
     if (TkPathMakePath(context, atomPtr, &(item.style)) != TCL_OK) {
         result = TCL_ERROR;
         goto bail;
@@ -697,6 +770,7 @@ SurfaceCreatePpoly(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int ob
 bail:
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
     TkPathFreeAtoms(atomPtr);
+    TkPathRestoreState(context);
     return result;
 }
 
@@ -740,6 +814,8 @@ SurfaceCreatePrect(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     PathStyleMergeStyles(Tk_MainWindow(interp), &(prect.style), prect.styleName, 0);
     prect.rx = MAX(0.0, prect.rx);
     prect.ry = MAX(0.0, prect.ry);
+    TkPathSaveState(context);
+    TkPathPushTMatrix(context, prect.style.matrixPtr);
     TkPathMakePrectAtoms(points, prect.rx, prect.ry, &atomPtr);
     if (TkPathMakePath(context, atomPtr, &(prect.style)) != TCL_OK) {
         result = TCL_ERROR;
@@ -750,6 +826,7 @@ SurfaceCreatePrect(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
 bail:
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(prect.style));
     TkPathFreeAtoms(atomPtr);
+    TkPathRestoreState(context);
     return result;
 }
 
@@ -780,9 +857,9 @@ static Tk_OptionSpec ptextOptionSpecs[] = {
         "start", -1, Tk_Offset(SurfPtextItem, textAnchor),
         0, (ClientData) textAnchorST, 0},
     PATH_OPTION_SPEC_STYLENAME(SurfPtextItem),
-    PATH_OPTION_SPEC_STYLE_FILL(SurfPtextItem, ""),
+    PATH_OPTION_SPEC_STYLE_FILL(SurfPtextItem, "black"),
     PATH_OPTION_SPEC_STYLE_MATRIX(SurfPtextItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(SurfPtextItem, "black"),
+    PATH_OPTION_SPEC_STYLE_STROKE(SurfPtextItem, ""),
     PATH_OPTION_SPEC_END
 };
 
@@ -824,6 +901,7 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
             point[0] -= (r.x2 - r.x1);
             break;
     }
+    TkPathSaveState(context);
     TkPathPushTMatrix(context, item.style.matrixPtr);
     TkPathBeginPath(context, &(item.style));
     TkPathTextDraw(context, &(item.style), &(item.textStyle), point[0], point[1], item.utf8, custom);
@@ -831,6 +909,7 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     TkPathTextFree(&(item.textStyle), custom);
 bail:
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
+    TkPathRestoreState(context);
     return result;
 }
 

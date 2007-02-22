@@ -30,6 +30,7 @@ extern Tk_ItemType tkPimageType;
 extern Tk_ItemType tkPtextType;
 
 int gUseAntiAlias = 0;
+int gSurfaceNoPremultiplyAlpha = 1;
 Tcl_Interp *gInterp = NULL;
 
 extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
@@ -104,6 +105,16 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     Tcl_EvalEx(interp, "namespace eval ::tkpath {}", -1, TCL_EVAL_GLOBAL);
     if (Tcl_LinkVar(interp, "::tkpath::antialias",
             (char *) &gUseAntiAlias, TCL_LINK_BOOLEAN) != TCL_OK) {
+        Tcl_ResetResult(interp);
+    }
+    
+    /*
+     * With gSurfaceNoPremultiplyAlpha true we ignore the "premultiply alpha"
+     * and use RGB as is. Else we need to divide each RGB with alpha
+     * to get "true" values.
+     */
+    if (Tcl_LinkVar(interp, "::tkpath::nopremultiplyalpha",
+            (char *) &gSurfaceNoPremultiplyAlpha, TCL_LINK_BOOLEAN) != TCL_OK) {
         Tcl_ResetResult(interp);
     }
     

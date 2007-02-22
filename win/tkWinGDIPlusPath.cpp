@@ -67,6 +67,8 @@ class PathC {
     ~PathC(void);
 
     void PushTMatrix(TMatrix *m);
+    void SaveState();
+    void RestoreState();
 	void BeginPath(Drawable d, Tk_PathStyle *style);
     void MoveTo(float x, float y);
     void LineTo(float x, float y);
@@ -90,11 +92,16 @@ class PathC {
     PointF 			mCurrentPoint;
     Graphics 		*mGraphics;
     GraphicsPath 	*mPath;
+    GraphicsContainer mContainerStack[10];
+    int				mCointainerTop = 0;
     Drawable 		mD;
     
     static Pen* PathCreatePen(Tk_PathStyle *style);
     static SolidBrush* PathCreateBrush(Tk_PathStyle *style);
 };
+
+//     GraphicsContainer container = mGraphics->BeginContainer();
+//    mGraphics->EndContainer(container);
 
 /*
  * This is used as a place holder for platform dependent stuff between each call.
@@ -201,6 +208,21 @@ inline void PathC::PushTMatrix(TMatrix *tm)
 {
     Matrix m((float)tm->a, (float)tm->b, (float)tm->c, (float)tm->d, (float)tm->tx, (float)tm->ty);
     mGraphics->MultiplyTransform(&m);
+}
+
+inline void PathC::SaveState()
+{
+    if (mCointainerTop >= 9) {
+        Tcl_Panic("reached top of cointainer stack of GDI+");
+    }
+    mContainerStack[mCointainerTop] = mGraphics->BeginContainer();
+    mCointainerTop++;
+}
+
+inline void PathC::RestoreState()
+{
+    mCointainerTop--;
+    mGraphics->EndContainer(mContainerStack[mCointainerTop]);
 }
 
 inline void PathC::BeginPath(Drawable d, Tk_PathStyle *style)
@@ -459,7 +481,7 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
     PathRect			*tPtr;
 	PointF				p1, p2;
 
-    stopArrPtr = fillPtr->stopArrPtr;    
+    stopArrPtr = fillPtr->stopArrPtr;
     nstops = stopArrPtr->nstops;
     tPtr = fillPtr->transitionPtr;
 
@@ -622,6 +644,18 @@ void TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
         return;
     }
     context->c->PushTMatrix(m);
+}
+
+void TkPathSaveState(TkPathContext ctx)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_save(context->c);
+}
+
+void TkPathRestoreState(TkPathContext ctx)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    cairo_restore(context->c);
 }
 
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)

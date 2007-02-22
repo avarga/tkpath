@@ -231,6 +231,8 @@ void    	TkPathFree(TkPathContext ctx);
 int			TkPathDrawingDestroysPath(void);
 int			TkPathPixelAlign(void);
 void		TkPathPushTMatrix(TkPathContext ctx, TMatrix *mPtr);
+void		TkPathSaveState(TkPathContext ctx);
+void		TkPathRestoreState(TkPathContext ctx);
 
 /*
  * Utilities for creating and deleting Tk_PathStyles.
