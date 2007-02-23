@@ -930,16 +930,16 @@ SurfaceInitOptions(Tcl_Interp* interp)
 static int 
 SurfaceEraseObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[])
 {
-    int x, y, width, height;
+    double x, y, width, height;
     
     if (objc != 6) {
         Tcl_WrongNumArgs(interp, 2, objv, "x y width height");
         return TCL_ERROR;
     }
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK) ||
-            (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) ||
-            (Tcl_GetIntFromObj(interp, objv[4], &width) != TCL_OK) ||
-            (Tcl_GetIntFromObj(interp, objv[5], &height) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x) != TCL_OK) ||
+            (Tcl_GetDoubleFromObj(interp, objv[3], &y) != TCL_OK) ||
+            (Tcl_GetDoubleFromObj(interp, objv[4], &width) != TCL_OK) ||
+            (Tcl_GetDoubleFromObj(interp, objv[5], &height) != TCL_OK)) {
         return TCL_ERROR;
     }
     TkPathSurfaceErase(surfacePtr->ctx, x, y, width, height);

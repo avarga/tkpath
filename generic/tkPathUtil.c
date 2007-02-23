@@ -145,7 +145,7 @@ TkPathDrawPath(
  *		None.
  *
  * Side effects:
- *		Any path defined in the context is painted..
+ *		Any path defined in the context is painted.
  *
  *--------------------------------------------------------------
  */
@@ -196,6 +196,89 @@ TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr)
     bare = GetGenericBarePathBbox(atomPtr);
     total = GetGenericPathTotalBboxFromBare(atomPtr, stylePtr, &bare);
     return total;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * PathCopyBitsPremultipliedAlphaRGBA, PathCopyBitsPremultipliedAlphaARGB --
+ *
+ *		Copies bitmap data that have alpha premultiplied into a bitmap
+ *		with "true" RGB values need for Tk_Photo. The source format is
+ *		either RGBA or ARGB, but destination always RGBA used for photos.
+ *
+ * Results:
+ *		None.
+ *
+ * Side effects:
+ *		None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+PathCopyBitsPremultipliedAlphaRGBA(unsigned char *from, unsigned char *to, 
+        int width, int height, int bytesPerRow)
+{
+    unsigned char *src, *dst, alpha;
+    int i, j;
+
+    /* Copy src RGBA with premulitplied alpha to "plain" RGBA. */
+    for (i = 0; i < height; i++) {
+        src = from + i*bytesPerRow;
+        dst = to + i*bytesPerRow;
+        for (j = 0; j < width; j++) {
+            alpha = *(src+3);
+            if (alpha == 0xFF) {
+                memcpy(dst, src, 4);
+                src += 4;
+                dst += 4;
+            } else {
+                /* dst = 255*src/alpha */
+                *dst = ((*src << 8) - *src)/alpha;
+                dst++, src++;
+                *dst = ((*src << 8) - *src)/alpha;
+                dst++, src++;
+                *dst = ((*src << 8) - *src)/alpha;
+                dst++, src++;
+                *dst = alpha;
+                dst++, src++;
+            }
+        }
+    }
+}
+
+void
+PathCopyBitsPremultipliedAlphaARGB(unsigned char *from, unsigned char *to, 
+        int width, int height, int bytesPerRow)
+{
+    unsigned char *src, *dst, alpha;
+    int i, j;
+
+    /* Copy src ARGB with premulitplied alpha to "plain" RGBA. */
+    for (i = 0; i < height; i++) {
+        src = from + i*bytesPerRow;
+        dst = to + i*bytesPerRow;
+        for (j = 0; j < width; j++) {
+            alpha = *src;
+            if (alpha == 0xFF) {
+                memcpy(dst, src+1, 3);
+                *(dst+3) = alpha;
+                src += 4;
+                dst += 4;
+            } else {
+                /* dst = 255*src/alpha */
+                *(dst+3) = alpha;
+                src++;
+                *dst = ((*src << 8) - *src)/alpha;
+                dst++, src++;
+                *dst = ((*src << 8) - *src)/alpha;
+                dst++, src++;
+                *dst = ((*src << 8) - *src)/alpha;
+                dst++, dst++, src++;
+            }
+        }
+    }
 }
 
 /* from mozilla */

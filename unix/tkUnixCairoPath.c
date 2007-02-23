@@ -21,6 +21,7 @@
 #define RedDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
 extern int gUseAntiAlias;
+extern int gSurfaceNoPremultiplyAlpha;
 extern Tcl_Interp *gInterp;
 
 /* @@@ Need to use cairo_image_surface_create_for_data() here since prior to 1.2
@@ -76,7 +77,6 @@ TkPathContext TkPathInitSurface(int width, int height)
     cairo_surface_t *surface;
     unsigned char *data;
     int stride;
-    PathSurfaceCairoRecord *record; 
     
     /* @@@ Need to use cairo_image_surface_create_for_data() here since prior to 1.2
      *     there doesn't exist any cairo_image_surface_get_data() accessor. 
@@ -86,7 +86,7 @@ TkPathContext TkPathInitSurface(int width, int height)
     stride = 4*width;
     /* Round up to nearest multiple of 16 */
     stride = (stride + (16-1)) & ~(16-1);
-    data = ckalloc(height*stride);
+    data = (unsigned char *) ckalloc(height*stride);
     memset(data, '\0', height*stride);
     surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, width, height, stride);
     record->data = data;
@@ -396,13 +396,33 @@ void
 TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-
-    /* @@@ TODO Not sure about this. */
-    /*
-    cairo_paint_with_alpha(context->c, 0.0);
-    cairo_rectangle(context->c, x, y, width, height);
-    cairo_fill_preserve(context->c);
-    */
+    unsigned char *data, *dst;
+    int i, j;
+    int ix, iy, iwidth, iheight;
+    int iend, jend;
+    int stride;
+    
+    /* Had to do it directly on the bits. Assuming CAIRO_FORMAT_ARGB32 
+     * Be careful not to address the bitmap outside its limits. */
+    data = context->record->data;
+    stride = context->record->stride;
+    ix = (int) (x + 0.5);
+    iy = (int) (y + 0.5);
+    iwidth = (int) (width + 0.5);
+    iheight = (int) (height + 0.5);
+    ix = MAX(0, MIN(context->record->width, ix));
+    iy = MAX(0, MIN(context->record->height, iy));
+    iwidth = MAX(0, iwidth);
+    iheight = MAX(0, iheight);
+    iend = MIN(ix + iwidth, context->record->width);
+    jend = MIN(iy + iheight, context->record->height);
+    
+    for (i = ix; i < iend; i++) {
+        dst = data + i*stride;
+        for (j = iy; j < jend; j++, dst += 4) {
+            *dst = 0x00;
+        }
+    }
 }
 
 void
@@ -415,8 +435,6 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     unsigned char *pixel;
     int width, height;
     int stride;					/* Bytes per row. */
-    unsigned char *src, *dst;
-    int i, j;
     
     width = cairo_image_surface_get_width(surface);
     height = cairo_image_surface_get_height(surface);
@@ -424,17 +442,24 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     stride = context->record->stride;
     
     Tk_PhotoGetImage(photo, &block);    
-    pixel = ckalloc(height*stride);
+    pixel = (unsigned char *) ckalloc(height*stride);
 
-    for (i = 0; i < height; i++) {
-        src = data + i*stride;
-        dst = pixel + i*stride;
-        /* Copy XRGB to RGBX in one shot, alphas in a loop. */
-        /* @@@ Keep ARGB format in photo? */
-        memcpy(dst, src+1, 4*width-1);
-        for (j = 0; j < width; j++, src += 4, dst += 4) {
-            *(dst+3) = *src;
+    if (gSurfaceNoPremultiplyAlpha) {
+        unsigned char *src, *dst;
+        int i, j;
+
+        for (i = 0; i < height; i++) {
+            src = data + i*stride;
+            dst = pixel + i*stride;
+            /* Copy XRGB to RGBX in one shot, alphas in a loop. */
+            /* @@@ Keep ARGB format in photo? */
+            memcpy(dst, src+1, 4*width-1);
+            for (j = 0; j < width; j++, src += 4, dst += 4) {
+                *(dst+3) = *src;
+            }
         }
+    } else {
+        PathCopyBitsPremultipliedAlphaARGB(data, pixel, width, height, stride);
     }
     block.pixelPtr = pixel;
     block.width = width;
@@ -544,7 +569,7 @@ void TkPathFree(TkPathContext ctx)
     cairo_destroy(context->c);
     cairo_surface_destroy(context->surface);
     if (context->record) {
-        ckfree(context->record->data);
+        ckfree((char *) context->record->data);
         ckfree((char *) context->record);
     }
     ckfree((char *) context);

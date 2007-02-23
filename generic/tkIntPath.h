@@ -273,6 +273,10 @@ void		PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayP
 void 		PathApplyTMatrix(TMatrix *m, double *x, double *y);
 void 		PathApplyTMatrixToPoint(TMatrix *m, double in[2], double out[2]);
 void		PathInverseTMatrix(TMatrix *m, TMatrix *mi);
+void		PathCopyBitsPremultipliedAlphaRGBA(unsigned char *from, unsigned char *to, 
+                    int width, int height, int bytesPerRow);
+void		PathCopyBitsPremultipliedAlphaARGB(unsigned char *from, unsigned char *to, 
+                    int width, int height, int bytesPerRow);
 
 int			ObjectIsEmpty(Tcl_Obj *objPtr);
 int			PathGetTMatrix(Tcl_Interp* interp, CONST char *list, TMatrix *matrixPtr);

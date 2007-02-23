@@ -637,31 +637,7 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     if (gSurfaceNoPremultiplyAlpha) {
         memcpy(pixel, data, height*bytesPerRow);
     } else {
-        unsigned char *src, *dst, alpha;
-        int i, j;
-    
-        /* Copy src RGBA with premulitplied alpha to "plain" RGBA. */
-        for (i = 0; i < height; i++) {
-            src = data + i*bytesPerRow;
-            dst = pixel + i*bytesPerRow;
-            for (j = 0; j < width; j++) {
-                alpha = *(src+3);
-                if (alpha == 0xFF) {
-                    memcpy(dst, src, 3);
-                    src += 3;
-                    dst += 3;
-                } else {
-                    *dst = ((*src << 8) - *src)/alpha;
-                    dst++, src++;
-                    *dst = ((*src << 8) - *src)/alpha;
-                    dst++, src++;
-                    *dst = ((*src << 8) - *src)/alpha;
-                    dst++, src++;
-                }
-                *dst = alpha;
-                dst++, src++;
-            }
-        }
+        PathCopyBitsPremultipliedAlphaRGBA(data, pixel, width, height, bytesPerRow);
     }
     block.pixelPtr = pixel;
     block.width = width;
