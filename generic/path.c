@@ -30,7 +30,7 @@ extern Tk_ItemType tkPimageType;
 extern Tk_ItemType tkPtextType;
 
 int gUseAntiAlias = 0;
-int gSurfaceNoPremultiplyAlpha = 0;
+int gSurfaceCopyPremultiplyAlpha = 1;
 Tcl_Interp *gInterp = NULL;
 
 extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
@@ -39,7 +39,7 @@ extern int 	RadialGradientCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 extern int 	PixelAlignObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
-extern int	InitSurface(Tcl_Interp *interp);
+extern int	SurfaceInit(Tcl_Interp *interp);
 
 
 #ifdef _WIN32
@@ -109,19 +109,18 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     }
     
     /*
-     * With gSurfaceNoPremultiplyAlpha true we ignore the "premultiply alpha"
+     * With gSurfaceCopyPremultiplyAlpha true we ignore the "premultiply alpha"
      * and use RGB as is. Else we need to divide each RGB with alpha
      * to get "true" values.
      */
-    if (Tcl_LinkVar(interp, "::tkpath::nopremultiplyalpha",
-            (char *) &gSurfaceNoPremultiplyAlpha, TCL_LINK_BOOLEAN) != TCL_OK) {
+    if (Tcl_LinkVar(interp, "::tkpath::premultiplyalpha",
+            (char *) &gSurfaceCopyPremultiplyAlpha, TCL_LINK_BOOLEAN) != TCL_OK) {
         Tcl_ResetResult(interp);
     }
     
     Tcl_CreateObjCommand(interp, "::tkpath::pixelalign",
             PixelAlignObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 
-    // @@@ Move these to Init functions inside the files containing commands
     /*
      * Make separate gradient objects, similar to SVG.
      */
@@ -130,13 +129,11 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     Tcl_CreateObjCommand(interp, "::tkpath::radialgradient",
             RadialGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathGradientInit(interp);
-    InitSurface(interp);
+    SurfaceInit(interp);
 
     /*
      * Style object.
      */
-    Tcl_CreateObjCommand(interp, "::tkpath::style",
-            StyleObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathStyleInit(interp);
 
     return Tcl_PkgProvide(interp, "tkpath", TKPATH_PATCHLEVEL);

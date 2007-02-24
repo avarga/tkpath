@@ -304,8 +304,6 @@ int 		PathGenericCmdDispatcher(
                     void (*freeProc)(Tcl_Interp *interp, char *recordPtr));
 void		PathStyleInit(Tcl_Interp* interp);
 void		PathGradientInit(Tcl_Interp* interp);
-int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp,
-                    int objc, Tcl_Obj* CONST objv[]);
 int			PathStyleHaveWithName(CONST char *name);
 int			HaveGradientStyleWithName(CONST char *name);
 void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName, long flags);

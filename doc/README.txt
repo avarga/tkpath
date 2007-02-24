@@ -163,9 +163,34 @@ if paramters are wrong.
     -state, and -tags.
 
 
+ o Gradients are created and configured using:
+
+    ::tkpath::gradient cmd ?options?
+
+        ::tkpath::gradient cget token option
+	    Returns the value of an option.
+
+	::tkpath::gradient configure token ?option? ?value option value...?
+	    Configures the object in the usual tcl way.
+
+        ::tkpath::gradient create type ?-key value ...?
+            Creates a linear gradient object with type any of linear or radial
+	    and returns its token.
+
+        ::tkpath::gradient delete token
+            Deletes the object.
+
+        ::tkpath::gradient names
+            Returns all existing tokens.
+
+	::tkpath::gradient type token
+	    Returns the type (linear|radial) of the gradient.
+
+
  o Linear gradients are created and configured using:
 
     ::tkpath::lineargradient cmd ?options?
+
 
 	::tkpath::lineargradient cget token option
 	    Returns the value of an option.
@@ -225,14 +250,14 @@ o Radial gradients are created and configured using:
 
     The surface token commands are:
 
-    $token copy image
+    $token copy imageName
 
     copies the surface to an existing image (photo) and returns the name of
     the image so you can do: 
     set image [$token copy [image create photo]]
     See Tk_PhotoPutBlock for how it affects the existing image.
 
-    The boolean variable ::tkpath::nopremultiplyalpha controls how the copy
+    The boolean variable ::tkpath::premultiplyalpha controls how the copy
     action handles surfaces with the alpha component premultiplied. If 1 the
     copy process correctly handles any format with premultiplied alpha. This
     gets the highest quality for antialiasing and correct results for partial

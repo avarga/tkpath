@@ -30,10 +30,10 @@ static char 			*kStyleNameBase = "pathstyle";
  * Declarationd for functions local to this file.
  */
 
+static int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
 static char *	StyleCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
 static void 	StyleConfigNotify(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]);
 static void		StyleFree(Tcl_Interp *interp, char *recordPtr);
-
 
 /*
  * Custom option support.
@@ -358,6 +358,9 @@ PathStyleInit(Tcl_Interp* interp)
      * The option table must only be made once and not for each instance.
      */
     gStyleOptionTable = Tk_CreateOptionTable(interp, styleOptionSpecs);
+
+    Tcl_CreateObjCommand(interp, "::tkpath::style",
+            StyleObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 }
 
 /*

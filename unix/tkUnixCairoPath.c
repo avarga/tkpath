@@ -21,7 +21,7 @@
 #define RedDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
 extern int gUseAntiAlias;
-extern int gSurfaceNoPremultiplyAlpha;
+extern int gSurfaceCopyPremultiplyAlpha;
 extern Tcl_Interp *gInterp;
 
 /* @@@ Need to use cairo_image_surface_create_for_data() here since prior to 1.2
@@ -100,20 +100,6 @@ TkPathContext TkPathInitSurface(int width, int height)
     context->record = record;
     return (TkPathContext) context;
 }
-
-#if 0
-TkPathContext TkPathInitSurfaceBUBUBU(int width, int height)
-{
-    cairo_t *c;
-    cairo_surface_t *surface;
-    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
-    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    c = cairo_create(surface);
-    context->c = c;
-    context->surface = surface;
-    return (TkPathContext) context;
-}
-#endif
 
 void TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 {
@@ -444,7 +430,11 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     Tk_PhotoGetImage(photo, &block);    
     pixel = (unsigned char *) ckalloc(height*stride);
 
-    if (gSurfaceNoPremultiplyAlpha) {
+    if (gSurfaceCopyPremultiplyAlpha) {
+        PathCopyBitsPremultipliedAlphaARGB(data, pixel, width, height, stride);
+    } else {
+        memcpy(pixel, data, height*stride);    
+#if 0
         unsigned char *src, *dst;
         int i, j;
 
@@ -458,8 +448,7 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
                 *(dst+3) = *src;
             }
         }
-    } else {
-        PathCopyBitsPremultipliedAlphaARGB(data, pixel, width, height, stride);
+#endif
     }
     block.pixelPtr = pixel;
     block.width = width;

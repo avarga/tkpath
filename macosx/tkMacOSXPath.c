@@ -27,7 +27,7 @@
 #define FloatToFixed(a) ((Fixed)((float) (a) * fixed1))
 
 extern int gUseAntiAlias;
-extern int gSurfaceNoPremultiplyAlpha;
+extern int gSurfaceCopyPremultiplyAlpha;
 
 /* For debugging. */
 extern Tcl_Interp *gInterp;
@@ -634,10 +634,10 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     
     Tk_PhotoGetImage(photo, &block);    
     pixel = ckalloc(height*bytesPerRow);
-    if (gSurfaceNoPremultiplyAlpha) {
-        memcpy(pixel, data, height*bytesPerRow);
-    } else {
+    if (gSurfaceCopyPremultiplyAlpha) {
         PathCopyBitsPremultipliedAlphaRGBA(data, pixel, width, height, bytesPerRow);
+    } else {
+        memcpy(pixel, data, height*bytesPerRow);
     }
     block.pixelPtr = pixel;
     block.width = width;

@@ -45,7 +45,7 @@ static int	uid = 0;
 static char *kSurfaceNameBase = "tkpath::surface";
 
 int
-InitSurface(Tcl_Interp *interp)
+SurfaceInit(Tcl_Interp *interp)
 {
     surfaceHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
     Tcl_InitHashTable(surfaceHashPtr, TCL_STRING_KEYS);
