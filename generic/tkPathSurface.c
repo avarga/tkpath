@@ -617,7 +617,7 @@ bail:
     TkPathFreeAtoms(atomPtr);
     TkPathRestoreState(context);
     // CRASH!!!
-    //Tk_FreeConfigOptions((char *)&item, gOptionTablePath, Tk_MainWindow(interp));
+    Tk_FreeConfigOptions((char *)&item, gOptionTablePath, Tk_MainWindow(interp));
     return result;
 }
 

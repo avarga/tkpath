@@ -86,10 +86,6 @@ static void		TranslatePath(Tk_Canvas canvas,
 static int		GetSubpathMaxNumSegments(PathAtom *atomPtr);
 
 
-extern int 		LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
-                        int objc, Tcl_Obj* CONST objv[]);
-
-
 PATH_STYLE_CUSTOM_CONFIG_RECORDS
 
 static Tk_ConfigSpec configSpecs[] = {

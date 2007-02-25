@@ -33,10 +33,6 @@ int gUseAntiAlias = 0;
 int gSurfaceCopyPremultiplyAlpha = 1;
 Tcl_Interp *gInterp = NULL;
 
-extern int 	LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
-                    int objc, Tcl_Obj* CONST objv[]);
-extern int 	RadialGradientCmd(ClientData clientData, Tcl_Interp* interp,
-                    int objc, Tcl_Obj* CONST objv[]);
 extern int 	PixelAlignObjCmd(ClientData clientData, Tcl_Interp* interp,
                     int objc, Tcl_Obj* CONST objv[]);
 extern int	SurfaceInit(Tcl_Interp *interp);
@@ -124,10 +120,6 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
     /*
      * Make separate gradient objects, similar to SVG.
      */
-    Tcl_CreateObjCommand(interp, "::tkpath::lineargradient",
-            LinearGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "::tkpath::radialgradient",
-            RadialGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     PathGradientInit(interp);
     SurfaceInit(interp);
 

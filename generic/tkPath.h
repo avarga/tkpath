@@ -108,14 +108,6 @@ typedef struct LinearGradientFill {
     GradientStopArray *stopArrPtr;
 } LinearGradientFill;
 
-typedef struct LinearGradientFill2 {
-    PathRect linTransition;		/* Actually not a proper rect but a vector. */
-    int method;
-    int fillRule;				/* Not yet used. */
-    int units;
-    GradientStopArray *stopArrPtr;
-} LinearGradientFill2;
-
 typedef struct RadialTransition {
     double centerX;
     double centerY;
@@ -131,14 +123,6 @@ typedef struct RadialGradientFill {
     int units;
     GradientStopArray *stopArrPtr;
 } RadialGradientFill;
-
-typedef struct RadialGradientFill2 {
-    RadialTransition radTransition;
-    int method;
-    int fillRule;				/* Not yet used. */
-    int units;
-    GradientStopArray *stopArrPtr;
-} RadialGradientFill2;
 
 /*
  * Opaque platform dependent struct.

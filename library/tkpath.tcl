@@ -189,7 +189,7 @@ proc ::tkpath::coords {type args} {
     return $path
 }
 
-# ::tkpath::gradient --
+# ::tkpath::gradientstopsstyle --
 # 
 #       Utility function to create named example gradient definitions.
 #       
@@ -200,7 +200,7 @@ proc ::tkpath::coords {type args} {
 # Results:
 #       the stops list.
 
-proc ::tkpath::gradient {name args} {
+proc ::tkpath::gradientstopsstyle {name args} {
     
     switch -- $name {
 	rainbow {

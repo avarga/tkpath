@@ -163,7 +163,8 @@ if paramters are wrong.
     -state, and -tags.
 
 
- o Gradients are created and configured using:
+ o Gradients can be of two types, linear and radial. They are created and 
+   configured using:
 
     ::tkpath::gradient cmd ?options?
 
@@ -186,28 +187,7 @@ if paramters are wrong.
 	::tkpath::gradient type token
 	    Returns the type (linear|radial) of the gradient.
 
-
- o Linear gradients are created and configured using:
-
-    ::tkpath::lineargradient cmd ?options?
-
-
-	::tkpath::lineargradient cget token option
-	    Returns the value of an option.
-
-	::tkpath::lineargradient configure token ?option? ?value option value...?
-	    Configures the object in the usual tcl way.
-
-	::tkpath::lineargradient create ?-key value ...?
-	    Creates a linear gradient object and returns its token.
-
-	::tkpath::lineargradient delete token
-	    Deletes the object.
-
-	::tkpath::lineargradient names
-	    Returns all existing tokens.
-
-    The options are:
+    The options for linear gradients are:
 	-method pad|repeat|reflect    partial implementation; defaults to pad
 	-stops {stopSpec ?stopSpec...?}
 	    where stopSpec is a list {offset color ?opacity?}.
@@ -223,13 +203,8 @@ if paramters are wrong.
 	    See above. Defaults to bbox. Not implemented in the Tk and GDI 
 	    backends. 
 
-
-o Radial gradients are created and configured using:
-
-   ::tkpath::radialgradient cmd ?options?
-
-   Works as the tkpath::lineargradient except that it uses a -radialtransition
-   option instead of the -lineartransition:
+    The options for radial gradients are the same as for linear gradients
+    except that the -lineartransition is replaced by a -radialtransition:
        -radialtransition {cx cy ?r? ?fx fy?}
            specifies the transition circles relative the items bounding box
 	   and run from 0 to 1. They default to {0.5 0.5 0.5 0.5 0.5}.
