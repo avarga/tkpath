@@ -9,20 +9,19 @@
 			9AA54B2707F99AFF00A80065,
 		);
 		breakpoints = (
-			9A5972540B91B06100795CA5,
 		);
 		executables = (
 			F5C4047C036D26C701BDBE87,
 		);
 		perUserDictionary = {
-			PBXPerProjectTemplateStateSaveDate = 194094997;
+			PBXPerProjectTemplateStateSaveDate = 194099121;
 			PBXWorkspaceContents = (
 				{
 					LeftSlideOut = {
 						Split0 = {
 							Split0 = {
 								NavContent0 = {
-									bookmark = 9A59726F0B91B40D00795CA5;
+									bookmark = 9A1750160B91E6BF004906EB;
 									history = (
 										9ACCDAFE0581CCD300D671C7,
 										9ACCDAFF0581CCD300D671C7,
@@ -97,28 +96,29 @@
 										9A75C7080B8AEFB700A80005,
 										9A59FF160B8C3E8C0055B41F,
 										9A539E180B8C960E0055ADF1,
-										9A539E190B8C960E0055ADF1,
 										9A539E1C0B8C960E0055ADF1,
 										9A539E1E0B8C960E0055ADF1,
-										9A539E1F0B8C960E0055ADF1,
 										9A539E200B8C960E0055ADF1,
 										9A539E230B8C960E0055ADF1,
 										9A46D4800B8EEA1C00A80002,
 										9A46D4810B8EEA1C00A80002,
 										9A5C553D0B902A4B002C257C,
 										9A5C553E0B902A4B002C257C,
-										9A5998D10B908CFC0080D46A,
 										9A5998D30B908CFC0080D46A,
 										9A5998D40B908CFC0080D46A,
-										9A5998D50B908CFC0080D46A,
 										9A5A905C0B91856C00D354E8,
 										9A5A905D0B91856C00D354E8,
 										9A5A905E0B91856C00D354E8,
 										9A59725B0B91B40D00795CA5,
 										9A59725C0B91B40D00795CA5,
-										9A59725D0B91B40D00795CA5,
-										9A59725E0B91B40D00795CA5,
-										9A59725F0B91B40D00795CA5,
+										9A1750000B91E6BF004906EB,
+										9A1750010B91E6BF004906EB,
+										9A1750020B91E6BF004906EB,
+										9A1750030B91E6BF004906EB,
+										9A1750040B91E6BF004906EB,
+										9A1750050B91E6BF004906EB,
+										9A1750060B91E6BF004906EB,
+										9A1750070B91E6BF004906EB,
 									);
 									prevStack = (
 										9AA9447305822E1E00D671C7,
@@ -3457,6 +3457,20 @@
 										9A59726C0B91B40D00795CA5,
 										9A59726D0B91B40D00795CA5,
 										9A59726E0B91B40D00795CA5,
+										9A1750080B91E6BF004906EB,
+										9A1750090B91E6BF004906EB,
+										9A17500A0B91E6BF004906EB,
+										9A17500B0B91E6BF004906EB,
+										9A17500C0B91E6BF004906EB,
+										9A17500D0B91E6BF004906EB,
+										9A17500E0B91E6BF004906EB,
+										9A17500F0B91E6BF004906EB,
+										9A1750100B91E6BF004906EB,
+										9A1750110B91E6BF004906EB,
+										9A1750120B91E6BF004906EB,
+										9A1750130B91E6BF004906EB,
+										9A1750140B91E6BF004906EB,
+										9A1750150B91E6BF004906EB,
 									);
 								};
 								NavCount = 1;
@@ -3626,7 +3640,7 @@
 					WindowLocation = "{0, 4}";
 				},
 			);
-			PBXWorkspaceStateSaveDate = 194094997;
+			PBXWorkspaceStateSaveDate = 194099121;
 		};
 		perUserProjectItems = {
 			9A017EE207A0074300A80065 = 9A017EE207A0074300A80065;
@@ -3827,6 +3841,29 @@
 			9A1730A907918C3B00A80065 = 9A1730A907918C3B00A80065;
 			9A1730AA07918C3B00A80065 = 9A1730AA07918C3B00A80065;
 			9A1730AB07918C3B00A80065 = 9A1730AB07918C3B00A80065;
+			9A1750000B91E6BF004906EB = 9A1750000B91E6BF004906EB;
+			9A1750010B91E6BF004906EB = 9A1750010B91E6BF004906EB;
+			9A1750020B91E6BF004906EB = 9A1750020B91E6BF004906EB;
+			9A1750030B91E6BF004906EB = 9A1750030B91E6BF004906EB;
+			9A1750040B91E6BF004906EB = 9A1750040B91E6BF004906EB;
+			9A1750050B91E6BF004906EB = 9A1750050B91E6BF004906EB;
+			9A1750060B91E6BF004906EB = 9A1750060B91E6BF004906EB;
+			9A1750070B91E6BF004906EB = 9A1750070B91E6BF004906EB;
+			9A1750080B91E6BF004906EB = 9A1750080B91E6BF004906EB;
+			9A1750090B91E6BF004906EB = 9A1750090B91E6BF004906EB;
+			9A17500A0B91E6BF004906EB = 9A17500A0B91E6BF004906EB;
+			9A17500B0B91E6BF004906EB = 9A17500B0B91E6BF004906EB;
+			9A17500C0B91E6BF004906EB = 9A17500C0B91E6BF004906EB;
+			9A17500D0B91E6BF004906EB = 9A17500D0B91E6BF004906EB;
+			9A17500E0B91E6BF004906EB = 9A17500E0B91E6BF004906EB;
+			9A17500F0B91E6BF004906EB = 9A17500F0B91E6BF004906EB;
+			9A1750100B91E6BF004906EB = 9A1750100B91E6BF004906EB;
+			9A1750110B91E6BF004906EB = 9A1750110B91E6BF004906EB;
+			9A1750120B91E6BF004906EB = 9A1750120B91E6BF004906EB;
+			9A1750130B91E6BF004906EB = 9A1750130B91E6BF004906EB;
+			9A1750140B91E6BF004906EB = 9A1750140B91E6BF004906EB;
+			9A1750150B91E6BF004906EB = 9A1750150B91E6BF004906EB;
+			9A1750160B91E6BF004906EB = 9A1750160B91E6BF004906EB;
 			9A18021B09925C2D00A80065 = 9A18021B09925C2D00A80065;
 			9A18021D09925C2D00A80065 = 9A18021D09925C2D00A80065;
 			9A18021F09925C2D00A80065 = 9A18021F09925C2D00A80065;
@@ -4141,10 +4178,8 @@
 			9A5138D40B4957CB00A80006 = 9A5138D40B4957CB00A80006;
 			9A5138D50B4957CB00A80006 = 9A5138D50B4957CB00A80006;
 			9A539E180B8C960E0055ADF1 = 9A539E180B8C960E0055ADF1;
-			9A539E190B8C960E0055ADF1 = 9A539E190B8C960E0055ADF1;
 			9A539E1C0B8C960E0055ADF1 = 9A539E1C0B8C960E0055ADF1;
 			9A539E1E0B8C960E0055ADF1 = 9A539E1E0B8C960E0055ADF1;
-			9A539E1F0B8C960E0055ADF1 = 9A539E1F0B8C960E0055ADF1;
 			9A539E200B8C960E0055ADF1 = 9A539E200B8C960E0055ADF1;
 			9A539E230B8C960E0055ADF1 = 9A539E230B8C960E0055ADF1;
 			9A539E250B8C960E0055ADF1 = 9A539E250B8C960E0055ADF1;
@@ -4821,9 +4856,6 @@
 			9A5964CA07FBE12600D4618E = 9A5964CA07FBE12600D4618E;
 			9A59725B0B91B40D00795CA5 = 9A59725B0B91B40D00795CA5;
 			9A59725C0B91B40D00795CA5 = 9A59725C0B91B40D00795CA5;
-			9A59725D0B91B40D00795CA5 = 9A59725D0B91B40D00795CA5;
-			9A59725E0B91B40D00795CA5 = 9A59725E0B91B40D00795CA5;
-			9A59725F0B91B40D00795CA5 = 9A59725F0B91B40D00795CA5;
 			9A5972600B91B40D00795CA5 = 9A5972600B91B40D00795CA5;
 			9A5972610B91B40D00795CA5 = 9A5972610B91B40D00795CA5;
 			9A5972620B91B40D00795CA5 = 9A5972620B91B40D00795CA5;
@@ -4839,11 +4871,8 @@
 			9A59726C0B91B40D00795CA5 = 9A59726C0B91B40D00795CA5;
 			9A59726D0B91B40D00795CA5 = 9A59726D0B91B40D00795CA5;
 			9A59726E0B91B40D00795CA5 = 9A59726E0B91B40D00795CA5;
-			9A59726F0B91B40D00795CA5 = 9A59726F0B91B40D00795CA5;
-			9A5998D10B908CFC0080D46A = 9A5998D10B908CFC0080D46A;
 			9A5998D30B908CFC0080D46A = 9A5998D30B908CFC0080D46A;
 			9A5998D40B908CFC0080D46A = 9A5998D40B908CFC0080D46A;
-			9A5998D50B908CFC0080D46A = 9A5998D50B908CFC0080D46A;
 			9A5998DD0B908CFC0080D46A = 9A5998DD0B908CFC0080D46A;
 			9A5998DE0B908CFC0080D46A = 9A5998DE0B908CFC0080D46A;
 			9A5998DF0B908CFC0080D46A = 9A5998DF0B908CFC0080D46A;
@@ -8373,7 +8402,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 519";
 		rLen = 0;
-		rLoc = 24951;
+		rLoc = 25200;
 		rType = 0;
 		vrLen = 1354;
 		vrLoc = 5097;
@@ -8383,7 +8412,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 315";
 		rLen = 0;
-		rLoc = 10303;
+		rLoc = 10310;
 		rType = 0;
 		vrLen = 1462;
 		vrLoc = 9344;
@@ -8403,7 +8432,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 412";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 1234;
 		vrLoc = 11159;
@@ -8433,7 +8462,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 470";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 1060;
 		vrLoc = 12538;
@@ -8483,7 +8512,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 86";
 		rLen = 68;
-		rLoc = 2691;
+		rLoc = 2690;
 		rType = 0;
 		vrLen = 1138;
 		vrLoc = 1201;
@@ -8503,7 +8532,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 408";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 975;
 		vrLoc = 10879;
@@ -8533,7 +8562,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 398";
 		rLen = 0;
-		rLoc = 16962;
+		rLoc = 17119;
 		rType = 0;
 		vrLen = 1317;
 		vrLoc = 11204;
@@ -8543,7 +8572,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 416";
 		rLen = 0;
-		rLoc = 18072;
+		rLoc = 18046;
 		rType = 0;
 		vrLen = 1522;
 		vrLoc = 11524;
@@ -8593,7 +8622,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 425";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 874;
 		vrLoc = 9874;
@@ -8663,7 +8692,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 699";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 1247;
 		vrLoc = 13788;
@@ -8683,7 +8712,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 502";
 		rLen = 13;
-		rLoc = 20964;
+		rLoc = 21213;
 		rType = 0;
 		vrLen = 660;
 		vrLoc = 13834;
@@ -8713,7 +8742,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 69";
 		rLen = 0;
-		rLoc = 1827;
+		rLoc = 1815;
 		rType = 0;
 		vrLen = 1290;
 		vrLoc = 13475;
@@ -9050,6 +9079,248 @@
 		vrLen = 925;
 		vrLoc = 5263;
 	};
+	9A1750000B91E6BF004906EB = {
+		fRef = 9AB6AB700B835DCD00A80002;
+		isa = PBXTextBookmark;
+		name = "tkPathSurface.c: 598";
+		rLen = 17;
+		rLoc = 19148;
+		rType = 0;
+		vrLen = 895;
+		vrLoc = 18543;
+	};
+	9A1750010B91E6BF004906EB = {
+		fRef = 9AA0B6C407DD8C9900A80065;
+		isa = PBXTextBookmark;
+		name = "tkPathStyle.c: TkPathCreateStyle";
+		rLen = 2;
+		rLoc = 19792;
+		rType = 0;
+		vrLen = 1047;
+		vrLoc = 19542;
+	};
+	9A1750020B91E6BF004906EB = {
+		fRef = 9A96B2380B898CA800A80002;
+		isa = PBXTextBookmark;
+		name = "tkPathStyle.h: PATH_OPTION_SPEC_STYLE_MATRIX";
+		rLen = 0;
+		rLoc = 4014;
+		rType = 0;
+		vrLen = 3265;
+		vrLoc = 2792;
+	};
+	9A1750030B91E6BF004906EB = {
+		fRef = 9A58E5420796814B00FBE143;
+		isa = PBXTextBookmark;
+		name = "tkPathGradients.c: 201";
+		rLen = 0;
+		rLoc = 6501;
+		rType = 0;
+		vrLen = 1298;
+		vrLoc = 5254;
+	};
+	9A1750040B91E6BF004906EB = {
+		fRef = 9A6C4D7407AD01B100A80065;
+		isa = PBXTextBookmark;
+		name = "tkWinGDIPlusPath.cpp: 161";
+		rLen = 0;
+		rLoc = 4557;
+		rType = 0;
+		vrLen = 1227;
+		vrLoc = 18981;
+	};
+	9A1750050B91E6BF004906EB = {
+		fRef = 9AA1ECE6077FF68100A80065;
+		isa = PBXTextBookmark;
+		name = "tkMacOSXPath.c: 827";
+		rLen = 0;
+		rLoc = 24656;
+		rType = 0;
+		vrLen = 864;
+		vrLoc = 24569;
+	};
+	9A1750060B91E6BF004906EB = {
+		fRef = 9A1750180B91E6C0004906EB;
+		isa = PBXTextBookmark;
+		name = "CFByteOrder.h: 19";
+		rLen = 0;
+		rLoc = 449;
+		rType = 0;
+		vrLen = 1284;
+		vrLoc = 0;
+	};
+	9A1750070B91E6BF004906EB = {
+		fRef = 9A49B81F07A7AA2F00A80065;
+		isa = PBXTextBookmark;
+		name = "tkUnixCairoPath.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1858;
+		vrLoc = 6897;
+	};
+	9A1750080B91E6BF004906EB = {
+		fRef = 9AB6AB700B835DCD00A80002;
+		isa = PBXTextBookmark;
+		name = "tkPathSurface.c: result";
+		rLen = 0;
+		rLoc = 19084;
+		rType = 0;
+		vrLen = 1648;
+		vrLoc = 18589;
+	};
+	9A1750090B91E6BF004906EB = {
+		fRef = 9A6C4D7407AD01B100A80065;
+		isa = PBXTextBookmark;
+		name = "tkWinGDIPlusPath.cpp: 638";
+		rLen = 0;
+		rLoc = 19873;
+		rType = 0;
+		vrLen = 1127;
+		vrLoc = 18959;
+	};
+	9A17500A0B91E6BF004906EB = {
+		fRef = 9A49B81F07A7AA2F00A80065;
+		isa = PBXTextBookmark;
+		name = "tkUnixCairoPath.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1753;
+		vrLoc = 306;
+	};
+	9A17500B0B91E6BF004906EB = {
+		fRef = 9A6C4D7407AD01B100A80065;
+		isa = PBXTextBookmark;
+		name = "tkWinGDIPlusPath.cpp: 638";
+		rLen = 0;
+		rLoc = 19707;
+		rType = 0;
+		vrLen = 743;
+		vrLoc = 18675;
+	};
+	9A17500C0B91E6BF004906EB = {
+		fRef = 9AB6AB700B835DCD00A80002;
+		isa = PBXTextBookmark;
+		name = "tkPathSurface.c: 598";
+		rLen = 0;
+		rLoc = 19181;
+		rType = 0;
+		vrLen = 1654;
+		vrLoc = 18543;
+	};
+	9A17500D0B91E6BF004906EB = {
+		fRef = 9AA0B6C407DD8C9900A80065;
+		isa = PBXTextBookmark;
+		name = "tkPathStyle.c: 207";
+		rLen = 0;
+		rLoc = 6179;
+		rType = 0;
+		vrLen = 1730;
+		vrLoc = 645;
+	};
+	9A17500E0B91E6BF004906EB = {
+		fRef = 9AB6AB700B835DCD00A80002;
+		isa = PBXTextBookmark;
+		name = "tkPathSurface.c: 598";
+		rLen = 17;
+		rLoc = 19148;
+		rType = 0;
+		vrLen = 895;
+		vrLoc = 18543;
+	};
+	9A17500F0B91E6BF004906EB = {
+		fRef = 9AA0B6C407DD8C9900A80065;
+		isa = PBXTextBookmark;
+		name = "tkPathStyle.c: TkPathCreateStyle";
+		rLen = 2;
+		rLoc = 19792;
+		rType = 0;
+		vrLen = 1047;
+		vrLoc = 19542;
+	};
+	9A1750100B91E6BF004906EB = {
+		fRef = 9A96B2380B898CA800A80002;
+		isa = PBXTextBookmark;
+		name = "tkPathStyle.h: PATH_OPTION_SPEC_STYLE_MATRIX";
+		rLen = 0;
+		rLoc = 4014;
+		rType = 0;
+		vrLen = 3265;
+		vrLoc = 2792;
+	};
+	9A1750110B91E6BF004906EB = {
+		fRef = 9A58E5420796814B00FBE143;
+		isa = PBXTextBookmark;
+		name = "tkPathGradients.c: 201";
+		rLen = 0;
+		rLoc = 6501;
+		rType = 0;
+		vrLen = 1298;
+		vrLoc = 5254;
+	};
+	9A1750120B91E6BF004906EB = {
+		fRef = 9A6C4D7407AD01B100A80065;
+		isa = PBXTextBookmark;
+		name = "tkWinGDIPlusPath.cpp: 161";
+		rLen = 0;
+		rLoc = 4557;
+		rType = 0;
+		vrLen = 1227;
+		vrLoc = 18981;
+	};
+	9A1750130B91E6BF004906EB = {
+		fRef = 9A49B81F07A7AA2F00A80065;
+		isa = PBXTextBookmark;
+		name = "tkUnixCairoPath.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1858;
+		vrLoc = 6897;
+	};
+	9A1750140B91E6BF004906EB = {
+		fRef = 9AA1ECE6077FF68100A80065;
+		isa = PBXTextBookmark;
+		name = "tkMacOSXPath.c: 827";
+		rLen = 0;
+		rLoc = 24656;
+		rType = 0;
+		vrLen = 864;
+		vrLoc = 24569;
+	};
+	9A1750150B91E6BF004906EB = {
+		fRef = 9A1750170B91E6BF004906EB;
+		isa = PBXTextBookmark;
+		name = "CFByteOrder.h: 19";
+		rLen = 0;
+		rLoc = 449;
+		rType = 0;
+		vrLen = 1284;
+		vrLoc = 0;
+	};
+	9A1750160B91E6BF004906EB = {
+		fRef = 9A49B81F07A7AA2F00A80065;
+		isa = PBXTextBookmark;
+		name = "tkUnixCairoPath.c: 393";
+		rLen = 0;
+		rLoc = 12760;
+		rType = 0;
+		vrLen = 1589;
+		vrLoc = 13180;
+	};
+	9A1750170B91E6BF004906EB = {
+		isa = PBXFileReference;
+		name = CFByteOrder.h;
+		path = /System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/CFByteOrder.h;
+		refType = 0;
+	};
+	9A1750180B91E6C0004906EB = {
+		isa = PBXFileReference;
+		name = CFByteOrder.h;
+		path = /System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/CFByteOrder.h;
+		refType = 0;
+	};
 	9A18021B09925C2D00A80065 = {
 		fRef = 9A5B17C7097BA957000B33B2;
 		isa = PBXTextBookmark;
@@ -9125,7 +9396,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 399";
 		rLen = 22;
-		rLoc = 21746;
+		rLoc = 21745;
 		rType = 0;
 		vrLen = 1294;
 		vrLoc = 11077;
@@ -9175,7 +9446,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 166";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1611;
 		vrLoc = 4145;
@@ -9245,7 +9516,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 399";
 		rLen = 31;
-		rLoc = 21714;
+		rLoc = 21713;
 		rType = 0;
 		vrLen = 1557;
 		vrLoc = 0;
@@ -9265,7 +9536,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 356";
 		rLen = 0;
-		rLoc = 19719;
+		rLoc = 19718;
 		rType = 0;
 		vrLen = 780;
 		vrLoc = 9815;
@@ -9885,7 +10156,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 883";
 		rLen = 0;
-		rLoc = 29143;
+		rLoc = 29145;
 		rType = 0;
 		vrLen = 1181;
 		vrLoc = 27776;
@@ -9945,7 +10216,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 468";
 		rLen = 0;
-		rLoc = 34026;
+		rLoc = 34025;
 		rType = 0;
 		vrLen = 765;
 		vrLoc = 12833;
@@ -10035,7 +10306,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 284";
 		rLen = 0;
-		rLoc = 9277;
+		rLoc = 9284;
 		rType = 0;
 		vrLen = 1456;
 		vrLoc = 8165;
@@ -10065,7 +10336,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 281";
 		rLen = 0;
-		rLoc = 20320;
+		rLoc = 20569;
 		rType = 0;
 		vrLen = 971;
 		vrLoc = 6704;
@@ -10085,7 +10356,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 165";
 		rLen = 0;
-		rLoc = 5500;
+		rLoc = 5486;
 		rType = 0;
 		vrLen = 1307;
 		vrLoc = 4623;
@@ -10115,7 +10386,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 135";
 		rLen = 0;
-		rLoc = 5520;
+		rLoc = 5519;
 		rType = 0;
 		vrLen = 1610;
 		vrLoc = 3589;
@@ -10165,7 +10436,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 605";
 		rLen = 25;
-		rLoc = 22069;
+		rLoc = 22068;
 		rType = 0;
 		vrLen = 876;
 		vrLoc = 18537;
@@ -10185,7 +10456,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 601";
 		rLen = 0;
-		rLoc = 21812;
+		rLoc = 21811;
 		rType = 0;
 		vrLen = 1552;
 		vrLoc = 18210;
@@ -10205,7 +10476,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: stopPtr";
 		rLen = 12;
-		rLoc = 9502;
+		rLoc = 9501;
 		rType = 0;
 		vrLen = 695;
 		vrLoc = 8126;
@@ -10225,7 +10496,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 475";
 		rLen = 65;
-		rLoc = 15776;
+		rLoc = 15775;
 		rType = 0;
 		vrLen = 1199;
 		vrLoc = 14616;
@@ -10245,7 +10516,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 476";
 		rLen = 0;
-		rLoc = 15870;
+		rLoc = 15869;
 		rType = 0;
 		vrLen = 1958;
 		vrLoc = 14443;
@@ -10265,7 +10536,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 467";
 		rLen = 0;
-		rLoc = 15471;
+		rLoc = 15470;
 		rType = 0;
 		vrLen = 1820;
 		vrLoc = 14403;
@@ -10285,7 +10556,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 617";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 1363;
 		vrLoc = 22867;
@@ -10315,7 +10586,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 678";
 		rLen = 24;
-		rLoc = 34153;
+		rLoc = 34152;
 		rType = 0;
 		vrLen = 849;
 		vrLoc = 20969;
@@ -10581,7 +10852,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 516";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -10969,7 +11240,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 428";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 854;
 		vrLoc = 9922;
@@ -11009,7 +11280,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 75";
 		rLen = 0;
-		rLoc = 2497;
+		rLoc = 2485;
 		rType = 0;
 		vrLen = 1546;
 		vrLoc = 1339;
@@ -11049,7 +11320,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 462";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 1544;
 		vrLoc = 11091;
@@ -11069,7 +11340,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 445";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 1375;
 		vrLoc = 11091;
@@ -11089,7 +11360,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 181";
 		rLen = 0;
-		rLoc = 5546;
+		rLoc = 5532;
 		rType = 0;
 		vrLen = 1546;
 		vrLoc = 4007;
@@ -11149,7 +11420,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: stylePtr";
 		rLen = 0;
-		rLoc = 34033;
+		rLoc = 34032;
 		rType = 0;
 		vrLen = 415;
 		vrLoc = 13183;
@@ -11169,7 +11440,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 470";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 680;
 		vrLoc = 12918;
@@ -11199,7 +11470,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: PathLinearGradientInit";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 156;
 		vrLoc = 13442;
@@ -11389,7 +11660,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 405";
 		rLen = 0;
-		rLoc = 12885;
+		rLoc = 12955;
 		rType = 0;
 		vrLen = 1530;
 		vrLoc = 11985;
@@ -11409,7 +11680,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 410";
 		rLen = 0;
-		rLoc = 13008;
+		rLoc = 13078;
 		rType = 0;
 		vrLen = 1489;
 		vrLoc = 11985;
@@ -11419,9 +11690,9 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 942";
 		rLen = 0;
-		rLoc = 31519;
+		rLoc = 31521;
 		rType = 0;
-		vrLen = 1979;
+		vrLen = 1977;
 		vrLoc = 29698;
 	};
 	9A46D4890B8EEA1C00A80002 = {
@@ -11439,7 +11710,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 402";
 		rLen = 0;
-		rLoc = 12650;
+		rLoc = 12657;
 		rType = 0;
 		vrLen = 1453;
 		vrLoc = 12746;
@@ -11499,7 +11770,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 463";
 		rLen = 0;
-		rLoc = 14676;
+		rLoc = 14833;
 		rType = 0;
 		vrLen = 903;
 		vrLoc = 13869;
@@ -11529,7 +11800,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 463";
 		rLen = 0;
-		rLoc = 14676;
+		rLoc = 14833;
 		rType = 0;
 		vrLen = 1525;
 		vrLoc = 14074;
@@ -11599,7 +11870,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 89";
 		rLen = 7;
-		rLoc = 3139;
+		rLoc = 3183;
 		rType = 0;
 		vrLen = 1089;
 		vrLoc = 2317;
@@ -11713,7 +11984,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: LinGradientCreateAndConfig";
 		rLen = 0;
-		rLoc = 34946;
+		rLoc = 34945;
 		rType = 0;
 		vrLen = 882;
 		vrLoc = 12502;
@@ -11733,7 +12004,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: __LDBL_MAX__";
 		rLen = 0;
-		rLoc = 2632;
+		rLoc = 2631;
 		rType = 0;
 		vrLen = 870;
 		vrLoc = 930;
@@ -11943,7 +12214,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 49";
 		rLen = 0;
-		rLoc = 3606;
+		rLoc = 3650;
 		rType = 0;
 		vrLen = 812;
 		vrLoc = 0;
@@ -11963,7 +12234,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 57";
 		rLen = 0;
-		rLoc = 3672;
+		rLoc = 3716;
 		rType = 0;
 		vrLen = 780;
 		vrLoc = 164;
@@ -11983,7 +12254,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 62";
 		rLen = 0;
-		rLoc = 16156;
+		rLoc = 16313;
 		rType = 0;
 		vrLen = 774;
 		vrLoc = 207;
@@ -12033,7 +12304,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 209";
 		rLen = 0;
-		rLoc = 16190;
+		rLoc = 16347;
 		rType = 0;
 		vrLen = 662;
 		vrLoc = 5187;
@@ -12167,7 +12438,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 406";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 707;
 		vrLoc = 11386;
@@ -12177,7 +12448,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 433";
 		rLen = 0;
-		rLoc = 13008;
+		rLoc = 12982;
 		rType = 0;
 		vrLen = 1747;
 		vrLoc = 9569;
@@ -12222,16 +12493,6 @@
 		vrLen = 1926;
 		vrLoc = 4340;
 	};
-	9A539E190B8C960E0055ADF1 = {
-		fRef = 9A96B2380B898CA800A80002;
-		isa = PBXTextBookmark;
-		name = "tkPathStyle.h: lineJoinST";
-		rLen = 0;
-		rLoc = 2821;
-		rType = 0;
-		vrLen = 2743;
-		vrLoc = 2491;
-	};
 	9A539E1C0B8C960E0055ADF1 = {
 		fRef = 9AA54B1507F999B200A80065;
 		isa = PBXTextBookmark;
@@ -12251,16 +12512,6 @@
 		rType = 0;
 		vrLen = 621;
 		vrLoc = 4919;
-	};
-	9A539E1F0B8C960E0055ADF1 = {
-		fRef = 9A6C4D7407AD01B100A80065;
-		isa = PBXTextBookmark;
-		name = "tkWinGDIPlusPath.cpp: 624";
-		rLen = 0;
-		rLoc = 19181;
-		rType = 0;
-		vrLen = 705;
-		vrLoc = 18686;
 	};
 	9A539E200B8C960E0055ADF1 = {
 		fRef = 9A671A8F099DC683007AF773;
@@ -12337,7 +12588,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 354";
 		rLen = 0;
-		rLoc = 12005;
+		rLoc = 12012;
 		rType = 0;
 		vrLen = 637;
 		vrLoc = 10929;
@@ -12357,7 +12608,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 788";
 		rLen = 0;
-		rLoc = 24261;
+		rLoc = 24510;
 		rType = 0;
 		vrLen = 636;
 		vrLoc = 23624;
@@ -12367,7 +12618,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 339";
 		rLen = 0;
-		rLoc = 10546;
+		rLoc = 10553;
 		rType = 0;
 		vrLen = 1285;
 		vrLoc = 10716;
@@ -12387,7 +12638,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 362";
 		rLen = 0;
-		rLoc = 11212;
+		rLoc = 11219;
 		rType = 0;
 		vrLen = 1472;
 		vrLoc = 10886;
@@ -12437,7 +12688,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: ";
 		rLen = 0;
-		rLoc = 27675;
+		rLoc = 27677;
 		rType = 0;
 		vrLen = 1800;
 		vrLoc = 24460;
@@ -12457,7 +12708,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 793";
 		rLen = 0;
-		rLoc = 26127;
+		rLoc = 26129;
 		rType = 0;
 		vrLen = 2063;
 		vrLoc = 24460;
@@ -12477,7 +12728,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: SurfPtextItem";
 		rLen = 0;
-		rLoc = 25023;
+		rLoc = 25025;
 		rType = 0;
 		vrLen = 1970;
 		vrLoc = 24771;
@@ -12497,7 +12748,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 780";
 		rLen = 0;
-		rLoc = 25834;
+		rLoc = 25836;
 		rType = 0;
 		vrLen = 2012;
 		vrLoc = 24771;
@@ -12527,7 +12778,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: item";
 		rLen = 0;
-		rLoc = 26342;
+		rLoc = 26344;
 		rType = 0;
 		vrLen = 1918;
 		vrLoc = 23971;
@@ -12547,7 +12798,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 813";
 		rLen = 0;
-		rLoc = 27495;
+		rLoc = 27497;
 		rType = 0;
 		vrLen = 1733;
 		vrLoc = 25988;
@@ -12567,7 +12818,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: SurfaceInitOptions";
 		rLen = 0;
-		rLoc = 27664;
+		rLoc = 27666;
 		rType = 0;
 		vrLen = 1644;
 		vrLoc = 25988;
@@ -12587,7 +12838,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 811";
 		rLen = 0;
-		rLoc = 26968;
+		rLoc = 26970;
 		rType = 0;
 		vrLen = 1790;
 		vrLoc = 25988;
@@ -12607,7 +12858,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 807";
 		rLen = 0;
-		rLoc = 26733;
+		rLoc = 26735;
 		rType = 0;
 		vrLen = 1706;
 		vrLoc = 24703;
@@ -12627,7 +12878,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 810";
 		rLen = 0;
-		rLoc = 26860;
+		rLoc = 26862;
 		rType = 0;
 		vrLen = 1745;
 		vrLoc = 24622;
@@ -12657,7 +12908,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 813";
 		rLen = 0;
-		rLoc = 26968;
+		rLoc = 26970;
 		rType = 0;
 		vrLen = 1151;
 		vrLoc = 26371;
@@ -12677,7 +12928,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 858";
 		rLen = 0;
-		rLoc = 29143;
+		rLoc = 29145;
 		rType = 0;
 		vrLen = 1007;
 		vrLoc = 26129;
@@ -12757,7 +13008,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 79";
 		rLen = 0;
-		rLoc = 2460;
+		rLoc = 2504;
 		rType = 0;
 		vrLen = 843;
 		vrLoc = 1840;
@@ -12777,7 +13028,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 624";
 		rLen = 0;
-		rLoc = 19181;
+		rLoc = 19155;
 		rType = 0;
 		vrLen = 705;
 		vrLoc = 18686;
@@ -12787,7 +13038,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 858";
 		rLen = 0;
-		rLoc = 29143;
+		rLoc = 29145;
 		rType = 0;
 		vrLen = 962;
 		vrLoc = 26129;
@@ -12807,7 +13058,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 817";
 		rLen = 0;
-		rLoc = 27450;
+		rLoc = 27452;
 		rType = 0;
 		vrLen = 1917;
 		vrLoc = 26126;
@@ -12827,7 +13078,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 829";
 		rLen = 0;
-		rLoc = 27775;
+		rLoc = 27777;
 		rType = 0;
 		vrLen = 1993;
 		vrLoc = 26642;
@@ -12847,7 +13098,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 829";
 		rLen = 0;
-		rLoc = 27775;
+		rLoc = 27777;
 		rType = 0;
 		vrLen = 1921;
 		vrLoc = 26642;
@@ -12887,7 +13138,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 159";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1499;
 		vrLoc = 3858;
@@ -13117,7 +13368,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 278";
 		rLen = 0;
-		rLoc = 20320;
+		rLoc = 20569;
 		rType = 0;
 		vrLen = 574;
 		vrLoc = 6919;
@@ -13266,8 +13517,8 @@
 		fRef = 9A6C4D7407AD01B100A80065;
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 277";
-		rLen = 1970;
-		rLoc = 18350;
+		rLen = 2245;
+		rLoc = 18324;
 		rType = 0;
 		vrLen = 896;
 		vrLoc = 6743;
@@ -13277,7 +13528,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 44";
 		rLen = 0;
-		rLoc = 2549;
+		rLoc = 2593;
 		rType = 0;
 		vrLen = 1163;
 		vrLoc = 633;
@@ -13481,7 +13732,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 44";
 		rLen = 0;
-		rLoc = 2549;
+		rLoc = 2593;
 		rType = 0;
 		vrLen = 684;
 		vrLoc = 633;
@@ -13501,7 +13752,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 208";
 		rLen = 15;
-		rLoc = 15912;
+		rLoc = 16069;
 		rType = 0;
 		vrLen = 461;
 		vrLoc = 5118;
@@ -13511,7 +13762,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 370";
 		rLen = 0;
-		rLoc = 25816;
+		rLoc = 26065;
 		rType = 0;
 		vrLen = 878;
 		vrLoc = 8983;
@@ -13603,7 +13854,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 191";
 		rLen = 0;
-		rLoc = 15678;
+		rLoc = 15835;
 		rType = 0;
 		vrLen = 1556;
 		vrLoc = 5446;
@@ -13633,7 +13884,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 261";
 		rLen = 0;
-		rLoc = 18495;
+		rLoc = 18652;
 		rType = 0;
 		vrLen = 1556;
 		vrLoc = 5470;
@@ -13653,7 +13904,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 222";
 		rLen = 0;
-		rLoc = 17039;
+		rLoc = 17196;
 		rType = 0;
 		vrLen = 1658;
 		vrLoc = 5647;
@@ -13673,7 +13924,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 273";
 		rLen = 0;
-		rLoc = 18480;
+		rLoc = 18637;
 		rType = 0;
 		vrLen = 1661;
 		vrLoc = 5823;
@@ -14015,7 +14266,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 489";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 470;
 		vrLoc = 13128;
@@ -14105,7 +14356,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 445";
 		rLen = 0;
-		rLoc = 21063;
+		rLoc = 21062;
 		rType = 0;
 		vrLen = 636;
 		vrLoc = 12256;
@@ -14125,7 +14376,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 650";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -14145,7 +14396,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 649";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -14155,7 +14406,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 732";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 20371;
@@ -14165,7 +14416,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 460";
 		rLen = 124;
-		rLoc = 19262;
+		rLoc = 19419;
 		rType = 0;
 		vrLen = 1634;
 		vrLoc = 13241;
@@ -14175,7 +14426,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 721";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 20371;
@@ -14185,7 +14436,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 460";
 		rLen = 0;
-		rLoc = 19297;
+		rLoc = 19454;
 		rType = 0;
 		vrLen = 1634;
 		vrLoc = 13241;
@@ -14195,7 +14446,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 496";
 		rLen = 0;
-		rLoc = 18513;
+		rLoc = 18487;
 		rType = 0;
 		vrLen = 1332;
 		vrLoc = 14608;
@@ -14205,7 +14456,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 440";
 		rLen = 266;
-		rLoc = 18690;
+		rLoc = 18847;
 		rType = 0;
 		vrLen = 1662;
 		vrLoc = 13213;
@@ -14215,7 +14466,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 501";
 		rLen = 0;
-		rLoc = 18623;
+		rLoc = 18597;
 		rType = 0;
 		vrLen = 1365;
 		vrLoc = 14608;
@@ -14225,7 +14476,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 463";
 		rLen = 72;
-		rLoc = 19387;
+		rLoc = 19544;
 		rType = 0;
 		vrLen = 1662;
 		vrLoc = 13213;
@@ -14235,7 +14486,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 528";
 		rLen = 0;
-		rLoc = 19989;
+		rLoc = 20250;
 		rType = 0;
 		vrLen = 1597;
 		vrLoc = 15195;
@@ -14245,7 +14496,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 461";
 		rLen = 0;
-		rLoc = 19342;
+		rLoc = 19499;
 		rType = 0;
 		vrLen = 1662;
 		vrLoc = 13213;
@@ -14255,7 +14506,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 530";
 		rLen = 0;
-		rLoc = 20038;
+		rLoc = 20299;
 		rType = 0;
 		vrLen = 1579;
 		vrLoc = 15195;
@@ -14265,7 +14516,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 458";
 		rLen = 12;
-		rLoc = 19246;
+		rLoc = 19403;
 		rType = 0;
 		vrLen = 1662;
 		vrLoc = 13213;
@@ -14275,7 +14526,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 505";
 		rLen = 0;
-		rLoc = 18782;
+		rLoc = 18756;
 		rType = 0;
 		vrLen = 1600;
 		vrLoc = 15315;
@@ -14285,7 +14536,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 456";
 		rLen = 0;
-		rLoc = 19142;
+		rLoc = 19299;
 		rType = 0;
 		vrLen = 1662;
 		vrLoc = 13213;
@@ -14351,7 +14602,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 405";
 		rLen = 0;
-		rLoc = 17273;
+		rLoc = 17430;
 		rType = 0;
 		vrLen = 1684;
 		vrLoc = 11918;
@@ -14568,7 +14819,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 164";
 		rLen = 0;
-		rLoc = 5500;
+		rLoc = 5486;
 		rType = 0;
 		vrLen = 1243;
 		vrLoc = 4884;
@@ -14588,7 +14839,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 337";
 		rLen = 0;
-		rLoc = 24557;
+		rLoc = 24806;
 		rType = 0;
 		vrLen = 891;
 		vrLoc = 8769;
@@ -15167,7 +15418,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 748";
 		rLen = 5;
-		rLoc = 36510;
+		rLoc = 36509;
 		rType = 0;
 		vrLen = 1085;
 		vrLoc = 22697;
@@ -15227,7 +15478,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 205";
 		rLen = 5;
-		rLoc = 7169;
+		rLoc = 7171;
 		rType = 0;
 		vrLen = 1053;
 		vrLoc = 6066;
@@ -15247,7 +15498,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 490";
 		rLen = 5;
-		rLoc = 20551;
+		rLoc = 20800;
 		rType = 0;
 		vrLen = 737;
 		vrLoc = 13928;
@@ -15267,7 +15518,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 279";
 		rLen = 46;
-		rLoc = 9589;
+		rLoc = 9588;
 		rType = 0;
 		vrLen = 717;
 		vrLoc = 8604;
@@ -15479,7 +15730,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: fillPtr";
 		rLen = 0;
-		rLoc = 10641;
+		rLoc = 10640;
 		rType = 0;
 		vrLen = 870;
 		vrLoc = 5324;
@@ -15509,7 +15760,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 660";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15529,7 +15780,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: TkPathPaintLinearGradient";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15549,7 +15800,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: listObj";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15569,7 +15820,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 383";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 975;
 		vrLoc = 10347;
@@ -15589,7 +15840,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 383";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 975;
 		vrLoc = 10347;
@@ -15609,7 +15860,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 383";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 975;
 		vrLoc = 10347;
@@ -15629,7 +15880,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 635";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15649,7 +15900,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 439";
 		rLen = 0;
-		rLoc = 20341;
+		rLoc = 20340;
 		rType = 0;
 		vrLen = 791;
 		vrLoc = 11322;
@@ -15709,7 +15960,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 661";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15739,7 +15990,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: fillPtr";
 		rLen = 0;
-		rLoc = 10641;
+		rLoc = 10640;
 		rType = 0;
 		vrLen = 870;
 		vrLoc = 4792;
@@ -15759,7 +16010,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: fillPtr";
 		rLen = 0;
-		rLoc = 10641;
+		rLoc = 10640;
 		rType = 0;
 		vrLen = 870;
 		vrLoc = 4792;
@@ -15779,7 +16030,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 665";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15799,7 +16050,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 665";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15819,7 +16070,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 396";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 1496;
 		vrLoc = 10127;
@@ -15859,7 +16110,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: listObj";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -15879,7 +16130,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: fillPtr";
 		rLen = 0;
-		rLoc = 10641;
+		rLoc = 10640;
 		rType = 0;
 		vrLen = 870;
 		vrLoc = 4792;
@@ -15899,7 +16150,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 667";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -16293,7 +16544,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 406";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 1297;
 		vrLoc = 11077;
@@ -16323,7 +16574,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 399";
 		rLen = 22;
-		rLoc = 21746;
+		rLoc = 21745;
 		rType = 0;
 		vrLen = 707;
 		vrLoc = 11386;
@@ -16589,7 +16840,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 34";
 		rLen = 10;
-		rLoc = 1458;
+		rLoc = 1502;
 		rType = 0;
 		vrLen = 804;
 		vrLoc = 0;
@@ -16949,7 +17200,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 33";
 		rLen = 0;
-		rLoc = 1444;
+		rLoc = 1488;
 		rType = 0;
 		vrLen = 835;
 		vrLoc = 500;
@@ -16969,7 +17220,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 446";
 		rLen = 0;
-		rLoc = 20364;
+		rLoc = 20613;
 		rType = 0;
 		vrLen = 1241;
 		vrLoc = 12780;
@@ -16989,7 +17240,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 40";
 		rLen = 0;
-		rLoc = 1641;
+		rLoc = 1685;
 		rType = 0;
 		vrLen = 1301;
 		vrLoc = 8170;
@@ -17081,7 +17332,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 234";
 		rLen = 0;
-		rLoc = 11660;
+		rLoc = 11634;
 		rType = 0;
 		vrLen = 878;
 		vrLoc = 8890;
@@ -17101,7 +17352,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 42";
 		rLen = 0;
-		rLoc = 2655;
+		rLoc = 2699;
 		rType = 0;
 		vrLen = 1337;
 		vrLoc = 698;
@@ -17243,7 +17494,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 110";
 		rLen = 0;
-		rLoc = 3202;
+		rLoc = 3170;
 		rType = 0;
 		vrLen = 1639;
 		vrLoc = 2371;
@@ -17337,7 +17588,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 114";
 		rLen = 0;
-		rLoc = 4143;
+		rLoc = 4187;
 		rType = 0;
 		vrLen = 1391;
 		vrLoc = 2656;
@@ -17357,7 +17608,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 61";
 		rLen = 37;
-		rLoc = 2802;
+		rLoc = 2846;
 		rType = 0;
 		vrLen = 1478;
 		vrLoc = 2692;
@@ -17377,7 +17628,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 124";
 		rLen = 0;
-		rLoc = 8206;
+		rLoc = 8208;
 		rType = 0;
 		vrLen = 1465;
 		vrLoc = 2692;
@@ -17397,7 +17648,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 128";
 		rLen = 0;
-		rLoc = 8206;
+		rLoc = 8208;
 		rType = 0;
 		vrLen = 1475;
 		vrLoc = 2692;
@@ -17427,7 +17678,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 455";
 		rLen = 24;
-		rLoc = 33808;
+		rLoc = 33807;
 		rType = 0;
 		vrLen = 818;
 		vrLoc = 12609;
@@ -17467,7 +17718,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 824";
 		rLen = 0;
-		rLoc = 26013;
+		rLoc = 26262;
 		rType = 0;
 		vrLen = 1405;
 		vrLoc = 4998;
@@ -17477,7 +17728,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 286";
 		rLen = 0;
-		rLoc = 9377;
+		rLoc = 9384;
 		rType = 0;
 		vrLen = 1867;
 		vrLoc = 13997;
@@ -17487,7 +17738,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 824";
 		rLen = 0;
-		rLoc = 26013;
+		rLoc = 26262;
 		rType = 0;
 		vrLen = 1405;
 		vrLoc = 4998;
@@ -17517,7 +17768,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 824";
 		rLen = 0;
-		rLoc = 26013;
+		rLoc = 26262;
 		rType = 0;
 		vrLen = 1636;
 		vrLoc = 13455;
@@ -17537,7 +17788,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 433";
 		rLen = 0;
-		rLoc = 13008;
+		rLoc = 12982;
 		rType = 0;
 		vrLen = 1724;
 		vrLoc = 13703;
@@ -17557,7 +17808,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 433";
 		rLen = 0;
-		rLoc = 13008;
+		rLoc = 12982;
 		rType = 0;
 		vrLen = 1644;
 		vrLoc = 13703;
@@ -18015,7 +18266,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 286";
 		rLen = 0;
-		rLoc = 9377;
+		rLoc = 9384;
 		rType = 0;
 		vrLen = 1491;
 		vrLoc = 8205;
@@ -18147,7 +18398,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 268";
 		rLen = 21;
-		rLoc = 9485;
+		rLoc = 9492;
 		rType = 0;
 		vrLen = 853;
 		vrLoc = 7663;
@@ -18197,7 +18448,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 647";
 		rLen = 0;
-		rLoc = 22445;
+		rLoc = 22694;
 		rType = 0;
 		vrLen = 535;
 		vrLoc = 19129;
@@ -18217,7 +18468,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 259";
 		rLen = 0;
-		rLoc = 9386;
+		rLoc = 9393;
 		rType = 0;
 		vrLen = 1219;
 		vrLoc = 7871;
@@ -18237,7 +18488,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 268";
 		rLen = 21;
-		rLoc = 9485;
+		rLoc = 9492;
 		rType = 0;
 		vrLen = 857;
 		vrLoc = 7704;
@@ -18277,7 +18528,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 268";
 		rLen = 21;
-		rLoc = 9485;
+		rLoc = 9492;
 		rType = 0;
 		vrLen = 690;
 		vrLoc = 8018;
@@ -18297,7 +18548,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 647";
 		rLen = 0;
-		rLoc = 22445;
+		rLoc = 22694;
 		rType = 0;
 		vrLen = 595;
 		vrLoc = 19129;
@@ -18667,7 +18918,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 259";
 		rLen = 0;
-		rLoc = 9385;
+		rLoc = 9392;
 		rType = 0;
 		vrLen = 1312;
 		vrLoc = 7195;
@@ -18717,7 +18968,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 276";
 		rLen = 0;
-		rLoc = 9817;
+		rLoc = 9824;
 		rType = 0;
 		vrLen = 1462;
 		vrLoc = 7592;
@@ -19057,7 +19308,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 95";
 		rLen = 0;
-		rLoc = 12230;
+		rLoc = 12237;
 		rType = 0;
 		vrLen = 1556;
 		vrLoc = 5446;
@@ -19132,12 +19383,6 @@
 		vrLen = 1081;
 		vrLoc = 5580;
 	};
-	9A5972540B91B06100795CA5 = {
-		fileReference = 9AB6AB700B835DCD00A80002;
-		isa = PBXFileBreakpoint;
-		lineNumber = 593;
-		state = 1;
-	};
 	9A59725B0B91B40D00795CA5 = {
 		fRef = 9AA1ECEA077FF7CC00A80065;
 		isa = PBXTextBookmark;
@@ -19158,39 +19403,12 @@
 		vrLen = 1071;
 		vrLoc = 4231;
 	};
-	9A59725D0B91B40D00795CA5 = {
-		fRef = 9A58E5420796814B00FBE143;
-		isa = PBXTextBookmark;
-		name = "tkPathGradients.c: 1031";
-		rLen = 0;
-		rLoc = 34198;
-		rType = 0;
-		vrLen = 1320;
-		vrLoc = 33261;
-	};
-	9A59725E0B91B40D00795CA5 = {
-		fRef = 9AA0B6C407DD8C9900A80065;
-		isa = PBXTextBookmark;
-		name = "tkPathStyle.c: 207";
-		rLen = 0;
-		rLoc = 6179;
-		rType = 0;
-		vrLen = 887;
-		vrLoc = 5798;
-	};
-	9A59725F0B91B40D00795CA5 = {
-		fRef = 9AB6AB700B835DCD00A80002;
-		isa = PBXTextBookmark;
-		rLen = 0;
-		rLoc = 594;
-		rType = 1;
-	};
 	9A5972600B91B40D00795CA5 = {
 		fRef = 9A58E5420796814B00FBE143;
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 668";
 		rLen = 25;
-		rLoc = 21817;
+		rLoc = 21816;
 		rType = 0;
 		vrLen = 812;
 		vrLoc = 20899;
@@ -19210,7 +19428,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 650";
 		rLen = 25;
-		rLoc = 21365;
+		rLoc = 21364;
 		rType = 0;
 		vrLen = 802;
 		vrLoc = 21002;
@@ -19230,7 +19448,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 679";
 		rLen = 25;
-		rLoc = 22069;
+		rLoc = 22068;
 		rType = 0;
 		vrLen = 867;
 		vrLoc = 21804;
@@ -19250,7 +19468,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 1031";
 		rLen = 0;
-		rLoc = 34198;
+		rLoc = 34197;
 		rType = 0;
 		vrLen = 1320;
 		vrLoc = 33261;
@@ -19335,26 +19553,6 @@
 		vrLen = 887;
 		vrLoc = 5798;
 	};
-	9A59726F0B91B40D00795CA5 = {
-		fRef = 9AB6AB700B835DCD00A80002;
-		isa = PBXTextBookmark;
-		name = "tkPathSurface.c: result";
-		rLen = 0;
-		rLoc = 19084;
-		rType = 0;
-		vrLen = 1649;
-		vrLoc = 18589;
-	};
-	9A5998D10B908CFC0080D46A = {
-		fRef = 9A49B81F07A7AA2F00A80065;
-		isa = PBXTextBookmark;
-		name = "tkUnixCairoPath.c: 622";
-		rLen = 13;
-		rLoc = 19195;
-		rType = 0;
-		vrLen = 884;
-		vrLoc = 18762;
-	};
 	9A5998D30B908CFC0080D46A = {
 		fRef = 9A66FCF40978E3400086B7B8;
 		isa = PBXTextBookmark;
@@ -19374,16 +19572,6 @@
 		rType = 0;
 		vrLen = 1390;
 		vrLoc = 66683;
-	};
-	9A5998D50B908CFC0080D46A = {
-		fRef = 9AA1ECE6077FF68100A80065;
-		isa = PBXTextBookmark;
-		name = "tkMacOSXPath.c: 844";
-		rLen = 0;
-		rLoc = 25274;
-		rType = 0;
-		vrLen = 1814;
-		vrLoc = 24569;
 	};
 	9A5998DD0B908CFC0080D46A = {
 		fRef = 9A58E5420796814B00FBE143;
@@ -19410,7 +19598,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 895";
 		rLen = 13;
-		rLoc = 35161;
+		rLoc = 35160;
 		rType = 0;
 		vrLen = 1125;
 		vrLoc = 27539;
@@ -19430,7 +19618,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 622";
 		rLen = 13;
-		rLoc = 19195;
+		rLoc = 19352;
 		rType = 0;
 		vrLen = 884;
 		vrLoc = 18762;
@@ -19540,7 +19728,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 568";
 		rLen = 0;
-		rLoc = 20391;
+		rLoc = 20390;
 		rType = 0;
 		vrLen = 1344;
 		vrLoc = 18022;
@@ -19580,7 +19768,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 860";
 		rLen = 0;
-		rLoc = 31944;
+		rLoc = 31943;
 		rType = 0;
 		vrLen = 1583;
 		vrLoc = 27010;
@@ -19600,7 +19788,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 61";
 		rLen = 18;
-		rLoc = 2164;
+		rLoc = 2163;
 		rType = 0;
 		vrLen = 862;
 		vrLoc = 887;
@@ -19640,7 +19828,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 63";
 		rLen = 0;
-		rLoc = 2136;
+		rLoc = 2135;
 		rType = 0;
 		vrLen = 1609;
 		vrLoc = 1341;
@@ -20140,7 +20328,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 655";
 		rLen = 266;
-		rLoc = 23370;
+		rLoc = 23372;
 		rType = 0;
 		vrLen = 1646;
 		vrLoc = 20969;
@@ -20500,7 +20688,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 160";
 		rLen = 11;
-		rLoc = 4505;
+		rLoc = 4549;
 		rType = 0;
 		vrLen = 1606;
 		vrLoc = 7127;
@@ -20520,7 +20708,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 695";
 		rLen = 0;
-		rLoc = 21615;
+		rLoc = 21864;
 		rType = 0;
 		vrLen = 1667;
 		vrLoc = 20702;
@@ -21165,8 +21353,8 @@
 		fRef = 9A49B81F07A7AA2F00A80065;
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 103";
-		rLen = 4516;
-		rLoc = 3691;
+		rLen = 4474;
+		rLoc = 3735;
 		rType = 0;
 		vrLen = 1509;
 		vrLoc = 2657;
@@ -21186,7 +21374,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 509";
 		rLen = 331;
-		rLoc = 24643;
+		rLoc = 24892;
 		rType = 0;
 		vrLen = 1120;
 		vrLoc = 14955;
@@ -21546,7 +21734,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 708";
 		rLen = 0;
-		rLoc = 35278;
+		rLoc = 35277;
 		rType = 0;
 		vrLen = 930;
 		vrLoc = 21637;
@@ -21586,7 +21774,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 475";
 		rLen = 0;
-		rLoc = 15789;
+		rLoc = 15788;
 		rType = 0;
 		vrLen = 2077;
 		vrLoc = 14445;
@@ -21600,7 +21788,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 494";
 		rLen = 0;
-		rLoc = 17786;
+		rLoc = 17785;
 		rType = 0;
 		vrLen = 2188;
 		vrLoc = 14785;
@@ -21620,7 +21808,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 494";
 		rLen = 0;
-		rLoc = 17786;
+		rLoc = 17785;
 		rType = 0;
 		vrLen = 1795;
 		vrLoc = 2233;
@@ -21650,7 +21838,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 619";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 976;
 		vrLoc = 19203;
@@ -21690,7 +21878,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 399";
 		rLen = 0;
-		rLoc = 16865;
+		rLoc = 17022;
 		rType = 0;
 		vrLen = 805;
 		vrLoc = 11522;
@@ -21710,7 +21898,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 688";
 		rLen = 25;
-		rLoc = 25591;
+		rLoc = 25840;
 		rType = 0;
 		vrLen = 656;
 		vrLoc = 19720;
@@ -21730,7 +21918,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: radialFillPtr";
 		rLen = 0;
-		rLoc = 22154;
+		rLoc = 22153;
 		rType = 0;
 		vrLen = 979;
 		vrLoc = 19294;
@@ -21760,7 +21948,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 443";
 		rLen = 0;
-		rLoc = 18632;
+		rLoc = 18789;
 		rType = 0;
 		vrLen = 902;
 		vrLoc = 12935;
@@ -21780,7 +21968,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 688";
 		rLen = 25;
-		rLoc = 25591;
+		rLoc = 25840;
 		rType = 0;
 		vrLen = 656;
 		vrLoc = 19720;
@@ -21790,7 +21978,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: radialFillPtr";
 		rLen = 25;
-		rLoc = 22069;
+		rLoc = 22068;
 		rType = 0;
 		vrLen = 979;
 		vrLoc = 19294;
@@ -21810,7 +21998,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: radialFillPtr";
 		rLen = 25;
-		rLoc = 22069;
+		rLoc = 22068;
 		rType = 0;
 		vrLen = 798;
 		vrLoc = 19091;
@@ -21850,7 +22038,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: radialFillPtr";
 		rLen = 25;
-		rLoc = 22069;
+		rLoc = 22068;
 		rType = 0;
 		vrLen = 798;
 		vrLoc = 19091;
@@ -21880,7 +22068,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 619";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 773;
 		vrLoc = 19091;
@@ -21910,7 +22098,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 619";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 963;
 		vrLoc = 19203;
@@ -21940,7 +22128,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 399";
 		rLen = 0;
-		rLoc = 16865;
+		rLoc = 17022;
 		rType = 0;
 		vrLen = 794;
 		vrLoc = 11522;
@@ -21960,7 +22148,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 688";
 		rLen = 25;
-		rLoc = 25591;
+		rLoc = 25840;
 		rType = 0;
 		vrLen = 651;
 		vrLoc = 19720;
@@ -21980,7 +22168,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 621";
 		rLen = 0;
-		rLoc = 22637;
+		rLoc = 22636;
 		rType = 0;
 		vrLen = 954;
 		vrLoc = 19294;
@@ -22010,7 +22198,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 443";
 		rLen = 0;
-		rLoc = 18632;
+		rLoc = 18789;
 		rType = 0;
 		vrLen = 891;
 		vrLoc = 12924;
@@ -22030,7 +22218,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 662";
 		rLen = 0;
-		rLoc = 25049;
+		rLoc = 25298;
 		rType = 0;
 		vrLen = 1629;
 		vrLoc = 11772;
@@ -22060,7 +22248,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 494";
 		rLen = 0;
-		rLoc = 17750;
+		rLoc = 17749;
 		rType = 0;
 		vrLen = 1779;
 		vrLoc = 15403;
@@ -22080,7 +22268,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 421";
 		rLen = 217;
-		rLoc = 17462;
+		rLoc = 17619;
 		rType = 0;
 		vrLen = 1763;
 		vrLoc = 11849;
@@ -22090,7 +22278,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 423";
 		rLen = 60;
-		rLoc = 14179;
+		rLoc = 14153;
 		rType = 0;
 		vrLen = 1766;
 		vrLoc = 11816;
@@ -22130,7 +22318,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 722";
 		rLen = 20;
-		rLoc = 24960;
+		rLoc = 24959;
 		rType = 0;
 		vrLen = 1227;
 		vrLoc = 23428;
@@ -22140,7 +22328,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 620";
 		rLen = 20;
-		rLoc = 20005;
+		rLoc = 20007;
 		rType = 0;
 		vrLen = 1902;
 		vrLoc = 19084;
@@ -22170,7 +22358,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 862";
 		rLen = 0;
-		rLoc = 29604;
+		rLoc = 29603;
 		rType = 0;
 		vrLen = 1934;
 		vrLoc = 22081;
@@ -22210,7 +22398,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 82";
 		rLen = 0;
-		rLoc = 2406;
+		rLoc = 2405;
 		rType = 0;
 		vrLen = 1484;
 		vrLoc = 4411;
@@ -22357,7 +22545,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 25";
 		rLen = 0;
-		rLoc = 1444;
+		rLoc = 1488;
 		rType = 0;
 		vrLen = 798;
 		vrLoc = 0;
@@ -22377,7 +22565,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 439";
 		rLen = 0;
-		rLoc = 20367;
+		rLoc = 20616;
 		rType = 0;
 		vrLen = 1102;
 		vrLoc = 12589;
@@ -22487,7 +22675,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 29";
 		rLen = 0;
-		rLoc = 1759;
+		rLoc = 1803;
 		rType = 0;
 		vrLen = 1262;
 		vrLoc = 0;
@@ -22527,7 +22715,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 435";
 		rLen = 0;
-		rLoc = 20320;
+		rLoc = 20569;
 		rType = 0;
 		vrLen = 1098;
 		vrLoc = 12589;
@@ -22567,7 +22755,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 29";
 		rLen = 0;
-		rLoc = 1759;
+		rLoc = 1803;
 		rType = 0;
 		vrLen = 1262;
 		vrLoc = 0;
@@ -22587,7 +22775,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 38";
 		rLen = 0;
-		rLoc = 1843;
+		rLoc = 1887;
 		rType = 0;
 		vrLen = 1229;
 		vrLoc = 151;
@@ -22627,7 +22815,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 41";
 		rLen = 0;
-		rLoc = 1880;
+		rLoc = 1924;
 		rType = 0;
 		vrLen = 1349;
 		vrLoc = 151;
@@ -22657,7 +22845,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 435";
 		rLen = 0;
-		rLoc = 20320;
+		rLoc = 20569;
 		rType = 0;
 		vrLen = 1091;
 		vrLoc = 12589;
@@ -22687,7 +22875,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 433";
 		rLen = 0;
-		rLoc = 20268;
+		rLoc = 20517;
 		rType = 0;
 		vrLen = 1124;
 		vrLoc = 12589;
@@ -22717,7 +22905,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 23";
 		rLen = 189;
-		rLoc = 762;
+		rLoc = 806;
 		rType = 0;
 		vrLen = 1334;
 		vrLoc = 151;
@@ -22727,7 +22915,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 444";
 		rLen = 37;
-		rLoc = 20320;
+		rLoc = 20569;
 		rType = 0;
 		vrLen = 1158;
 		vrLoc = 12535;
@@ -22747,7 +22935,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 439";
 		rLen = 10;
-		rLoc = 18376;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 658;
 		vrLoc = 12256;
@@ -22797,7 +22985,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 45";
 		rLen = 0;
-		rLoc = 2319;
+		rLoc = 2363;
 		rType = 0;
 		vrLen = 741;
 		vrLoc = 784;
@@ -22817,7 +23005,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 450";
 		rLen = 0;
-		rLoc = 20475;
+		rLoc = 20724;
 		rType = 0;
 		vrLen = 1163;
 		vrLoc = 12535;
@@ -22827,7 +23015,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 48";
 		rLen = 0;
-		rLoc = 2389;
+		rLoc = 2433;
 		rType = 0;
 		vrLen = 1191;
 		vrLoc = 580;
@@ -22857,7 +23045,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 447";
 		rLen = 17;
-		rLoc = 20367;
+		rLoc = 20616;
 		rType = 0;
 		vrLen = 732;
 		vrLoc = 12910;
@@ -22877,7 +23065,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 50";
 		rLen = 0;
-		rLoc = 2559;
+		rLoc = 2603;
 		rType = 0;
 		vrLen = 802;
 		vrLoc = 697;
@@ -22907,7 +23095,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 447";
 		rLen = 17;
-		rLoc = 20367;
+		rLoc = 20616;
 		rType = 0;
 		vrLen = 732;
 		vrLoc = 12910;
@@ -23037,7 +23225,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 53";
 		rLen = 0;
-		rLoc = 2612;
+		rLoc = 2656;
 		rType = 0;
 		vrLen = 654;
 		vrLoc = 1027;
@@ -23057,7 +23245,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 456";
 		rLen = 0;
-		rLoc = 20635;
+		rLoc = 20884;
 		rType = 0;
 		vrLen = 786;
 		vrLoc = 13029;
@@ -23077,7 +23265,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 56";
 		rLen = 0;
-		rLoc = 2655;
+		rLoc = 2699;
 		rType = 0;
 		vrLen = 707;
 		vrLoc = 1027;
@@ -23107,7 +23295,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 456";
 		rLen = 0;
-		rLoc = 20763;
+		rLoc = 21012;
 		rType = 0;
 		vrLen = 781;
 		vrLoc = 13029;
@@ -23281,7 +23469,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 141";
 		rLen = 0;
-		rLoc = 8204;
+		rLoc = 8206;
 		rType = 0;
 		vrLen = 1361;
 		vrLoc = 3217;
@@ -23301,7 +23489,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 145";
 		rLen = 0;
-		rLoc = 8087;
+		rLoc = 8089;
 		rType = 0;
 		vrLen = 1320;
 		vrLoc = 3217;
@@ -23321,7 +23509,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 147";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1366;
 		vrLoc = 3217;
@@ -23341,7 +23529,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 158";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1397;
 		vrLoc = 3740;
@@ -23361,7 +23549,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 166";
 		rLen = 0;
-		rLoc = 8204;
+		rLoc = 8206;
 		rType = 0;
 		vrLen = 1449;
 		vrLoc = 3705;
@@ -23381,7 +23569,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 157";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1471;
 		vrLoc = 3705;
@@ -23401,7 +23589,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 159";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1404;
 		vrLoc = 3705;
@@ -23431,7 +23619,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 150";
 		rLen = 0;
-		rLoc = 14773;
+		rLoc = 14930;
 		rType = 0;
 		vrLen = 1319;
 		vrLoc = 818;
@@ -23471,7 +23659,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 70";
 		rLen = 0;
-		rLoc = 3627;
+		rLoc = 3626;
 		rType = 0;
 		vrLen = 1521;
 		vrLoc = 8312;
@@ -23921,7 +24109,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 341";
 		rLen = 0;
-		rLoc = 10553;
+		rLoc = 10560;
 		rType = 0;
 		vrLen = 1456;
 		vrLoc = 8602;
@@ -23941,7 +24129,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 341";
 		rLen = 0;
-		rLoc = 10553;
+		rLoc = 10560;
 		rType = 0;
 		vrLen = 985;
 		vrLoc = 9788;
@@ -24137,7 +24325,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 463";
 		rLen = 0;
-		rLoc = 14081;
+		rLoc = 14238;
 		rType = 0;
 		vrLen = 1512;
 		vrLoc = 13860;
@@ -24157,7 +24345,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 448";
 		rLen = 0;
-		rLoc = 14081;
+		rLoc = 14238;
 		rType = 0;
 		vrLen = 1477;
 		vrLoc = 14283;
@@ -24177,7 +24365,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 448";
 		rLen = 0;
-		rLoc = 14081;
+		rLoc = 14238;
 		rType = 0;
 		vrLen = 1419;
 		vrLoc = 14283;
@@ -24207,7 +24395,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 466";
 		rLen = 0;
-		rLoc = 14676;
+		rLoc = 14833;
 		rType = 0;
 		vrLen = 1047;
 		vrLoc = 14029;
@@ -24227,7 +24415,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 620";
 		rLen = 16;
-		rLoc = 23132;
+		rLoc = 23131;
 		rType = 0;
 		vrLen = 1701;
 		vrLoc = 18813;
@@ -24247,7 +24435,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 103";
 		rLen = 0;
-		rLoc = 3606;
+		rLoc = 3650;
 		rType = 0;
 		vrLen = 826;
 		vrLoc = 3202;
@@ -24307,7 +24495,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 682";
 		rLen = 0;
-		rLoc = 25387;
+		rLoc = 25386;
 		rType = 0;
 		vrLen = 1077;
 		vrLoc = 21041;
@@ -24327,7 +24515,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 743";
 		rLen = 0;
-		rLoc = 26938;
+		rLoc = 26937;
 		rType = 0;
 		vrLen = 1530;
 		vrLoc = 22220;
@@ -24377,7 +24565,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 775";
 		rLen = 0;
-		rLoc = 28116;
+		rLoc = 28115;
 		rType = 0;
 		vrLen = 1212;
 		vrLoc = 23895;
@@ -24671,7 +24859,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 220";
 		rLen = 0;
-		rLoc = 8251;
+		rLoc = 8250;
 		rType = 0;
 		vrLen = 1540;
 		vrLoc = 21006;
@@ -24691,7 +24879,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 607";
 		rLen = 25;
-		rLoc = 22069;
+		rLoc = 22068;
 		rType = 0;
 		vrLen = 963;
 		vrLoc = 18922;
@@ -25001,7 +25189,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 158";
 		rLen = 13;
-		rLoc = 15014;
+		rLoc = 15171;
 		rType = 0;
 		vrLen = 1541;
 		vrLoc = 3409;
@@ -25031,7 +25219,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 45";
 		rLen = 0;
-		rLoc = 2687;
+		rLoc = 2731;
 		rType = 0;
 		vrLen = 1298;
 		vrLoc = 307;
@@ -25215,7 +25403,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 464";
 		rLen = 0;
-		rLoc = 19449;
+		rLoc = 19606;
 		rType = 0;
 		vrLen = 1630;
 		vrLoc = 13245;
@@ -25505,7 +25693,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 572";
 		rLen = 0;
-		rLoc = 17795;
+		rLoc = 17952;
 		rType = 0;
 		vrLen = 1502;
 		vrLoc = 13852;
@@ -25943,7 +26131,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 140";
 		rLen = 0;
-		rLoc = 5211;
+		rLoc = 5255;
 		rType = 0;
 		vrLen = 1447;
 		vrLoc = 3857;
@@ -25963,7 +26151,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 154";
 		rLen = 0;
-		rLoc = 4499;
+		rLoc = 4543;
 		rType = 0;
 		vrLen = 1680;
 		vrLoc = 3217;
@@ -25983,7 +26171,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 160";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1498;
 		vrLoc = 3706;
@@ -26113,7 +26301,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 114";
 		rLen = 0;
-		rLoc = 3202;
+		rLoc = 3170;
 		rType = 0;
 		vrLen = 1115;
 		vrLoc = 15030;
@@ -26133,7 +26321,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 244";
 		rLen = 0;
-		rLoc = 7216;
+		rLoc = 7190;
 		rType = 0;
 		vrLen = 1740;
 		vrLoc = 9887;
@@ -26153,7 +26341,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 244";
 		rLen = 0;
-		rLoc = 7216;
+		rLoc = 7190;
 		rType = 0;
 		vrLen = 1309;
 		vrLoc = 14814;
@@ -26233,7 +26421,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 252";
 		rLen = 0;
-		rLoc = 7205;
+		rLoc = 7179;
 		rType = 0;
 		vrLen = 1778;
 		vrLoc = 11042;
@@ -26873,7 +27061,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 245";
 		rLen = 16;
-		rLoc = 8345;
+		rLoc = 8347;
 		rType = 0;
 		vrLen = 740;
 		vrLoc = 7257;
@@ -26923,7 +27111,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 279";
 		rLen = 0;
-		rLoc = 12077;
+		rLoc = 12084;
 		rType = 0;
 		vrLen = 633;
 		vrLoc = 8068;
@@ -26943,7 +27131,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 645";
 		rLen = 0;
-		rLoc = 22446;
+		rLoc = 22695;
 		rType = 0;
 		vrLen = 458;
 		vrLoc = 19340;
@@ -27315,7 +27503,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 536";
 		rLen = 0;
-		rLoc = 21829;
+		rLoc = 22078;
 		rType = 0;
 		vrLen = 1720;
 		vrLoc = 14958;
@@ -27375,7 +27563,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 463";
 		rLen = 6;
-		rLoc = 18042;
+		rLoc = 18016;
 		rType = 0;
 		vrLen = 1057;
 		vrLoc = 12901;
@@ -27435,7 +27623,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 122";
 		rLen = 0;
-		rLoc = 3448;
+		rLoc = 3402;
 		rType = 0;
 		vrLen = 1327;
 		vrLoc = 6490;
@@ -27455,7 +27643,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 122";
 		rLen = 0;
-		rLoc = 3448;
+		rLoc = 3402;
 		rType = 0;
 		vrLen = 1300;
 		vrLoc = 6490;
@@ -27475,7 +27663,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 286";
 		rLen = 0;
-		rLoc = 11406;
+		rLoc = 11380;
 		rType = 0;
 		vrLen = 1245;
 		vrLoc = 7394;
@@ -27495,7 +27683,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 153";
 		rLen = 208;
-		rLoc = 5212;
+		rLoc = 5256;
 		rType = 0;
 		vrLen = 1835;
 		vrLoc = 4143;
@@ -27505,7 +27693,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 289";
 		rLen = 0;
-		rLoc = 11347;
+		rLoc = 11321;
 		rType = 0;
 		vrLen = 1189;
 		vrLoc = 7603;
@@ -27515,7 +27703,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 148";
 		rLen = 42;
-		rLoc = 5069;
+		rLoc = 5113;
 		rType = 0;
 		vrLen = 1864;
 		vrLoc = 4202;
@@ -27525,7 +27713,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 269";
 		rLen = 0;
-		rLoc = 7531;
+		rLoc = 7505;
 		rType = 0;
 		vrLen = 1192;
 		vrLoc = 7603;
@@ -27544,8 +27732,8 @@
 		fRef = 9A49B81F07A7AA2F00A80065;
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 181";
-		rLen = 1660;
-		rLoc = 6208;
+		rLen = 1618;
+		rLoc = 6252;
 		rType = 0;
 		vrLen = 1603;
 		vrLoc = 6094;
@@ -27555,7 +27743,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 287";
 		rLen = 0;
-		rLoc = 8275;
+		rLoc = 8249;
 		rType = 0;
 		vrLen = 1806;
 		vrLoc = 7873;
@@ -27565,7 +27753,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 142";
 		rLen = 171;
-		rLoc = 4838;
+		rLoc = 4882;
 		rType = 0;
 		vrLen = 1803;
 		vrLoc = 4029;
@@ -27575,7 +27763,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 276";
 		rLen = 0;
-		rLoc = 7927;
+		rLoc = 7901;
 		rType = 0;
 		vrLen = 1810;
 		vrLoc = 8165;
@@ -27585,7 +27773,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 147";
 		rLen = 14;
-		rLoc = 5055;
+		rLoc = 5099;
 		rType = 0;
 		vrLen = 1803;
 		vrLoc = 4029;
@@ -27595,7 +27783,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 270";
 		rLen = 0;
-		rLoc = 7604;
+		rLoc = 7578;
 		rType = 0;
 		vrLen = 1611;
 		vrLoc = 8062;
@@ -27605,7 +27793,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 140";
 		rLen = 63;
-		rLoc = 4775;
+		rLoc = 4819;
 		rType = 0;
 		vrLen = 1803;
 		vrLoc = 4029;
@@ -27691,7 +27879,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 516";
 		rLen = 0;
-		rLoc = 19379;
+		rLoc = 19353;
 		rType = 0;
 		vrLen = 1811;
 		vrLoc = 15282;
@@ -27711,7 +27899,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 365";
 		rLen = 0;
-		rLoc = 15976;
+		rLoc = 16133;
 		rType = 0;
 		vrLen = 1001;
 		vrLoc = 10420;
@@ -28061,7 +28249,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: SurfaceInitOptions";
 		rLen = 0;
-		rLoc = 20096;
+		rLoc = 20098;
 		rType = 0;
 		vrLen = 1557;
 		vrLoc = 10602;
@@ -28081,7 +28269,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 501";
 		rLen = 0;
-		rLoc = 21259;
+		rLoc = 21261;
 		rType = 0;
 		vrLen = 1657;
 		vrLoc = 13966;
@@ -28101,7 +28289,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 551";
 		rLen = 0;
-		rLoc = 21240;
+		rLoc = 21242;
 		rType = 0;
 		vrLen = 1709;
 		vrLoc = 15582;
@@ -28121,7 +28309,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 551";
 		rLen = 0;
-		rLoc = 21240;
+		rLoc = 21242;
 		rType = 0;
 		vrLen = 1800;
 		vrLoc = 9226;
@@ -28928,7 +29116,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 258";
 		rLen = 0;
-		rLoc = 11393;
+		rLoc = 11367;
 		rType = 0;
 		vrLen = 1108;
 		vrLoc = 6898;
@@ -28958,7 +29146,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 258";
 		rLen = 0;
-		rLoc = 8004;
+		rLoc = 7978;
 		rType = 0;
 		vrLen = 1032;
 		vrLoc = 6898;
@@ -28978,7 +29166,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 257";
 		rLen = 0;
-		rLoc = 7419;
+		rLoc = 7393;
 		rType = 0;
 		vrLen = 978;
 		vrLoc = 7059;
@@ -28998,7 +29186,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 258";
 		rLen = 0;
-		rLoc = 7419;
+		rLoc = 7393;
 		rType = 0;
 		vrLen = 1017;
 		vrLoc = 7059;
@@ -29018,7 +29206,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 267";
 		rLen = 0;
-		rLoc = 8003;
+		rLoc = 7977;
 		rType = 0;
 		vrLen = 1058;
 		vrLoc = 7059;
@@ -29028,7 +29216,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 180";
 		rLen = 35;
-		rLoc = 6208;
+		rLoc = 6252;
 		rType = 0;
 		vrLen = 1947;
 		vrLoc = 4724;
@@ -29038,7 +29226,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 268";
 		rLen = 0;
-		rLoc = 7940;
+		rLoc = 7914;
 		rType = 0;
 		vrLen = 1010;
 		vrLoc = 7059;
@@ -29048,7 +29236,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 189";
 		rLen = 0;
-		rLoc = 6621;
+		rLoc = 6665;
 		rType = 0;
 		vrLen = 1788;
 		vrLoc = 4506;
@@ -29090,7 +29278,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 296";
 		rLen = 25;
-		rLoc = 15878;
+		rLoc = 16035;
 		rType = 0;
 		vrLen = 600;
 		vrLoc = 8300;
@@ -29216,7 +29404,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 490";
 		rLen = 5;
-		rLoc = 20551;
+		rLoc = 20800;
 		rType = 0;
 		vrLen = 983;
 		vrLoc = 2125;
@@ -29340,7 +29528,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 675";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29380,7 +29568,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: fillPtr";
 		rLen = 0;
-		rLoc = 10641;
+		rLoc = 10640;
 		rType = 0;
 		vrLen = 870;
 		vrLoc = 4792;
@@ -29470,7 +29658,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 667";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29490,7 +29678,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 685";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29510,7 +29698,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 679";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29530,7 +29718,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 345";
 		rLen = 0;
-		rLoc = 18286;
+		rLoc = 18285;
 		rType = 0;
 		vrLen = 871;
 		vrLoc = 9290;
@@ -29570,7 +29758,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 383";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 1066;
 		vrLoc = 10347;
@@ -29600,7 +29788,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 686";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29620,7 +29808,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 503";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 247;
 		vrLoc = 13351;
@@ -29650,7 +29838,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 503";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 247;
 		vrLoc = 13351;
@@ -29680,7 +29868,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 503";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 247;
 		vrLoc = 13351;
@@ -29710,7 +29898,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 503";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 247;
 		vrLoc = 13351;
@@ -29760,7 +29948,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 503";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 247;
 		vrLoc = 13351;
@@ -29830,7 +30018,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 503";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 247;
 		vrLoc = 13351;
@@ -29860,7 +30048,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 691";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29880,7 +30068,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 666";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29910,7 +30098,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 656";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29940,7 +30128,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 691";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29980,7 +30168,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 691";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -29990,7 +30178,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 701";
 		rLen = 0;
-		rLoc = 23732;
+		rLoc = 23981;
 		rType = 0;
 		vrLen = 1483;
 		vrLoc = 20482;
@@ -30010,7 +30198,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 300";
 		rLen = 0;
-		rLoc = 9612;
+		rLoc = 9619;
 		rType = 0;
 		vrLen = 1526;
 		vrLoc = 9058;
@@ -30020,7 +30208,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 350";
 		rLen = 0;
-		rLoc = 10666;
+		rLoc = 10640;
 		rType = 0;
 		vrLen = 1723;
 		vrLoc = 9561;
@@ -30030,7 +30218,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 276";
 		rLen = 398;
-		rLoc = 8904;
+		rLoc = 8911;
 		rType = 0;
 		vrLen = 1699;
 		vrLoc = 8298;
@@ -30040,7 +30228,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 356";
 		rLen = 0;
-		rLoc = 11120;
+		rLoc = 11094;
 		rType = 0;
 		vrLen = 1701;
 		vrLoc = 9648;
@@ -30060,7 +30248,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 792";
 		rLen = 0;
-		rLoc = 25898;
+		rLoc = 26147;
 		rType = 0;
 		vrLen = 1281;
 		vrLoc = 0;
@@ -30110,7 +30298,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: TkPathPaintLinearGradient";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -30130,7 +30318,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 695";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -30260,7 +30448,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 665";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -30290,7 +30478,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 663";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -30370,7 +30558,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: methodST";
 		rLen = 0;
-		rLoc = 14990;
+		rLoc = 14989;
 		rType = 0;
 		vrLen = 1381;
 		vrLoc = 7963;
@@ -30560,7 +30748,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: __LDBL_MANT_DIG__";
 		rLen = 18;
-		rLoc = 2105;
+		rLoc = 2104;
 		rType = 0;
 		vrLen = 606;
 		vrLoc = 564;
@@ -30741,7 +30929,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 250";
 		rLen = 0;
-		rLoc = 11819;
+		rLoc = 11793;
 		rType = 0;
 		vrLen = 1054;
 		vrLoc = 6460;
@@ -30791,7 +30979,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 255";
 		rLen = 0;
-		rLoc = 13389;
+		rLoc = 13363;
 		rType = 0;
 		vrLen = 1093;
 		vrLoc = 6549;
@@ -30975,7 +31163,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 352";
 		rLen = 0;
-		rLoc = 10739;
+		rLoc = 10713;
 		rType = 0;
 		vrLen = 1594;
 		vrLoc = 21152;
@@ -30995,7 +31183,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 131";
 		rLen = 0;
-		rLoc = 3875;
+		rLoc = 3829;
 		rType = 0;
 		vrLen = 1358;
 		vrLoc = 3177;
@@ -31005,7 +31193,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 286";
 		rLen = 0;
-		rLoc = 9377;
+		rLoc = 9384;
 		rType = 0;
 		vrLen = 1424;
 		vrLoc = 9259;
@@ -31025,7 +31213,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 286";
 		rLen = 0;
-		rLoc = 9377;
+		rLoc = 9384;
 		rType = 0;
 		vrLen = 1366;
 		vrLoc = 9259;
@@ -31607,7 +31795,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 502";
 		rLen = 9;
-		rLoc = 20954;
+		rLoc = 21203;
 		rType = 0;
 		vrLen = 1302;
 		vrLoc = 13918;
@@ -31655,7 +31843,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 486";
 		rLen = 31;
-		rLoc = 20946;
+		rLoc = 20945;
 		rType = 0;
 		vrLen = 810;
 		vrLoc = 13921;
@@ -31685,7 +31873,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 486";
 		rLen = 31;
-		rLoc = 20946;
+		rLoc = 20945;
 		rType = 0;
 		vrLen = 762;
 		vrLoc = 13943;
@@ -31715,7 +31903,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 486";
 		rLen = 31;
-		rLoc = 20946;
+		rLoc = 20945;
 		rType = 0;
 		vrLen = 784;
 		vrLoc = 13921;
@@ -31735,7 +31923,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 486";
 		rLen = 31;
-		rLoc = 20946;
+		rLoc = 20945;
 		rType = 0;
 		vrLen = 727;
 		vrLoc = 13919;
@@ -31785,7 +31973,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 526";
 		rLen = 25;
-		rLoc = 21640;
+		rLoc = 21639;
 		rType = 0;
 		vrLen = 779;
 		vrLoc = 14762;
@@ -31815,7 +32003,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 526";
 		rLen = 25;
-		rLoc = 21640;
+		rLoc = 21639;
 		rType = 0;
 		vrLen = 823;
 		vrLoc = 14454;
@@ -31835,7 +32023,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 534";
 		rLen = 0;
-		rLoc = 22093;
+		rLoc = 22092;
 		rType = 0;
 		vrLen = 1669;
 		vrLoc = 14774;
@@ -31855,7 +32043,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 532";
 		rLen = 0;
-		rLoc = 21812;
+		rLoc = 21811;
 		rType = 0;
 		vrLen = 969;
 		vrLoc = 15254;
@@ -31885,7 +32073,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 393";
 		rLen = 0;
-		rLoc = 17377;
+		rLoc = 17534;
 		rType = 0;
 		vrLen = 1657;
 		vrLoc = 11769;
@@ -31905,7 +32093,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 104";
 		rLen = 0;
-		rLoc = 4725;
+		rLoc = 4724;
 		rType = 0;
 		vrLen = 1583;
 		vrLoc = 4490;
@@ -31935,7 +32123,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 439";
 		rLen = 0;
-		rLoc = 19935;
+		rLoc = 20092;
 		rType = 0;
 		vrLen = 1665;
 		vrLoc = 11874;
@@ -31955,7 +32143,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 652";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 1234;
 		vrLoc = 17443;
@@ -31975,7 +32163,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 680";
 		rLen = 0;
-		rLoc = 36593;
+		rLoc = 36592;
 		rType = 0;
 		vrLen = 913;
 		vrLoc = 18949;
@@ -32251,7 +32439,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 24";
 		rLen = 0;
-		rLoc = 1759;
+		rLoc = 1803;
 		rType = 0;
 		vrLen = 864;
 		vrLoc = 163;
@@ -32271,7 +32459,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 51";
 		rLen = 0;
-		rLoc = 3197;
+		rLoc = 3241;
 		rType = 0;
 		vrLen = 1071;
 		vrLoc = 463;
@@ -32301,7 +32489,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 86";
 		rLen = 0;
-		rLoc = 16156;
+		rLoc = 16313;
 		rType = 0;
 		vrLen = 1244;
 		vrLoc = 644;
@@ -32321,7 +32509,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 83";
 		rLen = 0;
-		rLoc = 12192;
+		rLoc = 12199;
 		rType = 0;
 		vrLen = 961;
 		vrLoc = 1127;
@@ -32341,7 +32529,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 103";
 		rLen = 0;
-		rLoc = 15329;
+		rLoc = 15486;
 		rType = 0;
 		vrLen = 881;
 		vrLoc = 2051;
@@ -32361,7 +32549,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 106";
 		rLen = 0;
-		rLoc = 15329;
+		rLoc = 15486;
 		rType = 0;
 		vrLen = 895;
 		vrLoc = 1965;
@@ -32381,7 +32569,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 91";
 		rLen = 0;
-		rLoc = 12447;
+		rLoc = 12454;
 		rType = 0;
 		vrLen = 1418;
 		vrLoc = 2051;
@@ -32401,7 +32589,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 119";
 		rLen = 0;
-		rLoc = 14081;
+		rLoc = 14238;
 		rType = 0;
 		vrLen = 1442;
 		vrLoc = 2143;
@@ -32421,7 +32609,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 134";
 		rLen = 0;
-		rLoc = 15079;
+		rLoc = 15236;
 		rType = 0;
 		vrLen = 1532;
 		vrLoc = 2661;
@@ -32441,7 +32629,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 80";
 		rLen = 0;
-		rLoc = 3633;
+		rLoc = 3677;
 		rType = 0;
 		vrLen = 1483;
 		vrLoc = 1153;
@@ -32461,7 +32649,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 80";
 		rLen = 0;
-		rLoc = 3633;
+		rLoc = 3677;
 		rType = 0;
 		vrLen = 1483;
 		vrLoc = 1153;
@@ -32481,7 +32669,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 85";
 		rLen = 0;
-		rLoc = 8221;
+		rLoc = 8223;
 		rType = 0;
 		vrLen = 1396;
 		vrLoc = 1153;
@@ -32501,7 +32689,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 170";
 		rLen = 0;
-		rLoc = 15386;
+		rLoc = 15543;
 		rType = 0;
 		vrLen = 1311;
 		vrLoc = 3311;
@@ -32521,7 +32709,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 199";
 		rLen = 0;
-		rLoc = 15811;
+		rLoc = 15968;
 		rType = 0;
 		vrLen = 1025;
 		vrLoc = 4204;
@@ -32541,7 +32729,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 211";
 		rLen = 0;
-		rLoc = 16155;
+		rLoc = 16312;
 		rType = 0;
 		vrLen = 1038;
 		vrLoc = 4254;
@@ -32561,7 +32749,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 222";
 		rLen = 0;
-		rLoc = 16787;
+		rLoc = 16944;
 		rType = 0;
 		vrLen = 1335;
 		vrLoc = 1941;
@@ -32591,7 +32779,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 69";
 		rLen = 0;
-		rLoc = 2209;
+		rLoc = 2253;
 		rType = 0;
 		vrLen = 1688;
 		vrLoc = 843;
@@ -32611,7 +32799,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 62";
 		rLen = 0;
-		rLoc = 1938;
+		rLoc = 1982;
 		rType = 0;
 		vrLen = 1041;
 		vrLoc = 843;
@@ -32631,7 +32819,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 341";
 		rLen = 0;
-		rLoc = 10553;
+		rLoc = 10560;
 		rType = 0;
 		vrLen = 1522;
 		vrLoc = 10042;
@@ -33221,7 +33409,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 553";
 		rLen = 22;
-		rLoc = 24831;
+		rLoc = 25080;
 		rType = 0;
 		vrLen = 1020;
 		vrLoc = 15667;
@@ -33271,7 +33459,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 69";
 		rLen = 0;
-		rLoc = 1827;
+		rLoc = 1815;
 		rType = 0;
 		vrLen = 1481;
 		vrLoc = 3900;
@@ -33385,7 +33573,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 555";
 		rLen = 22;
-		rLoc = 24831;
+		rLoc = 25080;
 		rType = 0;
 		vrLen = 1035;
 		vrLoc = 15107;
@@ -33425,7 +33613,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 103";
 		rLen = 22;
-		rLoc = 3608;
+		rLoc = 3652;
 		rType = 0;
 		vrLen = 863;
 		vrLoc = 2575;
@@ -33445,7 +33633,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 560";
 		rLen = 0;
-		rLoc = 25004;
+		rLoc = 25253;
 		rType = 0;
 		vrLen = 1109;
 		vrLoc = 15767;
@@ -33465,7 +33653,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 554";
 		rLen = 22;
-		rLoc = 24831;
+		rLoc = 25080;
 		rType = 0;
 		vrLen = 1050;
 		vrLoc = 15767;
@@ -33515,7 +33703,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 103";
 		rLen = 22;
-		rLoc = 3608;
+		rLoc = 3652;
 		rType = 0;
 		vrLen = 863;
 		vrLoc = 2575;
@@ -33691,7 +33879,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 33";
 		rLen = 0;
-		rLoc = 1444;
+		rLoc = 1488;
 		rType = 0;
 		vrLen = 941;
 		vrLoc = 293;
@@ -33711,7 +33899,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 33";
 		rLen = 0;
-		rLoc = 1444;
+		rLoc = 1488;
 		rType = 0;
 		vrLen = 804;
 		vrLoc = 0;
@@ -33741,7 +33929,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 38";
 		rLen = 5;
-		rLoc = 1713;
+		rLoc = 1757;
 		rType = 0;
 		vrLen = 1005;
 		vrLoc = 313;
@@ -33791,7 +33979,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 30";
 		rLen = 0;
-		rLoc = 951;
+		rLoc = 995;
 		rType = 0;
 		vrLen = 804;
 		vrLoc = 0;
@@ -33847,7 +34035,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 226";
 		rLen = 0;
-		rLoc = 16776;
+		rLoc = 16933;
 		rType = 0;
 		vrLen = 1654;
 		vrLoc = 6348;
@@ -33867,7 +34055,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 31";
 		rLen = 0;
-		rLoc = 952;
+		rLoc = 996;
 		rType = 0;
 		vrLen = 1428;
 		vrLoc = 110;
@@ -33887,7 +34075,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 214";
 		rLen = 0;
-		rLoc = 15811;
+		rLoc = 15968;
 		rType = 0;
 		vrLen = 1211;
 		vrLoc = 5791;
@@ -34689,7 +34877,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 402";
 		rLen = 0;
-		rLoc = 17940;
+		rLoc = 18097;
 		rType = 0;
 		vrLen = 1033;
 		vrLoc = 11394;
@@ -34819,7 +35007,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 134";
 		rLen = 0;
-		rLoc = 4583;
+		rLoc = 4627;
 		rType = 0;
 		vrLen = 980;
 		vrLoc = 3484;
@@ -34829,7 +35017,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 536";
 		rLen = 0;
-		rLoc = 25330;
+		rLoc = 25579;
 		rType = 0;
 		vrLen = 1047;
 		vrLoc = 15408;
@@ -35411,7 +35599,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: stylePtr";
 		rLen = 0;
-		rLoc = 19873;
+		rLoc = 19872;
 		rType = 0;
 		vrLen = 1259;
 		vrLoc = 11492;
@@ -35571,7 +35759,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 650";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -35591,7 +35779,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 449";
 		rLen = 0;
-		rLoc = 21079;
+		rLoc = 21078;
 		rType = 0;
 		vrLen = 660;
 		vrLoc = 12338;
@@ -35681,7 +35869,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 449";
 		rLen = 0;
-		rLoc = 21079;
+		rLoc = 21078;
 		rType = 0;
 		vrLen = 1030;
 		vrLoc = 12120;
@@ -35891,7 +36079,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: stylePtr";
 		rLen = 0;
-		rLoc = 4456;
+		rLoc = 4455;
 		rType = 0;
 		vrLen = 814;
 		vrLoc = 1912;
@@ -35961,7 +36149,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 93";
 		rLen = 0;
-		rLoc = 3688;
+		rLoc = 3732;
 		rType = 0;
 		vrLen = 1241;
 		vrLoc = 4057;
@@ -36131,7 +36319,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 269";
 		rLen = 0;
-		rLoc = 12142;
+		rLoc = 12149;
 		rType = 0;
 		vrLen = 540;
 		vrLoc = 7911;
@@ -36151,7 +36339,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 650";
 		rLen = 0;
-		rLoc = 22516;
+		rLoc = 22765;
 		rType = 0;
 		vrLen = 424;
 		vrLoc = 19215;
@@ -36161,7 +36349,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 471";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 1653;
 		vrLoc = 7012;
@@ -36181,7 +36369,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 285";
 		rLen = 0;
-		rLoc = 12851;
+		rLoc = 12825;
 		rType = 0;
 		vrLen = 1810;
 		vrLoc = 9312;
@@ -36201,7 +36389,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 370";
 		rLen = 0;
-		rLoc = 17158;
+		rLoc = 17132;
 		rType = 0;
 		vrLen = 1290;
 		vrLoc = 14967;
@@ -36231,7 +36419,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 71";
 		rLen = 0;
-		rLoc = 3264;
+		rLoc = 3308;
 		rType = 0;
 		vrLen = 940;
 		vrLoc = 4691;
@@ -36341,7 +36529,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 638";
 		rLen = 0;
-		rLoc = 22314;
+		rLoc = 22563;
 		rType = 0;
 		vrLen = 1165;
 		vrLoc = 18559;
@@ -36351,7 +36539,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 272";
 		rLen = 24;
-		rLoc = 8715;
+		rLoc = 8717;
 		rType = 0;
 		vrLen = 1444;
 		vrLoc = 8126;
@@ -36361,7 +36549,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 637";
 		rLen = 0;
-		rLoc = 22314;
+		rLoc = 22563;
 		rType = 0;
 		vrLen = 1192;
 		vrLoc = 18559;
@@ -36381,7 +36569,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 274";
 		rLen = 22;
-		rLoc = 8842;
+		rLoc = 8844;
 		rType = 0;
 		vrLen = 1414;
 		vrLoc = 8126;
@@ -36391,7 +36579,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 334";
 		rLen = 0;
-		rLoc = 9821;
+		rLoc = 9795;
 		rType = 0;
 		vrLen = 1715;
 		vrLoc = 9833;
@@ -36401,7 +36589,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 278";
 		rLen = 0;
-		rLoc = 9040;
+		rLoc = 9047;
 		rType = 0;
 		vrLen = 1620;
 		vrLoc = 930;
@@ -36621,7 +36809,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 361";
 		rLen = 0;
-		rLoc = 18286;
+		rLoc = 18285;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -36761,7 +36949,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 226";
 		rLen = 0;
-		rLoc = 17377;
+		rLoc = 17534;
 		rType = 0;
 		vrLen = 923;
 		vrLoc = 5039;
@@ -36781,7 +36969,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 233";
 		rLen = 0;
-		rLoc = 17867;
+		rLoc = 18024;
 		rType = 0;
 		vrLen = 1043;
 		vrLoc = 5137;
@@ -36801,7 +36989,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 244";
 		rLen = 0;
-		rLoc = 18438;
+		rLoc = 18595;
 		rType = 0;
 		vrLen = 1150;
 		vrLoc = 5193;
@@ -36821,7 +37009,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 222";
 		rLen = 18;
-		rLoc = 16794;
+		rLoc = 16951;
 		rType = 0;
 		vrLen = 597;
 		vrLoc = 5224;
@@ -36851,7 +37039,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 36";
 		rLen = 0;
-		rLoc = 1843;
+		rLoc = 1887;
 		rType = 0;
 		vrLen = 766;
 		vrLoc = 221;
@@ -36911,7 +37099,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 29";
 		rLen = 0;
-		rLoc = 1444;
+		rLoc = 1488;
 		rType = 0;
 		vrLen = 757;
 		vrLoc = 298;
@@ -36931,7 +37119,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 426";
 		rLen = 0;
-		rLoc = 18388;
+		rLoc = 18362;
 		rType = 0;
 		vrLen = 623;
 		vrLoc = 12415;
@@ -36954,7 +37142,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 158";
 		rLen = 0;
-		rLoc = 4925;
+		rLoc = 4911;
 		rType = 0;
 		vrLen = 1453;
 		vrLoc = 4014;
@@ -37003,7 +37191,7 @@
 		fRef = 9A49B81F07A7AA2F00A80065;
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 25";
-		rLen = 17829;
+		rLen = 17986;
 		rLoc = 666;
 		rType = 0;
 		vrLen = 1510;
@@ -37048,7 +37236,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 514";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 742;
 		vrLoc = 12856;
@@ -37062,7 +37250,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 473";
 		rLen = 0;
-		rLoc = 34291;
+		rLoc = 34290;
 		rType = 0;
 		vrLen = 444;
 		vrLoc = 13154;
@@ -37102,7 +37290,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 70";
 		rLen = 0;
-		rLoc = 3627;
+		rLoc = 3626;
 		rType = 0;
 		vrLen = 1559;
 		vrLoc = 8312;
@@ -37112,7 +37300,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 121";
 		rLen = 0;
-		rLoc = 5520;
+		rLoc = 5519;
 		rType = 0;
 		vrLen = 2122;
 		vrLoc = 5442;
@@ -37132,7 +37320,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 393";
 		rLen = 0;
-		rLoc = 17377;
+		rLoc = 17534;
 		rType = 0;
 		vrLen = 1853;
 		vrLoc = 11310;
@@ -37152,7 +37340,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 628";
 		rLen = 0;
-		rLoc = 25823;
+		rLoc = 26072;
 		rType = 0;
 		vrLen = 1030;
 		vrLoc = 17265;
@@ -37172,7 +37360,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 442";
 		rLen = 16;
-		rLoc = 22120;
+		rLoc = 22119;
 		rType = 0;
 		vrLen = 1077;
 		vrLoc = 11908;
@@ -37202,7 +37390,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 371";
 		rLen = 0;
-		rLoc = 17647;
+		rLoc = 17646;
 		rType = 0;
 		vrLen = 1886;
 		vrLoc = 9521;
@@ -37232,7 +37420,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 339";
 		rLen = 0;
-		rLoc = 13831;
+		rLoc = 13830;
 		rType = 0;
 		vrLen = 1612;
 		vrLoc = 11773;
@@ -37252,7 +37440,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 421";
 		rLen = 0;
-		rLoc = 17997;
+		rLoc = 17996;
 		rType = 0;
 		vrLen = 1530;
 		vrLoc = 13921;
@@ -37292,7 +37480,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 499";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 1360;
 		vrLoc = 10372;
@@ -37332,7 +37520,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 132";
 		rLen = 20;
-		rLoc = 4342;
+		rLoc = 4283;
 		rType = 0;
 		vrLen = 1386;
 		vrLoc = 4127;
@@ -37342,7 +37530,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 104";
 		rLen = 0;
-		rLoc = 3202;
+		rLoc = 3170;
 		rType = 0;
 		vrLen = 850;
 		vrLoc = 4;
@@ -37476,7 +37664,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 259";
 		rLen = 0;
-		rLoc = 8903;
+		rLoc = 8905;
 		rType = 0;
 		vrLen = 1441;
 		vrLoc = 7592;
@@ -37496,7 +37684,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 279";
 		rLen = 0;
-		rLoc = 9816;
+		rLoc = 9823;
 		rType = 0;
 		vrLen = 1611;
 		vrLoc = 8395;
@@ -37516,7 +37704,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 59";
 		rLen = 0;
-		rLoc = 2655;
+		rLoc = 2699;
 		rType = 0;
 		vrLen = 1566;
 		vrLoc = 908;
@@ -37536,7 +37724,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 255";
 		rLen = 14;
-		rLoc = 8473;
+		rLoc = 8475;
 		rType = 0;
 		vrLen = 838;
 		vrLoc = 7636;
@@ -37596,7 +37784,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 634";
 		rLen = 0;
-		rLoc = 22101;
+		rLoc = 22350;
 		rType = 0;
 		vrLen = 643;
 		vrLoc = 18863;
@@ -37616,7 +37804,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 47";
 		rLen = 0;
-		rLoc = 1443;
+		rLoc = 1487;
 		rType = 0;
 		vrLen = 1546;
 		vrLoc = 9020;
@@ -37636,7 +37824,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 306";
 		rLen = 0;
-		rLoc = 10258;
+		rLoc = 10265;
 		rType = 0;
 		vrLen = 1413;
 		vrLoc = 9018;
@@ -37656,7 +37844,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 307";
 		rLen = 0;
-		rLoc = 10306;
+		rLoc = 10313;
 		rType = 0;
 		vrLen = 1462;
 		vrLoc = 9018;
@@ -37676,7 +37864,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 182";
 		rLen = 0;
-		rLoc = 5820;
+		rLoc = 5806;
 		rType = 0;
 		vrLen = 1340;
 		vrLoc = 4475;
@@ -37696,7 +37884,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 179";
 		rLen = 49;
-		rLoc = 5707;
+		rLoc = 5693;
 		rType = 0;
 		vrLen = 1340;
 		vrLoc = 4475;
@@ -37716,7 +37904,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 382";
 		rLen = 0;
-		rLoc = 25547;
+		rLoc = 25796;
 		rType = 0;
 		vrLen = 961;
 		vrLoc = 9248;
@@ -37746,7 +37934,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 245";
 		rLen = 0;
-		rLoc = 11749;
+		rLoc = 11723;
 		rType = 0;
 		vrLen = 1395;
 		vrLoc = 4504;
@@ -37766,7 +37954,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 364";
 		rLen = 0;
-		rLoc = 11109;
+		rLoc = 11083;
 		rType = 0;
 		vrLen = 1793;
 		vrLoc = 9661;
@@ -37796,7 +37984,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 653";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -37816,7 +38004,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 479";
 		rLen = 0;
-		rLoc = 24841;
+		rLoc = 24840;
 		rType = 0;
 		vrLen = 1145;
 		vrLoc = 12353;
@@ -38454,7 +38642,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 163";
 		rLen = 0;
-		rLoc = 7868;
+		rLoc = 7870;
 		rType = 0;
 		vrLen = 1723;
 		vrLoc = 3900;
@@ -38514,7 +38702,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 304";
 		rLen = 0;
-		rLoc = 21442;
+		rLoc = 21691;
 		rType = 0;
 		vrLen = 1053;
 		vrLoc = 8107;
@@ -38534,7 +38722,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 306";
 		rLen = 0;
-		rLoc = 9752;
+		rLoc = 9759;
 		rType = 0;
 		vrLen = 1410;
 		vrLoc = 9250;
@@ -38584,7 +38772,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 738";
 		rLen = 24;
-		rLoc = 35905;
+		rLoc = 35904;
 		rType = 0;
 		vrLen = 726;
 		vrLoc = 22543;
@@ -38624,7 +38812,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 680";
 		rLen = 0;
-		rLoc = 34395;
+		rLoc = 34394;
 		rType = 0;
 		vrLen = 1482;
 		vrLoc = 20697;
@@ -38644,7 +38832,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 622";
 		rLen = 348;
-		rLoc = 23247;
+		rLoc = 23246;
 		rType = 0;
 		vrLen = 1709;
 		vrLoc = 18861;
@@ -38834,7 +39022,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 468";
 		rLen = 0;
-		rLoc = 34026;
+		rLoc = 34025;
 		rType = 0;
 		vrLen = 966;
 		vrLoc = 12632;
@@ -39294,7 +39482,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 329";
 		rLen = 0;
-		rLoc = 12005;
+		rLoc = 12012;
 		rType = 0;
 		vrLen = 730;
 		vrLoc = 10033;
@@ -39314,7 +39502,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 778";
 		rLen = 0;
-		rLoc = 24261;
+		rLoc = 24510;
 		rType = 0;
 		vrLen = 486;
 		vrLoc = 23894;
@@ -39344,7 +39532,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 65";
 		rLen = 0;
-		rLoc = 2279;
+		rLoc = 2323;
 		rType = 0;
 		vrLen = 850;
 		vrLoc = 1494;
@@ -39364,7 +39552,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 619";
 		rLen = 0;
-		rLoc = 19020;
+		rLoc = 18994;
 		rType = 0;
 		vrLen = 634;
 		vrLoc = 18498;
@@ -39526,7 +39714,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 306";
 		rLen = 0;
-		rLoc = 18284;
+		rLoc = 18283;
 		rType = 0;
 		vrLen = 964;
 		vrLoc = 8400;
@@ -39596,7 +39784,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 228";
 		rLen = 0;
-		rLoc = 7481;
+		rLoc = 7483;
 		rType = 0;
 		vrLen = 978;
 		vrLoc = 7184;
@@ -39750,7 +39938,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 506";
 		rLen = 0;
-		rLoc = 16318;
+		rLoc = 16292;
 		rType = 0;
 		vrLen = 1703;
 		vrLoc = 13862;
@@ -39770,7 +39958,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 454";
 		rLen = 22;
-		rLoc = 15276;
+		rLoc = 15275;
 		rType = 0;
 		vrLen = 610;
 		vrLoc = 13957;
@@ -39882,7 +40070,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 271";
 		rLen = 0;
-		rLoc = 14921;
+		rLoc = 14920;
 		rType = 0;
 		vrLen = 1650;
 		vrLoc = 8343;
@@ -39932,7 +40120,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 426";
 		rLen = 266;
-		rLoc = 24782;
+		rLoc = 24781;
 		rType = 0;
 		vrLen = 1376;
 		vrLoc = 11898;
@@ -40060,7 +40248,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 70";
 		rLen = 0;
-		rLoc = 3627;
+		rLoc = 3626;
 		rType = 0;
 		vrLen = 1521;
 		vrLoc = 8312;
@@ -40080,7 +40268,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 373";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 1516;
 		vrLoc = 10186;
@@ -40140,7 +40328,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 373";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 1573;
 		vrLoc = 10022;
@@ -40210,7 +40398,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 366";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -40230,7 +40418,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 378";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 1540;
 		vrLoc = 10056;
@@ -40250,7 +40438,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 378";
 		rLen = 0;
-		rLoc = 18351;
+		rLoc = 18350;
 		rType = 0;
 		vrLen = 194;
 		vrLoc = 13404;
@@ -40260,7 +40448,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: stylePtr";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 20;
 		vrLoc = 13578;
@@ -40270,7 +40458,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: stylePtr";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 20;
 		vrLoc = 13578;
@@ -40280,7 +40468,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 404";
 		rLen = 304;
-		rLoc = 19464;
+		rLoc = 19463;
 		rType = 0;
 		vrLen = 1554;
 		vrLoc = 10666;
@@ -40290,7 +40478,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 404";
 		rLen = 304;
-		rLoc = 19464;
+		rLoc = 19463;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -40300,7 +40488,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 550";
 		rLen = 0;
-		rLoc = 36794;
+		rLoc = 36793;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 13598;
@@ -40400,7 +40588,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 437";
 		rLen = 0;
-		rLoc = 14864;
+		rLoc = 14863;
 		rType = 0;
 		vrLen = 1997;
 		vrLoc = 14515;
@@ -40410,7 +40598,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 397";
 		rLen = 0;
-		rLoc = 16961;
+		rLoc = 17118;
 		rType = 0;
 		vrLen = 1721;
 		vrLoc = 11805;
@@ -40430,7 +40618,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 455";
 		rLen = 4;
-		rLoc = 19171;
+		rLoc = 19328;
 		rType = 0;
 		vrLen = 1710;
 		vrLoc = 11802;
@@ -40450,7 +40638,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 446";
 		rLen = 0;
-		rLoc = 18849;
+		rLoc = 19006;
 		rType = 0;
 		vrLen = 1720;
 		vrLoc = 13145;
@@ -40470,7 +40658,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 120";
 		rLen = 0;
-		rLoc = 13436;
+		rLoc = 13593;
 		rType = 0;
 		vrLen = 1492;
 		vrLoc = 2641;
@@ -40490,7 +40678,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 262";
 		rLen = 0;
-		rLoc = 18388;
+		rLoc = 18545;
 		rType = 0;
 		vrLen = 1493;
 		vrLoc = 5510;
@@ -40690,7 +40878,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 299";
 		rLen = 0;
-		rLoc = 15053;
+		rLoc = 15052;
 		rType = 0;
 		vrLen = 1245;
 		vrLoc = 10930;
@@ -40750,7 +40938,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: GetLinearGradientFromName";
 		rLen = 856;
-		rLoc = 20165;
+		rLoc = 20164;
 		rType = 0;
 		vrLen = 1239;
 		vrLoc = 10930;
@@ -40800,7 +40988,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 389";
 		rLen = 19;
-		rLoc = 15258;
+		rLoc = 15415;
 		rType = 0;
 		vrLen = 809;
 		vrLoc = 11492;
@@ -41382,7 +41570,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 447";
 		rLen = 0;
-		rLoc = 15147;
+		rLoc = 15146;
 		rType = 0;
 		vrLen = 1425;
 		vrLoc = 13661;
@@ -41404,7 +41592,7 @@
 		isa = PBXTextBookmark;
 		name = "tkUnixCairoPath.c: 249";
 		rLen = 0;
-		rLoc = 8152;
+		rLoc = 8154;
 		rType = 0;
 		vrLen = 1606;
 		vrLoc = 6725;
@@ -41414,7 +41602,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 324";
 		rLen = 0;
-		rLoc = 9424;
+		rLoc = 9398;
 		rType = 0;
 		vrLen = 1620;
 		vrLoc = 7996;
@@ -41444,7 +41632,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: __LDBL_DIG__";
 		rLen = 178;
-		rLoc = 2034;
+		rLoc = 2033;
 		rType = 0;
 		vrLen = 1504;
 		vrLoc = 27;
@@ -41524,7 +41712,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathGradients.c: 675";
 		rLen = 24;
-		rLoc = 34153;
+		rLoc = 34152;
 		rType = 0;
 		vrLen = 708;
 		vrLoc = 20698;
@@ -41580,7 +41768,7 @@
 		isa = PBXTextBookmark;
 		name = "tkWinGDIPlusPath.cpp: 505";
 		rLen = 10;
-		rLoc = 21089;
+		rLoc = 21338;
 		rType = 0;
 		vrLen = 1449;
 		vrLoc = 5506;
@@ -41876,7 +42064,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: 691";
 		rLen = 0;
-		rLoc = 24639;
+		rLoc = 24641;
 		rType = 0;
 		vrLen = 1279;
 		vrLoc = 12749;
@@ -41906,7 +42094,7 @@
 		isa = PBXTextBookmark;
 		name = "tkPathSurface.c: ";
 		rLen = 0;
-		rLoc = 24894;
+		rLoc = 24896;
 		rType = 0;
 		vrLen = 1646;
 		vrLoc = 20969;

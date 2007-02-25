@@ -62,7 +62,6 @@ typedef struct GradientStyle {
 } GradientStyle;
 
 // OUTDATED
-
 typedef struct LinearGradientStyle {
 	Tk_OptionTable optionTable;
 	Tk_Uid name;

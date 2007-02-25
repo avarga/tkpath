@@ -24,6 +24,8 @@ extern int gUseAntiAlias;
 extern int gSurfaceCopyPremultiplyAlpha;
 extern Tcl_Interp *gInterp;
 
+int kPathSmallEndian = 1;	/* Hardcoded. */
+
 /* @@@ Need to use cairo_image_surface_create_for_data() here since prior to 1.2
  *     there doesn't exist any cairo_image_surface_get_data() accessor. 
  */
@@ -217,7 +219,6 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     int size, pitch;
     int iwidth, iheight;
     int i, j;
-    int smallEndian = 1;	/* Hardcoded. */
 
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
@@ -268,7 +269,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         dstG = 2;
         dstB = 3;
         dstA = 0;
-        if (smallEndian) {
+        if (kPathSmallEndian) {
             dstR = 3-dstR, dstG = 3-dstG, dstB = 3-dstB, dstA = 3-dstA;
         }
         if ((srcR == dstR) && (srcG == dstG) && (srcB == dstB) && (srcA == dstA)) {
@@ -389,6 +390,7 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
     int stride;
     
     /* Had to do it directly on the bits. Assuming CAIRO_FORMAT_ARGB32 
+     * cairos ARGB format is in *native* endian order; Switch!
      * Be careful not to address the bitmap outside its limits. */
     data = context->record->data;
     stride = context->record->stride;
@@ -405,6 +407,10 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
     
     for (i = ix; i < iend; i++) {
         dst = data + i*stride;
+        if (kPathSmallEndian) {
+            /* BGRA */
+            dst += 3;
+        }
         for (j = iy; j < jend; j++, dst += 4) {
             *dst = 0x00;
         }
