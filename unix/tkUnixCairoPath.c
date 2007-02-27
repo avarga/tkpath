@@ -437,24 +437,17 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     pixel = (unsigned char *) ckalloc(height*stride);
 
     if (gSurfaceCopyPremultiplyAlpha) {
-        PathCopyBitsPremultipliedAlphaARGB(data, pixel, width, height, stride);
-    } else {
-        memcpy(pixel, data, height*stride);    
-#if 0
-        unsigned char *src, *dst;
-        int i, j;
-
-        for (i = 0; i < height; i++) {
-            src = data + i*stride;
-            dst = pixel + i*stride;
-            /* Copy XRGB to RGBX in one shot, alphas in a loop. */
-            /* @@@ Keep ARGB format in photo? */
-            memcpy(dst, src+1, 4*width-1);
-            for (j = 0; j < width; j++, src += 4, dst += 4) {
-                *(dst+3) = *src;
-            }
+        if (kPathSmallEndian) {
+            PathCopyBitsPremultipliedAlphaBGRA(data, pixel, width, height, stride);
+        } else {
+            PathCopyBitsPremultipliedAlphaARGB(data, pixel, width, height, stride);
         }
-#endif
+    } else {
+        if (kPathSmallEndian) {
+            PathCopyBitsBGRA(data, pixel, width, height, stride);
+        } else {
+            PathCopyBitsARGB(data, pixel, width, height, stride);
+        }
     }
     block.pixelPtr = pixel;
     block.width = width;

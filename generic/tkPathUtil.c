@@ -201,6 +201,70 @@ TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr)
 /*
  *--------------------------------------------------------------
  *
+ * PathCopyBitsARGB, PathCopyBitsBGRA --
+ *
+ *		Copies bitmap data from these formats to RGBA.
+ *
+ * Results:
+ *		None.
+ *
+ * Side effects:
+ *		None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+PathCopyBitsARGB(unsigned char *from, unsigned char *to, 
+        int width, int height, int bytesPerRow)
+{
+    unsigned char *src, *dst;
+    int i, j;
+
+    /* Copy XRGB to RGBX in one shot, alphas in a loop. */
+    memcpy(to, from+1, height*bytesPerRow-1);
+    
+    for (i = 0; i < height; i++) {
+        src = from + i*bytesPerRow;
+        dst = to + i*bytesPerRow;
+        /* @@@ Keep ARGB format in photo? */
+        for (j = 0; j < width; j++, src += 4, dst += 4) {
+            *(dst+3) = *src;
+        }
+    }
+}
+
+void
+PathCopyBitsBGRA(unsigned char *from, unsigned char *to, 
+        int width, int height, int bytesPerRow)
+{
+    unsigned char *src, *dst;
+    int i, j;
+    
+    /* Copy BGRA -> RGBA */
+    for (i = 0; i < height; i++) {
+        src = from + i*bytesPerRow;
+        dst = to + i*bytesPerRow;
+        for (j = 0; j < width; j++, src += 4) {
+            /* RED */
+            *dst = *(src+2);
+            dst++;
+            /* GREEN */
+            *dst = *(src+1);
+            dst++;
+            /* BLUE */
+            *dst = *src;
+            dst++;
+            /* ALPHA */
+            *dst = *(src+3);
+            dst++;
+        }
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * PathCopyBitsPremultipliedAlphaRGBA, PathCopyBitsPremultipliedAlphaARGB --
  *
  *		Copies bitmap data that have alpha premultiplied into a bitmap
@@ -229,20 +293,20 @@ PathCopyBitsPremultipliedAlphaRGBA(unsigned char *from, unsigned char *to,
         dst = to + i*bytesPerRow;
         for (j = 0; j < width; j++) {
             alpha = *(src+3);
-            if (alpha == 0xFF) {
+            if (alpha == 0xFF || alpha == 0x00) {
                 memcpy(dst, src, 4);
                 src += 4;
                 dst += 4;
             } else {
                 /* dst = 255*src/alpha */
-                *dst = ((*src << 8) - *src)/alpha;
-                dst++, src++;
-                *dst = ((*src << 8) - *src)/alpha;
-                dst++, src++;
-                *dst = ((*src << 8) - *src)/alpha;
-                dst++, src++;
-                *dst = alpha;
-                dst++, src++;
+                *dst++ = ((*src << 8) - *src)/alpha;
+                src++;
+                *dst++ = ((*src << 8) - *src)/alpha;
+                src++;
+                *dst++ = ((*src << 8) - *src)/alpha;
+                src++;
+                *dst++ = alpha;
+                src++;
             }
         }
     }
@@ -261,7 +325,7 @@ PathCopyBitsPremultipliedAlphaARGB(unsigned char *from, unsigned char *to,
         dst = to + i*bytesPerRow;
         for (j = 0; j < width; j++) {
             alpha = *src;
-            if (alpha == 0xFF) {
+            if (alpha == 0xFF || alpha == 0x00) {
                 memcpy(dst, src+1, 3);
                 *(dst+3) = alpha;
                 src += 4;
@@ -276,6 +340,51 @@ PathCopyBitsPremultipliedAlphaARGB(unsigned char *from, unsigned char *to,
                 dst++, src++;
                 *dst = ((*src << 8) - *src)/alpha;
                 dst++, dst++, src++;
+            }
+        }
+    }
+}
+
+void
+PathCopyBitsPremultipliedAlphaBGRA(unsigned char *from, unsigned char *to, 
+        int width, int height, int bytesPerRow)
+{
+    unsigned char *src, *dst, alpha;
+    int i, j;
+
+    /* Copy src BGRA with premulitplied alpha to "plain" RGBA. */
+    for (i = 0; i < height; i++) {
+        src = from + i*bytesPerRow;
+        dst = to + i*bytesPerRow;
+        for (j = 0; j < width; j++, src += 4) {
+            alpha = *src;
+            if (alpha == 0xFF || alpha == 0x00) {
+                /* RED */
+                *dst = *(src+2);
+                dst++;
+                /* GREEN */
+                *dst = *(src+1);
+                dst++;
+                /* BLUE */
+                *dst = *src;
+                dst++;
+                /* ALPHA */
+                *dst = *(src+3);
+                dst++;
+            } else {
+                /* dst = 255*src/alpha */
+                /* RED */
+                *dst = ((*(src+2) << 8) - *src)/alpha;
+                dst++;                
+                /* GREEN */
+                *dst = ((*(src+1) << 8) - *src)/alpha;                
+                dst++;
+                /* BLUE */
+                *dst = ((*(src+0) << 8) - *src)/alpha;
+                dst++;
+                /* ALPHA */
+                *dst = ((*(src+3) << 8) - *src)/alpha;
+                dst++;
             }
         }
     }

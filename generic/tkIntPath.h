@@ -49,6 +49,19 @@ extern "C" {
 #	endif
 #endif
 
+#if 0
+typedef enum __CFByteOrder {
+    CFByteOrderUnknown,
+    CFByteOrderLittleEndian,
+    CFByteOrderBigEndian
+} CFByteOrder;
+
+CF_INLINE CFByteOrder CFByteOrderGetCurrent(void) {
+    uint32_t x = (CFByteOrderBigEndian << 24) | CFByteOrderLittleEndian;
+    return (CFByteOrder)*((UInt8 *)&x);
+}
+#endif
+
 #ifndef MIN
 #	define MIN(a, b) 	(((a) < (b)) ? (a) : (b))
 #endif
@@ -273,9 +286,15 @@ void		PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayP
 void 		PathApplyTMatrix(TMatrix *m, double *x, double *y);
 void 		PathApplyTMatrixToPoint(TMatrix *m, double in[2], double out[2]);
 void		PathInverseTMatrix(TMatrix *m, TMatrix *mi);
+void		PathCopyBitsARGB(unsigned char *from, unsigned char *to, 
+                    int width, int height, int bytesPerRow);
+void		PathCopyBitsBGRA(unsigned char *from, unsigned char *to, 
+                    int width, int height, int bytesPerRow);
 void		PathCopyBitsPremultipliedAlphaRGBA(unsigned char *from, unsigned char *to, 
                     int width, int height, int bytesPerRow);
 void		PathCopyBitsPremultipliedAlphaARGB(unsigned char *from, unsigned char *to, 
+                    int width, int height, int bytesPerRow);
+void		PathCopyBitsPremultipliedAlphaBGRA(unsigned char *from, unsigned char *to, 
                     int width, int height, int bytesPerRow);
 
 int			ObjectIsEmpty(Tcl_Obj *objPtr);
