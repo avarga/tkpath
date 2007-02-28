@@ -247,17 +247,13 @@ PathCopyBitsBGRA(unsigned char *from, unsigned char *to,
         dst = to + i*bytesPerRow;
         for (j = 0; j < width; j++, src += 4) {
             /* RED */
-            *dst = *(src+2);
-            dst++;
+            *dst++ = *(src+2);
             /* GREEN */
-            *dst = *(src+1);
-            dst++;
+            *dst++ = *(src+1);
             /* BLUE */
-            *dst = *src;
-            dst++;
+            *dst++ = *src;
             /* ALPHA */
-            *dst = *(src+3);
-            dst++;
+            *dst++ = *(src+3);
         }
     }
 }
@@ -299,12 +295,9 @@ PathCopyBitsPremultipliedAlphaRGBA(unsigned char *from, unsigned char *to,
                 dst += 4;
             } else {
                 /* dst = 255*src/alpha */
-                *dst++ = ((*src << 8) - *src)/alpha;
-                src++;
-                *dst++ = ((*src << 8) - *src)/alpha;
-                src++;
-                *dst++ = ((*src << 8) - *src)/alpha;
-                src++;
+                *dst++ = (*src++*255)/alpha;
+                *dst++ = (*src++*255)/alpha;
+                *dst++ = (*src++*255)/alpha;
                 *dst++ = alpha;
                 src++;
             }
@@ -312,6 +305,7 @@ PathCopyBitsPremultipliedAlphaRGBA(unsigned char *from, unsigned char *to,
     }
 }
 
+// UNTESTED!
 void
 PathCopyBitsPremultipliedAlphaARGB(unsigned char *from, unsigned char *to, 
         int width, int height, int bytesPerRow)
@@ -357,34 +351,26 @@ PathCopyBitsPremultipliedAlphaBGRA(unsigned char *from, unsigned char *to,
         src = from + i*bytesPerRow;
         dst = to + i*bytesPerRow;
         for (j = 0; j < width; j++, src += 4) {
-            alpha = *src;
+            alpha = *(src+3);
             if (alpha == 0xFF || alpha == 0x00) {
                 /* RED */
-                *dst = *(src+2);
-                dst++;
+                *dst++ = *(src+2);
                 /* GREEN */
-                *dst = *(src+1);
-                dst++;
+                *dst++ = *(src+1);
                 /* BLUE */
-                *dst = *src;
-                dst++;
+                *dst++ = *src;
                 /* ALPHA */
-                *dst = *(src+3);
-                dst++;
+                *dst++ = *(src+3);
             } else {
                 /* dst = 255*src/alpha */
                 /* RED */
-                *dst = ((*(src+2) << 8) - *src)/alpha;
-                dst++;                
+                *dst++ = (*(src+2)*255)/alpha;
                 /* GREEN */
-                *dst = ((*(src+1) << 8) - *src)/alpha;                
-                dst++;
+                *dst++ = (*(src+1)*255)/alpha;
                 /* BLUE */
-                *dst = ((*(src+0) << 8) - *src)/alpha;
-                dst++;
+                *dst++ = (*(src+0)*255)/alpha;
                 /* ALPHA */
-                *dst = ((*(src+3) << 8) - *src)/alpha;
-                dst++;
+                *dst++ = alpha;
             }
         }
     }
