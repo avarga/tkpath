@@ -652,6 +652,7 @@ SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
     Tk_PhotoHandle	photo;
 
     item.imageName = NULL;
+    item.matrixPtr = NULL;
     i = GetFirstOptionIndex(objc, objv);
 	if (GetPointCoords(interp, point, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;

@@ -380,13 +380,13 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 }
 
 void    	
-TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
+TkPathSurfaceErase(TkPathContext ctx, double dx, double dy, double dwidth, double dheight)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     unsigned char *data, *dst;
     int i, j;
-    int ix, iy, iwidth, iheight;
-    int iend, jend;
+    int x, y, width, height;
+    int xend, yend;
     int stride;
     
     /* Had to do it directly on the bits. Assuming CAIRO_FORMAT_ARGB32 
@@ -394,25 +394,24 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
      * Be careful not to address the bitmap outside its limits. */
     data = context->record->data;
     stride = context->record->stride;
-    ix = (int) (x + 0.5);
-    iy = (int) (y + 0.5);
-    iwidth = (int) (width + 0.5);
-    iheight = (int) (height + 0.5);
-    ix = MAX(0, MIN(context->record->width, ix));
-    iy = MAX(0, MIN(context->record->height, iy));
-    iwidth = MAX(0, iwidth);
-    iheight = MAX(0, iheight);
-    iend = MIN(ix + iwidth, context->record->width);
-    jend = MIN(iy + iheight, context->record->height);
-    
-    for (i = ix; i < iend; i++) {
-        dst = data + i*stride;
-        if (kPathSmallEndian) {
-            /* BGRA */
-            dst += 3;
-        }
-        for (j = iy; j < jend; j++, dst += 4) {
+    x = (int) (dx + 0.5);
+    y = (int) (dy + 0.5);
+    width = (int) (dwidth + 0.5);
+    height = (int) (dheight + 0.5);
+    x = MAX(0, MIN(context->record->width, x));
+    y = MAX(0, MIN(context->record->height, y));
+    width = MAX(0, width);
+    height = MAX(0, height);
+    xend = MIN(x + width, context->record->width);
+    yend = MIN(y + height, context->record->height);
+        
+    for (i = y; i < yend; i++) {
+        dst = data + i*stride + 4*x;
+        for (j = x; j < xend; j++, dst += 4) {
             *dst = 0x00;
+            *(dst+1) = 0x00;
+            *(dst+2) = 0x00;
+            *(dst+3) = 0x00;
         }
     }
 }
