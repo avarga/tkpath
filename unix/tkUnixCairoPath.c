@@ -30,7 +30,7 @@ int kPathSmallEndian = 1;	/* Hardcoded. */
  *     there doesn't exist any cairo_image_surface_get_data() accessor. 
  */
 typedef struct PathSurfaceCairoRecord {
-    unsigned char 	*data;
+    unsigned char*	data;
     cairo_format_t 	format;
     int 			width;
     int				height;

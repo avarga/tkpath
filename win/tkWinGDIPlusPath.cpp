@@ -22,6 +22,7 @@ using namespace Gdiplus;
 
 extern Tcl_Interp *gInterp;
 extern "C" int gUseAntiAlias;
+extern "C" int gSurfaceCopyPremultiplyAlpha;
 
 #define MakeGDIPlusColor(xc, opacity) 	Color(BYTE(opacity*255), 				\
 											BYTE(((xc)->pixel & 0xFF)),			\
@@ -99,14 +100,22 @@ class PathC {
     static SolidBrush* PathCreateBrush(Tk_PathStyle *style);
 };
 
+typedef struct PathSurfaceGDIpRecord {
+    HBITMAP bitmap;
+    void * 	data;
+    int 	width;
+    int		height;
+    int		stride;		/* the number of bytes between the start of rows in the buffer */
+} PathSurfaceGDIpRecord;
+
 /*
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
 	PathC *		c;
     HDC			memHdc;
-    HBITMAP  	hbm;
-} TkPathContext_;
+    PathSurfaceGDIpRecord *	surface;	/* NULL unless surface. */
+};
 
 void InitGDIplus(void)
 {
@@ -626,22 +635,57 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     SelectObject(memHdc, twdPtr->bitmap.handle);
     context->c = new PathC(memHdc);
     context->memHdc = memHdc;
-    context->hbm = NULL;
+    context->surface = NULL;
     return (TkPathContext) context;
 }
 
 TkPathContext TkPathInitSurface(int width, int height)
 {
     TkPathContext_ *context = reinterpret_cast<TkPathContext_ *> (ckalloc((unsigned) (sizeof(TkPathContext_))));
-    HBITMAP hbm;
-    HDC memHdc;
+    PathSurfaceGDIpRecord *surface = (PathSurfaceGDIpRecord *) ckalloc((unsigned) (sizeof(PathSurfaceGDIpRecord)));
+    HBITMAP hbm = NULL;
+    HDC memHdc = NULL;
+    BITMAPINFO *bmInfo = NULL;
+    void *data;
     
-    hbm = CreateBitmap(width, height, 1, 32, NULL);
     memHdc = CreateCompatibleDC(NULL);
+#if 0
+    hbm = CreateBitmap(width, height, 1, 32, NULL);
+#endif
+    /* We create off-screen surfaces as DIBs */
+    bmInfo = (BITMAPINFO *) ckalloc(sizeof(BITMAPINFO));
+    bmInfo->bmiHeader.biSize               = sizeof(BITMAPINFOHEADER);
+    bmInfo->bmiHeader.biWidth              = width;
+    bmInfo->bmiHeader.biHeight             = -(int) height;
+    bmInfo->bmiHeader.biPlanes             = 1;
+    bmInfo->bmiHeader.biBitCount           = 32;
+    bmInfo->bmiHeader.biCompression        = BI_RGB;
+    bmInfo->bmiHeader.biSizeImage          = 0;
+    bmInfo->bmiHeader.biXPelsPerMeter      = 72. / 0.0254; /* unused here */
+    bmInfo->bmiHeader.biYPelsPerMeter      = 72. / 0.0254; /* unused here */
+    bmInfo->bmiHeader.biClrUsed            = 0;
+    bmInfo->bmiHeader.biClrImportant       = 0;
+
+    hbm = CreateDIBSection(memHdc, bmInfo, DIB_RGB_COLORS, &data, NULL, 0);
+    if (!hbm) {
+        Tcl_Panic("CreateDIBSection");
+    }
     SelectObject(memHdc, hbm);
+    
+    surface->bitmap = hbm;
+    surface->width = width;
+    surface->data = data;
+    surface->width = width;
+    surface->height = height;
+	/* Windows bitmaps are padded to 16-bit (word) boundaries */
+    surface->stride = 4*width;
+    
     context->c = new PathC(memHdc);
     context->memHdc = memHdc;
-    context->hbm = hbm;
+    context->surface = surface;
+    if (bmInfo) {
+        ckfree((char *) bmInfo);
+    }
     return (TkPathContext) context;
 }
 
@@ -828,7 +872,35 @@ void
 TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    PathSurfaceGDIpRecord *surface = context->surface;
+    Tk_PhotoImageBlock block;
+    unsigned char *data;
+    unsigned char *pixel;
+    int width, height;
+    int bytesPerRow;
 
+    width = surface->width;
+    height = surface->height;
+    data = (unsigned char *)surface->data;
+    bytesPerRow = surface->stride;
+
+    Tk_PhotoGetImage(photo, &block);    
+    pixel = (unsigned char *)ckalloc(height*bytesPerRow);
+    if (gSurfaceCopyPremultiplyAlpha) {
+        PathCopyBitsPremultipliedAlphaARGB(data, pixel, width, height, bytesPerRow);
+    } else {
+        PathCopyBitsARGB(data, pixel, width, height, bytesPerRow);
+    }
+    block.pixelPtr = pixel;
+    block.width = width;
+    block.height = height;
+    block.pitch = bytesPerRow;
+    block.pixelSize = 4;
+    block.offset[0] = 0;
+    block.offset[1] = 1;
+    block.offset[2] = 2;
+    block.offset[3] = 3;
+    Tk_PhotoPutBlock(photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
 }
 
 void
@@ -842,8 +914,8 @@ TkPathFree(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     DeleteDC(context->memHdc);
-    if (context->hbm) {
-        DeleteObject(context->hbm);
+    if (context->surface) {
+        DeleteObject(context->surface->bitmap);
     }
     delete context->c;
     ckfree((char *) context);
