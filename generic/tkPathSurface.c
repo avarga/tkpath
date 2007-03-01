@@ -139,7 +139,7 @@ NewSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* C
     }
     
     ctx = TkPathInitSurface(width, height);
-    if (ctx == NULL) {
+    if (ctx == 0) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("Failed in TkPathInitSurface", -1));
         return TCL_ERROR;
     }

@@ -34,7 +34,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="tclstub84.lib tkstub84.lib gdiplus.lib"
-				OutputFile="$(OutDir)/tkpathgdiplus022.dll"
+				OutputFile="$(OutDir)/tkpathgdiplus024.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="C:\Tcl\lib"
 				GenerateDebugInformation="TRUE"
@@ -159,6 +159,9 @@
 			</File>
 			<File
 				RelativePath="..\..\generic\tkPathStyle.c">
+			</File>
+			<File
+				RelativePath="..\..\generic\tkPathSurface.c">
 			</File>
 			<File
 				RelativePath="..\..\generic\tkPathUtil.c">

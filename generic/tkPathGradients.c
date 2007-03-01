@@ -892,7 +892,7 @@ GradientObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CON
                 gradientStylePtr->optionTable = gRadialGradientOptionTable; 
             }
             gradientStylePtr->type = type;
-            gradientStylePtr->name = Tk_GetUid(name);
+            gradientStylePtr->name = Tk_GetUid(str);
 
             /* 
              * Set default transition vector in case not set. 

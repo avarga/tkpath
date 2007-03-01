@@ -63,7 +63,7 @@ static void PathExit(ClientData clientData);
 class PathC {
 
   public:
-    PathC(Drawable d);
+    PathC(HDC hdc);
     ~PathC(void);
 
     void PushTMatrix(TMatrix *m);
@@ -87,26 +87,25 @@ class PathC {
     void FillRadialGradient(PathRect *bbox, RadialGradientFill *fillPtr, int fillRule);
 
   private:  
-    HDC 			mMemHdc;
-    PointF 			mOrigin;
-    PointF 			mCurrentPoint;
-    Graphics 		*mGraphics;
-    GraphicsPath 	*mPath;
-    GraphicsContainer mContainerStack[10];
-    int				mCointainerTop = 0;
+    HDC 				mMemHdc;
+    PointF 				mOrigin;
+    PointF 				mCurrentPoint;
+    Graphics 			*mGraphics;
+    GraphicsPath 		*mPath;
+    GraphicsContainer 	mContainerStack[10];
+    int					mCointainerTop;
     
     static Pen* PathCreatePen(Tk_PathStyle *style);
     static SolidBrush* PathCreateBrush(Tk_PathStyle *style);
 };
-
-//     GraphicsContainer container = mGraphics->BeginContainer();
-//    mGraphics->EndContainer(container);
 
 /*
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
 	PathC *		c;
+    HDC			memHdc;
+    HBITMAP  	hbm;
 } TkPathContext_;
 
 void InitGDIplus(void)
@@ -123,29 +122,18 @@ void InitGDIplus(void)
     sGdiplusStarted = 1;
 }
 
-PathC::PathC(Drawable d)
+PathC::PathC(HDC hdc)
 {
-    TkWinDrawable *twdPtr = (TkWinDrawable *) d;
-    //TkWinDrawable *twdPtr = reinterpret_cast<TkWinDrawable*>(d);
-
 	if (!sGdiplusStarted) {
 		InitGDIplus();
     }
-
-    /* This will only work for bitmaps; need something else! TkWinGetDrawableDC()? */
-    mMemHdc = CreateCompatibleDC(NULL);
-    SelectObject(mMemHdc, twdPtr->bitmap.handle);
+    mMemHdc = hdc;
     mGraphics = new Graphics(mMemHdc);
 	mPath = NULL;
+	mCointainerTop = 0;
     if (gUseAntiAlias) {
         mGraphics->SetSmoothingMode(SmoothingModeAntiAlias);
     }
-    /* from tile
-    TkWinDCState dcState;
-    HDC hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
-    ...
-    TkWinReleaseDrawableDC(d, hdc, &dcState);
-    */
     return;    
 }
 
@@ -157,9 +145,6 @@ inline PathC::~PathC(void)
     if (mGraphics) {
         delete mGraphics;
     }
-    // free bitmap
-    // DeleteObject(hbm);
-    DeleteDC(mMemHdc);
 }
 
 Pen* PathC::PathCreatePen(Tk_PathStyle *style)
@@ -340,7 +325,7 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
     mGraphics->DrawImage(&bitmap, x, y, width, height);
     if (data) {
-        ckfree(data);
+        ckfree((char *)data);
     }
 }
 
@@ -626,7 +611,22 @@ void PathExit(ClientData clientData)
 TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
     TkPathContext_ *context = reinterpret_cast<TkPathContext_ *> (ckalloc((unsigned) (sizeof(TkPathContext_))));
-    context->c = new PathC(d);
+    TkWinDrawable *twdPtr = (TkWinDrawable *) d;
+    HDC memHdc;
+    //TkWinDrawable *twdPtr = reinterpret_cast<TkWinDrawable*>(d);
+    /* from tile
+    TkWinDCState dcState;
+    HDC hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
+    ...
+    TkWinReleaseDrawableDC(d, hdc, &dcState);
+    */
+
+    /* This will only work for bitmaps; need something else! TkWinGetDrawableDC()? */
+    memHdc = CreateCompatibleDC(NULL);
+    SelectObject(memHdc, twdPtr->bitmap.handle);
+    context->c = new PathC(memHdc);
+    context->memHdc = memHdc;
+    context->hbm = NULL;
     return (TkPathContext) context;
 }
 
@@ -634,12 +634,14 @@ TkPathContext TkPathInitSurface(int width, int height)
 {
     TkPathContext_ *context = reinterpret_cast<TkPathContext_ *> (ckalloc((unsigned) (sizeof(TkPathContext_))));
     HBITMAP hbm;
-    HDC hdc;
+    HDC memHdc;
     
     hbm = CreateBitmap(width, height, 1, 32, NULL);
-    hdc = CreateCompatibleDC(NULL);
-    SelectObject(hdc, hbm);
-    
+    memHdc = CreateCompatibleDC(NULL);
+    SelectObject(memHdc, hbm);
+    context->c = new PathC(memHdc);
+    context->memHdc = memHdc;
+    context->hbm = hbm;
     return (TkPathContext) context;
 }
 
@@ -655,13 +657,13 @@ void TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 void TkPathSaveState(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    cairo_save(context->c);
+	context->c->SaveState();
 }
 
 void TkPathRestoreState(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    cairo_restore(context->c);
+	context->c->RestoreState();
 }
 
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
@@ -819,7 +821,7 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 void    	
 TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
 {
-
+    // @@@ ???
 }
 
 void
@@ -839,6 +841,10 @@ void
 TkPathFree(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    DeleteDC(context->memHdc);
+    if (context->hbm) {
+        DeleteObject(context->hbm);
+    }
     delete context->c;
     ckfree((char *) context);
 }
