@@ -384,10 +384,11 @@ TkPathSurfaceErase(TkPathContext ctx, double dx, double dy, double dwidth, doubl
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     unsigned char *data, *dst;
-    int i, j;
+    int i;
     int x, y, width, height;
     int xend, yend;
     int stride;
+    int bwidth;
     
     /* Had to do it directly on the bits. Assuming CAIRO_FORMAT_ARGB32 
      * cairos ARGB format is in *native* endian order; Switch!
@@ -404,15 +405,11 @@ TkPathSurfaceErase(TkPathContext ctx, double dx, double dy, double dwidth, doubl
     height = MAX(0, height);
     xend = MIN(x + width, context->record->width);
     yend = MIN(y + height, context->record->height);
+    bwidth = 4*(xend - x);
         
     for (i = y; i < yend; i++) {
         dst = data + i*stride + 4*x;
-        for (j = x; j < xend; j++, dst += 4) {
-            *dst = 0x00;
-            *(dst+1) = 0x00;
-            *(dst+2) = 0x00;
-            *(dst+3) = 0x00;
-        }
+        memset(dst, '\0', bwidth);
     }
 }
 

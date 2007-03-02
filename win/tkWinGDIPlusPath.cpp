@@ -105,7 +105,7 @@ typedef struct PathSurfaceGDIpRecord {
     void * 	data;
     int 	width;
     int		height;
-    int		stride;		/* the number of bytes between the start of rows in the buffer */
+    int		bytesPerRow;		/* the number of bytes between the start of rows in the buffer */
 } PathSurfaceGDIpRecord;
 
 /*
@@ -678,7 +678,7 @@ TkPathContext TkPathInitSurface(int width, int height)
     surface->width = width;
     surface->height = height;
 	/* Windows bitmaps are padded to 16-bit (word) boundaries */
-    surface->stride = 4*width;
+    surface->bytesPerRow = 4*width;
     
     context->c = new PathC(memHdc);
     context->memHdc = memHdc;
@@ -863,9 +863,38 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 }
 
 void    	
-TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
+TkPathSurfaceErase(TkPathContext ctx, double dx, double dy, double dwidth, double dheight)
 {
-    // @@@ ???
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    PathSurfaceGDIpRecord *surface = context->surface;
+    unsigned char *data, *dst;
+    int i;
+    int x, y, width, height;
+    int xend, yend;
+    int bytesPerRow;
+    int bwidth;
+    
+    width = surface->width;
+    height = surface->height;
+    data = (unsigned char *)surface->data;
+    bytesPerRow = surface->bytesPerRow;
+
+    x = (int) (dx + 0.5);
+    y = (int) (dy + 0.5);
+    width = (int) (dwidth + 0.5);
+    height = (int) (dheight + 0.5);
+    x = MAX(0, MIN(context->surface->width, x));
+    y = MAX(0, MIN(context->surface->height, y));
+    width = MAX(0, width);
+    height = MAX(0, height);
+    xend = MIN(x + width, context->surface->width);
+    yend = MIN(y + height, context->surface->height);
+    bwidth = 4*(xend - x);
+        
+    for (i = y; i < yend; i++) {
+        dst = data + i*bytesPerRow + 4*x;
+        memset(dst, '\0', bwidth);
+    }
 }
 
 void
@@ -882,14 +911,14 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     width = surface->width;
     height = surface->height;
     data = (unsigned char *)surface->data;
-    bytesPerRow = surface->stride;
+    bytesPerRow = surface->bytesPerRow;
 
     Tk_PhotoGetImage(photo, &block);    
     pixel = (unsigned char *)ckalloc(height*bytesPerRow);
     if (gSurfaceCopyPremultiplyAlpha) {
-        PathCopyBitsPremultipliedAlphaARGB(data, pixel, width, height, bytesPerRow);
+        PathCopyBitsPremultipliedAlphaBGRA(data, pixel, width, height, bytesPerRow);
     } else {
-        PathCopyBitsARGB(data, pixel, width, height, bytesPerRow);
+        PathCopyBitsBGRA(data, pixel, width, height, bytesPerRow);
     }
     block.pixelPtr = pixel;
     block.width = width;
@@ -916,6 +945,7 @@ TkPathFree(TkPathContext ctx)
     DeleteDC(context->memHdc);
     if (context->surface) {
         DeleteObject(context->surface->bitmap);
+        ckfree((char *) context->surface);
     }
     delete context->c;
     ckfree((char *) context);

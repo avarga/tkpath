@@ -118,7 +118,7 @@ if paramters are wrong.
 
    .c create pimage x y ?-width -height?
 
- o The ptext item
+ o The ptext item (cairo, quartz, gdi+)
 
    Displays text as expected. Note that the x coordinate marks the baseline
    of the text. Gradient fills unsupported so far. Not implemented in the
@@ -212,7 +212,7 @@ if paramters are wrong.
 	   start point.
 
 
- o In memory drawing surfaces:
+ o In memory drawing surfaces (cairo, quartz, gdi+):
 
     ::tkpath::surface new width height
 
@@ -258,6 +258,10 @@ if paramters are wrong.
     $token width
 
     returns height and width respectively.
+
+    NB: gdi+ seems unable to produce antialiasing effects here but there seems
+        to be no gdi+ specific way of drawing in memory bitmaps but had to call
+	CreateDIBSection() which is a Win32 GDI API.
 
 
  o Helper function for making transformation matrices:
