@@ -12,10 +12,6 @@
 #include "tkIntPath.h"
 
 
-int 		FillGradientSetOption(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
-                    Tcl_Obj **value, char *recordPtr, int internalOffset, char *oldInternalPtr, int flags);
-Tcl_Obj * 	FillGradientGetOption(ClientData clientData, Tk_Window tkwin, char *recordPtr, int internalOffset);
-void		FillGradientFreeOption(ClientData clientData, Tk_Window tkwin, char *internalPtr);
 int 		MatrixSetOption(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
                     Tcl_Obj **value, char *recordPtr, int internalOffset, char *oldInternalPtr, int flags);
 Tcl_Obj *	MatrixGetOption(ClientData clientData, Tk_Window tkwin, char *recordPtr, int internalOffset);
@@ -25,17 +21,12 @@ int 		DashSetOption(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
                     Tcl_Obj **value, char *recordPtr, int internalOffset, char *oldInternalPtr, int flags);
 Tcl_Obj *	DashGetOption(ClientData clientData, Tk_Window tkwin, char *recordPtr, int internalOffset);
 void		DashFreeOption(ClientData clientData, Tk_Window tkwin, char *internalPtr);
+int 		PathColorSetOption(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
+                    Tcl_Obj **value, char *recordPtr, int internalOffset, char *oldInternalPtr, int flags);
+Tcl_Obj *	PathColorGetOption(ClientData clientData, Tk_Window tkwin, char *recordPtr, int internalOffset);
+void		PathColorRestoreOption(ClientData clientData, Tk_Window tkwin, char *internalPtr, char *oldInternalPtr);
+void		PathColorFreeOption(ClientData clientData, Tk_Window tkwin, char *internalPtr);
 
-
-#define PATH_STYLE_CUSTOM_OPTION_FILLGRADIENT 	\
-    static Tk_ObjCustomOption fillGradientCO = {\
-        "fillgradient",							\
-        FillGradientSetOption,					\
-        FillGradientGetOption,					\
-        NULL,									\
-        FillGradientFreeOption,					\
-        (ClientData) NULL						\
-    };
 
 #define PATH_STYLE_CUSTOM_OPTION_MATRIX			\
     static Tk_ObjCustomOption matrixCO = {		\
@@ -56,11 +47,22 @@ void		DashFreeOption(ClientData clientData, Tk_Window tkwin, char *internalPtr);
         DashFreeOption,							\
         (ClientData) NULL						\
     };
+    
+#define PATH_STYLE_CUSTOM_OPTION_PATHCOLOR
+    static Tk_ObjCustomOption pathColorCO = {\
+        "pathcolor",							\
+        PathColorSetOption,						\
+        PathColorGetOption,						\
+        PathColorRestoreOption,					\
+        PathColorFreeOption,					\
+        (ClientData) NULL						\
+    };
+
 
 #define PATH_STYLE_CUSTOM_OPTION_RECORDS	 	\
-    PATH_STYLE_CUSTOM_OPTION_FILLGRADIENT		\
     PATH_STYLE_CUSTOM_OPTION_MATRIX 			\
-    PATH_STYLE_CUSTOM_OPTION_DASH
+    PATH_STYLE_CUSTOM_OPTION_DASH				\
+    PATH_STYLE_CUSTOM_OPTION_PATHCOLOR
 
 /* 
  * These must be kept in sync with defines in X.h! 
@@ -75,15 +77,15 @@ static char *lineJoinST[] = {
     "miter", "round", "bevel", (char *) NULL
 };
 
+/*
+ * This assumes that we have a Tk_PathStyle struct element named 'style'.
+ */
 
 #define PATH_OPTION_SPEC_STYLE_FILL(typeName, theColor)                     \
-    {TK_OPTION_COLOR, "-fill", (char *) NULL, (char *) NULL,                \
-        theColor, -1, Tk_Offset(typeName, style.fillColor),                 \
-        TK_OPTION_NULL_OK, 0, PATH_STYLE_OPTION_FILL},                      \
-	{TK_OPTION_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,       \
-		(char *) NULL, -1, Tk_Offset(typeName, style.gradientFillName),     \
-		TK_OPTION_NULL_OK, (ClientData) &fillGradientCO,                    \
-        PATH_STYLE_OPTION_FILL_GRADIENT},                                   \
+	{TK_OPTION_CUSTOM, "-fill", (char *) NULL, (char *) NULL,				\
+		theColor, -1, Tk_Offset(typeName, style.fill),				\
+		TK_OPTION_NULL_OK, (ClientData) &pathColorCO,	 					\
+        PATH_STYLE_OPTION_FILL},											\
     {TK_OPTION_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,        \
         "1.0", -1, Tk_Offset(typeName, style.fillOpacity), 0, 0,            \
         PATH_STYLE_OPTION_FILL_OPACITY},                                    \

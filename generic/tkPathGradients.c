@@ -14,11 +14,7 @@
  *       items are not notified. They will only notice any change when
  *       they need to redisplay.
  *
- * NB:   Right now we have duplicated gradient commands and a lot of related stuff.
- *
  * TODO: o Add tkwin option here and there so we can free stop colors!
- *       o Clean out all linear/radial specific code related to tkpath::lineargradient
- *		   and tkpath::radialgradient commands.
  *
  * $Id$
  */
@@ -33,16 +29,10 @@ Tcl_HashTable 	*gGradientHashPtr = NULL;
 Tcl_HashTable 	*gLinearGradientHashPtr = NULL;
 Tcl_HashTable 	*gRadialGradientHashPtr = NULL;
 
-static Tk_OptionTable 	gLinearGradientOptionTableOLD;
-static Tk_OptionTable 	gRadialGradientOptionTableOLD;
 static Tk_OptionTable 	gLinearGradientOptionTable;
 static Tk_OptionTable 	gRadialGradientOptionTable;
 static int 				gGradientNameUid = 0;
-static int 				gLinearGradientNameUid = 0;
-static int 				gRadialGradientNameUid = 0;
-static char *			kGradientNameBase = "gradient";
-static char *			kLinearGradientNameBase = "lineargradient";
-static char *			kRadialGradientNameBase = "radialgradient";
+static char *			kGradientNameBase = "tkpath::gradient";
 
 enum {
     kPathGradientTypeLinear =	0L,
@@ -81,16 +71,6 @@ typedef struct RadialGradientStyle {
 static int 			GradientObjCmd(ClientData clientData, Tcl_Interp* interp,
                             int objc, Tcl_Obj* CONST objv[]);
 static void			GradientStyleFree(Tcl_Interp *interp, GradientStyle *gradientStylePtr);
-
-// OUTDATED
-static int			LinearGradientCmd(ClientData clientData, Tcl_Interp* interp,
-                            int objc, Tcl_Obj* CONST objv[]);
-static char *		LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
-static void			LinGradientFree(Tcl_Interp *interp, char *recordPtr);
-static int			RadialGradientCmd(ClientData clientData, Tcl_Interp* interp,
-                            int objc, Tcl_Obj* CONST objv[]);
-static char *		RadGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
-static void			RadGradientFree(Tcl_Interp *interp, char *recordPtr);
 
 /*
  * Custom option processing code.
@@ -488,25 +468,6 @@ static char *unitsST[] = {
     "bbox", "userspace", (char *) NULL
 };
 
-static Tk_OptionSpec linGradientStyleOptionSpecsOLD[] = {
-    {TK_OPTION_STRING_TABLE, "-method", (char *) NULL, (char *) NULL,
-        "pad", -1, Tk_Offset(LinearGradientStyle, fill.method), 
-        0, (ClientData) methodST, 0},
-    {TK_OPTION_STRING_TABLE, "-units", (char *) NULL, (char *) NULL,
-        "bbox", -1, Tk_Offset(LinearGradientStyle, fill.units), 
-        0, (ClientData) unitsST, 0},
-	{TK_OPTION_CUSTOM, "-stops", (char *) NULL, (char *) NULL,
-		(char *) NULL, Tk_Offset(LinearGradientStyle, stopsObj),
-        Tk_Offset(LinearGradientStyle, fill.stopArrPtr),
-		TK_OPTION_NULL_OK, (ClientData) &stopsCO, 0},
-	{TK_OPTION_CUSTOM, "-lineartransition", (char *) NULL, (char *) NULL,
-		(char *) NULL, Tk_Offset(LinearGradientStyle, transObj), 
-        Tk_Offset(LinearGradientStyle, fill.transitionPtr),
-		TK_OPTION_NULL_OK, (ClientData) &linTransitionCO, 0},
-	{TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
-};
-
 static Tk_OptionSpec linGradientStyleOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-method", (char *) NULL, (char *) NULL,
         "pad", -1, Tk_Offset(GradientStyle, linearFill.method), 
@@ -522,25 +483,6 @@ static Tk_OptionSpec linGradientStyleOptionSpecs[] = {
 		(char *) NULL, Tk_Offset(GradientStyle, transObj), 
         Tk_Offset(GradientStyle, linearFill.transitionPtr),
 		TK_OPTION_NULL_OK, (ClientData) &linTransitionCO, 0},
-	{TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
-};
-
-static Tk_OptionSpec radGradientStyleOptionSpecsOLD[] = {
-    {TK_OPTION_STRING_TABLE, "-method", (char *) NULL, (char *) NULL,
-        "pad", -1, Tk_Offset(RadialGradientStyle, fill.method), 
-        0, (ClientData) methodST, 0},
-    {TK_OPTION_STRING_TABLE, "-units", (char *) NULL, (char *) NULL,
-        "bbox", -1, Tk_Offset(RadialGradientStyle, fill.units), 
-        0, (ClientData) unitsST, 0},
-	{TK_OPTION_CUSTOM, "-stops", (char *) NULL, (char *) NULL,
-		(char *) NULL, Tk_Offset(RadialGradientStyle, stopsObj),
-        Tk_Offset(RadialGradientStyle, fill.stopArrPtr),
-		TK_OPTION_NULL_OK, (ClientData) &stopsCO, 0},
-	{TK_OPTION_CUSTOM, "-radialtransition", (char *) NULL, (char *) NULL,
-		(char *) NULL, Tk_Offset(RadialGradientStyle, transObj), 
-        Tk_Offset(RadialGradientStyle, fill.radialPtr),
-		TK_OPTION_NULL_OK, (ClientData) &radTransitionCO, 0},
 	{TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
 		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
 };
@@ -683,10 +625,12 @@ PathPaintGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fil
 	hPtr = Tcl_FindHashEntry(gGradientHashPtr, name);
     if (hPtr) {
         gradientStylePtr = (GradientStyle *) Tcl_GetHashValue(hPtr);
-        if (gradientStylePtr->type == kPathGradientTypeLinear) {
-            TkPathPaintLinearGradient(ctx, bbox, &(gradientStylePtr->linearFill), fillRule);
-        } else {
-            TkPathPaintRadialGradient(ctx, bbox, &(gradientStylePtr->radialFill), fillRule);
+        if (!ObjectIsEmpty(gradientStylePtr->stopsObj)) {
+            if (gradientStylePtr->type == kPathGradientTypeLinear) {
+                TkPathPaintLinearGradient(ctx, bbox, &(gradientStylePtr->linearFill), fillRule);
+            } else {
+                TkPathPaintRadialGradient(ctx, bbox, &(gradientStylePtr->radialFill), fillRule);
+            }
         }
     }
 }
@@ -717,11 +661,6 @@ PathGradientInit(Tcl_Interp* interp)
     /*
      * The option table must only be made once and not for each instance.
      */
-    gLinearGradientOptionTableOLD = Tk_CreateOptionTable(interp, 
-            linGradientStyleOptionSpecsOLD);
-    gRadialGradientOptionTableOLD = Tk_CreateOptionTable(interp, 
-            radGradientStyleOptionSpecsOLD);
-            
     gLinearGradientOptionTable = Tk_CreateOptionTable(interp, 
             linGradientStyleOptionSpecs);
     gRadialGradientOptionTable = Tk_CreateOptionTable(interp, 
@@ -729,28 +668,6 @@ PathGradientInit(Tcl_Interp* interp)
 
     Tcl_CreateObjCommand(interp, "::tkpath::gradient",
             GradientObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-#if 0	// OLD
-    Tcl_CreateObjCommand(interp, "::tkpath::lineargradient",
-            LinearGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "::tkpath::radialgradient",
-            RadialGradientCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-#endif
-}
-
-static void
-FreeLinearGradientStyle(LinearGradientStyle *gradientStylePtr)
-{
-    FreeStopArray(gradientStylePtr->fill.stopArrPtr);
-	Tk_FreeConfigOptions((char *) gradientStylePtr, gradientStylePtr->optionTable, NULL);
-	ckfree( (char *) gradientStylePtr );
-}
-
-static void
-FreeRadialGradientStyle(RadialGradientStyle *gradientStylePtr)
-{
-    FreeStopArray(gradientStylePtr->fill.stopArrPtr);
-	Tk_FreeConfigOptions((char *) gradientStylePtr, gradientStylePtr->optionTable, NULL);
-	ckfree( (char *) gradientStylePtr );
 }
 
 static CONST char *gradientCmds[] = {
@@ -1000,131 +917,4 @@ GradientStyleFree(Tcl_Interp *interp, GradientStyle *gradientStylePtr)
     }
 	Tk_FreeConfigOptions((char *) gradientStylePtr, gradientStylePtr->optionTable, NULL);
     ckfree((char *) gradientStylePtr);
-}
-
-// OUTDATED
-
-/*
- *----------------------------------------------------------------------
- *
- * LinearGradientCmd --
- *
- *		Implements the tkpath::lineargradient command.  
- *
- * Results:
- *		Standard Tcl result
- *
- * Side effects:
- *		None
- *
- *----------------------------------------------------------------------
- */
-
-int 
-LinearGradientCmd( 
-        ClientData clientData,
-        Tcl_Interp* interp,
-        int objc,
-      	Tcl_Obj* CONST objv[] )
-{
-    return PathGenericCmdDispatcher(interp, objc, objv, 
-            kLinearGradientNameBase, &gLinearGradientNameUid, 
-            gLinearGradientHashPtr, gLinearGradientOptionTableOLD,
-            LinGradientCreateAndConfig, NULL, LinGradientFree);
-}
-
-static char *
-LinGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[])
-{
-	LinearGradientStyle *gradientStylePtr;
-    PathRect *transitionPtr = NULL;
-
-	gradientStylePtr = (LinearGradientStyle *) ckalloc(sizeof(LinearGradientStyle));
-	memset(gradientStylePtr, '\0', sizeof(LinearGradientStyle));
-    transitionPtr = (PathRect *) ckalloc(sizeof(PathRect));
-    
-    /*
-     * Create the option table for this class.  If it has already
-     * been created, the cached pointer will be returned.
-     */
-	gradientStylePtr->optionTable = gLinearGradientOptionTableOLD; 
-	gradientStylePtr->name = Tk_GetUid(name);
-    gradientStylePtr->fill.transitionPtr = transitionPtr;
-    
-    /* Set default transition vector in case not set. */
-    transitionPtr->x1 = 0.0;
-    transitionPtr->y1 = 0.0;
-    transitionPtr->x2 = 1.0;
-    transitionPtr->y2 = 0.0;
-    
-	return (char *) gradientStylePtr;
-}
-
-static void
-LinGradientFree(Tcl_Interp *interp, char *recordPtr) 
-{
-    FreeLinearGradientStyle((LinearGradientStyle *) recordPtr);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * RadialGradientCmd --
- *
- *		Implements the tkpath::radialgradient command.  
- *
- * Results:
- *		Standard Tcl result
- *
- * Side effects:
- *		None
- *
- *----------------------------------------------------------------------
- */
-
-int 
-RadialGradientCmd( 
-        ClientData clientData,
-        Tcl_Interp* interp,
-        int objc,
-      	Tcl_Obj* CONST objv[] )
-{
-    return PathGenericCmdDispatcher(interp, objc, objv, 
-            kRadialGradientNameBase, &gRadialGradientNameUid, 
-            gRadialGradientHashPtr, gRadialGradientOptionTableOLD,
-            RadGradientCreateAndConfig, NULL, RadGradientFree);
-}
-
-static char *
-RadGradientCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[])
-{
-	RadialGradientStyle *gradientStylePtr;
-    RadialTransition *tPtr = NULL;
-
-	gradientStylePtr = (RadialGradientStyle *) ckalloc(sizeof(RadialGradientStyle));
-	memset(gradientStylePtr, '\0', sizeof(RadialGradientStyle));
-    tPtr = (RadialTransition *) ckalloc(sizeof(RadialTransition));
-    
-    /*
-     * Create the option table for this class.  If it has already
-     * been created, the cached pointer will be returned.
-     */
-	gradientStylePtr->optionTable = gRadialGradientOptionTableOLD; 
-	gradientStylePtr->name = Tk_GetUid(name);
-    gradientStylePtr->fill.radialPtr = tPtr;
-    
-    /* Set default transition vector in case not set. */
-    tPtr->centerX = 0.5;
-    tPtr->centerY = 0.5;
-    tPtr->radius = 0.5;
-    tPtr->focalX = 0.5;
-    tPtr->focalY = 0.5;
-
-	return (char *) gradientStylePtr;
-}
-
-static void
-RadGradientFree(Tcl_Interp *interp, char *recordPtr) 
-{
-    FreeRadialGradientStyle((RadialGradientStyle *) recordPtr);
 }

@@ -141,8 +141,9 @@ PathCreatePen(Tk_PathStyle *stylePtr)
 static HBRUSH
 PathCreateBrush(Tk_PathStyle *style)
 {
-    if (style->fillColor != NULL) {
-        return CreateSolidBrush(style->fillColor->pixel);
+    if (GetColorFromPathColor(style->fill) != NULL) {
+        XColor *color = GetColorFromPathColor(style->fill);
+        return CreateSolidBrush(color->pixel);
     } else {
         return NULL;
     }

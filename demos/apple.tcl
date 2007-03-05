@@ -18,7 +18,7 @@ $w create path "M 0 0 C 20 0 40 -20 70 -20 S 130 30 130 60 \
   -10 200 -60 200   -130 90 -130 60  \
   -110 -20 -70 -20  -20 0 0 0 z \
   M 0 -10 Q -10 -60 50 -80 Q 50 -20 0 -10 z" \
-  -fillgradient $grad -stroke "" -tags apple
+  -fill $grad -stroke "" -tags apple
 
 $w move apple 200 120
 

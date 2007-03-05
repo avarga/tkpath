@@ -23,7 +23,7 @@
 static Tcl_HashTable 	*gStyleHashPtr;
 static Tk_OptionTable 	gStyleOptionTable;
 static int 				gStyleNameUid = 0;
-static char 			*kStyleNameBase = "pathstyle";
+static char 			*kStyleNameBase = "tkpath::style";
 
 
 /*
@@ -38,84 +38,6 @@ static void		StyleFree(Tcl_Interp *interp, char *recordPtr);
 /*
  * Custom option support.
  */
-
-/*
- * The -fillgradient custom option.
- */
- 
-int FillGradientSetOption(
-    ClientData clientData,
-    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
-    Tk_Window tkwin,		/* Window for which option is being set. */
-    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
-                             * We use a pointer to the pointer because
-                             * we may need to return a value (NULL). */
-    char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
-                               internal value is to be stored. */
-    char *oldInternalPtr,	/* Pointer to storage for the old value. */
-    int flags)				/* Flags for the option, set Tk_SetOptions. */
-{
-    char *internalPtr;
-    char *name, *new;
-    int length;
-    Tcl_Obj *valuePtr;
-    
-    valuePtr = *value;
-    if (internalOffset >= 0) {
-        internalPtr = recordPtr + internalOffset;
-    } else {
-        internalPtr = NULL;
-    }
-
-    if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
-		valuePtr = NULL;
-    }
-    if (internalPtr != NULL) {
-		if (valuePtr != NULL) {
-		    name = Tcl_GetStringFromObj(valuePtr, &length);
-            if (HaveGradientStyleWithName(name) != TCL_OK) {
-                Tcl_AppendResult(interp, "bad gradient name \"", name, 
-                        "\": does not exist",
-                        (char *) NULL);
-                return TCL_ERROR;
-            }
-		    new = ckalloc((unsigned) (length + 1));
-		    strcpy(new, name);
-		} else {
-		    new = NULL;
-		}
-		*((char **) oldInternalPtr) = *((char **) internalPtr);
-		*((char **) internalPtr) = new;
-    }
-    return TCL_OK;
-}
-
-Tcl_Obj *
-FillGradientGetOption(
-    ClientData clientData,
-    Tk_Window tkwin,
-    char *recordPtr,		/* Pointer to widget record. */
-    int internalOffset)		/* Offset within *recordPtr containing the
-                             * value. */
-{
-    char *internalPtr;
-
-    internalPtr = recordPtr + internalOffset;
-    return Tcl_NewStringObj(*((char **) internalPtr), -1);
-}
-
-void
-FillGradientFreeOption(
-        ClientData clientData,
-        Tk_Window tkwin, 
-        char *internalPtr)
-{
-    if (*((char **) internalPtr) != NULL) {
-        ckfree(*((char **) internalPtr));
-        *((char **) internalPtr) = NULL;
-    }
-}
 
 /*
  * The -matrix custom option.
@@ -134,11 +56,13 @@ int MatrixSetOption(
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)				/* Flags for the option, set Tk_SetOptions. */
 {
-    char *internalPtr;
+    char *internalPtr;		/* Points to location in record where
+                             * internal representation of value should
+                             * be stored, or NULL. */
     char *list;
     int length;
     Tcl_Obj *valuePtr;
-    TMatrix *new;
+    TMatrix *newPtr;
     
     valuePtr = *value;
     if (internalOffset >= 0) {
@@ -146,23 +70,22 @@ int MatrixSetOption(
     } else {
         internalPtr = NULL;
     }
-
     if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
 		valuePtr = NULL;
     }
     if (internalPtr != NULL) {
 		if (valuePtr != NULL) {
             list = Tcl_GetStringFromObj(valuePtr, &length);
-            new = (TMatrix *) ckalloc(sizeof(TMatrix));
-            if (PathGetTMatrix(interp, list, new) != TCL_OK) {
-                ckfree((char *) new);
+            newPtr = (TMatrix *) ckalloc(sizeof(TMatrix));
+            if (PathGetTMatrix(interp, list, newPtr) != TCL_OK) {
+                ckfree((char *) newPtr);
                 return TCL_ERROR;
             }
 		} else {
-		    new = NULL;
+		    newPtr = NULL;
         }
 		*((TMatrix **) oldInternalPtr) = *((TMatrix **) internalPtr);
-		*((TMatrix **) internalPtr) = new;
+		*((TMatrix **) internalPtr) = newPtr;
     }
     return TCL_OK;
 }
@@ -180,11 +103,9 @@ MatrixGetOption(
     Tcl_Obj 	*listObj;
     
     /* @@@ An alternative to this could be to have an objOffset in option table. */
-
     internalPtr = recordPtr + internalOffset;
     matrixPtr = *((TMatrix **) internalPtr);
-    PathGetTclObjFromTMatrix(NULL, matrixPtr, &listObj);
-    
+    PathGetTclObjFromTMatrix(NULL, matrixPtr, &listObj);    
     return listObj;
 }
 
@@ -287,6 +208,99 @@ DashFreeOption(
     }
 }
 
+/*
+ * Combined XColor and gradient name in a TkPathColor record.
+ */
+ 
+int PathColorSetOption(
+    ClientData clientData,
+    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
+    Tk_Window tkwin,		/* Window for which option is being set. */
+    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+                             * We use a pointer to the pointer because
+                             * we may need to return a value (NULL). */
+    char *recordPtr,		/* Pointer to storage for the widget record. */
+    int internalOffset,		/* Offset within *recordPtr at which the
+                               internal value is to be stored. */
+    char *oldInternalPtr,	/* Pointer to storage for the old value. */
+    int flags)				/* Flags for the option, set Tk_SetOptions. */
+{
+    char *internalPtr;		/* Points to location in record where
+                             * internal representation of value should
+                             * be stored, or NULL. */
+    Tcl_Obj *valuePtr;
+    TkPathColor *newPtr = NULL;
+    
+    valuePtr = *value;
+    if (internalOffset >= 0) {
+        internalPtr = recordPtr + internalOffset;
+    } else {
+        internalPtr = NULL;
+    }
+    if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+    }
+    if (internalPtr != NULL) {
+		if (valuePtr != NULL) {
+            newPtr = TkPathNewPathColor(interp, tkwin, valuePtr);
+            if (newPtr == NULL) {
+                return TCL_ERROR;
+            }
+        } else {
+            newPtr = NULL;
+        }
+		*((TkPathColor **) oldInternalPtr) = *((TkPathColor **) internalPtr);
+		*((TkPathColor **) internalPtr) = newPtr;
+    }
+    return TCL_OK;
+}
+
+Tcl_Obj *
+PathColorGetOption(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *recordPtr,		/* Pointer to widget record. */
+    int internalOffset)		/* Offset within *recordPtr containing the
+                             * value. */
+{
+    char 		*internalPtr;
+    Tcl_Obj 	*objPtr = NULL;
+    TkPathColor *pathColor = NULL;
+    
+    internalPtr = recordPtr + internalOffset;
+    pathColor = *((TkPathColor **) internalPtr);
+    if (pathColor != NULL) {
+        if (pathColor->color) {
+            objPtr = Tcl_NewStringObj(Tk_NameOfColor(pathColor->color), -1);
+        } else if (pathColor->gradientName) {
+            objPtr = Tcl_NewStringObj(pathColor->gradientName, -1);
+        }
+    }
+    return objPtr;
+}
+
+void
+PathColorRestoreOption(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr,		/* Pointer to storage for value. */
+    char *oldInternalPtr)	/* Pointer to old value. */
+{
+    *(TkPathColor **)internalPtr = *(TkPathColor **)oldInternalPtr;
+}
+
+void
+PathColorFreeOption(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr)		/* Pointer to storage for value. */
+{
+    if (*((char **) internalPtr) != NULL) {
+        TkPathFreePathColor(*(TkPathColor **) internalPtr);  
+        *((char **) internalPtr) = NULL;
+    }
+}
+
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
 /* Just a placeholder for not yet implemented stuff. */
@@ -298,13 +312,10 @@ static char *nullST[] = {
 //     Else I get problems with Tk_Offset and records.
 
 static Tk_OptionSpec styleOptionSpecs[] = {
-    {TK_OPTION_COLOR, "-fill", (char *) NULL, (char *) NULL,
-        "", -1, Tk_Offset(Tk_PathStyle, fillColor), TK_OPTION_NULL_OK, 0, 
+	{TK_OPTION_CUSTOM, "-fill", (char *) NULL, (char *) NULL,
+		"", -1, Tk_Offset(Tk_PathStyle, fill),
+		TK_OPTION_NULL_OK, (ClientData) &pathColorCO, 
         PATH_STYLE_OPTION_FILL},
-	{TK_OPTION_CUSTOM, "-fillgradient", (char *) NULL, (char *) NULL,
-		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, gradientFillName),
-		TK_OPTION_NULL_OK, (ClientData) &fillGradientCO, 
-        PATH_STYLE_OPTION_FILL_GRADIENT},
 	{TK_OPTION_STRING_TABLE, "-filloffset", (char *) NULL, (char *) NULL,	/* @@@ TODO */
 		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, null),
 		0, (ClientData) &nullST, PATH_STYLE_OPTION_FILL_OFFSET},
@@ -518,6 +529,7 @@ CopyTkDash(Tk_Dash *dstPtr, Tk_Dash *srcPtr)
     /* @@@ TODO */
 }
 
+#if 0 	// Keep for Backup
 static void
 CopyOptionString(char **dstPtrPtr, char *srcPtr)
 {
@@ -531,6 +543,31 @@ CopyOptionString(char **dstPtrPtr, char *srcPtr)
         *dstPtrPtr = (char *) ckalloc(strlen(srcPtr) + 1);
         strcpy(*dstPtrPtr, srcPtr);
     }
+}
+#endif
+
+static void
+CopyPathColor(Tk_Window tkwin, TkPathColor **dstPtrPtr, TkPathColor *srcPtr)
+{
+    TkPathColor *dstPtr;
+    TkPathColor *pathColorPtr = NULL;
+
+    dstPtr = *dstPtrPtr;
+    if ((dstPtr == NULL) && (srcPtr == NULL)) {
+        /* empty */
+    } else {
+        if (dstPtr != NULL) {
+            TkPathFreePathColor(dstPtr);
+        }
+        pathColorPtr = (TkPathColor *) ckalloc(sizeof(TkPathColor));
+        if (srcPtr->color != NULL) {
+            pathColorPtr->color = Tk_GetColorByValue(tkwin, srcPtr->color);
+        } else if (srcPtr->gradientName != NULL) {
+            pathColorPtr->gradientName = (char *) ckalloc(strlen(srcPtr->gradientName) + 1);
+            strcpy(pathColorPtr->gradientName, srcPtr->gradientName);
+        }
+    }
+    *dstPtrPtr = pathColorPtr;
 }
 
 /*
@@ -573,10 +610,7 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
     mask = srcStylePtr->mask;
     if (!(flags & kPathMergeStyleNotFill)) {
         if (mask & PATH_STYLE_OPTION_FILL) {
-            CopyXColor(tkwin, &(stylePtr->fillColor), srcStylePtr->fillColor);
-        }
-        if (mask & PATH_STYLE_OPTION_FILL_GRADIENT) {
-            CopyOptionString(&(stylePtr->gradientFillName), srcStylePtr->gradientFillName);
+            CopyPathColor(tkwin, &(stylePtr->fill), srcStylePtr->fill);
         }
         if (mask & PATH_STYLE_OPTION_FILL_OFFSET) {
             /* @@@ TODO */
@@ -656,13 +690,11 @@ TkPathCreateStyle(Tk_PathStyle *style)
     style->dash.number = 0;
     style->capStyle = CapButt;
     style->joinStyle = JoinRound;
-    style->gradientStrokeName = NULL;    
 
     style->fillGC = None;
-    style->fillColor = NULL;
     style->fillOpacity = 1.0;
     style->fillRule = WindingRule;
-    style->gradientFillName = NULL;    
+    style->fill = NULL;
     style->matrixPtr = NULL;
 }
 
@@ -673,6 +705,7 @@ TkPathCreateStyle(Tk_PathStyle *style)
  *
  *	This procedure frees all memory that might be
  *	allocated and referenced in the Tk_PathStyle structure.
+ *  @@@ Not sure how this interacts with Tk_FreeConfigOptions!
  *
  * Results:
  *	None
@@ -699,8 +732,18 @@ TkPathDeleteStyle(Display *display, Tk_PathStyle *style)
     if (style->fillGC != None) {
         Tk_FreeGC(display, style->fillGC);
     }
+#if 0
     if (style->fillColor != NULL) {
         Tk_FreeColor(style->fillColor);
+    }
+#endif
+    if (style->fill != NULL) {
+        if (style->fill->color != NULL) {
+            Tk_FreeColor(style->fill->color);
+        }
+        if (style->fill->gradientName) {
+            ckfree(style->fill->gradientName);
+        }
     }
     if (style->matrixPtr != NULL) {
         ckfree((char *) style->matrixPtr);

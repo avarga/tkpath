@@ -344,7 +344,7 @@ PrectToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
     int rectiLinear = 0;
     int filled;
 
-    filled = stylePtr->fillColor != NULL;
+    filled = GetColorFromPathColor(stylePtr->fill) != NULL;
     width = 0.0;
     if (stylePtr->strokeColor != NULL) {
         width = stylePtr->strokeWidth;
@@ -389,7 +389,7 @@ PrectToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
     int rectiLinear = 0;
     int filled;
 
-    filled = stylePtr->fillColor != NULL;
+    filled = GetColorFromPathColor(stylePtr->fill) != NULL;
     width = 0.0;
     if (stylePtr->strokeColor != NULL) {
         width = stylePtr->strokeWidth;

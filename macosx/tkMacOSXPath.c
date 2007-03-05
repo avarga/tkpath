@@ -168,12 +168,12 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     /* Set the current fill colorspace in the context `c' to `DeviceRGB' and
      * set the components of the current fill color to `(red, green, blue,
      * alpha)'. */
-    if (style->fillColor != NULL) {
+    if (GetColorFromPathColor(style->fill) != NULL) {
         fill = 1;
         CGContextSetRGBFillColor(c, 
-                RedFloatFromXColorPtr(style->fillColor), 
-                GreenFloatFromXColorPtr(style->fillColor),
-                BlueFloatFromXColorPtr(style->fillColor),
+                RedFloatFromXColorPtr(style->fill->color), 
+                GreenFloatFromXColorPtr(style->fill->color),
+                BlueFloatFromXColorPtr(style->fill->color),
                 style->fillOpacity);
     }
     

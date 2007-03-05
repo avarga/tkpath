@@ -22,8 +22,8 @@ if paramters are wrong.
     of an item for which they apply. Not all are implemented.
 
     Fill (fillOptions):
-	-fill color
-	-fillgradient gradientToken
+	-fill color|gradientToken       this is either a usual tk color
+	                                or the name of a gradient
 	-fillopacity float (0,1)
 	-fillrule nonzero|evenodd
 
@@ -65,6 +65,39 @@ if paramters are wrong.
     All path specifications are normalized initially to the fundamental atoms
     M, L, A, Q, and C, all upper case. When you use the canvas 'coords' command
     it is the normalized path spec that is returned.
+
+    Visualize this as a pen which always has a current coordinate after
+    the first M. Coordinates are floats:
+
+      M x y   Put the pen on the paper at specified coordinate.
+              Must be the first atom but can appear any time later.
+      L x y   Draw a line to the given coordinate.
+      H x     Draw a horizontal line to the given x coordinate.
+      V y     Draw a vertical line to the given y coordinate.
+      A rx ry phi largeArc sweep x y
+              Draw an elliptical arc from the current point to (x, y). 
+	      The points are on an ellipse with x-radius rx and y-radius ry.
+	      The ellipse is rotatted by phe degrees. If the arc is less than 
+	      180 degrees, largeArc is zero, else it is one. If the arc is to be
+	      drawn in cw direction, sweep is one, and zero for the ccw
+	      direction.
+      Q x1 y1 x y
+              Draw a qadratic Bezier curve from the current point to (x, y)
+	      using control point (x1, y1).
+      T x y   Draw a qadratic Bezier curve from the current point to (x, y)
+              The control point will be the reflection of the previous Q atoms
+	      control point.
+      C x1 y1 x2 y2 x y
+              Draw a cubic Bezier curve from the current point to (x, y)
+              using control points (x1, y1) and (x2, y2).
+
+      S x2 y2 x y
+              Draw a cubic Bezier curve from the current point to (x, y), using
+	      (x2, y2) as the control point for this new endpoint. The first
+	      control point will be the reflection of the previous C atoms
+	      ending control point.
+      Z       Close path by drawing from the current point to the preceeding M 
+              point.
 
  o The prect item
 

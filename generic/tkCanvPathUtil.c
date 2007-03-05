@@ -194,8 +194,7 @@ Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
     int 	mask = 0;
     XColor 	*color;
 
-    color = stylePtr->fillColor;
-
+    color = GetColorFromPathColor(stylePtr->fill);
     if (color != NULL) {
         gcValues->foreground = color->pixel;
         mask = GCForeground;
@@ -1004,7 +1003,7 @@ GenericPathToPoint(
     if (state == TK_STATE_HIDDEN) {
         return bestDist;
     }
-    if ((stylePtr->fillColor == NULL) && (stylePtr->strokeColor == NULL)) {
+    if ((GetColorFromPathColor(stylePtr->fill) == NULL) && (stylePtr->strokeColor == NULL)) {
         return bestDist;
     }
     if (atomPtr == NULL) {
@@ -1090,7 +1089,7 @@ GenericPathToPoint(
      * WindingRule (nonzero): If the number of directed intersections
      *			are nonzero, then inside.
      */
-    if (stylePtr->fillColor != NULL) {
+    if (GetColorFromPathColor(stylePtr->fill) != NULL) {
         if ((stylePtr->fillRule == EvenOddRule) && (sumIntersections & 0x1)) {
             bestDist = 0.0;
         } else if ((stylePtr->fillRule == WindingRule) && (sumNonzerorule != 0)) {
@@ -1160,7 +1159,7 @@ GenericPathToArea(
     if (state == TK_STATE_HIDDEN) {
         return -1;
     }
-    if ((stylePtr->fillColor == NULL) && (stylePtr->strokeColor == NULL)) {
+    if ((GetColorFromPathColor(stylePtr->fill) == NULL) && (stylePtr->strokeColor == NULL)) {
         return -1;
     }
     if (atomPtr == NULL) {
@@ -1836,7 +1835,7 @@ SubPathToArea(
      *		the line item counts it as outside (-1).
      */
     
-    if (stylePtr->fillColor != NULL) {
+    if (GetColorFromPathColor(stylePtr->fill) != NULL) {
     
         /* This checks a closed polygon with zero width for inside.
          * If area rect completely enclosed it returns intersecting (0).
@@ -2145,7 +2144,6 @@ FillRuleParseProc(
         *fillRulePtr = EvenOddRule;
         return TCL_OK;
     }
-
     Tcl_AppendResult(interp, "bad value \"", value, 
             "\": must be \"nonzero\" or \"evenodd\"",
 	    (char *) NULL);
@@ -2264,100 +2262,6 @@ TextAnchorPrintProc(
 /*
  *--------------------------------------------------------------
  *
- * GradientParseProc --
- *
- *		This procedure is invoked during option processing to handle
- *		the "-fillgradient" option.
- *
- * Results:
- *		A standard Tcl return value.
- *
- * Side effects:
- *
- *--------------------------------------------------------------
- */
-
-int
-GradientParseProc(
-    ClientData clientData,		/* some flags.*/
-    Tcl_Interp *interp,			/* Used for reporting errors. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    CONST char *value,			/* Value of option. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset)				/* Offset into item. */
-{
-    char *old, *new;    
-    register char *ptr = (char *) (widgRec + offset);
-
-    if(value == NULL || *value == 0) {
-        new = NULL;
-    } else {
-        if (HaveGradientStyleWithName(value) != TCL_OK) {
-            Tcl_AppendResult(interp, "bad value \"", value, 
-                    "\": does not exist",
-                    (char *) NULL);
-            return TCL_ERROR;
-        } else {
-            new = (char *) ckalloc((unsigned) (strlen(value) + 1));
-            strcpy(new, value);
-        }
-    }
-    old = *((char **) ptr);
-    if (old != NULL) {
-        ckfree(old);
-    }
-    
-    /* Note: the _value_ of the address is in turn a pointer to string. */
-    *((char **) ptr) = new;
-    return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GradientPrintProc --
- *
- *		This procedure is invoked by the Tk configuration code
- *		to produce a printable string for the "-lineargradient"
- *		configuration option.
- *
- * Results:
- *		The return value is a string describing the state for
- *		the item referred to by "widgRec".  In addition, *freeProcPtr
- *		is filled in with the address of a procedure to call to free
- *		the result string when it's no longer needed (or NULL to
- *		indicate that the string doesn't need to be freed).
- *
- * Side effects:
- *		None.
- *
- *--------------------------------------------------------------
- */
-
-char *
-GradientPrintProc(
-    ClientData clientData,		/* Ignored. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset,				/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)		/* Pointer to variable to fill in with
-					 * information about how to reclaim
-					 * storage for return string. */
-{
-    char *result;
-    register char *ptr = (char *) (widgRec + offset);
-
-    result = (*(char **) ptr);
-    if (result == NULL) {
-        result = "";
-    }
-    return result;
-}
-
-
-/*
- *--------------------------------------------------------------
- *
  * StyleParseProc --
  *
  *		This procedure is invoked during option processing to handle
@@ -2377,8 +2281,8 @@ StyleParseProc(
     Tcl_Interp *interp,			/* Used for reporting errors. */
     Tk_Window tkwin,			/* Window containing canvas widget. */
     CONST char *value,			/* Value of option. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset)				/* Offset into item. */
+    char *widgRec,				/* Pointer to record for item. */
+    int offset)					/* Offset into item. */
 {
     char *old, *new;    
     register char *ptr = (char *) (widgRec + offset);
@@ -2500,8 +2404,7 @@ MatrixParseProc(
     }
     
     /* Note: the _value_ of the address is in turn a pointer to string. */
-    *((char **) ptr) = new;
-    
+    *((char **) ptr) = new;    
     return TCL_OK;
 }
 
@@ -2529,10 +2432,65 @@ MatrixPrintProc(
     buffer = (char *) ckalloc((unsigned int) (len + 1));
     strcpy(buffer, str);
     Tcl_DecrRefCount(listObj);
-
     return buffer;
 }
 
+int
+PathColorParseProc(
+    ClientData clientData,		/* some flags.*/
+    Tcl_Interp *interp,			/* Used for reporting errors. */
+    Tk_Window tkwin,			/* Window containing canvas widget. */
+    CONST char *value,			/* Value of option. */
+    char *widgRec,				/* Pointer to record for item. */
+    int offset)					/* Offset into item. */
+{
+    register char *ptr = (char *) (widgRec + offset);
+    TkPathColor *oldPtr, *newPtr;
+
+    if(value == NULL || *value == 0) {
+        newPtr = NULL;
+    } else {
+        newPtr = TkPathNewPathColor(interp, tkwin, Tcl_NewStringObj(value, -1));
+        if (newPtr == NULL) {
+            return TCL_ERROR;
+        }
+    }
+    oldPtr = *((TkPathColor **) ptr);
+    if (oldPtr != NULL) {
+        TkPathFreePathColor(oldPtr);
+    }
+
+    /* Note: the _value_ of the address is in turn a pointer to string. */
+    *((TkPathColor **) ptr) = newPtr;    
+    return TCL_OK;
+}
+
+char *
+PathColorPrintProc(
+    ClientData clientData,		/* Ignored. */
+    Tk_Window tkwin,			/* Window containing canvas widget. */
+    char *widgRec,				/* Pointer to record for item. */
+    int offset,					/* Offset into item. */
+    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+                                 * information about how to reclaim
+                                 * storage for return string. */
+{
+    register char *ptr = (char *) (widgRec + offset);
+    char *result;
+    TkPathColor *colorPtr = *((TkPathColor **) ptr);
+
+    *freeProcPtr = NULL;
+    result = "";
+    if (colorPtr != NULL) {
+        if (colorPtr->color != NULL) {
+            // haven't the faintest why I get a warning here???
+            result = Tk_NameOfColor(colorPtr->color);
+        } else if (colorPtr->gradientName != NULL) {
+            result = colorPtr->gradientName;
+		}
+    }
+    return result;
+}
 
 /*
  *--------------------------------------------------------------

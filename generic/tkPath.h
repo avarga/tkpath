@@ -124,6 +124,17 @@ typedef struct RadialGradientFill {
     GradientStopArray *stopArrPtr;
 } RadialGradientFill;
 
+/* Experimental: have -fill color|gradient */
+
+typedef struct TkPathColor {
+    XColor *color;			/* Foreground color for filling. */
+    char *gradientName;		/* This is the *name* of the linear 
+                             * gradient fill. No fill record since
+                             * bad idea duplicate pointers.
+                             * Look up each time. */
+                            /* Any better suggestion? */
+} TkPathColor;
+
 /*
  * Opaque platform dependent struct.
  */
@@ -137,21 +148,20 @@ typedef XID TkPathContext;
  
 enum {
     PATH_STYLE_OPTION_FILL              	= (1L << 0),
-    PATH_STYLE_OPTION_FILL_GRADIENT        	= (1L << 1),
-    PATH_STYLE_OPTION_FILL_OFFSET        	= (1L << 2),
-    PATH_STYLE_OPTION_FILL_OPACITY    		= (1L << 3),
-    PATH_STYLE_OPTION_FILL_RULE         	= (1L << 4),
-    PATH_STYLE_OPTION_FILL_STIPPLE      	= (1L << 5),
-    PATH_STYLE_OPTION_MATRIX              	= (1L << 6),
-    PATH_STYLE_OPTION_STROKE           		= (1L << 7),
-    PATH_STYLE_OPTION_STROKE_DASHARRAY    	= (1L << 8),
-    PATH_STYLE_OPTION_STROKE_LINECAP        = (1L << 9),
-    PATH_STYLE_OPTION_STROKE_LINEJOIN       = (1L << 10),
-    PATH_STYLE_OPTION_STROKE_MITERLIMIT     = (1L << 11),
-    PATH_STYLE_OPTION_STROKE_OFFSET        	= (1L << 12),
-    PATH_STYLE_OPTION_STROKE_OPACITY	    = (1L << 13),
-    PATH_STYLE_OPTION_STROKE_STIPPLE     	= (1L << 14),
-    PATH_STYLE_OPTION_STROKE_WIDTH        	= (1L << 15)
+    PATH_STYLE_OPTION_FILL_OFFSET        	= (1L << 1),
+    PATH_STYLE_OPTION_FILL_OPACITY    		= (1L << 2),
+    PATH_STYLE_OPTION_FILL_RULE         	= (1L << 3),
+    PATH_STYLE_OPTION_FILL_STIPPLE      	= (1L << 4),
+    PATH_STYLE_OPTION_MATRIX              	= (1L << 5),
+    PATH_STYLE_OPTION_STROKE           		= (1L << 6),
+    PATH_STYLE_OPTION_STROKE_DASHARRAY    	= (1L << 7),
+    PATH_STYLE_OPTION_STROKE_LINECAP        = (1L << 8),
+    PATH_STYLE_OPTION_STROKE_LINEJOIN       = (1L << 9),
+    PATH_STYLE_OPTION_STROKE_MITERLIMIT     = (1L << 10),
+    PATH_STYLE_OPTION_STROKE_OFFSET        	= (1L << 11),
+    PATH_STYLE_OPTION_STROKE_OPACITY	    = (1L << 12),
+    PATH_STYLE_OPTION_STROKE_STIPPLE     	= (1L << 13),
+    PATH_STYLE_OPTION_STROKE_WIDTH        	= (1L << 14),
 };
 
 
@@ -168,16 +178,10 @@ typedef struct Tk_PathStyle {
     int capStyle;				/* Cap style for stroke. */
     int joinStyle;				/* Join style for stroke. */
     double miterLimit;
-    char *gradientStrokeName; 	/* @@@ TODO. */
-
     GC fillGC;					/* Graphics context for filling path. */
-    XColor *fillColor;			/* Foreground color for filling. */
+    TkPathColor *fill;			/* Record XColor + gradientName */
     double fillOpacity;
     int fillRule;				/* WindingRule or EvenOddRule. */
-    char *gradientFillName;  	/* This is the *name* of the linear 
-                                 * gradient fill. No fill record since
-                                 * bad idea duplicate pointers.
-                                 * Look up each time. */
     TMatrix *matrixPtr;			/*  a  b   default (NULL): 1 0
                                     c  d				   0 1
                                     tx ty 				   0 0 */

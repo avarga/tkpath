@@ -49,18 +49,6 @@ extern "C" {
 #	endif
 #endif
 
-#if 0
-typedef enum __CFByteOrder {
-    CFByteOrderUnknown,
-    CFByteOrderLittleEndian,
-    CFByteOrderBigEndian
-} CFByteOrder;
-
-CF_INLINE CFByteOrder CFByteOrderGetCurrent(void) {
-    uint32_t x = (CFByteOrderBigEndian << 24) | CFByteOrderLittleEndian;
-    return (CFByteOrder)*((UInt8 *)&x);
-}
-#endif
 
 #ifndef MIN
 #	define MIN(a, b) 	(((a) < (b)) ? (a) : (b))
@@ -96,6 +84,9 @@ CF_INLINE CFByteOrder CFByteOrderGetCurrent(void) {
 #define TMATRIX_IS_RECTILINEAR(mPtr)   	(fabs(mPtr->b) == 0.0) && (fabs(mPtr->c) == 0.0)
 
 #define TMATRIX_DETERMINANT(mPtr)		(mPtr->a * mPtr->d - mPtr->c * mPtr->d)
+
+#define GetColorFromPathColor(pcol) 		(((pcol != NULL) && (pcol->color != NULL)) ? pcol->color : NULL )
+#define GetGradientNameFromPathColor(pcol) 	(((pcol != NULL) && (pcol->gradientName != NULL)) ? pcol->gradientName : NULL )
 
 /*
  * So far we use a fixed number of straight line segments when
@@ -279,6 +270,8 @@ void		TkPathPaintPath(TkPathContext context, PathAtom *atomPtr,
 PathRect	TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr);
 
 void		TkPathMakePrectAtoms(double *pointsPtr, double rx, double ry, PathAtom **atomPtrPtr);
+TkPathColor *TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObjPtr);
+void		TkPathFreePathColor(TkPathColor *colorPtr);
 
 /* Various stuff. */
 int 		TableLookup(LookupTable *map, int n, int from);

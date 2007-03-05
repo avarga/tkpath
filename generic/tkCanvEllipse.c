@@ -373,7 +373,7 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
     int haveDist = 0;
     int filled;
 
-    filled = stylePtr->fillColor != NULL;
+    filled = GetColorFromPathColor(stylePtr->fill) != NULL;
     width = 0.0;
     if (stylePtr->strokeColor != NULL) {
         width = stylePtr->strokeWidth;
@@ -483,7 +483,7 @@ EllipseToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
          * unfilled center, in which case we should return "outside".
          */
         if ((result == 0) && (stylePtr->strokeColor != NULL)
-                && (stylePtr->fillColor != NULL)) {
+                && (GetColorFromPathColor(stylePtr->fill) != NULL)) {
             double width, height;
             double xDelta1, yDelta1, xDelta2, yDelta2;
         

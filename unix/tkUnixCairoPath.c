@@ -52,9 +52,9 @@ void CairoSetFill(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     cairo_set_source_rgba(context->c,
-            RedDoubleFromXColorPtr(style->fillColor),
-            GreenDoubleFromXColorPtr(style->fillColor),
-            BlueDoubleFromXColorPtr(style->fillColor),
+            RedDoubleFromXColorPtr(GetColorFromPathColor(style->fill)),
+            GreenDoubleFromXColorPtr(GetColorFromPathColor(style->fill)),
+            BlueDoubleFromXColorPtr(GetColorFromPathColor(style->fill)),
             style->fillOpacity);
     cairo_set_fill_rule(context->c, 
             (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
@@ -332,10 +332,10 @@ TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textSty
             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(context->c, textStylePtr->fontSize);
     cairo_move_to(context->c, x, y);
-    if ((style->fillColor != NULL) && (style->strokeColor != NULL)) {
+    if ((GetColorFromPathColor(style->fill) != NULL) && (style->strokeColor != NULL)) {
         cairo_text_path(context->c, utf8);
         TkPathFillAndStroke(ctx, style);
-    } else if (style->fillColor != NULL) {
+    } else if (GetColorFromPathColor(style->fill) != NULL) {
     
         /* This is the normal way to draw text which is likely faster. */
         CairoSetFill(ctx, style);

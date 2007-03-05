@@ -74,8 +74,10 @@ static void		ScalePtext(Tk_Canvas canvas,
                         double scaleX, double scaleY);
 static void		TranslatePtext(Tk_Canvas canvas,
                         Tk_Item *itemPtr, double deltaX, double deltaY);
+#if 0
 static void		PtextDeleteChars(Tk_Canvas canvas, Tk_Item *itemPtr, 
                         int first, int last);
+#endif
 
 static Tk_CustomOption textAnchorOption = {           \
     (Tk_OptionParseProc *) TextAnchorParseProc,       \
@@ -392,6 +394,7 @@ TranslatePtext(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
     SetGenericPathHeaderBbox(&(ptextPtr->header), stylePtr->matrixPtr, &(ptextPtr->bbox));
 }
 
+#if 0	// TODO
 static void
 PtextDeleteChars(Tk_Canvas canvas, Tk_Item *itemPtr, int first, int last)
 {
@@ -427,6 +430,7 @@ PtextDeleteChars(Tk_Canvas canvas, Tk_Item *itemPtr, int first, int last)
     ComputePtextBbox(canvas, ptextPtr);
     return;
 }
+#endif
 
 /*----------------------------------------------------------------------*/
 

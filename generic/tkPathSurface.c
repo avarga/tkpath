@@ -206,24 +206,17 @@ SurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONS
             result = SurfaceEraseObjCmd(interp, surfacePtr, objc, objv);
             break;
         }
-        case kPathSurfaceCmdHeight: {
-            if (objc != 2) {
-                Tcl_WrongNumArgs(interp, 2, objv, NULL);
-                return TCL_ERROR;
-            }
-            Tcl_SetObjResult(interp, Tcl_NewIntObj(surfacePtr->height));
-            break;
-        }
+        case kPathSurfaceCmdHeight:
         case kPathSurfaceCmdWidth: {
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp, 2, objv, NULL);
                 return TCL_ERROR;
             }
-            Tcl_SetObjResult(interp, Tcl_NewIntObj(surfacePtr->width));
+            Tcl_SetObjResult(interp, Tcl_NewIntObj(
+                    (index == kPathSurfaceCmdHeight) ? surfacePtr->height : surfacePtr->width));
             break;
         }
-    }
-    
+    }    
     return result;
 }
 
@@ -500,7 +493,7 @@ SurfaceParseOptions(Tcl_Interp *interp, char *recordPtr,
     }
     if (Tk_SetOptions(interp, recordPtr, table, 	
             objc, objv, tkwin, NULL, NULL) != TCL_OK) {
-        Tk_FreeConfigOptions(recordPtr, table, NULL);
+        Tk_FreeConfigOptions(recordPtr, table, tkwin);
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -673,6 +666,7 @@ SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
         Tk_FreeImage(image);
         TkPathRestoreState(context);
     }
+    Tk_FreeConfigOptions((char *)&item, gOptionTablePimage, Tk_MainWindow(interp));
     return TCL_OK;
 }
 
@@ -718,6 +712,8 @@ bail:
     TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), &(item.style));
     TkPathFreeAtoms(atomPtr);
     TkPathRestoreState(context);
+    // Crash!
+    //Tk_FreeConfigOptions((char *)&item, gOptionTablePline, Tk_MainWindow(interp));
     return result;
 }
 

@@ -193,7 +193,7 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
 inline SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
 {
     SolidBrush 	*brushPtr;
-    brushPtr = new SolidBrush(MakeGDIPlusColor(style->fillColor, style->fillOpacity));
+    brushPtr = new SolidBrush(MakeGDIPlusColor(GetColorFromPathColor(style->fill), style->fillOpacity));
     return brushPtr;
 }
 
@@ -368,7 +368,7 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
 	if (gUseAntiAlias) {
 		mGraphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
 	}
-    if (style->fillColor != NULL) {
+    if (GetColorFromPathColor(style->fill) != NULL) {
         SolidBrush *brush = PathCreateBrush(style);
         mGraphics->DrawString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr), &font, point, brush);
         delete brush;
@@ -649,9 +649,7 @@ TkPathContext TkPathInitSurface(int width, int height)
     void *data;
     
     memHdc = CreateCompatibleDC(NULL);
-#if 0
-    hbm = CreateBitmap(width, height, 1, 32, NULL);
-#endif
+
     /* We create off-screen surfaces as DIBs */
     bmInfo = (BITMAPINFO *) ckalloc(sizeof(BITMAPINFO));
     bmInfo->bmiHeader.biSize               = sizeof(BITMAPINFOHEADER);

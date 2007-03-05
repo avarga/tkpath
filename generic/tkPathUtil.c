@@ -161,11 +161,11 @@ TkPathPaintPath(TkPathContext context,
     /*
      * What if both -fill and -fillgradient?
      */     
-    if (stylePtr->gradientFillName != NULL) {
-        if (HaveGradientStyleWithName(stylePtr->gradientFillName) == TCL_OK) {
+    if (GetGradientNameFromPathColor(stylePtr->fill) != NULL) {
+        if (HaveGradientStyleWithName(stylePtr->fill->gradientName) == TCL_OK) {
             TkPathClipToPath(context, stylePtr->fillRule);
             PathPaintGradientFromName(context, bboxPtr, 
-                    stylePtr->gradientFillName, stylePtr->fillRule);
+                    stylePtr->fill->gradientName, stylePtr->fillRule);
 
             /* Note: Both CoreGraphics on MacOSX and Win32 GDI (and cairo from 1.0) clear the current path
              *       when setting clipping. Need therefore to redo the path. 
@@ -178,10 +178,9 @@ TkPathPaintPath(TkPathContext context,
             TkPathReleaseClipToPath(context);
         }
     }
-     
-    if ((stylePtr->fillColor != NULL) && (stylePtr->strokeColor != NULL)) {
+    if ((GetColorFromPathColor(stylePtr->fill) != NULL) && (stylePtr->strokeColor != NULL)) {
         TkPathFillAndStroke(context, stylePtr);
-    } else if (stylePtr->fillColor != NULL) {
+    } else if (GetColorFromPathColor(stylePtr->fill) != NULL) {
         TkPathFill(context, stylePtr);
     } else if (stylePtr->strokeColor != NULL) {
         TkPathStroke(context, stylePtr);
@@ -196,6 +195,49 @@ TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr)
     bare = GetGenericBarePathBbox(atomPtr);
     total = GetGenericPathTotalBboxFromBare(atomPtr, stylePtr, &bare);
     return total;
+}
+
+/* Return NULL on error and leave error message */
+
+TkPathColor *
+TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObjPtr)
+{
+    char *name;
+    TkPathColor *colorPtr;
+    XColor *color = NULL;
+    
+    name = Tcl_GetStringFromObj(nameObjPtr, NULL);
+    colorPtr = (TkPathColor *) ckalloc(sizeof(TkPathColor));
+    colorPtr->color = NULL;
+    colorPtr->gradientName = NULL;
+    if (HaveGradientStyleWithName(name) == TCL_OK) {
+        colorPtr->gradientName = ckalloc(strlen(name) + 1);
+        strcpy(colorPtr->gradientName, name);
+    } else {
+        color = Tk_AllocColorFromObj(interp, tkwin, nameObjPtr);
+        if (color == NULL) {
+            char tmp[256];
+            ckfree((char *) colorPtr);
+            sprintf(tmp, "unrecognized color or gradient name \"%s\"", name);
+            Tcl_SetObjResult(interp, Tcl_NewStringObj(tmp, -1));
+            return NULL;
+        }
+        colorPtr->color = color;     
+    }
+    return colorPtr;
+}
+
+void
+TkPathFreePathColor(TkPathColor *colorPtr)
+{
+    if (colorPtr != NULL) {
+        if (colorPtr->color != NULL) {
+            Tk_FreeColor(colorPtr->color);
+        } else if (colorPtr->gradientName != NULL) {
+            ckfree(colorPtr->gradientName);
+        }
+        ckfree((char *) colorPtr);
+    }
 }
 
 /*
@@ -918,7 +960,7 @@ PathGenericCmdDispatcher(
             }
             if (Tk_SetOptions(interp, recordPtr, optionTable, 	
                     objc - 2, objv + 2, tkwin, NULL, &mask) != TCL_OK) {
-                Tk_FreeConfigOptions(recordPtr, optionTable, NULL);
+                Tk_FreeConfigOptions(recordPtr, optionTable, tkwin);
                 ckfree(recordPtr);
                 return TCL_ERROR;
             }
@@ -943,6 +985,7 @@ PathGenericCmdDispatcher(
 			if (hPtr != NULL) {
                 Tcl_DeleteHashEntry(hPtr);
 			}
+            Tk_FreeConfigOptions(recordPtr, optionTable, tkwin);
             (*freeProc)(interp, recordPtr);
 			break;
         }
