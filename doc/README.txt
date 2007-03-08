@@ -22,25 +22,25 @@ if paramters are wrong.
     of an item for which they apply. Not all are implemented.
 
     Fill (fillOptions):
-	-fill color|gradientToken       this is either a usual tk color
-	                                or the name of a gradient
-	-fillopacity float (0,1)
-	-fillrule nonzero|evenodd
+        -fill color|gradientToken       this is either a usual tk color
+                                        or the name of a gradient
+        -fillopacity float (0,1)
+        -fillrule nonzero|evenodd
 
     Stroke (strokeOptions):
-	-stroke color
-	-strokedasharray dashArray
-	-strokelinecap 
-	-strokelinejoin
-	-strokemiterlimit float
-	-strokeopacity float (0,1)
-	-strokewidth float
+        -stroke color
+        -strokedasharray dashArray
+        -strokelinecap 
+        -strokelinejoin
+        -strokemiterlimit float
+        -strokeopacity float (0,1)
+        -strokewidth float
 
     Generic (genericOptions):
         -matrix {{a b} {c d} {tx ty}}
         -state
-	-style styleToken
-	-tags tagList
+        -style styleToken
+        -tags tagList
 
     A matrix is specified by a double list as {{a b} {c d} {tx ty}}.
     There are utility functions to create a matrix using simpler transformations,
@@ -76,28 +76,31 @@ if paramters are wrong.
       V y     Draw a vertical line to the given y coordinate.
       A rx ry phi largeArc sweep x y
               Draw an elliptical arc from the current point to (x, y). 
-	      The points are on an ellipse with x-radius rx and y-radius ry.
-	      The ellipse is rotatted by phe degrees. If the arc is less than 
-	      180 degrees, largeArc is zero, else it is one. If the arc is to be
-	      drawn in cw direction, sweep is one, and zero for the ccw
-	      direction.
+              The points are on an ellipse with x-radius rx and y-radius ry.
+              The ellipse is rotated by phi degrees. If the arc is less than 
+              180 degrees, largeArc is zero, else it is one. If the arc is to be
+              drawn in cw direction, sweep is one, and zero for the ccw
+              direction.
       Q x1 y1 x y
               Draw a qadratic Bezier curve from the current point to (x, y)
-	      using control point (x1, y1).
+              using control point (x1, y1).
       T x y   Draw a qadratic Bezier curve from the current point to (x, y)
               The control point will be the reflection of the previous Q atoms
-	      control point.
+              control point.
       C x1 y1 x2 y2 x y
               Draw a cubic Bezier curve from the current point to (x, y)
               using control points (x1, y1) and (x2, y2).
-
       S x2 y2 x y
               Draw a cubic Bezier curve from the current point to (x, y), using
-	      (x2, y2) as the control point for this new endpoint. The first
-	      control point will be the reflection of the previous C atoms
-	      ending control point.
+              (x2, y2) as the control point for this new endpoint. The first
+              control point will be the reflection of the previous C atoms
+              ending control point.
       Z       Close path by drawing from the current point to the preceeding M 
               point.
+
+    You may use lower case characters for all atoms which then means that all
+    coordinates where relevant, are interpreted as coordinates relative the
+    current point.
 
  o The prect item
 
@@ -105,7 +108,7 @@ if paramters are wrong.
     Item specific options:
 
         -rx  corner x-radius, or if -ry not given it sets the uniform radius.
-	-ry  corner y-radius
+        -ry  corner y-radius
 
     .c create prect x1 y1 x2 y2 ?-rx -ry fillOptions strokeOptions genericOptions?
 
@@ -122,7 +125,7 @@ if paramters are wrong.
     An ellipse item. Item specific options:
 
         -rx  its x-radius
-	-ry  its y-radius
+        -ry  its y-radius
 
     .c create ellipse cx cy ?-rx -ry fillOptions strokeOptions genericOptions?
 
@@ -178,7 +181,7 @@ if paramters are wrong.
     ::tkpath::style cmd ?options?
 
         ::tkpath::style cget token option
-	    Returns the value of an option.
+            Returns the value of an option.
 
         ::tkpath::style configure token ?option? ?value option value...?
             Configures the object in the usual tcl way.
@@ -186,11 +189,11 @@ if paramters are wrong.
         ::tkpath::style create ?-key value ...?
             Creates a linear gradient object and returns its token.
 
-	::tkpath::style delete token
-	    Deletes the object.
+        ::tkpath::style delete token
+            Deletes the object.
 
-	::tkpath::style names
-	    Returns all existing tokens.
+        ::tkpath::style names
+            Returns all existing tokens.
 
     The same options as for the item are supported with the exception of -style,
     -state, and -tags.
@@ -202,14 +205,14 @@ if paramters are wrong.
     ::tkpath::gradient cmd ?options?
 
         ::tkpath::gradient cget token option
-	    Returns the value of an option.
+            Returns the value of an option.
 
-	::tkpath::gradient configure token ?option? ?value option value...?
-	    Configures the object in the usual tcl way.
+        ::tkpath::gradient configure token ?option? ?value option value...?
+            Configures the object in the usual tcl way.
 
         ::tkpath::gradient create type ?-key value ...?
             Creates a linear gradient object with type any of linear or radial
-	    and returns its token.
+            and returns its token.
 
         ::tkpath::gradient delete token
             Deletes the object.
@@ -217,32 +220,32 @@ if paramters are wrong.
         ::tkpath::gradient names
             Returns all existing tokens.
 
-	::tkpath::gradient type token
-	    Returns the type (linear|radial) of the gradient.
+        ::tkpath::gradient type token
+            Returns the type (linear|radial) of the gradient.
 
     The options for linear gradients are:
-	-method pad|repeat|reflect    partial implementation; defaults to pad
-	-stops {stopSpec ?stopSpec...?}
-	    where stopSpec is a list {offset color ?opacity?}.
-	    All offsets must be ordered and run from 0 to 1.
-	-lineartransition {x1 y1 x2 y2}
-	    specifies the transtion vector relative the items bounding box.
+        -method pad|repeat|reflect    partial implementation; defaults to pad
+        -stops {stopSpec ?stopSpec...?}
+            where stopSpec is a list {offset color ?opacity?}.
+            All offsets must be ordered and run from 0 to 1.
+        -lineartransition {x1 y1 x2 y2}
+            specifies the transtion vector relative the items bounding box.
             Depending on -units it gets interpreted differently.
-	    If -units is 'bbox' coordinates run from 0 to 1 and are relative
+            If -units is 'bbox' coordinates run from 0 to 1 and are relative
             the items bounding box. If -units is 'userspace' then they are
             defined in absolute coordinates but in the space of the items
             coordinate system. It defaults to {0 0 1 0}.
         -units bbox|userspace sets the units of the transition coordinates.
-	    See above. Defaults to bbox. Not implemented in the Tk and GDI 
-	    backends. 
+            See above. Defaults to bbox. Not implemented in the Tk and GDI 
+            backends. 
 
     The options for radial gradients are the same as for linear gradients
     except that the -lineartransition is replaced by a -radialtransition:
        -radialtransition {cx cy ?r? ?fx fy?}
            specifies the transition circles relative the items bounding box
-	   and run from 0 to 1. They default to {0.5 0.5 0.5 0.5 0.5}.
-	   cx,cy is the center of the end circle and fx,fy the center of the
-	   start point.
+           and run from 0 to 1. They default to {0.5 0.5 0.5 0.5 0.5}.
+           cx,cy is the center of the end circle and fx,fy the center of the
+           start point.
 
 
  o In memory drawing surfaces (cairo, quartz, gdi+):
@@ -294,7 +297,7 @@ if paramters are wrong.
 
     NB: gdi+ seems unable to produce antialiasing effects here but there seems
         to be no gdi+ specific way of drawing in memory bitmaps but had to call
-	CreateDIBSection() which is a Win32 GDI API.
+        CreateDIBSection() which is a Win32 GDI API.
 
 
  o Helper function for making transformation matrices:
@@ -303,13 +306,13 @@ if paramters are wrong.
 
         ::tkpath::transform rotate angle ?centerX centerY?
 
-	::tkpath::transform scale factorXY ?factorY?
+        ::tkpath::transform scale factorXY ?factorY?
 
-	::tkpath::transform skewx angle
+        ::tkpath::transform skewx angle
 
-	::tkpath::transform skewy angle
+        ::tkpath::transform skewy angle
 
-	::tkpath::transform translate x y
+        ::tkpath::transform translate x y
 
 
  o Binaries and libraries:

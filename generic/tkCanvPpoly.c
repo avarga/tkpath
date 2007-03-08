@@ -421,13 +421,13 @@ CoordsForPolygonline(
                 case PATH_ATOM_M: { 
                     MoveToAtom *move = (MoveToAtom *) atomPtr;
                     Tcl_ListObjAppendElement(interp, obj, Tcl_NewDoubleObj(move->x));
-                    Tcl_ListObjAppendElement(interp, obj, Tcl_NewDoubleObj(move->x));
+                    Tcl_ListObjAppendElement(interp, obj, Tcl_NewDoubleObj(move->y));
                     break;
                 }
                 case PATH_ATOM_L: {
                     LineToAtom *line = (LineToAtom *) atomPtr;
                     Tcl_ListObjAppendElement(interp, obj, Tcl_NewDoubleObj(line->x));
-                    Tcl_ListObjAppendElement(interp, obj, Tcl_NewDoubleObj(line->x));
+                    Tcl_ListObjAppendElement(interp, obj, Tcl_NewDoubleObj(line->y));
                     break;
                 }
                 case PATH_ATOM_Z: {
