@@ -327,6 +327,7 @@ DisplayPline(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable draw
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
+
     TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, plinePtr->atomPtr, &(plinePtr->style), &m, &r);
 }
 
@@ -375,6 +376,7 @@ TranslatePline(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
 
     /* Just translate the bbox as well. */
     TranslatePathRect(&(plinePtr->totalBbox), deltaX, deltaY);
+    TranslatePathRect(&(plinePtr->coords), deltaX, deltaY);
     SetGenericPathHeaderBbox(&(plinePtr->header), stylePtr->matrixPtr, &(plinePtr->totalBbox));
 }
 
