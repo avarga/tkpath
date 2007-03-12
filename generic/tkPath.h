@@ -14,7 +14,8 @@
 
 #include <tkInt.h>
 #include "tkPort.h"
-#include "tkCanvas.h"
+// stub breaker! added because of TkCanvas
+//#include "tkCanvas.h" 
 
 /*
  * For C++ compilers, use extern "C"

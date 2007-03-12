@@ -133,9 +133,6 @@ Tk_ConfigStrokePathStyleGC(
     }
     dash = &(stylePtr->dash);
     color = stylePtr->strokeColor;
-    if (state == TK_STATE_NULL) {
-        state = ((TkCanvas *)canvas)->canvas_state;
-    }
     if (color == NULL) {
         return 0;
     }
@@ -997,9 +994,11 @@ GenericPathToPoint(
 
     bestDist = 1.0e36;
 
+#if 0
     if(state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
     }
+#endif
     if (state == TK_STATE_HIDDEN) {
         return bestDist;
     }
@@ -1153,9 +1152,11 @@ GenericPathToArea(
     TMatrix 		*matrixPtr = stylePtr->matrixPtr;
     MoveToAtom		*move;
 
+#if 0
     if(state == TK_STATE_NULL) {
         state = ((TkCanvas *)canvas)->canvas_state;
-    }    
+    }
+#endif
     if (state == TK_STATE_HIDDEN) {
         return -1;
     }
