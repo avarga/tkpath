@@ -31,6 +31,9 @@ proc ::tkpath::transform {cmd args} {
     
     switch -- $cmd {
 	rotate {
+	    if {($len != 1) && ($len != 3)} {
+		return -code error "usage: transform rotate angle ?centerX centerY?"
+	    }
 	    set phi [lindex $args 0]
 	    set cosPhi [expr {cos($phi)}]
 	    set sinPhi [expr {sin($phi)}]
@@ -46,8 +49,6 @@ proc ::tkpath::transform {cmd args} {
 		  [list $msinPhi $cosPhi] \
 		  [list [expr {-$cx*$cosPhi + $cy*$sinPhi + $cx}] \
 		  [expr {-$cx*$sinPhi - $cy*$cosPhi + $cy}]]]
-	    } else {
-		return -code error "usage: transform rotate angle ?centerX centerY?"
 	    }
 	}
 	scale {
