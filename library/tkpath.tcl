@@ -90,6 +90,18 @@ proc ::tkpath::transform {cmd args} {
     return $matrix
 }
 
+proc ::tkpath::mmult {m1 m2} {
+    foreach {a1 b1 c1 d1 tx1 ty1} $m1 { break }
+    foreach {a2 b2 c2 d2 tx2 ty2} $m2 { break }
+    return [list \
+      [expr {$a1*$a2  + $c1*$b2}]         \
+      [expr {$b1*$a2  + $d1*$b2}]         \
+      [expr {$a1*$c2  + $c1*$d2}]         \
+      [expr {$b1*$c2  + $d1*$d2}]         \
+      [expr {$a1*$tx2 + $c1*$ty2 + $tx1}] \
+      [expr {$b1*$tx2 + $d1*$ty2 + $ty1}]]
+}
+
 # OUTDATED!
 
 # ::tkpath::coords --
