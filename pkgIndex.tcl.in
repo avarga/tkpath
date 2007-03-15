@@ -1,7 +1,12 @@
-# @configure_input@
+# @configure_input@ 
 #
+namespace eval ::tkpath { 
+    proc load_package {dir} { 
+	load [file join $dir libtkpath@PACKAGE_VERSION@[info sharedlibext]] 
+	source $dir/tkpath.tcl 
+    };# load_package 
+}
 
-package ifneeded tkpath @PACKAGE_VERSION@ \
-    [list load [file join $dir libtkpath@PACKAGE_VERSION@[info sharedlibext]]]
+package ifneeded tkpath @PACKAGE_VERSION@ [list ::tkpath::load_package $dir] 
 
-#*EOF*
+#*EOF* 
