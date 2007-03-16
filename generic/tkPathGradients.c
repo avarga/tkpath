@@ -20,6 +20,7 @@
  */
 
 #include "tkIntPath.h"
+#include "tkPathStyle.h"
 
 /*
  * Hash table to keep track of linear gradient fills.
@@ -45,28 +46,14 @@ typedef struct GradientStyle {
 	Tk_Uid name;
     Tcl_Obj *transObj;
     Tcl_Obj *stopsObj;
+    TMatrix *matrixPtr;			/*  a  b   default (NULL): 1 0
+                                    c  d				   0 1
+                                    tx ty 				   0 0 */
     union {
         LinearGradientFill linearFill;
         RadialGradientFill radialFill;
     };
 } GradientStyle;
-
-// OUTDATED
-typedef struct LinearGradientStyle {
-	Tk_OptionTable optionTable;
-	Tk_Uid name;
-    Tcl_Obj *transObj;
-    Tcl_Obj *stopsObj;
-    LinearGradientFill fill;
-} LinearGradientStyle;
-
-typedef struct RadialGradientStyle {
-	Tk_OptionTable optionTable;
-	Tk_Uid name;
-    Tcl_Obj *transObj;
-    Tcl_Obj *stopsObj;
-    RadialGradientFill fill;
-} RadialGradientStyle;
 
 static int 			GradientObjCmd(ClientData clientData, Tcl_Interp* interp,
                             int objc, Tcl_Obj* CONST objv[]);
@@ -468,6 +455,8 @@ static char *unitsST[] = {
     "bbox", "userspace", (char *) NULL
 };
 
+PATH_STYLE_CUSTOM_OPTION_MATRIX
+
 static Tk_OptionSpec linGradientStyleOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-method", (char *) NULL, (char *) NULL,
         "pad", -1, Tk_Offset(GradientStyle, linearFill.method), 
@@ -483,6 +472,9 @@ static Tk_OptionSpec linGradientStyleOptionSpecs[] = {
 		(char *) NULL, Tk_Offset(GradientStyle, transObj), 
         Tk_Offset(GradientStyle, linearFill.transitionPtr),
 		TK_OPTION_NULL_OK, (ClientData) &linTransitionCO, 0},
+	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
+		(char *) NULL, -1, Tk_Offset(GradientStyle, matrixPtr),
+		TK_OPTION_NULL_OK, (ClientData) &matrixCO, 0},
 	{TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
 		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
 };
@@ -502,6 +494,9 @@ static Tk_OptionSpec radGradientStyleOptionSpecs[] = {
 		(char *) NULL, Tk_Offset(GradientStyle, transObj), 
         Tk_Offset(GradientStyle, radialFill.radialPtr),
 		TK_OPTION_NULL_OK, (ClientData) &radTransitionCO, 0},
+	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
+		(char *) NULL, -1, Tk_Offset(GradientStyle, matrixPtr),
+		TK_OPTION_NULL_OK, (ClientData) &matrixCO, 0},
 	{TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
 		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
 };
@@ -520,100 +515,10 @@ FormatResult(Tcl_Interp *interp, char *fmt, ...)
 }
 #endif
 
-#if 0
-static int 
-GetGradientStyleFromObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientStyle **stylePtrPtr)
-{
-	char *name;
-	Tcl_HashEntry *hPtr;
-
-	name = Tcl_GetString(obj);
-	hPtr = Tcl_FindHashEntry(gLinearGradientHashPtr, name);
-	if (hPtr == NULL) {
-		Tcl_AppendResult(interp, 
-                "lineargradient \"", name, "\" doesn't exist", NULL);
-		return TCL_ERROR;
-	}
-	*stylePtrPtr = (LinearGradientStyle *) Tcl_GetHashValue(hPtr);
-	return TCL_OK;
-}
-#endif
-
-#if 0
-static int
-GetLinearGradientFromNameObj(Tcl_Interp *interp, Tcl_Obj *obj, LinearGradientFill **gradientPtrPtr)
-{
-    LinearGradientStyle *gradientStylePtr;
-    
-    if (GetGradientStyleFromObj(interp, obj, &gradientStylePtr) != TCL_OK) {
-        return TCL_ERROR;
-    }
-    *gradientPtrPtr = &(gradientStylePtr->fill);
-    return TCL_OK;
-}
-#endif
-
-static int
-GetLinearGradientFillFromNameOLD(char *name, LinearGradientFill **gradientPtrPtr)
-{
-	Tcl_HashEntry *hPtr;
-    LinearGradientStyle *gradientStylePtr;
-
-	hPtr = Tcl_FindHashEntry(gLinearGradientHashPtr, name);
-	if (hPtr == NULL) {
-        *gradientPtrPtr = NULL;
-        return TCL_ERROR;
-    } else {
-        gradientStylePtr = (LinearGradientStyle *) Tcl_GetHashValue(hPtr);
-        *gradientPtrPtr = &(gradientStylePtr->fill);
-        return TCL_OK;
-    }
-}
-
-static int
-GetRadialGradientFillFromNameOLD(char *name, RadialGradientFill **gradientPtrPtr)
-{
-	Tcl_HashEntry *hPtr;
-    RadialGradientStyle *gradientStylePtr;
-
-	hPtr = Tcl_FindHashEntry(gRadialGradientHashPtr, name);
-	if (hPtr == NULL) {
-        *gradientPtrPtr = NULL;
-        return TCL_ERROR;
-    } else {
-        gradientStylePtr = (RadialGradientStyle *) Tcl_GetHashValue(hPtr);
-        *gradientPtrPtr = &(gradientStylePtr->fill);
-        return TCL_OK;
-    }
-}
-
 int
 HaveGradientStyleWithName(CONST char *name)
 {
     return (Tcl_FindHashEntry(gGradientHashPtr, name) == NULL) ? TCL_ERROR : TCL_OK;
-}
-
-static int
-HaveLinearGradientStyleWithName(CONST char *name)
-{
-    return (Tcl_FindHashEntry(gLinearGradientHashPtr, name) == NULL) ? TCL_ERROR : TCL_OK;
-}
-
-static int
-HaveRadialGradientStyleWithName(CONST char *name)
-{
-    return (Tcl_FindHashEntry(gRadialGradientHashPtr, name) == NULL) ? TCL_ERROR : TCL_OK;
-}
-
-int
-HaveGradientStyleWithNameOLD(CONST char *name)
-{
-    if ((HaveLinearGradientStyleWithName(name) == TCL_OK) 
-            || (HaveRadialGradientStyleWithName(name) == TCL_OK)) {
-        return TCL_OK;
-    } else {
-        return TCL_ERROR;
-    }
 }
 
 void
@@ -627,24 +532,11 @@ PathPaintGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fil
         gradientStylePtr = (GradientStyle *) Tcl_GetHashValue(hPtr);
         if (!ObjectIsEmpty(gradientStylePtr->stopsObj)) {
             if (gradientStylePtr->type == kPathGradientTypeLinear) {
-                TkPathPaintLinearGradient(ctx, bbox, &(gradientStylePtr->linearFill), fillRule);
+                TkPathPaintLinearGradient(ctx, bbox, &(gradientStylePtr->linearFill), fillRule, gradientStylePtr->matrixPtr);
             } else {
                 TkPathPaintRadialGradient(ctx, bbox, &(gradientStylePtr->radialFill), fillRule);
             }
         }
-    }
-}
-
-void
-PathPaintGradientFromNameOLD(TkPathContext ctx, PathRect *bbox, char *name, int fillRule)
-{
-    LinearGradientFill *linearFillPtr;
-    RadialGradientFill *radialFillPtr;
-
-    if (GetLinearGradientFillFromNameOLD(name, &linearFillPtr) == TCL_OK) {
-        TkPathPaintLinearGradient(ctx, bbox, linearFillPtr, fillRule);
-    } else if (GetRadialGradientFillFromNameOLD(name, &radialFillPtr) == TCL_OK) {
-        TkPathPaintRadialGradient(ctx, bbox, radialFillPtr, fillRule);
     }
 }
 

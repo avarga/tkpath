@@ -826,7 +826,7 @@ ShadeRelease(void *info)
 }
 
 void
-TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGShadingRef 		shading;
@@ -846,8 +846,8 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
      * We need to do like this since this is how SVG defines gradient drawing
      * in case the transition vector is in relative coordinates.
      */
+    CGContextSaveGState(context->c);
     if (fillPtr->units == kPathGradientUnitsBoundingBox) {
-        CGContextSaveGState(context->c);
         CGContextTranslateCTM(context->c, bbox->x1, bbox->y1);
         CGContextScaleCTM(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
     }
@@ -855,13 +855,16 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     start = CGPointMake(trans->x1, trans->y1);
     end   = CGPointMake(trans->x2, trans->y2);
     shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, 1, 1);
+    if (matrixPtr) {
+        /* @@@ I'm not completely sure of the order of transforms here! */
+        TkPathPushTMatrix(ctx, matrixPtr);
+    }
     CGContextDrawShading(context->c, shading);
+    CGContextRestoreGState(context->c);
     CGShadingRelease(shading);
     CGFunctionRelease(function);
     CGColorSpaceRelease(colorSpaceRef);
-    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
-        CGContextRestoreGState(context->c);
-    }
+    CGContextRestoreGState(context->c);
 }
 
 void

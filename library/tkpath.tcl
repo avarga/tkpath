@@ -8,7 +8,7 @@
 #
 #       Various support procedures for the tkpath package.
 #       
-#  Copyright (c) 2005  Mats Bengtsson
+#  Copyright (c) 2005-2007  Mats Bengtsson
 #  
 # $Id$
 

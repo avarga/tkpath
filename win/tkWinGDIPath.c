@@ -738,7 +738,7 @@ NeedTransitionPadding(PathRect *line)
 }
 
 void
-TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int 			i;

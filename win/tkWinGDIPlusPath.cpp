@@ -999,7 +999,7 @@ TkPathPixelAlign(void)
 
 /* @@@ INCOMPLETE! We need to consider any padding as well. */
 
-void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     context->c->FillLinearGradient(bbox, fillPtr, fillRule);

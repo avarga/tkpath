@@ -603,15 +603,16 @@ static int GetCairoExtend(int method)
     return extend;
 }
 
-void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
 {    
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i;
     int					nstops;
     PathRect 			*tPtr;		/* The transition line. */
     GradientStop 		*stop;
-    cairo_pattern_t 	*pattern;
     GradientStopArray 	*stopArrPtr;
+    cairo_pattern_t 	*pattern;
+    cairo_matrix_t 		matrix;
 
     stopArrPtr = fillPtr->stopArrPtr;    
     tPtr = fillPtr->transitionPtr;
@@ -624,6 +625,10 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     cairo_save(context->c);
 
     pattern = cairo_pattern_create_linear(tPtr->x1, tPtr->y1, tPtr->x2, tPtr->y2);
+    if (matrixPtr) {
+        cairo_matrix_init(&matrix, matrixPtr->a, matrixPtr->b, matrixPtr->c, matrixPtr->d, matrixPtr->tx, matrixPtr->ty);
+        cairo_pattern_set_matrix(pattern, &matrix);
+    }
 
     /*
      * We need to do like this since this is how SVG defines gradient drawing
