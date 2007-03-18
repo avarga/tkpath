@@ -826,7 +826,7 @@ ShadeRelease(void *info)
 }
 
 void
-TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
+TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGShadingRef 		shading;
@@ -855,20 +855,19 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     start = CGPointMake(trans->x1, trans->y1);
     end   = CGPointMake(trans->x2, trans->y2);
     shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, 1, 1);
-    if (matrixPtr) {
+    if (mPtr) {
         /* @@@ I'm not completely sure of the order of transforms here! */
-        TkPathPushTMatrix(ctx, matrixPtr);
+        TkPathPushTMatrix(ctx, mPtr);
     }
     CGContextDrawShading(context->c, shading);
     CGContextRestoreGState(context->c);
     CGShadingRelease(shading);
     CGFunctionRelease(function);
     CGColorSpaceRelease(colorSpaceRef);
-    CGContextRestoreGState(context->c);
 }
 
 void
-TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGShadingRef 		shading;
@@ -897,6 +896,10 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
     start = CGPointMake(tPtr->focalX, tPtr->focalY);
     end   = CGPointMake(tPtr->centerX, tPtr->centerY);
     shading = CGShadingCreateRadial(colorSpaceRef, start, 0.0, end, tPtr->radius, function, 1, 1);
+    if (mPtr) {
+        /* @@@ I'm not completely sure of the order of transforms here! */
+        TkPathPushTMatrix(ctx, mPtr);
+    }
     CGContextDrawShading(context->c, shading);
     CGShadingRelease(shading);
     CGFunctionRelease(function);

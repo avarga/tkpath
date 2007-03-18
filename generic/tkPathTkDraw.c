@@ -483,7 +483,7 @@ int TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
     return TCL_ERROR;
 }
 
-void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {    
     /* TkPathContext_ *context = (TkPathContext_ *) ctx; */
     /* The Tk X11 compatibility layer does not have tha ability to set up
@@ -492,7 +492,7 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
 }
             
 void
-TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
 }
 

@@ -994,15 +994,10 @@ GenericPathToPoint(
 
     bestDist = 1.0e36;
 
-#if 0
-    if(state == TK_STATE_NULL) {
-        state = ((TkCanvas *)canvas)->canvas_state;
-    }
-#endif
     if (state == TK_STATE_HIDDEN) {
         return bestDist;
     }
-    if ((GetColorFromPathColor(stylePtr->fill) == NULL) && (stylePtr->strokeColor == NULL)) {
+    if (!HaveAnyFillFromPathColor(stylePtr->fill) && (stylePtr->strokeColor == NULL)) {
         return bestDist;
     }
     if (atomPtr == NULL) {
@@ -1088,7 +1083,7 @@ GenericPathToPoint(
      * WindingRule (nonzero): If the number of directed intersections
      *			are nonzero, then inside.
      */
-    if (GetColorFromPathColor(stylePtr->fill) != NULL) {
+    if (HaveAnyFillFromPathColor(stylePtr->fill)) {
         if ((stylePtr->fillRule == EvenOddRule) && (sumIntersections & 0x1)) {
             bestDist = 0.0;
         } else if ((stylePtr->fillRule == WindingRule) && (sumNonzerorule != 0)) {
@@ -1836,7 +1831,7 @@ SubPathToArea(
      *		the line item counts it as outside (-1).
      */
     
-    if (GetColorFromPathColor(stylePtr->fill) != NULL) {
+    if (HaveAnyFillFromPathColor(stylePtr->fill)) {
     
         /* This checks a closed polygon with zero width for inside.
          * If area rect completely enclosed it returns intersecting (0).

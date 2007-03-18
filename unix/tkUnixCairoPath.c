@@ -603,7 +603,7 @@ static int GetCairoExtend(int method)
     return extend;
 }
 
-void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {    
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i;
@@ -612,7 +612,6 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     GradientStop 		*stop;
     GradientStopArray 	*stopArrPtr;
     cairo_pattern_t 	*pattern;
-    cairo_matrix_t 		matrix;
 
     stopArrPtr = fillPtr->stopArrPtr;    
     tPtr = fillPtr->transitionPtr;
@@ -625,10 +624,6 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     cairo_save(context->c);
 
     pattern = cairo_pattern_create_linear(tPtr->x1, tPtr->y1, tPtr->x2, tPtr->y2);
-    if (matrixPtr) {
-        cairo_matrix_init(&matrix, matrixPtr->a, matrixPtr->b, matrixPtr->c, matrixPtr->d, matrixPtr->tx, matrixPtr->ty);
-        cairo_pattern_set_matrix(pattern, &matrix);
-    }
 
     /*
      * We need to do like this since this is how SVG defines gradient drawing
@@ -637,6 +632,11 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
     if (fillPtr->units == kPathGradientUnitsBoundingBox) {
         cairo_translate(context->c, bbox->x1, bbox->y1);
         cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    }
+    if (mPtr) {
+        cairo_matrix_t matrix;
+        cairo_matrix_init(&matrix, mPtr->a, mPtr->b, mPtr->c, mPtr->d, mPtr->tx, mPtr->ty);
+        cairo_pattern_set_matrix(pattern, &matrix);
     }
 
     for (i = 0; i < nstops; i++) {
@@ -658,7 +658,7 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
 }
             
 void
-TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int					i;
@@ -681,8 +681,15 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
             tPtr->focalX, tPtr->focalY, 0.0,
             tPtr->centerX, tPtr->centerY, tPtr->radius);
 
-    cairo_translate(context->c, bbox->x1, bbox->y1);
-    cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+        cairo_translate(context->c, bbox->x1, bbox->y1);
+        cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+    }
+    if (mPtr) {
+        cairo_matrix_t matrix;
+        cairo_matrix_init(&matrix, mPtr->a, mPtr->b, mPtr->c, mPtr->d, mPtr->tx, mPtr->ty);
+        cairo_pattern_set_matrix(pattern, &matrix);
+    }
 
     for (i = 0; i < nstops; i++) {
         stop = stopArrPtr->stops[i];

@@ -84,8 +84,8 @@ class PathC {
     void Fill(Tk_PathStyle *style);
     void FillAndStroke(Tk_PathStyle *style);
     void GetCurrentPoint(PointF *pt);
-	void FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule);
-    void FillRadialGradient(PathRect *bbox, RadialGradientFill *fillPtr, int fillRule);
+	void FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr);
+    void FillRadialGradient(PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr);
 
   private:  
     HDC 				mMemHdc;
@@ -464,7 +464,7 @@ void PathC::FillSimpleLinearGradient(
 }
 #endif
 
-void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule)
+void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     int					i;
     int					nstops;
@@ -545,7 +545,7 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
 
 void PathC::FillRadialGradient(
         PathRect *bbox, 	/* The items bounding box in untransformed coords. */
-        RadialGradientFill *fillPtr, int fillRule)
+        RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     int					i;
     int					nstops;
@@ -573,6 +573,9 @@ void PathC::FillRadialGradient(
     SolidBrush solidBrush(MakeGDIPlusColor(stop->color, stop->opacity));
 	mGraphics->FillPath(&solidBrush, mPath);
 
+    /* This is a special trick to make a radial gradient pattern.
+     * Make a circle and use a PathGradientBrush.
+     */
     GraphicsPath path;
     path.AddEllipse(cx-radius*width, cy-radius*height, 2*radius*width, 2*radius*height);
     PathGradientBrush brush(&path);
@@ -999,17 +1002,17 @@ TkPathPixelAlign(void)
 
 /* @@@ INCOMPLETE! We need to consider any padding as well. */
 
-void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->FillLinearGradient(bbox, fillPtr, fillRule);
+    context->c->FillLinearGradient(bbox, fillPtr, fillRule, mPtr);
 }
 
 void
-TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule)
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->FillRadialGradient(bbox, fillPtr, fillRule);
+    context->c->FillRadialGradient(bbox, fillPtr, fillRule, mPtr);
 }
 
 

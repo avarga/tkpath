@@ -235,6 +235,9 @@ if paramters are wrong.
             the items bounding box. If -units is 'userspace' then they are
             defined in absolute coordinates but in the space of the items
             coordinate system. It defaults to {0 0 1 0}.
+        -matrix {{a b} {c d} {tx ty}}
+            sets a specific transformation for the gradient pattern only.
+	    NB: not sure about the order transforms, see -units.
         -units bbox|userspace sets the units of the transition coordinates.
             See above. Defaults to bbox. Not implemented in the Tk and GDI 
             backends. 

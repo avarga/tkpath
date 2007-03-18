@@ -34,7 +34,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="tclstub84.lib tkstub84.lib gdiplus.lib"
-				OutputFile="$(OutDir)/tkpathgdiplus024.dll"
+				OutputFile="$(OutDir)/tkpathgdiplus026.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="C:\Tcl\lib"
 				GenerateDebugInformation="TRUE"
@@ -83,7 +83,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="tclstub84.lib tkstub84.lib gdiplus.lib"
-				OutputFile="$(OutDir)/tkpathgdiplus024.dll"
+				OutputFile="$(OutDir)/tkpathgdiplus026.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="C:\Tcl\lib"
 				GenerateDebugInformation="TRUE"

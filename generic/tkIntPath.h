@@ -87,6 +87,7 @@ extern "C" {
 
 #define GetColorFromPathColor(pcol) 		(((pcol != NULL) && (pcol->color != NULL)) ? pcol->color : NULL )
 #define GetGradientNameFromPathColor(pcol) 	(((pcol != NULL) && (pcol->gradientName != NULL)) ? pcol->gradientName : NULL )
+#define HaveAnyFillFromPathColor(pcol) 		(((pcol != NULL) && ((pcol->color != NULL) || (pcol->gradientName != NULL))) ? 1 : 0 )
 
 /*
  * So far we use a fixed number of straight line segments when

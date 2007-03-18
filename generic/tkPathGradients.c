@@ -534,7 +534,7 @@ PathPaintGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fil
             if (gradientStylePtr->type == kPathGradientTypeLinear) {
                 TkPathPaintLinearGradient(ctx, bbox, &(gradientStylePtr->linearFill), fillRule, gradientStylePtr->matrixPtr);
             } else {
-                TkPathPaintRadialGradient(ctx, bbox, &(gradientStylePtr->radialFill), fillRule);
+                TkPathPaintRadialGradient(ctx, bbox, &(gradientStylePtr->radialFill), fillRule, gradientStylePtr->matrixPtr);
             }
         }
     }
@@ -702,6 +702,7 @@ GradientObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CON
             }
             gradientStylePtr->type = type;
             gradientStylePtr->name = Tk_GetUid(str);
+            gradientStylePtr->matrixPtr = NULL;
 
             /* 
              * Set default transition vector in case not set. 
@@ -802,11 +803,6 @@ GradientObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CON
 static void
 GradientStyleFree(Tcl_Interp *interp, GradientStyle *gradientStylePtr)
 {
-    if (gradientStylePtr->type == kPathGradientTypeLinear) {
-        FreeStopArray(gradientStylePtr->linearFill.stopArrPtr);
-    } else {
-        FreeStopArray(gradientStylePtr->radialFill.stopArrPtr);
-    }
 	Tk_FreeConfigOptions((char *) gradientStylePtr, gradientStylePtr->optionTable, NULL);
     ckfree((char *) gradientStylePtr);
 }
