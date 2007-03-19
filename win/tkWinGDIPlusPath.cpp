@@ -199,7 +199,7 @@ inline SolidBrush* PathC::PathCreateBrush(Tk_PathStyle *style)
 
 inline void PathC::PushTMatrix(TMatrix *tm)
 {
-    Matrix m((float)tm->a, (float)tm->b, (float)tm->c, (float)tm->d, (float)tm->tx, (float)tm->ty);
+    Matrix m(float(tm->a), float(tm->b), float(tm->c), float(tm->d), float(tm->tx), float(tm->ty));
     mGraphics->MultiplyTransform(&m);
 }
 
@@ -480,25 +480,11 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
 
     GraphicsContainer container = mGraphics->BeginContainer();
 
-    /*
-     * We need to do like this since this is how SVG defines gradient drawing
-     * in case the transition vector is in relative coordinates.
-     */
-    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
-        x = float(bbox->x1);
-        y = float(bbox->y1);
-        width = float(bbox->x2 - bbox->x1);
-        height = float(bbox->y2 - bbox->y1);
-		p1.X = float(x + tPtr->x1*width);
-		p1.Y = float(y + tPtr->y1*height);
-        p2.X = float(x + tPtr->x2*width);
-		p2.Y = float(y + tPtr->y2*height);
-    } else {
-        p1.X = float(tPtr->x1);
-		p1.Y = float(tPtr->y1);
-        p2.X = float(tPtr->x2);
-		p2.Y = float(tPtr->y2);
-    }
+    p1.X = float(tPtr->x1);
+    p1.Y = float(tPtr->y1);
+    p2.X = float(tPtr->x2);
+    p2.Y = float(tPtr->y2);
+
     stop = stopArrPtr->stops[0];
     Color col1(MakeGDIPlusColor(stop->color, stop->opacity));
     stop = stopArrPtr->stops[nstops-1];
@@ -508,6 +494,18 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
         brush.SetWrapMode(WrapModeTileFlipXY);
     } else if (fillPtr->method == kPathGradientMethodPad) {
         brush.SetWrapMode(WrapModeTileFlipXY);
+    }
+    /*
+     * We need to do like this since this is how SVG defines gradient drawing
+     * in case the transition vector is in relative coordinates.
+     */
+    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+        brush.TranslateTransform(float(bbox->x1), float(bbox->y1));
+        brush.ScaleTransform(float(bbox->x2 - bbox->x1), float(bbox->y2 - bbox->y1));     
+    }
+	if (mPtr) {
+	    Matrix m(float(mPtr->a), float(mPtr->b), float(mPtr->c), float(mPtr->d), float(mPtr->tx), float(mPtr->ty));
+		brush.MultiplyTransform(&m);
     }
     Color *col = new Color[nstops];
     REAL *pos = new REAL[nstops];
@@ -568,20 +566,30 @@ void PathC::FillRadialGradient(
 
     GraphicsContainer container = mGraphics->BeginContainer();
     mGraphics->SetClip(mPath);
-	
+#if 0	
     stop = stopArrPtr->stops[nstops-1];
     SolidBrush solidBrush(MakeGDIPlusColor(stop->color, stop->opacity));
 	mGraphics->FillPath(&solidBrush, mPath);
-
+#endif
     /* This is a special trick to make a radial gradient pattern.
      * Make a circle and use a PathGradientBrush.
      */
     GraphicsPath path;
     path.AddEllipse(cx-radius*width, cy-radius*height, 2*radius*width, 2*radius*height);
+    //path.AddEllipse(0, 0, 1 ,1);
     PathGradientBrush brush(&path);
+    if (0 && fillPtr->units == kPathGradientUnitsBoundingBox) {
+        brush.TranslateTransform(float(bbox->x1), float(bbox->y1));
+        brush.ScaleTransform(float(bbox->x2 - bbox->x1), float(bbox->y2 - bbox->y1));     
+    }
+	if (0 && mPtr) {
+	    Matrix m(float(mPtr->a), float(mPtr->b), float(mPtr->c), float(mPtr->d), float(mPtr->tx), float(mPtr->ty));
+		brush.MultiplyTransform(&m);
+	}
     stop = stopArrPtr->stops[0];
     brush.SetCenterColor(MakeGDIPlusColor(stop->color, stop->opacity));
 	PointF focal(float(x + tPtr->focalX*width), float(y + tPtr->focalY*height));
+	//PointF focal(float(tPtr->focalX), float(tPtr->focalY));
     brush.SetCenterPoint(focal);
     int count = 1;
     stop = stopArrPtr->stops[nstops-1];
