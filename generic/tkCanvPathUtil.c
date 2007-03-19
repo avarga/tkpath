@@ -237,7 +237,7 @@ CoordsForPointItems(
             if (Tcl_ListObjGetElements(interp, objv[0], &objc,
                     (Tcl_Obj ***) &objv) != TCL_OK) {
                 return TCL_ERROR;
-            } else if (objc != 4) {
+            } else if (objc != 2) {
                 Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
                 return TCL_ERROR;
             }
