@@ -419,51 +419,6 @@ inline void PathC::GetCurrentPoint(PointF *pt)
     *pt = mCurrentPoint;
 }
 
-#if 0
-void PathC::FillSimpleLinearGradient(
-        PathRect *bbox, 		/* The items bounding box in untransformed coords. */
-        LinearGradientFill *fillPtr)
-{
-    PathRect 		*tPtr;
-    GradientStop 	*stop1, *stop2;
-    PointF			p1, p2;
-    Color			col1, col2;
-	GradientStopArray 	*stopArrPtr;
-    
-    stopArrPtr = fillPtr->stopArrPtr;
-
-    tPtr = fillPtr->transitionPtr;
-    stop1 = stopArrPtr->stops[0];
-    stop2 = stopArrPtr->stops[1];
-
-    p1.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*tPtr->x1);
-    p1.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*tPtr->y1);
-    p2.X = (float) (bbox->x1 + (bbox->x2 - bbox->x1)*tPtr->x2);
-    p2.Y = (float) (bbox->y1 + (bbox->y2 - bbox->y1)*tPtr->y2);
-
-    col1 = MakeGDIPlusColor(stop1->color, stop1->opacity);
-    col2 = MakeGDIPlusColor(stop2->color, stop2->opacity);
-    LinearGradientBrush brush(p1, p2, col1, col2);
-    if ((stop1->offset > 1e-6) || (stop2->offset < 1.0-1e-6)) {
-    
-        /* This is a trick available in gdi+ we use for padding with a const color. ??? */
-        REAL blendFactors[4];
-        REAL blendPositions[4];
-        blendFactors[0] = 0.0;
-        blendFactors[1] = 0.0;
-        blendFactors[2] = 1.0;
-        blendFactors[3] = 1.0;
-        blendPositions[0] = 0.0;
-        blendPositions[1] = (float) stop1->offset;
-        blendPositions[2] = (float) stop2->offset;
-        blendPositions[3] = 1.0;
-        brush.SetBlend(blendFactors, blendPositions, 4);
-    }
-    /* We could also have used brush.SetWrapMode() */
-    mGraphics->FillPath(&brush, mPath);
-}
-#endif
-
 void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
 {
     int					i;
@@ -472,73 +427,169 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
     GradientStop 		*stop;
     GradientStopArray 	*stopArrPtr;
     PathRect			*tPtr;
-	PointF				p1, p2;
+	PointF				p1, p2, pstart, pend;
 
     stopArrPtr = fillPtr->stopArrPtr;
     nstops = stopArrPtr->nstops;
     tPtr = fillPtr->transitionPtr;
 
     GraphicsContainer container = mGraphics->BeginContainer();
-
-    p1.X = float(tPtr->x1);
-    p1.Y = float(tPtr->y1);
-    p2.X = float(tPtr->x2);
-    p2.Y = float(tPtr->y2);
-
-    stop = stopArrPtr->stops[0];
-    Color col1(MakeGDIPlusColor(stop->color, stop->opacity));
-    stop = stopArrPtr->stops[nstops-1];
-    Color col2(MakeGDIPlusColor(stop->color, stop->opacity));
-	LinearGradientBrush brush(p1, p2, col1, col2);
-    if (fillPtr->method == kPathGradientMethodReflect) {
-        brush.SetWrapMode(WrapModeTileFlipXY);
-    } else if (fillPtr->method == kPathGradientMethodPad) {
-        brush.SetWrapMode(WrapModeTileFlipXY);
-    }
-    /*
+     /*
      * We need to do like this since this is how SVG defines gradient drawing
      * in case the transition vector is in relative coordinates.
      */
-    if (fillPtr->units == kPathGradientUnitsBoundingBox) {
-        brush.TranslateTransform(float(bbox->x1), float(bbox->y1));
-        brush.ScaleTransform(float(bbox->x2 - bbox->x1), float(bbox->y2 - bbox->y1));     
+	if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+		x = float(bbox->x1);
+		y = float(bbox->y1);
+		width = float(bbox->x2 - bbox->x1);
+		height = float(bbox->y2 - bbox->y1);
+		p1.X = float(x + tPtr->x1*width);
+		p1.Y = float(y + tPtr->y1*height);
+		p2.X = float(x + tPtr->x2*width);
+		p2.Y = float(y + tPtr->y2*height);
+	} else {
+		p1.X = float(tPtr->x1);
+		p1.Y = float(tPtr->y1);
+		p2.X = float(tPtr->x2);
+		p2.Y = float(tPtr->y2);
     }
-	if (mPtr) {
-	    Matrix m(float(mPtr->a), float(mPtr->b), float(mPtr->c), float(mPtr->d), float(mPtr->tx), float(mPtr->ty));
-		brush.MultiplyTransform(&m);
-    }
-    Color *col = new Color[nstops];
-    REAL *pos = new REAL[nstops];
-	for (i = 0; i < nstops; i++) {
-        stop = stopArrPtr->stops[i];
-        col[i] = MakeGDIPlusColor(stop->color, stop->opacity);
-        pos[i] = REAL(stop->offset);
-    }
-    brush.SetInterpolationColors(col, pos, nstops);
-    mGraphics->FillPath(&brush, mPath);
-    
-    /* 
-     * GDI+ seems to miss a simple way to pad with constant colors.
-     */
-    if (fillPtr->method == kPathGradientMethodPad) {
-        PointF pdiff = p2 - p1;
-        PointF perp(-pdiff.Y, pdiff.X);
-		Gdiplus::Region region(mPath);
-        mGraphics->SetClip(&region);
-        SolidBrush brush1(col1);
-        SolidBrush brush2(col2);
-        width = float(bbox->x2 - bbox->x1);
-        height = float(bbox->y2 - bbox->y1);
-        float side = width + height;
-        float angle = atan2(perp.Y, perp.X) * 180.0/M_PI;
-        // Paint only if needed!?
-        // @@@ I anticipate problems here if any color has opacity unequal to 1!
-        mGraphics->FillPie(&brush1, p1.X-side, p1.Y-side, side, side, angle, 180.0);
-        mGraphics->FillPie(&brush2, p2.X-side, p2.Y-side, side, side, angle+180.0, 180.0);
-    }
+	stop = stopArrPtr->stops[0];
+    Color col1(MakeGDIPlusColor(stop->color, stop->opacity));
+    stop = stopArrPtr->stops[nstops-1];
+    Color col2(MakeGDIPlusColor(stop->color, stop->opacity));
+	if (fillPtr->method == kPathGradientMethodPad) {
+		/* 
+		 * GDI+ seems to miss a simple way to pad with constant colors.
+		 * NB: This trick assumes no -matrix!
+		 */
+		float length = float(hypot(p1.X - p2.X, p1.Y - p2.Y));
+		int singular = 0;
+		if (length < 1e-6) {
+			/* @@@ p1 and p2 essentially coincide.
+		 	 *     Not sure what is the standard fallback here since
+			 *     we get no direction. Pick the x direction and make
+			 *     essentially a two color painting.
+			 */
+			singular = 1;
+		}
+		/* We need to put up two extra points that are outside
+		 * the bounding rectangle so that when used for gradient
+		 * start and stop points it will cover the bbox.
+		 */
+		int npts = nstops + 2;
+		Color *col = new Color[npts];
+		REAL *pos = new REAL[npts];
+
+		/* The bounding box corners. */
+		PointF corner[4];
+		corner[0].X = float(bbox->x1);
+		corner[0].Y = float(bbox->y1);
+		corner[1].X = float(bbox->x2);
+		corner[1].Y = float(bbox->y1);
+		corner[2].X = float(bbox->x2);
+		corner[2].Y = float(bbox->y2);
+		corner[3].X = float(bbox->x1);
+		corner[3].Y = float(bbox->y2);
+
+		/* The normalized transition vector as pn */
+		PointF pn;
+		if (singular) {
+			pn.X = 1;
+			pn.Y = 0;
+		} else {
+			pn = p2 - p1;
+			pn.X /= length;
+			pn.Y /= length;
+		}
+
+		/* To find the start point we need to find the minimum
+		 * projection of the vector corner_i - p1 along pn.
+		 * Only if this is negative we need to extend the start point from p1.
+		 */
+		PointF ptmp;
+		float min = 1e+6, max = -1e6;
+		float dist;
+		for (i = 0; i < 4; i++) {
+			ptmp = corner[i] - p1;
+			dist = ptmp.X*pn.X + ptmp.Y*pn.Y;
+			if (dist < min) {
+				min = dist;
+			}
+		}
+		if (min < 0) {
+			pstart.X = p1.X + min * pn.X;
+			pstart.Y = p1.Y + min * pn.Y;
+		} else {
+			pstart = p1;
+			min = 0;
+		}
+
+		/* Do the same for the end point but use p2 instead of p1 and find max. */
+		for (i = 0; i < 4; i++) {
+			ptmp = corner[i] - p2;
+			dist = ptmp.X*pn.X + ptmp.Y*pn.Y;
+			if (dist > max) {
+				max = dist;
+			}
+		}
+		if (max > 0) {
+			pend.X = p2.X + max * pn.X;
+			pend.Y = p2.Y + max * pn.Y;
+		} else {
+			pend = p2;
+			max = 0;
+		}
+		LinearGradientBrush brush(pstart, pend, col1, col2);
+		col[0] = col1;
+		col[npts-1] = col2;
+		pos[0] = 0.0;
+		pos[npts-1] = 1.0;
+
+		/* Since we now have artificially extended the gradient transition
+		 * we also need to rescale the (relative) stops values using
+		 * this extended transition:
+		 *              |min| + offset * length
+		 * new offset = -----------------------
+		 *              |min| + length + |max|
+		 */
+
+		float den = fabs(min) + length + fabs(max);
+		for (i = 0; i < nstops; i++) {
+			stop = stopArrPtr->stops[i];
+			col[i+1] = MakeGDIPlusColor(stop->color, stop->opacity);
+			pos[i+1] = (fabs(min) + REAL(stop->offset) * length)/den;
+		}
+		if (mPtr) {
+			/* @@@ Not sure in which coord system we should do this. */
+			Matrix m(float(mPtr->a), float(mPtr->b), float(mPtr->c), float(mPtr->d), float(mPtr->tx), float(mPtr->ty));
+			brush.MultiplyTransform(&m);
+		}		
+		brush.SetInterpolationColors(col, pos, npts);
+	    mGraphics->FillPath(&brush, mPath);
+		delete [] col;
+		delete [] pos;
+	} else {
+		LinearGradientBrush brush(p1, p2, col1, col2);
+		if (fillPtr->method == kPathGradientMethodReflect) {
+			brush.SetWrapMode(WrapModeTileFlipXY);
+		}
+		if (mPtr) {
+			Matrix m(float(mPtr->a), float(mPtr->b), float(mPtr->c), float(mPtr->d), float(mPtr->tx), float(mPtr->ty));
+			brush.MultiplyTransform(&m);
+		}
+		Color *col = new Color[nstops];
+		REAL *pos = new REAL[nstops];
+		for (i = 0; i < nstops; i++) {
+			stop = stopArrPtr->stops[i];
+			col[i] = MakeGDIPlusColor(stop->color, stop->opacity);
+			pos[i] = REAL(stop->offset);
+		}
+	    brush.SetInterpolationColors(col, pos, nstops);
+	    mGraphics->FillPath(&brush, mPath);
+		delete [] col;
+		delete [] pos;
+	}
     mGraphics->EndContainer(container);
-	delete [] col;
-	delete [] pos;
 }
 
 void PathC::FillRadialGradient(
@@ -547,49 +598,56 @@ void PathC::FillRadialGradient(
 {
     int					i;
     int					nstops;
-	float				radius;
-	float				x, y, width, height, cx, cy;
+	float				width, height;
     GradientStop 		*stop;
     GradientStopArray 	*stopArrPtr;
     RadialTransition    *tPtr;
+	PointF				center, radius, focal;
 
     stopArrPtr = fillPtr->stopArrPtr;    
     nstops = stopArrPtr->nstops;
     tPtr = fillPtr->radialPtr;
-	radius = float(tPtr->radius);
-	x = float(bbox->x1);
-	y = float(bbox->y1);
+
+     /*
+     * We need to do like this since this is how SVG defines gradient drawing
+     * in case the transition vector is in relative coordinates.
+     */
 	width = float(bbox->x2 - bbox->x1);
 	height = float(bbox->y2 - bbox->y1);
-	cx = x + width/2.0;
-	cy = y + height/2.0;
-
+	if (fillPtr->units == kPathGradientUnitsBoundingBox) {
+		center.X = float(bbox->x1 + width * tPtr->centerX);
+		center.Y = float(bbox->y1 + height * tPtr->centerY);
+		radius.X = float(width * tPtr->radius);
+		radius.Y = float(height * tPtr->radius);
+		focal.X = float(bbox->x1 + width * tPtr->focalX);
+		focal.Y = float(bbox->y1 + height * tPtr->focalY);
+	} else {
+		center.X = float(tPtr->centerX);
+		center.Y = float(tPtr->centerY);
+		radius.X = float(tPtr->radius);
+		radius.Y = float(tPtr->radius);
+		focal.X = float(tPtr->focalX);
+		focal.Y = float(tPtr->focalY);
+	}
     GraphicsContainer container = mGraphics->BeginContainer();
     mGraphics->SetClip(mPath);
-#if 0	
+	// @@@ Extend the transition instead like we did for liner gradients above.
     stop = stopArrPtr->stops[nstops-1];
     SolidBrush solidBrush(MakeGDIPlusColor(stop->color, stop->opacity));
 	mGraphics->FillPath(&solidBrush, mPath);
-#endif
+
     /* This is a special trick to make a radial gradient pattern.
-     * Make a circle and use a PathGradientBrush.
+     * Make an ellipse and use a PathGradientBrush.
      */
     GraphicsPath path;
-    path.AddEllipse(cx-radius*width, cy-radius*height, 2*radius*width, 2*radius*height);
-    //path.AddEllipse(0, 0, 1 ,1);
+    path.AddEllipse(center.X - radius.X, center.Y - radius.Y, 2*radius.X, 2*radius.Y);
     PathGradientBrush brush(&path);
-    if (0 && fillPtr->units == kPathGradientUnitsBoundingBox) {
-        brush.TranslateTransform(float(bbox->x1), float(bbox->y1));
-        brush.ScaleTransform(float(bbox->x2 - bbox->x1), float(bbox->y2 - bbox->y1));     
-    }
-	if (0 && mPtr) {
+	if (mPtr) {
 	    Matrix m(float(mPtr->a), float(mPtr->b), float(mPtr->c), float(mPtr->d), float(mPtr->tx), float(mPtr->ty));
 		brush.MultiplyTransform(&m);
 	}
     stop = stopArrPtr->stops[0];
     brush.SetCenterColor(MakeGDIPlusColor(stop->color, stop->opacity));
-	PointF focal(float(x + tPtr->focalX*width), float(y + tPtr->focalY*height));
-	//PointF focal(float(tPtr->focalX), float(tPtr->focalY));
     brush.SetCenterPoint(focal);
     int count = 1;
     stop = stopArrPtr->stops[nstops-1];
