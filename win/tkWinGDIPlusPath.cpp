@@ -480,17 +480,30 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
 		Color *col = new Color[npts];
 		REAL *pos = new REAL[npts];
 
-		/* The bounding box corners. */
+        /* We do the painting within a rectangle which is normally
+         * the bounding box but if we do padding and have a gradient
+         * transform we pick a "large enough" rectangle.
+         */
 		PointF corner[4];
-		corner[0].X = float(bbox->x1);
-		corner[0].Y = float(bbox->y1);
-		corner[1].X = float(bbox->x2);
-		corner[1].Y = float(bbox->y1);
-		corner[2].X = float(bbox->x2);
-		corner[2].Y = float(bbox->y2);
-		corner[3].X = float(bbox->x1);
-		corner[3].Y = float(bbox->y2);
-
+		if (mPtr) {
+            corner[0].X = 0.0f;
+            corner[0].Y = 0.0f;
+            corner[1].X = 10000.0f;
+            corner[1].Y = 0.0f;
+            corner[2].X = 10000.0f;
+            corner[2].Y = 10000.0f;
+            corner[3].X = 0.0f;
+            corner[3].Y = 10000.0f;
+        } else {
+            corner[0].X = float(bbox->x1);
+            corner[0].Y = float(bbox->y1);
+            corner[1].X = float(bbox->x2);
+            corner[1].Y = float(bbox->y1);
+            corner[2].X = float(bbox->x2);
+            corner[2].Y = float(bbox->y2);
+            corner[3].X = float(bbox->x1);
+            corner[3].Y = float(bbox->y2);
+        }
 		/* The normalized transition vector as pn */
 		PointF pn;
 		if (singular) {
