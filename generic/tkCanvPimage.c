@@ -342,6 +342,8 @@ TranslatePimage(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY
 
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&(pimagePtr->bbox), deltaX, deltaY);
+    pimagePtr->coord[0] += deltaX;
+    pimagePtr->coord[1] += deltaY;
     SetGenericPathHeaderBbox(&(pimagePtr->header), stylePtr->matrixPtr, &(pimagePtr->bbox));
 }
 

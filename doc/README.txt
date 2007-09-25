@@ -152,7 +152,7 @@ if paramters are wrong.
    This displays an image in the canvas anchored nw. If -width or -height is
    nonzero then the image is scaled to this size prior to any affine transform.
 
-   .c create pimage x y ?-width -height?
+   .c create pimage x y ?-image -width -height?
 
  o The ptext item (cairo, quartz, gdi+)
 
@@ -187,7 +187,7 @@ if paramters are wrong.
             Configures the object in the usual tcl way.
 
         ::tkpath::style create ?-key value ...?
-            Creates a linear gradient object and returns its token.
+            Creates a style object and returns its token.
 
         ::tkpath::style delete token
             Deletes the object.
