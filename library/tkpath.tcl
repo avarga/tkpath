@@ -90,16 +90,39 @@ proc ::tkpath::transform {cmd args} {
     return $matrix
 }
 
-proc ::tkpath::mmult {m1 m2} {
-    foreach {a1 b1 c1 d1 tx1 ty1} $m1 { break }
-    foreach {a2 b2 c2 d2 tx2 ty2} $m2 { break }
-    return [list \
-      [expr {$a1*$a2  + $c1*$b2}]         \
-      [expr {$b1*$a2  + $d1*$b2}]         \
-      [expr {$a1*$c2  + $c1*$d2}]         \
-      [expr {$b1*$c2  + $d1*$d2}]         \
-      [expr {$a1*$tx2 + $c1*$ty2 + $tx1}] \
-      [expr {$b1*$tx2 + $d1*$ty2 + $ty1}]]
+proc ::tkpath::mmult {m1 m2} { 
+    seteach {{a1 b1} {c1 d1} {tx1 ty1}} $m1 
+    seteach {{a2 b2} {c2 d2} {tx2 ty2}} $m2 
+    return [list  \
+      [list [expr {$a1*$a2 + $c1*$b2}] [expr {$b1*$a2 + $d1*$b2}]] \
+      [list [expr {$a1*$c2 + $c1*$d2}] [expr {$b1*$c2 + $d1*$d2}]] \
+      [list [expr {$a1*$tx2 + $c1*$ty2 + $tx1}] \
+      [expr {$b1*$tx2 + $d1*$ty2 + $ty1}]]] 
+}
+
+# Function  : seteach 
+# ------------------------------ ------------------------------ ---- 
+# Returns : - 
+# Parameters : 
+# Description : set a list of variables 
+# Written : 01/10/2007, Arndt Roger Schneider 
+#  roger.schneider@addcom.de 
+#
+# Rewritten  : 09/24/2007, Roger -- for tkpath::mmult 
+# License   : Tcl-License 
+# ------------------------------ ------------------------------ ---- 
+
+proc ::tkpath::seteach {variables arglist} { 
+    uplevel [format { 
+	foreach i {%1$s} j {%2$s} { 
+	    set lgi [llength $i]
+	    if {1 < $lgi && [llength $j] == $lgi} { 
+		seteach $i $j 
+	    } else {  
+		set $i $j 
+	    } 
+	} 
+    } $variables $arglist] 
 }
 
 # OUTDATED!
