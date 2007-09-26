@@ -17,7 +17,7 @@
 
 /* Keep patch level release numbers odd and set even only on release. */
 #define TKPATH_VERSION    "0.2"
-#define TKPATH_PATCHLEVEL "0.2.6"
+#define TKPATH_PATCHLEVEL "0.2.8"
 
 extern Tk_ItemType tkPathType;
 extern Tk_ItemType tkPrectType;

@@ -91,6 +91,7 @@ static void		TranslatePpoly(Tk_Canvas canvas,
 PATH_STYLE_CUSTOM_CONFIG_RECORDS
 
 static Tk_ConfigSpec polylineConfigSpecs[] = {
+    PATH_CONFIG_SPEC_STYLE_FILL(PpolyItem, ""),
     PATH_CONFIG_SPEC_STYLE_MATRIX(PpolyItem),
     PATH_CONFIG_SPEC_STYLE_STROKE(PpolyItem, "black"),
     PATH_CONFIG_SPEC_CORE(PpolyItem),
