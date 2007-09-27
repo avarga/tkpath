@@ -112,17 +112,15 @@ proc ::tkpath::mmult {m1 m2} {
 # License   : Tcl-License 
 # ------------------------------ ------------------------------ ---- 
 
-proc ::tkpath::seteach {variables arglist} { 
-    uplevel [format { 
-	foreach i {%1$s} j {%2$s} { 
-	    set lgi [llength $i]
-	    if {1 < $lgi && [llength $j] == $lgi} { 
-		seteach $i $j 
-	    } else {  
-		set $i $j 
-	    } 
+proc ::tkpath::seteach {variables arglist} {
+    foreach i $variables j $arglist { 
+	set lgi [llength $i]
+	if {1 < $lgi && [llength $j] == $lgi} { 
+	    uplevel [list seteach $i $j]
+	} else {  
+	    uplevel [list set $i $j]
 	} 
-    } $variables $arglist] 
+    }
 }
 
 # OUTDATED!
