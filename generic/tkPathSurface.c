@@ -234,7 +234,7 @@ SurfaceCopyObjCmd(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
         Tcl_SetObjResult(interp, Tcl_NewStringObj("didn't find that image", -1));
         return TCL_ERROR;
     }
-    TkPathSurfaceToPhoto(surfacePtr->ctx, photo);
+    TkPathSurfaceToPhoto(interp, surfacePtr->ctx, photo);
     Tcl_SetObjResult(interp, objv[2]);
     return TCL_OK;
 }

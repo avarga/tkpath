@@ -24,7 +24,9 @@
 #	define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
 #endif
 
+#ifndef FloatToFixed
 #define FloatToFixed(a) ((Fixed)((float) (a) * fixed1))
+#endif
 
 extern int gUseAntiAlias;
 extern int gSurfaceCopyPremultiplyAlpha;
@@ -617,7 +619,7 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
 }
 
 void
-TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
+TkPathSurfaceToPhoto(Tcl_Interp *interp, TkPathContext ctx, Tk_PhotoHandle photo)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGContextRef c = context->c;
@@ -648,7 +650,7 @@ TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
     block.offset[1] = 1;
     block.offset[2] = 2;
     block.offset[3] = 3;
-    Tk_PhotoPutBlock(photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
+    Tk_PhotoPutBlock(interp, photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
 }
 
 void		

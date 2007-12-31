@@ -258,7 +258,7 @@ void		TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style,
 void		TkPathTextFree(Tk_PathTextStyle *textStylePtr, void *custom);
 PathRect	TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom);
 void    	TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height);
-void		TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo);
+void		TkPathSurfaceToPhoto(Tcl_Interp *interp, TkPathContext ctx, Tk_PhotoHandle photo);
 
 /*
  * General path drawing using linked list of path atoms.

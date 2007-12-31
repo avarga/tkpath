@@ -344,7 +344,7 @@ TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double h
 }
 
 void
-TkPathSurfaceToPhoto(TkPathContext ctx, Tk_PhotoHandle photo)
+TkPathSurfaceToPhoto(Tcl_Interp *interp, TkPathContext ctx, Tk_PhotoHandle photo)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
 

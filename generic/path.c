@@ -73,12 +73,12 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
 {
         
 #ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.5", 0) == NULL) {
 	    return TCL_ERROR;
     }
 #endif
 #ifdef USE_TK_STUBS
-    if (Tk_InitStubs(interp, "8.1", 0) == NULL) {
+    if (Tk_InitStubs(interp, "8.5", 0) == NULL) {
 		return TCL_ERROR;
     }
 #endif

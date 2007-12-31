@@ -1,0 +1,827 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		49C087920D263C51008B0A1B /* tkIntPath.h in Headers */ = {isa = PBXBuildFile; fileRef = 9AA1ECEA077FF7CC00A80065 /* tkIntPath.h */; };
+		49C087930D263C51008B0A1B /* tkPath.h in Headers */ = {isa = PBXBuildFile; fileRef = 9AF2FEBB079410DB00AB783C /* tkPath.h */; };
+		49C087940D263C51008B0A1B /* tkCanvPathUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A66FCF40978E3400086B7B8 /* tkCanvPathUtil.h */; };
+		49C087950D263C51008B0A1B /* tkPathCopyTk.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A5B17C4097B9322000B33B2 /* tkPathCopyTk.h */; };
+		49C087960D263C51008B0A1B /* tkPathStyle.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A96B2380B898CA800A80002 /* tkPathStyle.h */; };
+		49C087980D263C51008B0A1B /* tkMacOSXPath.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AA1ECE6077FF68100A80065 /* tkMacOSXPath.c */; };
+		49C087990D263C51008B0A1B /* tkCanvPath.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AA1ECE8077FF7BF00A80065 /* tkCanvPath.c */; };
+		49C0879A0D263C51008B0A1B /* tkPathGradients.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A58E5420796814B00FBE143 /* tkPathGradients.c */; };
+		49C0879B0D263C51008B0A1B /* tkPath.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A017ED6079FCCE100A80065 /* tkPath.c */; };
+		49C0879C0D263C51008B0A1B /* path.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A56FF2807A234510091799F /* path.c */; };
+		49C0879D0D263C51008B0A1B /* tkPathStyle.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AA0B6C407DD8C9900A80065 /* tkPathStyle.c */; };
+		49C0879E0D263C51008B0A1B /* tkPathUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5BCDA007E2D8B400B6FA03 /* tkPathUtil.c */; };
+		49C0879F0D263C51008B0A1B /* tkPathCopyTk.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5BCD9E07E2D81600B6FA03 /* tkPathCopyTk.c */; };
+		49C087A00D263C51008B0A1B /* tkCanvPrect.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A66FCF20978D8050086B7B8 /* tkCanvPrect.c */; };
+		49C087A10D263C51008B0A1B /* tkCanvPathUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5B17C7097BA957000B33B2 /* tkCanvPathUtil.c */; };
+		49C087A20D263C51008B0A1B /* tkCanvPline.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A587F03098FA7870094E994 /* tkCanvPline.c */; };
+		49C087A30D263C51008B0A1B /* tkCanvPimage.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A671A8F099DC683007AF773 /* tkCanvPimage.c */; };
+		49C087A40D263C51008B0A1B /* tkCanvEllipse.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6265BF09C474B3009A2B1E /* tkCanvEllipse.c */; };
+		49C087A50D263C51008B0A1B /* tkCanvPpoly.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AB087D80A38001400A80065 /* tkCanvPpoly.c */; };
+		49C087A60D263C51008B0A1B /* tkCanvPtext.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5A2A920B45059700496554 /* tkCanvPtext.c */; };
+		49C087A70D263C51008B0A1B /* tkPathSurface.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AB6AB700B835DCD00A80002 /* tkPathSurface.c */; };
+		49C087A90D263C51008B0A1B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
+		49C087AA0D263C51008B0A1B /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5564883038142E001A4FCC0 /* CoreServices.framework */; };
+		49C087AB0D263C51008B0A1B /* libtclstub8.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A57846A043C3778009A6529 /* libtclstub8.5.a */; };
+		49C087AC0D263C51008B0A1B /* libtkstub8.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A57846C043C37A8009A6529 /* libtkstub8.5.a */; };
+		49C087B70D263C51008B0A1B /* tkIntPath.h in Headers */ = {isa = PBXBuildFile; fileRef = 9AA1ECEA077FF7CC00A80065 /* tkIntPath.h */; };
+		49C087B80D263C51008B0A1B /* tkPath.h in Headers */ = {isa = PBXBuildFile; fileRef = 9AF2FEBB079410DB00AB783C /* tkPath.h */; };
+		49C087B90D263C51008B0A1B /* tkCanvPathUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A66FCF40978E3400086B7B8 /* tkCanvPathUtil.h */; };
+		49C087BA0D263C51008B0A1B /* tkPathCopyTk.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A5B17C4097B9322000B33B2 /* tkPathCopyTk.h */; };
+		49C087BB0D263C51008B0A1B /* tkPathStyle.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A96B2380B898CA800A80002 /* tkPathStyle.h */; };
+		49C087BD0D263C51008B0A1B /* tkCanvPath.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AA1ECE8077FF7BF00A80065 /* tkCanvPath.c */; };
+		49C087BE0D263C51008B0A1B /* tkPathGradients.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A58E5420796814B00FBE143 /* tkPathGradients.c */; };
+		49C087BF0D263C51008B0A1B /* tkPath.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A017ED6079FCCE100A80065 /* tkPath.c */; };
+		49C087C00D263C51008B0A1B /* path.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A56FF2807A234510091799F /* path.c */; };
+		49C087C10D263C51008B0A1B /* tkPathStyle.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AA0B6C407DD8C9900A80065 /* tkPathStyle.c */; };
+		49C087C20D263C51008B0A1B /* tkPathUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5BCDA007E2D8B400B6FA03 /* tkPathUtil.c */; };
+		49C087C30D263C51008B0A1B /* tkPathTkDraw.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AA54B1507F999B200A80065 /* tkPathTkDraw.c */; };
+		49C087C40D263C51008B0A1B /* tkPathCopyTk.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5BCD9E07E2D81600B6FA03 /* tkPathCopyTk.c */; };
+		49C087C50D263C51008B0A1B /* tkCanvPathUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5B17C7097BA957000B33B2 /* tkCanvPathUtil.c */; };
+		49C087C60D263C51008B0A1B /* tkCanvPrect.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A66FCF20978D8050086B7B8 /* tkCanvPrect.c */; };
+		49C087C70D263C51008B0A1B /* tkCanvPline.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A587F03098FA7870094E994 /* tkCanvPline.c */; };
+		49C087C80D263C51008B0A1B /* tkCanvPimage.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A671A8F099DC683007AF773 /* tkCanvPimage.c */; };
+		49C087C90D263C51008B0A1B /* tkCanvEllipse.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6265BF09C474B3009A2B1E /* tkCanvEllipse.c */; };
+		49C087CA0D263C51008B0A1B /* tkCanvPpoly.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AB087D80A38001400A80065 /* tkCanvPpoly.c */; };
+		49C087CB0D263C51008B0A1B /* tkCanvPtext.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A5A2A920B45059700496554 /* tkCanvPtext.c */; };
+		49C087CC0D263C51008B0A1B /* tkPathSurface.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AB6AB700B835DCD00A80002 /* tkPathSurface.c */; };
+		49C087CE0D263C51008B0A1B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
+		49C087CF0D263C51008B0A1B /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5564883038142E001A4FCC0 /* CoreServices.framework */; };
+		49C087D00D263C51008B0A1B /* libtclstub8.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A57846A043C3778009A6529 /* libtclstub8.5.a */; };
+		49C087D10D263C51008B0A1B /* libtkstub8.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A57846C043C37A8009A6529 /* libtkstub8.5.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08FB77AAFE841565C02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		49C087B30D263C51008B0A1B /* tkpath0.2.8.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = tkpath0.2.8.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		49C087D80D263C51008B0A1B /* tkpathtk0.2.4.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = tkpathtk0.2.4.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A017ED6079FCCE100A80065 /* tkPath.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkPath.c; path = ../generic/tkPath.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
+		9A49B81F07A7AA2F00A80065 /* tkUnixCairoPath.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkUnixCairoPath.c; path = ../unix/tkUnixCairoPath.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
+		9A49B82107A7AAD000A80065 /* tkUnixLibartPath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkUnixLibartPath.c; path = ../unix/tkUnixLibartPath.c; sourceTree = SOURCE_ROOT; };
+		9A56FF2807A234510091799F /* path.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = path.c; path = ../generic/path.c; sourceTree = SOURCE_ROOT; };
+		9A578441043C3672009A6529 /* Tcl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tcl.framework; path = /Library/Frameworks/Tcl.framework; sourceTree = "<absolute>"; };
+		9A578465043C369F009A6529 /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = /Library/Frameworks/Tk.framework; sourceTree = "<absolute>"; };
+		9A57846A043C3778009A6529 /* libtclstub8.5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtclstub8.5.a; path = /Library/Frameworks/Tcl.framework/libtclstub8.5.a; sourceTree = "<absolute>"; };
+		9A57846C043C37A8009A6529 /* libtkstub8.5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtkstub8.5.a; path = /Library/Frameworks/Tk.framework/libtkstub8.5.a; sourceTree = "<absolute>"; };
+		9A587F03098FA7870094E994 /* tkCanvPline.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkCanvPline.c; path = ../generic/tkCanvPline.c; sourceTree = SOURCE_ROOT; };
+		9A58E5420796814B00FBE143 /* tkPathGradients.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkPathGradients.c; path = ../generic/tkPathGradients.c; sourceTree = SOURCE_ROOT; };
+		9A5A2A920B45059700496554 /* tkCanvPtext.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = tkCanvPtext.c; path = ../generic/tkCanvPtext.c; sourceTree = SOURCE_ROOT; };
+		9A5B17C4097B9322000B33B2 /* tkPathCopyTk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tkPathCopyTk.h; path = ../generic/tkPathCopyTk.h; sourceTree = SOURCE_ROOT; };
+		9A5B17C7097BA957000B33B2 /* tkCanvPathUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkCanvPathUtil.c; path = ../generic/tkCanvPathUtil.c; sourceTree = SOURCE_ROOT; };
+		9A5BCD9E07E2D81600B6FA03 /* tkPathCopyTk.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = tkPathCopyTk.c; path = ../generic/tkPathCopyTk.c; sourceTree = SOURCE_ROOT; };
+		9A5BCDA007E2D8B400B6FA03 /* tkPathUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkPathUtil.c; path = ../generic/tkPathUtil.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
+		9A6265BF09C474B3009A2B1E /* tkCanvEllipse.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkCanvEllipse.c; path = ../generic/tkCanvEllipse.c; sourceTree = SOURCE_ROOT; };
+		9A66FCF20978D8050086B7B8 /* tkCanvPrect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkCanvPrect.c; path = ../generic/tkCanvPrect.c; sourceTree = SOURCE_ROOT; };
+		9A66FCF40978E3400086B7B8 /* tkCanvPathUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tkCanvPathUtil.h; path = ../generic/tkCanvPathUtil.h; sourceTree = SOURCE_ROOT; };
+		9A671A8F099DC683007AF773 /* tkCanvPimage.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = tkCanvPimage.c; path = ../generic/tkCanvPimage.c; sourceTree = "<group>"; };
+		9A6C4D7407AD01B100A80065 /* tkWinGDIPlusPath.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 2; name = tkWinGDIPlusPath.cpp; path = ../win/tkWinGDIPlusPath.cpp; sourceTree = SOURCE_ROOT; };
+		9A8794BD07801B3900A80065 /* tkWinGDIPath.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 2; name = tkWinGDIPath.c; path = ../win/tkWinGDIPath.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
+		9A96B2380B898CA800A80002 /* tkPathStyle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tkPathStyle.h; path = ../generic/tkPathStyle.h; sourceTree = SOURCE_ROOT; };
+		9AA0B6C407DD8C9900A80065 /* tkPathStyle.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkPathStyle.c; path = ../generic/tkPathStyle.c; sourceTree = SOURCE_ROOT; };
+		9AA1ECE6077FF68100A80065 /* tkMacOSXPath.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; path = tkMacOSXPath.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
+		9AA1ECE8077FF7BF00A80065 /* tkCanvPath.c */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkCanvPath.c; path = ../generic/tkCanvPath.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
+		9AA1ECEA077FF7CC00A80065 /* tkIntPath.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tkIntPath.h; path = ../generic/tkIntPath.h; sourceTree = SOURCE_ROOT; };
+		9AA54B1507F999B200A80065 /* tkPathTkDraw.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkPathTkDraw.c; path = ../generic/tkPathTkDraw.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
+		9AB087D80A38001400A80065 /* tkCanvPpoly.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = tkCanvPpoly.c; path = ../generic/tkCanvPpoly.c; sourceTree = SOURCE_ROOT; };
+		9AB6AB700B835DCD00A80002 /* tkPathSurface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkPathSurface.c; path = ../generic/tkPathSurface.c; sourceTree = SOURCE_ROOT; };
+		9AF2FEBB079410DB00AB783C /* tkPath.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tkPath.h; path = ../generic/tkPath.h; sourceTree = SOURCE_ROOT; };
+		F5564883038142E001A4FCC0 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		49C087A80D263C51008B0A1B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C087A90D263C51008B0A1B /* Carbon.framework in Frameworks */,
+				49C087AA0D263C51008B0A1B /* CoreServices.framework in Frameworks */,
+				49C087AB0D263C51008B0A1B /* libtclstub8.5.a in Frameworks */,
+				49C087AC0D263C51008B0A1B /* libtkstub8.5.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49C087CD0D263C51008B0A1B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C087CE0D263C51008B0A1B /* Carbon.framework in Frameworks */,
+				49C087CF0D263C51008B0A1B /* CoreServices.framework in Frameworks */,
+				49C087D00D263C51008B0A1B /* libtclstub8.5.a in Frameworks */,
+				49C087D10D263C51008B0A1B /* libtkstub8.5.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DDFF38A45A11DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				49C087B30D263C51008B0A1B /* tkpath0.2.8.dylib */,
+				49C087D80D263C51008B0A1B /* tkpathtk0.2.4.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* MatsFramework */ = {
+			isa = PBXGroup;
+			children = (
+				9A8794B5078019DB00A80065 /* Source */,
+				034768DDFF38A45A11DB9C8B /* Products */,
+				089C1665FE841158C02AAC07 /* Resources */,
+				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+			);
+			name = MatsFramework;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77AAFE841565C02AAC07 /* Carbon.framework */,
+				F5564883038142E001A4FCC0 /* CoreServices.framework */,
+				9A578441043C3672009A6529 /* Tcl.framework */,
+				9A57846A043C3778009A6529 /* libtclstub8.5.a */,
+				9A578465043C369F009A6529 /* Tk.framework */,
+				9A57846C043C37A8009A6529 /* libtkstub8.5.a */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C1665FE841158C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77ACFE841707C02AAC07 /* generic */ = {
+			isa = PBXGroup;
+			children = (
+				9A56FF2807A234510091799F /* path.c */,
+				9AF2FEBB079410DB00AB783C /* tkPath.h */,
+				9A017ED6079FCCE100A80065 /* tkPath.c */,
+				9AA1ECEA077FF7CC00A80065 /* tkIntPath.h */,
+				9A66FCF40978E3400086B7B8 /* tkCanvPathUtil.h */,
+				9A5B17C7097BA957000B33B2 /* tkCanvPathUtil.c */,
+				9AA1ECE8077FF7BF00A80065 /* tkCanvPath.c */,
+				9A66FCF20978D8050086B7B8 /* tkCanvPrect.c */,
+				9A6265BF09C474B3009A2B1E /* tkCanvEllipse.c */,
+				9A587F03098FA7870094E994 /* tkCanvPline.c */,
+				9A671A8F099DC683007AF773 /* tkCanvPimage.c */,
+				9AB087D80A38001400A80065 /* tkCanvPpoly.c */,
+				9A5A2A920B45059700496554 /* tkCanvPtext.c */,
+				9A58E5420796814B00FBE143 /* tkPathGradients.c */,
+				9A96B2380B898CA800A80002 /* tkPathStyle.h */,
+				9AA0B6C407DD8C9900A80065 /* tkPathStyle.c */,
+				9AB6AB700B835DCD00A80002 /* tkPathSurface.c */,
+				9A5BCDA007E2D8B400B6FA03 /* tkPathUtil.c */,
+				9AA54B1507F999B200A80065 /* tkPathTkDraw.c */,
+				9A5BCD9E07E2D81600B6FA03 /* tkPathCopyTk.c */,
+				9A5B17C4097B9322000B33B2 /* tkPathCopyTk.h */,
+			);
+			name = generic;
+			sourceTree = "<group>";
+		};
+		9A8794B5078019DB00A80065 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77ACFE841707C02AAC07 /* generic */,
+				9A8794B6078019FB00A80065 /* macosx */,
+				9A8794B707801A0400A80065 /* unix */,
+				9A8794BC07801A5D00A80065 /* windows */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		9A8794B6078019FB00A80065 /* macosx */ = {
+			isa = PBXGroup;
+			children = (
+				9AA1ECE6077FF68100A80065 /* tkMacOSXPath.c */,
+			);
+			name = macosx;
+			sourceTree = "<group>";
+		};
+		9A8794B707801A0400A80065 /* unix */ = {
+			isa = PBXGroup;
+			children = (
+				9A49B81F07A7AA2F00A80065 /* tkUnixCairoPath.c */,
+				9A49B82107A7AAD000A80065 /* tkUnixLibartPath.c */,
+			);
+			name = unix;
+			sourceTree = "<group>";
+		};
+		9A8794BC07801A5D00A80065 /* windows */ = {
+			isa = PBXGroup;
+			children = (
+				9A8794BD07801B3900A80065 /* tkWinGDIPath.c */,
+				9A6C4D7407AD01B100A80065 /* tkWinGDIPlusPath.cpp */,
+			);
+			name = windows;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		49C087910D263C51008B0A1B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C087920D263C51008B0A1B /* tkIntPath.h in Headers */,
+				49C087930D263C51008B0A1B /* tkPath.h in Headers */,
+				49C087940D263C51008B0A1B /* tkCanvPathUtil.h in Headers */,
+				49C087950D263C51008B0A1B /* tkPathCopyTk.h in Headers */,
+				49C087960D263C51008B0A1B /* tkPathStyle.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49C087B60D263C51008B0A1B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C087B70D263C51008B0A1B /* tkIntPath.h in Headers */,
+				49C087B80D263C51008B0A1B /* tkPath.h in Headers */,
+				49C087B90D263C51008B0A1B /* tkCanvPathUtil.h in Headers */,
+				49C087BA0D263C51008B0A1B /* tkPathCopyTk.h in Headers */,
+				49C087BB0D263C51008B0A1B /* tkPathStyle.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		49C0878F0D263C51008B0A1B /* tkpath dylib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49C087AF0D263C51008B0A1B /* Build configuration list for PBXNativeTarget "tkpath dylib" */;
+			buildPhases = (
+				49C087900D263C51008B0A1B /* ShellScript */,
+				49C087910D263C51008B0A1B /* Headers */,
+				49C087970D263C51008B0A1B /* Sources */,
+				49C087A80D263C51008B0A1B /* Frameworks */,
+				49C087AD0D263C51008B0A1B /* Rez */,
+				49C087AE0D263C51008B0A1B /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "tkpath dylib";
+			productInstallPath = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+			productName = "MovableAlerts dylib";
+			productReference = 49C087B30D263C51008B0A1B /* tkpath0.2.8.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		49C087B40D263C51008B0A1B /* tkpath TkDraw dylib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49C087D40D263C51008B0A1B /* Build configuration list for PBXNativeTarget "tkpath TkDraw dylib" */;
+			buildPhases = (
+				49C087B50D263C51008B0A1B /* ShellScript */,
+				49C087B60D263C51008B0A1B /* Headers */,
+				49C087BC0D263C51008B0A1B /* Sources */,
+				49C087CD0D263C51008B0A1B /* Frameworks */,
+				49C087D20D263C51008B0A1B /* Rez */,
+				49C087D30D263C51008B0A1B /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "tkpath TkDraw dylib";
+			productInstallPath = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+			productName = "MovableAlerts dylib";
+			productReference = 49C087D80D263C51008B0A1B /* tkpathtk0.2.4.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 49C087820D263BCC008B0A1B /* Build configuration list for PBXProject "tkpath" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 0867D691FE84028FC02AAC07 /* MatsFramework */;
+			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
+			projectDirPath = "";
+			projectRoot = ..;
+			targets = (
+				49C0878F0D263C51008B0A1B /* tkpath dylib */,
+				49C087B40D263C51008B0A1B /* tkpath TkDraw dylib */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXRezBuildPhase section */
+		49C087AD0D263C51008B0A1B /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49C087D20D263C51008B0A1B /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		49C087900D263C51008B0A1B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}\"\nfi";
+		};
+		49C087AE0D263C51008B0A1B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/install -m 444 -g staff \"${SRCROOT}/pkgIndex.tcl\" \"${TARGET_BUILD_DIR}\"";
+		};
+		49C087B50D263C51008B0A1B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}\"\nfi";
+		};
+		49C087D30D263C51008B0A1B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/install -m 444 -g staff \"${SRCROOT}/pkgIndex.tcl\" \"${TARGET_BUILD_DIR}\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		49C087970D263C51008B0A1B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C087980D263C51008B0A1B /* tkMacOSXPath.c in Sources */,
+				49C087990D263C51008B0A1B /* tkCanvPath.c in Sources */,
+				49C0879A0D263C51008B0A1B /* tkPathGradients.c in Sources */,
+				49C0879B0D263C51008B0A1B /* tkPath.c in Sources */,
+				49C0879C0D263C51008B0A1B /* path.c in Sources */,
+				49C0879D0D263C51008B0A1B /* tkPathStyle.c in Sources */,
+				49C0879E0D263C51008B0A1B /* tkPathUtil.c in Sources */,
+				49C0879F0D263C51008B0A1B /* tkPathCopyTk.c in Sources */,
+				49C087A00D263C51008B0A1B /* tkCanvPrect.c in Sources */,
+				49C087A10D263C51008B0A1B /* tkCanvPathUtil.c in Sources */,
+				49C087A20D263C51008B0A1B /* tkCanvPline.c in Sources */,
+				49C087A30D263C51008B0A1B /* tkCanvPimage.c in Sources */,
+				49C087A40D263C51008B0A1B /* tkCanvEllipse.c in Sources */,
+				49C087A50D263C51008B0A1B /* tkCanvPpoly.c in Sources */,
+				49C087A60D263C51008B0A1B /* tkCanvPtext.c in Sources */,
+				49C087A70D263C51008B0A1B /* tkPathSurface.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49C087BC0D263C51008B0A1B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C087BD0D263C51008B0A1B /* tkCanvPath.c in Sources */,
+				49C087BE0D263C51008B0A1B /* tkPathGradients.c in Sources */,
+				49C087BF0D263C51008B0A1B /* tkPath.c in Sources */,
+				49C087C00D263C51008B0A1B /* path.c in Sources */,
+				49C087C10D263C51008B0A1B /* tkPathStyle.c in Sources */,
+				49C087C20D263C51008B0A1B /* tkPathUtil.c in Sources */,
+				49C087C30D263C51008B0A1B /* tkPathTkDraw.c in Sources */,
+				49C087C40D263C51008B0A1B /* tkPathCopyTk.c in Sources */,
+				49C087C50D263C51008B0A1B /* tkCanvPathUtil.c in Sources */,
+				49C087C60D263C51008B0A1B /* tkCanvPrect.c in Sources */,
+				49C087C70D263C51008B0A1B /* tkCanvPline.c in Sources */,
+				49C087C80D263C51008B0A1B /* tkCanvPimage.c in Sources */,
+				49C087C90D263C51008B0A1B /* tkCanvEllipse.c in Sources */,
+				49C087CA0D263C51008B0A1B /* tkCanvPpoly.c in Sources */,
+				49C087CB0D263C51008B0A1B /* tkCanvPtext.c in Sources */,
+				49C087CC0D263C51008B0A1B /* tkPathSurface.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		49C087790D263BCB008B0A1B /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Development;
+		};
+		49C0877A0D263BCB008B0A1B /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Deployment;
+		};
+		49C0877B0D263BCB008B0A1B /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Default;
+		};
+		49C087B00D263C51008B0A1B /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 0.2.8;
+				DYLIB_CURRENT_VERSION = 0.2.8;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_TCL_STUBS,
+					"TARGET_OS_MAC=1",
+					"TARGET_API_MAC_CARBON=1",
+					USE_TK_STUBS,
+					MAC_OSX_TK,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
+					../../tk/generic,
+				);
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/PrivateHeaders\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/PrivateHeaders\\\"";
+				INSTALL_PATH = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers/X11\\\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tkpath0.2.8;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		49C087B10D263C51008B0A1B /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DYLIB_COMPATIBILITY_VERSION = 0.2.8;
+				DYLIB_CURRENT_VERSION = 0.2.8;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_TCL_STUBS,
+					"TARGET_OS_MAC=1",
+					"TARGET_API_MAC_CARBON=1",
+					USE_TK_STUBS,
+					MAC_OSX_TK,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
+					../../tk/generic,
+				);
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/PrivateHeaders\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/PrivateHeaders\\\"";
+				INSTALL_PATH = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers/X11\\\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tkpath0.2.8;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		49C087B20D263C51008B0A1B /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 0.2.8;
+				DYLIB_CURRENT_VERSION = 0.2.8;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_TCL_STUBS,
+					"TARGET_OS_MAC=1",
+					"TARGET_API_MAC_CARBON=1",
+					USE_TK_STUBS,
+					MAC_OSX_TK,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
+					../../tk/generic,
+				);
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/PrivateHeaders\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/PrivateHeaders\\\"";
+				INSTALL_PATH = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers/X11\\\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tkpath0.2.8;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Default;
+		};
+		49C087D50D263C51008B0A1B /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = "/usr/bin/gcc-3.3";
+				COPY_PHASE_STRIP = NO;
+				CPLUSPLUS = "/usr/bin/g++-3.3";
+				DYLIB_COMPATIBILITY_VERSION = 3.1;
+				DYLIB_CURRENT_VERSION = 3.1;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_TCL_STUBS,
+					"TARGET_OS_MAC=1",
+					"TARGET_API_MAC_CARBON=1",
+					USE_TK_STUBS,
+					MAC_OSX_TK,
+					USE_COMPOSITELESS_PHOTO_PUT_BLOCK,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
+					/Users/matben/C/cvs/tk/generic,
+				);
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/PrivateHeaders\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/PrivateHeaders\\\"";
+				INSTALL_PATH = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers/X11\\\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tkpathtk0.2.4;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		49C087D60D263C51008B0A1B /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = "/usr/bin/gcc-3.3";
+				COPY_PHASE_STRIP = YES;
+				CPLUSPLUS = "/usr/bin/g++-3.3";
+				DYLIB_COMPATIBILITY_VERSION = 3.1;
+				DYLIB_CURRENT_VERSION = 3.1;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_TCL_STUBS,
+					"TARGET_OS_MAC=1",
+					"TARGET_API_MAC_CARBON=1",
+					USE_TK_STUBS,
+					MAC_OSX_TK,
+					USE_COMPOSITELESS_PHOTO_PUT_BLOCK,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
+					/Users/matben/C/cvs/tk/generic,
+				);
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/PrivateHeaders\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/PrivateHeaders\\\"";
+				INSTALL_PATH = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers/X11\\\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tkpathtk0.2.4;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		49C087D70D263C51008B0A1B /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = "/usr/bin/gcc-3.3";
+				CPLUSPLUS = "/usr/bin/g++-3.3";
+				DYLIB_COMPATIBILITY_VERSION = 3.1;
+				DYLIB_CURRENT_VERSION = 3.1;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_TCL_STUBS,
+					"TARGET_OS_MAC=1",
+					"TARGET_API_MAC_CARBON=1",
+					USE_TK_STUBS,
+					MAC_OSX_TK,
+					USE_COMPOSITELESS_PHOTO_PUT_BLOCK,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
+					/Users/matben/C/cvs/tk/generic,
+				);
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework/PrivateHeaders\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers\\\"";
+				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/PrivateHeaders\\\"";
+				INSTALL_PATH = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = (
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tcl.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework\\\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\\\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Headers/X11\\\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = tkpathtk0.2.4;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Default;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		49C087820D263BCC008B0A1B /* Build configuration list for PBXProject "tkpath" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49C087790D263BCB008B0A1B /* Development */,
+				49C0877A0D263BCB008B0A1B /* Deployment */,
+				49C0877B0D263BCB008B0A1B /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		49C087AF0D263C51008B0A1B /* Build configuration list for PBXNativeTarget "tkpath dylib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49C087B00D263C51008B0A1B /* Development */,
+				49C087B10D263C51008B0A1B /* Deployment */,
+				49C087B20D263C51008B0A1B /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		49C087D40D263C51008B0A1B /* Build configuration list for PBXNativeTarget "tkpath TkDraw dylib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49C087D50D263C51008B0A1B /* Development */,
+				49C087D60D263C51008B0A1B /* Deployment */,
+				49C087D70D263C51008B0A1B /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}
