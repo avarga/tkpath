@@ -10,19 +10,12 @@
  */
 
 #include "tkMacOSXInt.h"
-#include "tkPath.h"
 #include "tkIntPath.h"
 
-
-#ifdef WORDS_BIGENDIAN
-#	define BlueFloatFromXColorPtr(xc)   (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
-#	define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
-#	define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
-#else
-#	define BlueFloatFromXColorPtr(xc)   (float) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
-#	define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
-#	define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
-#endif
+/* Seems to work for both Endians. */
+#define BlueFloatFromXColorPtr(xc)   (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
+#define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
+#define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
 #ifndef FloatToFixed
 #define FloatToFixed(a) ((Fixed)((float) (a) * fixed1))

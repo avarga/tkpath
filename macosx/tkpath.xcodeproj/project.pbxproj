@@ -266,7 +266,6 @@
 				49C087970D263C51008B0A1B /* Sources */,
 				49C087A80D263C51008B0A1B /* Frameworks */,
 				49C087AD0D263C51008B0A1B /* Rez */,
-				49C087AE0D263C51008B0A1B /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -287,7 +286,6 @@
 				49C087BC0D263C51008B0A1B /* Sources */,
 				49C087CD0D263C51008B0A1B /* Frameworks */,
 				49C087D20D263C51008B0A1B /* Rez */,
-				49C087D30D263C51008B0A1B /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -345,15 +343,6 @@
 			shellPath = /bin/sh;
 			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}\"\nfi";
 		};
-		49C087AE0D263C51008B0A1B /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/bin/install -m 444 -g staff \"${SRCROOT}/pkgIndex.tcl\" \"${TARGET_BUILD_DIR}\"";
-		};
 		49C087B50D263C51008B0A1B /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 8;
@@ -362,15 +351,6 @@
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
 			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}\"\nfi";
-		};
-		49C087D30D263C51008B0A1B /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/bin/install -m 444 -g staff \"${SRCROOT}/pkgIndex.tcl\" \"${TARGET_BUILD_DIR}\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
