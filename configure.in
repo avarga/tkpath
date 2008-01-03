@@ -18,7 +18,7 @@ dnl	to configure the system for the local environment.
 # so you can encode the package version directly into the source files.
 #-----------------------------------------------------------------------
 
-AC_INIT([tkpath], [0.2.6])
+AC_INIT([tkpath], [0.2.8])
 
 #--------------------------------------------------------------------
 # Call TEA_INIT as the first TEA_ macro to set up initial vars.
@@ -111,10 +111,16 @@ if test "${TEA_PLATFORM}" = "windows" ; then
     #TEA_ADD_INCLUDES([-I\"$(${CYGPATH} ${srcdir}/win)\"])
 else
     CLEANFILES="pkgIndex.tcl"
-    TEA_ADD_SOURCES([unix/tkUnixCairoPath.c])
-    TEA_ADD_INCLUDES([`freetype-config --cflags`])
-    TEA_ADD_INCLUDES([-I/usr/include/cairo])
-    TEA_ADD_LIBS([-lcairo])
+    if test "${TEA_WINDOWINGSYSTEM}" = "aqua" ; then
+	TEA_ADD_SOURCES([macosx/tkMacOSXPath.c])
+	TEA_ADD_LIBS([-framework Carbon])
+	TEA_ADD_LIBS([-framework CoreServices])
+    else
+	TEA_ADD_SOURCES([unix/tkUnixCairoPath.c])
+	TEA_ADD_INCLUDES([`freetype-config --cflags`])
+	TEA_ADD_INCLUDES([-I/usr/include/cairo])
+	TEA_ADD_LIBS([-lcairo])
+    fi
 fi
 AC_SUBST(CLEANFILES)
 

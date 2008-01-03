@@ -712,6 +712,8 @@ GetMiterBbox(PathAtom *atomPtr, double width, double miterLimit)
     npts = 0;
     current[0] = 0.0;
     current[1] = 0.0;
+	second[0] = 0.0;
+    second[1] = 0.0;
     
     /* Find sin(thetaLimit) which is needed to get miter points:
      * miterLimit = 1/sin(theta/2) =approx 2/theta
@@ -2479,7 +2481,7 @@ PathColorPrintProc(
     result = "";
     if (colorPtr != NULL) {
         if (colorPtr->color != NULL) {
-            // haven't the faintest why I get a warning here???
+            // not sure how to handle const here.
             result = Tk_NameOfColor(colorPtr->color);
         } else if (colorPtr->gradientName != NULL) {
             result = colorPtr->gradientName;
