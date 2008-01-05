@@ -25,7 +25,7 @@ typedef struct PimageItem  {
     Tk_Item header;			/* Generic stuff that's the same for all
                              * types.  MUST BE FIRST IN STRUCTURE. */
     Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_PathStyle style;		/* Contains most drawing info. */
+    Tk_PathStyle style;		/* Contains most drawing info. @@@ Only few (two) elements used! */
     char *styleName;		/* Name of any inherited style object. */
     double coord[2];		/* nw coord. */
     char *imageString;		/* String describing -image option (malloc-ed).
@@ -81,6 +81,8 @@ PATH_STYLE_CUSTOM_CONFIG_MATRIX
 PATH_STYLE_CUSTOM_CONFIG_STYLE
 
 static Tk_ConfigSpec configSpecs[] = {
+    {TK_CONFIG_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,
+        "1.0", Tk_Offset(PimageItem, style.fillOpacity), 0},
     {TK_CONFIG_DOUBLE, "-height", (char *) NULL, (char *) NULL,
             "0", Tk_Offset(PimageItem, height), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_STRING, "-image", (char *) NULL, (char *) NULL,
@@ -139,7 +141,6 @@ CreatePimage(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
      * this procedure.
      */
      
-    // This seems to be unnecessary???
     TkPathCreateStyle(&(pimagePtr->style));
     pimagePtr->canvas = canvas;
     pimagePtr->styleName = NULL;

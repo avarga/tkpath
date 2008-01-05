@@ -487,6 +487,10 @@
 		49C087B10D263C51008B0A1B /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = (
+					i386,
+					ppc,
+				);
 				COPY_PHASE_STRIP = YES;
 				DYLIB_COMPATIBILITY_VERSION = 0.2.8;
 				DYLIB_CURRENT_VERSION = 0.2.8;
@@ -600,11 +604,9 @@
 		49C087D50D263C51008B0A1B /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CC = "/usr/bin/gcc-3.3";
 				COPY_PHASE_STRIP = NO;
-				CPLUSPLUS = "/usr/bin/g++-3.3";
-				DYLIB_COMPATIBILITY_VERSION = 3.1;
-				DYLIB_CURRENT_VERSION = 3.1;
+				DYLIB_COMPATIBILITY_VERSION = 0.2.8;
+				DYLIB_CURRENT_VERSION = 0.2.8;
 				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -661,11 +663,9 @@
 		49C087D60D263C51008B0A1B /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CC = "/usr/bin/gcc-3.3";
 				COPY_PHASE_STRIP = YES;
-				CPLUSPLUS = "/usr/bin/g++-3.3";
-				DYLIB_COMPATIBILITY_VERSION = 3.1;
-				DYLIB_CURRENT_VERSION = 3.1;
+				DYLIB_COMPATIBILITY_VERSION = 0.2.8;
+				DYLIB_CURRENT_VERSION = 0.2.8;
 				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -721,10 +721,8 @@
 		49C087D70D263C51008B0A1B /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CC = "/usr/bin/gcc-3.3";
-				CPLUSPLUS = "/usr/bin/g++-3.3";
-				DYLIB_COMPATIBILITY_VERSION = 3.1;
-				DYLIB_CURRENT_VERSION = 3.1;
+				DYLIB_COMPATIBILITY_VERSION = 0.2.8;
+				DYLIB_CURRENT_VERSION = 0.2.8;
 				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = 0;

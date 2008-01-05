@@ -18,6 +18,7 @@
 /* Keep patch level release numbers odd and set even only on release. */
 #define TKPATH_VERSION    "0.2"
 #define TKPATH_PATCHLEVEL "0.2.8"
+#define TKPATH_REQUIRE    "8.5"
 
 extern Tk_ItemType tkPathType;
 extern Tk_ItemType tkPrectType;
@@ -72,16 +73,18 @@ extern int	SurfaceInit(Tcl_Interp *interp);
 int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
 {
         
-#ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, "8.5", 0) == NULL) {
-	    return TCL_ERROR;
-    }
-#endif
-#ifdef USE_TK_STUBS
-    if (Tk_InitStubs(interp, "8.5", 0) == NULL) {
+	if (Tcl_InitStubs(interp, TKPATH_REQUIRE, 0) == NULL) {
 		return TCL_ERROR;
-    }
-#endif
+	}
+	if (Tcl_PkgRequire(interp, "Tcl", TKPATH_REQUIRE, 0) == NULL) {
+		return TCL_ERROR;
+	}
+	if (Tk_InitStubs(interp, TKPATH_REQUIRE, 0) == NULL) {
+		return TCL_ERROR;
+	}
+	if (Tcl_PkgRequire(interp, "Tk", TKPATH_REQUIRE, 0) == NULL) {
+		return TCL_ERROR;
+	}
 
     gInterp = interp;
 	
