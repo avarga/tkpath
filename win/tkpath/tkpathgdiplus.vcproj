@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\generic;..\..\..\tcl8.4.9\win;..\..\..\tcl8.4.9\generic;..\..\..\tk8.4.9\generic;..\..\..\tk8.4.9\win;..\..\..\tk8.4.9\xlib"
+				AdditionalIncludeDirectories="..\..\generic;..\..\..\tcl\win;..\..\..\tcl\generic;..\..\..\tk\generic;..\..\..\tk\win;..\..\..\tk\xlib"
 				PreprocessorDefinitions="USE_TCL_STUBS;USE_TK_STUBS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -33,10 +33,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tclstub84.lib tkstub84.lib gdiplus.lib"
-				OutputFile="$(OutDir)/tkpathgdiplus026.dll"
+				AdditionalDependencies="tclstub85.lib tkstub85.lib gdiplus.lib"
+				OutputFile="$(OutDir)/tkpathgdiplus028.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="C:\Tcl\lib"
+				AdditionalLibraryDirectories="C:\Tcl8.5\lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/tkpath.pdb"
 				SubSystem="2"
@@ -71,7 +71,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\generic;..\..\..\tcl8.4.9\win;..\..\..\tcl8.4.9\generic;..\..\..\tk8.4.9\generic;..\..\..\tk8.4.9\win;..\..\..\tk8.4.9\xlib"
+				AdditionalIncludeDirectories="..\..\generic;..\..\..\tcl\win;..\..\..\tcl\generic;..\..\..\tk\generic;..\..\..\tk\win;..\..\..\tk\xlib"
 				PreprocessorDefinitions="USE_TCL_STUBS;USE_TK_STUBS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -82,10 +82,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tclstub84.lib tkstub84.lib gdiplus.lib"
-				OutputFile="$(OutDir)/tkpathgdiplus026.dll"
+				AdditionalDependencies="tclstub85.lib tkstub85.lib gdiplus.lib"
+				OutputFile="$(OutDir)/tkpathgdiplus028.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="C:\Tcl\lib"
+				AdditionalLibraryDirectories="C:\Tcl8.5\lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"

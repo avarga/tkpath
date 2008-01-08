@@ -73,15 +73,19 @@ extern int	SurfaceInit(Tcl_Interp *interp);
 int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
 {
         
+#if defined(USE_TCL_STUBS)
 	if (Tcl_InitStubs(interp, TKPATH_REQUIRE, 0) == NULL) {
 		return TCL_ERROR;
 	}
+#endif
 	if (Tcl_PkgRequire(interp, "Tcl", TKPATH_REQUIRE, 0) == NULL) {
 		return TCL_ERROR;
 	}
+#if defined(USE_TK_STUBS)
 	if (Tk_InitStubs(interp, TKPATH_REQUIRE, 0) == NULL) {
 		return TCL_ERROR;
 	}
+#endif
 	if (Tcl_PkgRequire(interp, "Tk", TKPATH_REQUIRE, 0) == NULL) {
 		return TCL_ERROR;
 	}

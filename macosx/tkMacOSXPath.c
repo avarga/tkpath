@@ -47,21 +47,27 @@ typedef struct PathATSUIRecord {
 
 void
 PathSetUpCGContext(    
-        CGrafPtr destPort,
+        Drawable d,
         CGContextRef *contextPtr)
 {
     CGContextRef outContext;
-    OSStatus err;
+    CGrafPtr port;
     Rect boundsRect;
     CGAffineTransform transform;
 
-    err = QDBeginCGContext(destPort, contextPtr);
+    port = TkMacOSXGetDrawablePort(d);
+#ifdef TKPATH_AQUA_USE_CACHED_CONTEXT
+    // Seems that the CG context is cached in MacDrawable but don't know how it works!
+    MacDrawable *macDraw = ((MacDrawable*)d);
+    outContext = macDraw->context;
+#else
+    OSStatus err;
+    err = QDBeginCGContext(port, contextPtr);
     outContext = *contextPtr;
+#endif
     
-    CGContextSaveGState(outContext);
-    
-    GetPortBounds(destPort, &boundsRect);
-    
+    CGContextSaveGState(outContext);    
+    GetPortBounds(port, &boundsRect);
     CGContextResetCTM(outContext);
     transform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0, 
             (float)(boundsRect.bottom - boundsRect.top));
@@ -274,13 +280,11 @@ TkPathContext
 TkPathInit(Tk_Window tkwin, Drawable d)
 {
     CGContextRef cgContext;
-    CGrafPtr port;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
     
-    port = TkMacOSXGetDrawablePort(d);
-    PathSetUpCGContext(port, &cgContext);
+    PathSetUpCGContext(d, &cgContext);
     context->c = cgContext;
-    context->port = port;
+    context->port = TkMacOSXGetDrawablePort(d);
     context->data = NULL;
     return (TkPathContext) context;
 }
@@ -709,7 +713,11 @@ void
 TkPathFree(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+#ifdef TKPATH_AQUA_USE_DRAWABEL_CONTEXT
+
+#else
     PathReleaseCGContext(context->port, &(context->c));
+#endif
     if (context->data) {
         ckfree(context->data);
     }

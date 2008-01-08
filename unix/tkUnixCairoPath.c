@@ -454,7 +454,7 @@ TkPathSurfaceToPhoto(Tcl_Interp *interp, TkPathContext ctx, Tk_PhotoHandle photo
     block.offset[1] = 1;
     block.offset[2] = 2;
     block.offset[3] = 3;
-    Tk_PhotoPutBlock(photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
+    Tk_PhotoPutBlock(interp, photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
 }
 
 void TkPathClipToPath(TkPathContext ctx, int fillRule)
