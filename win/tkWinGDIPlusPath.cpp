@@ -8,6 +8,11 @@
  * $Id$
  */
 
+/* This should go into configure.in but don't know how. */
+#ifdef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#undef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#endif
+
 #include <tkWinInt.h>
 #include "tkPath.h"
 #include "tkIntPath.h"

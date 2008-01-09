@@ -9,11 +9,15 @@
  *
  * $Id$
  */
+ 
+/* This should go into configure.in but don't know how. */
+#ifdef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#undef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#endif
 
 #include <cairo.h>
 #include <cairo-xlib.h>
 #include <tkUnixInt.h>
-#include "tkPath.h"
 #include "tkIntPath.h"
 
 #define BlueDoubleFromXColorPtr(xc)   (double) (((xc)->pixel & 0xFF)) / 255.0
