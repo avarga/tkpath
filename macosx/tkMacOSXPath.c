@@ -9,6 +9,11 @@
  *
  */
 
+/* This should go into configure.in but don't know how. */
+#ifdef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#undef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#endif
+
 #include "tkMacOSXInt.h"
 #include "tkIntPath.h"
 
@@ -647,6 +652,7 @@ TkPathSurfaceToPhoto(Tcl_Interp *interp, TkPathContext ctx, Tk_PhotoHandle photo
     block.offset[1] = 1;
     block.offset[2] = 2;
     block.offset[3] = 3;
+    // Should change this to check for errors...
     Tk_PhotoPutBlock(interp, photo, &block, 0, 0, width, height, TK_PHOTO_COMPOSITE_OVERLAY);
 }
 
