@@ -2,12 +2,13 @@ package require tkpath 0.2.8
 if {[tk windowingsystem] ne "aqua"} {
     return
 }
+set transparent 1
 
 set t .c_isexy1
 destroy $t
 toplevel $t
 set w $t.c
-if {1} {
+if {$transparent && $tcl_version >= 8.5} {
     wm attributes $t -transparent 1
     canvas $w -width 400 -height 400 -bg systemTransparent -highlightthickness 0
 } else {
@@ -101,13 +102,13 @@ proc drawbutton {win grad1 grad2 tag {type plain}} {
     $win move $id1 0.5 0.5
     $win move $id2 0.5 0.5
     
-#     $win bind $id2 <ButtonPress-1>   [list $win itemconfig $id2 -fill $grad2]
-#     $win bind $id2 <ButtonRelease-1> [list $win itemconfig $id2 -fill $grad1]
+    $win bind $id2 <ButtonPress-1>   [list $win itemconfig $id2 -fill $grad2]
+    $win bind $id2 <ButtonRelease-1> [list $win itemconfig $id2 -fill $grad1]
 }
 
 proc drawhammer {w tag} {
     set path "M 0 -3 H 2 L 5 -2 V 0 H 1 V 8 H -1 V 0 H -5 V -2 L -2 -3 z"
-    return id [$w create path $path -stroke "" -fill gray50 -tags $tag]
+    return [$w create path $path -stroke "" -fill gray50 -tags $tag]
 }
 
 drawcolumn $w c1
@@ -182,10 +183,4 @@ $w move b4c [expr {130+0*26}] 10
 $w move b5c [expr {130+1*26}] 10
 $w move b6c [expr {130+2*26}] 10
 $w move b7c [expr {130+3*26}] 10
-
-lassign [$w bbox all] x y wb hb
-
-
-
-
 
