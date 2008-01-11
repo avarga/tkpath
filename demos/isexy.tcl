@@ -1,14 +1,12 @@
 package require tkpath 0.2.8
-if {[tk windowingsystem] ne "aqua"} {
-    return
-}
+
 set transparent 1
 
 set t .c_isexy1
 destroy $t
 toplevel $t
 set w $t.c
-if {$transparent && $tcl_version >= 8.5} {
+if {$transparent && $tcl_version >= 8.5 && [tk windowingsystem] eq "aqua"} {
     wm attributes $t -transparent 1
     canvas $w -width 400 -height 400 -bg systemTransparent -highlightthickness 0
 } else {
