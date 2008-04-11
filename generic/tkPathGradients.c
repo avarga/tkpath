@@ -543,22 +543,50 @@ PathPaintGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fil
 void
 PathGradientInit(Tcl_Interp* interp) 
 {
-    gGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
-    gLinearGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
-    gRadialGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
-    Tcl_InitHashTable(gGradientHashPtr, TCL_STRING_KEYS);
-    Tcl_InitHashTable(gLinearGradientHashPtr, TCL_STRING_KEYS);
-    Tcl_InitHashTable(gRadialGradientHashPtr, TCL_STRING_KEYS);
+    /* 
+     fixme roger: 04/07/2008
+
+     Don't recreate the Gradient Tables for
+     slave interps -- otherwise will void
+     existing gradients in the main interp...
+
+     THERE IS NO FREE FOR THESE HASH TABLES...
+    */
+    
+    if (NULL == gGradientHashPtr) {
+	gGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
+	Tcl_InitHashTable(gGradientHashPtr, TCL_STRING_KEYS);
+    }
+    if (NULL == gLinearGradientHashPtr) {
+	gLinearGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
+	Tcl_InitHashTable(gLinearGradientHashPtr, TCL_STRING_KEYS);
+    }
+    if (NULL == gRadialGradientHashPtr) {
+	gRadialGradientHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
+	Tcl_InitHashTable(gRadialGradientHashPtr, TCL_STRING_KEYS);
+    }
     
     /*
      * The option table must only be made once and not for each instance.
      */
-    gLinearGradientOptionTable = Tk_CreateOptionTable(interp, 
-            linGradientStyleOptionSpecs);
-    gRadialGradientOptionTable = Tk_CreateOptionTable(interp, 
-            radGradientStyleOptionSpecs);
 
-    Tcl_CreateObjCommand(interp, "::tkpath::gradient",
+    if (NULL == gLinearGradientOptionTable) {
+	gLinearGradientOptionTable = Tk_CreateOptionTable(interp, 
+		linGradientStyleOptionSpecs);
+    }
+    if (NULL == gRadialGradientOptionTable ) {
+	gRadialGradientOptionTable = Tk_CreateOptionTable(interp, 
+		radGradientStyleOptionSpecs);
+    }
+    
+    /* 
+       fixme roger 04/07 ... above,
+       
+       Tables have to be restructured to be accessed via clientData
+       for each interp... that will close this issue.
+     */
+     
+    Tcl_CreateObjCommand(interp, "::tkp::gradient",
             GradientObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 }
 
