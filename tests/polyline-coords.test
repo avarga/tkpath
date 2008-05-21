@@ -1,5 +1,5 @@
 package require tkpath; # 0.2.4 cairo & aqua 
-pack [canvas .c] 
+pack [tkp::canvas .c] 
 
 if {[lsearch [namespace children] ::tcltest] == -1} { 
     package require tcltest 
