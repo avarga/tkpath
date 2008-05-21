@@ -1,11 +1,9 @@
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_lines
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400 -bg white]
-
-set ::tkpath::antialias 1
+pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
 $w create pline 20  20 180 20
 $w create pline 200 20 260 20 -stroke blue
@@ -34,7 +32,7 @@ $w create ppolygon 75 237  89 280  134 280  98 307  111 350  75 325  38 350  \
 $w create ppolygon 240 250  283 275  283 325  240 350  196 325  196 275 \
   -stroke "#a19de2" -strokewidth 6 -fill "#d6d6ff"
 
-if {![tkpath::pixelalign]} {
+if {![tkp::pixelalign]} {
     $w move all 0.5 0.5
 }
 

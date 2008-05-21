@@ -1,11 +1,9 @@
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_hittest
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400 -bg white]
-
-set ::tkpath::antialias 1
+pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
 set id [$w create path "M 20 20 L 120 20 v 30 h -20 z"]
 $w bind $id <Button-1> [list puts "hit $id"]
@@ -27,7 +25,4 @@ $w bind $id <Button-1> [list puts "hit $id (blue with evenodd rule)"]
 set id [$w create path "M 220 50 v 100" -strokewidth 36 -strokelinecap round]
 $w bind $id <Button-1> [list puts "hit $id (fat line with rounded caps)"]
 
-if {![tkpath::pixelalign]} {
-    $w move all 0.5 0.5
-}
 

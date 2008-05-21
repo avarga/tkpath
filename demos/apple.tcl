@@ -1,13 +1,11 @@
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_apple
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400 -bg white]
+pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
-set ::tkpath::antialias 1
-
-set grad [tkpath::gradient create linear -stops \
+set grad [$w gradient create linear -stops \
   {{0.0 "#00bb00"} {0.35 "#00bb00"} {0.35 "#ffff00"} {0.50 "#ffff00"} \
   {0.50 "#ff6600"} {0.65 "#ff6600"} {0.65 "#dd0000"} {0.8 "#dd0000"} \
   {0.8 "#3366cc"} {1.0 "#3366cc"}} \

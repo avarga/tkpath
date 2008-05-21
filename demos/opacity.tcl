@@ -1,11 +1,10 @@
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_opacity
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400 -bg white]
+pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
-set ::tkpath::antialias 1
 
 namespace eval ::opacity {
 
@@ -24,7 +23,7 @@ namespace eval ::opacity {
     $w move all 200 [expr 200-$r]
     
     variable time 0
-    variable speed 0.1
+    variable speed 0.06
     
     proc step {} {
 	variable w 
@@ -53,7 +52,7 @@ namespace eval ::opacity {
 	$w itemconfig blue -matrix $m
 	
 	incr time
-	after 100 opacity::step	
+	after 40 opacity::step	
     }
     
     step

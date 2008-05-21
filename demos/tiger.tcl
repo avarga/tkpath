@@ -2,14 +2,13 @@
 # 
 # Note that the drawing is presumably copyrighted by someone.
 
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_tiger
 toplevel $t
 set w $t.c
-pack [canvas $w -width 600 -height 600 -bg white]
+pack [tkp::canvas $w -width 600 -height 600 -bg white]
 
-set ::tkpath::antialias 1
 
 $w create path {M -122.304 84.285 C -122.304 84.285  -122.203 86.179  -123.027 86.16 C -123.851 86.141  -140.305 38.066  -160.833 40.309 C -160.833 40.309  -143.05 32.956  -122.304 84.285 z} -tags _tmp_transform -fill #ffffff -stroke #000000
 $w create path {M -118.774 81.262 C -118.774 81.262  -119.323 83.078  -120.092 82.779 C -120.86 82.481  -119.977 31.675  -140.043 26.801 C -140.043 26.801  -120.82 25.937  -118.774 81.262 z} -tags _tmp_transform -fill #ffffff -stroke #000000

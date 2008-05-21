@@ -1,11 +1,9 @@
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_text
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400 -bg "#c6ceef" -highlightthickness 0]
-
-set ::tkpath::antialias 1
+pack [tkp::canvas $w -width 400 -height 400 -bg "#c6ceef" -highlightthickness 0]
 
 $w create ptext 200 360 -text X -fontsize 400 -fill "" \
   -stroke gray -strokewidth 2 -textanchor middle

@@ -1,12 +1,10 @@
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_randlines
 toplevel $t
 set w $t.c
 set size 400
-pack [canvas $w -width $size -height $size -bg white]
-
-set ::tkpath::antialias 1
+pack [tkp::canvas $w -width $size -height $size -bg white]
 
 set x0 10
 set y0 10

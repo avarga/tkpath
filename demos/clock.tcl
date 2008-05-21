@@ -1,11 +1,10 @@
-package require tkpath
+package require tkpath 0.3.0
  
 set t .c_clock
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400 -bg white]
+pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
-set ::tkpath::antialias 1
 
 namespace eval ::clock {
     
@@ -43,7 +42,7 @@ namespace eval ::clock {
 	if {[winfo exists $w]} {
 	    after 1000 [list clock::ticker [expr [incr secs] % 60]]
 	    set phi [expr $secs*2.0*3.14159/60.0]
-	    set m [::tkpath::transform rotate $phi 200 200]
+	    set m [::tkp::transform rotate $phi 200 200]
 	    $w itemconfig pointer -m $m
 	}
     }

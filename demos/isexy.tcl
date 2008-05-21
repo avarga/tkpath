@@ -1,4 +1,4 @@
-package require tkpath 0.2.8
+package require tkpath 0.3.0
 
 set transparent 1
 
@@ -8,13 +8,13 @@ toplevel $t
 set w $t.c
 if {$transparent && $tcl_version >= 8.5 && [tk windowingsystem] eq "aqua"} {
     wm attributes $t -transparent 1
-    canvas $w -width 400 -height 400 -bg systemTransparent -highlightthickness 0
+    tkp::canvas $w -width 400 -height 400 -bg systemTransparent -highlightthickness 0
 } else {
-    canvas $w -width 400 -height 400 -highlightthickness 0
+    tkp::canvas $w -width 400 -height 400 -highlightthickness 0
 }
 pack $w -fill both -expand 1
 
-set ::tkpath::antialias 1
+set ::tkp::antialias 1
 
 set height 24
 set width 120
@@ -34,7 +34,7 @@ proc drawcolumn {w tag {op 1.0}} {
     set family $font(-family)
     set fsize $font(-size)
 
-    set g1 [tkpath::gradient create linear \
+    set g1 [$w gradient create linear \
       -stops [list [list 0.0 gray90 $op] [list 1.0 gray60 $op]] \
       -lineartransition {0 0 0 1}]
 
@@ -47,7 +47,6 @@ proc drawcolumn {w tag {op 1.0}} {
     set id3 [$w create ptext 20 $ybase -fontfamily $family -fontsize $fsize \
       -text "Vikings" -tags $tag -fillopacity $op]
 
-    $w move $id1 0.5 0.5
     $w move $id2 0 1
     
     set y 0
@@ -64,11 +63,11 @@ proc drawcolumn {w tag {op 1.0}} {
     
 proc drawbar {w tag} {
     
-    set g1 [tkpath::gradient create linear \
+    set g1 [$w gradient create linear \
       -stops {{0.0 "#c3c3c3"} {1.0 "#969696"}} \
       -lineartransition {0 0 0 1}]
     $w create prect 0 0 2000 40 -fill $g1 -stroke "" -tags $tag
-    $w create pline 0 40.5 2000 40.5 -stroke "#404040"    
+    $w create pline 0 40 2000 40 -stroke "#404040"    
 }
 
 proc drawbutton {win grad1 grad2 tag {type plain}} {
@@ -97,8 +96,6 @@ proc drawbutton {win grad1 grad2 tag {type plain}} {
     set id1 [$win create path $p -stroke "#c2c2c2" -tags $tag -fill ""]
     set id2 [$win create path $p -stroke "#454545" -tags $tag -fill $grad1]
     $win move $id1 0 1
-    $win move $id1 0.5 0.5
-    $win move $id2 0.5 0.5
     
     $win bind $id2 <ButtonPress-1>   [list $win itemconfig $id2 -fill $grad2]
     $win bind $id2 <ButtonRelease-1> [list $win itemconfig $id2 -fill $grad1]
@@ -116,14 +113,14 @@ $w move c2 [expr {$width + 2*10}] 60
 
 drawhammer $w hammer
 $w move hammer 80 102
-$w itemconfig hammer -matrix [::tkpath::transform rotate -0.7 80 102]
+$w itemconfig hammer -matrix [::tkp::transform rotate -0.7 80 102]
 
 drawbar $w bar
 
-set g1 [tkpath::gradient create linear \
+set g1 [$w gradient create linear \
   -stops {{0.0 "#ffffff"} {0.5 "#d1d1d1"} {1.0 "#a9a9a9"}} \
   -lineartransition {0 0 0 1}]
-set g2 [tkpath::gradient create linear \
+set g2 [$w gradient create linear \
   -stops {{0.0 "#222222"} {0.1 "#4b4b4b"} {0.9 "#616161"} {1.0 "#454545"}} \
   -lineartransition {0 0 0 1}]
 
@@ -132,26 +129,22 @@ set l 12
 set path "M 0 0 h $l M 0 3 h $l M 0 6 h $l M 0 9 h $l"
 set id [$w create path $path -stroke "#0f0f0f" -tags b1]
 $w move $id 8 6
-$w move $id 0 0.5
 set id [$w create path $path -stroke white -strokeopacity 0.5 -tags b1]
 $w move $id 8 7
-$w move $id 0 0.5
 $w move b1 20 10
 
 drawbutton $w $g1 $g2 b2 left
-set path "M 0 0 l 9 4.5 v -9 z"
+set path "M 0 0 l 9 4 v -9 z"
 set id [$w create path $path -fill white -stroke "" -tags {b2 b2-a}]
-$w move $id 0 0.5
 set id [$w create path $path -fill black -stroke "" -tags {b2 b2-a} -fillopacity 0.7]
-$w move b2-a 8 10.5
+$w move b2-a 8 10
 $w move b2 60 10
 
 drawbutton $w $g1 $g2 b3 right
-set path "M 0 0 l -9 4.5 v -9 z"
+set path "M 0 0 l -9 4 v -9 z"
 set id [$w create path $path -fill white -stroke "" -tags {b3 b3-a}]
-$w move $id 0 0.5
 set id [$w create path $path -fill black -stroke "" -tags {b3 b3-a} -fillopacity 0.78]
-$w move b3-a 17 10.5
+$w move b3-a 17 10
 $w move b3 [expr {60+26}] 10
 
 proc drawletter {w c tag} {

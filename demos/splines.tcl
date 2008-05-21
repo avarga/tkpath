@@ -1,11 +1,9 @@
-package require tkpath
+package require tkpath 0.3.0
 
 set t .c_splines
 toplevel $t
 set w $t.c
-pack [canvas $w -width 400 -height 400 -bg white]
-
-set ::tkpath::antialias 1
+pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
 $w create text 160 80 -text "Quadratic spline" -anchor w
 $w create text 160 100 -text "M 20  100 Q 80 20 140 100" -anchor w
@@ -24,7 +22,7 @@ $w create path "M 55  140 h 10 m -5 -5 v 10" -stroke red
 $w create path "M 95  380 h 10 m -5 -5 v 10" -stroke red
 $w create path "M 135 250 h 10 m -5 -5 v 10" -stroke red
 
-if {![tkpath::pixelalign]} {
+if {![tkp::pixelalign]} {
     $w move all 0.5 0.5
 }
 
