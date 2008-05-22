@@ -70,17 +70,32 @@ TEA_SETUP_COMPILER
 #-----------------------------------------------------------------------
 
 TEA_ADD_SOURCES([path.c \
-		tkCanvEllipse.c \
-		tkCanvPath.c \
+		tkPath.c \
+                tkpCanvas.c \
+		tkpCanvArc.c \
+		tkpCanvBmap.c \
+		tkpCanvImg.c \
+		tkpCanvLine.c \
+		tkpCanvPoly.c \
+		tkpCanvPs.c \
+		tkpCanvText.c \
+		tkpCanvUtil.c \
+		tkpCanvWind.c \
+		tkpRectOval.c \
+		tkpTrig.c \
+		tkpUtil.c \
 		tkCanvPathUtil.c \
+		tkCanvEllipse.c \
+		tkCanvGroup.c \
+		tkCanvPath.c \
 		tkCanvPimage.c \
 		tkCanvPline.c \
 		tkCanvPpoly.c \
 		tkCanvPrect.c \
 		tkCanvPtext.c \
-		tkPath.c \
-		tkPathCopyTk.c \
-		tkPathGradients.c \
+		tkCanvGradient.c \
+		tkPathGradient.c \
+		tkCanvStyle.c \
 		tkPathStyle.c \
 		tkPathSurface.c \
 		tkPathUtil.c])

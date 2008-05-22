@@ -8,14 +8,14 @@
 #
 #       Various support procedures for the tkpath package.
 #       
-#  Copyright (c) 2005-2007  Mats Bengtsson
+#  Copyright (c) 2005-2008  Mats Bengtsson
 #  
 # $Id$
 
-namespace eval ::tkpath {}
+namespace eval ::tkp {}
 
 
-# ::tkpath::transform --
+# ::tkp::transform --
 # 
 #       Helper for designing the -matrix option from simpler transformations.
 #       
@@ -25,7 +25,7 @@ namespace eval ::tkpath {}
 # Results:
 #       a transformation matrix
 
-proc ::tkpath::transform {cmd args} {
+proc ::tkp::transform {cmd args} {
     
     set len [llength $args]
     
@@ -90,7 +90,7 @@ proc ::tkpath::transform {cmd args} {
     return $matrix
 }
 
-proc ::tkpath::mmult {m1 m2} { 
+proc ::tkp::mmult {m1 m2} { 
     seteach {{a1 b1} {c1 d1} {tx1 ty1}} $m1 
     seteach {{a2 b2} {c2 d2} {tx2 ty2}} $m2 
     return [list  \
@@ -112,7 +112,7 @@ proc ::tkpath::mmult {m1 m2} {
 # License   : Tcl-License 
 # ------------------------------ ------------------------------ ---- 
 
-proc ::tkpath::seteach {variables arglist} {
+proc ::tkp::seteach {variables arglist} {
     foreach i $variables j $arglist { 
 	set lgi [llength $i]
 	if {1 < $lgi && [llength $j] == $lgi} { 
@@ -125,7 +125,7 @@ proc ::tkpath::seteach {variables arglist} {
 
 # OUTDATED!
 
-# ::tkpath::coords --
+# ::tkp::coords --
 # 
 #       Helper for designing the path specification for some typical items.
 #       These have SVG prototypes.
@@ -138,7 +138,7 @@ proc ::tkpath::seteach {variables arglist} {
 # Results:
 #       a transformation matrix
 
-proc ::tkpath::coords {type args} {
+proc ::tkp::coords {type args} {
     
     set len [llength $args]
     
@@ -223,7 +223,7 @@ proc ::tkpath::coords {type args} {
     return $path
 }
 
-# ::tkpath::gradientstopsstyle --
+# ::tkp::gradientstopsstyle --
 # 
 #       Utility function to create named example gradient definitions.
 #       
@@ -234,7 +234,7 @@ proc ::tkpath::coords {type args} {
 # Results:
 #       the stops list.
 
-proc ::tkpath::gradientstopsstyle {name args} {
+proc ::tkp::gradientstopsstyle {name args} {
     
     switch -- $name {
 	rainbow {
