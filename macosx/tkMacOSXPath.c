@@ -3,7 +3,7 @@
  *
  *	This file implements path drawing API's using CoreGraphics on Mac OS X.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  *
@@ -26,8 +26,9 @@
 #define FloatToFixed(a) ((Fixed)((float) (a) * fixed1))
 #endif
 
-extern int gUseAntiAlias;
+extern int gAntiAlias;
 extern int gSurfaceCopyPremultiplyAlpha;
+extern int gDepixelize;
 
 /* For debugging. */
 extern Tcl_Interp *gInterp;
@@ -39,61 +40,122 @@ const float kValidRange[8] = {0, 1, 0, 1, 0, 1, 0, 1};
  * This is used as a place holder for platform dependent stuff between each call.
  */
 typedef struct TkPathContext_ {
-    CGContextRef 	c;
-    CGrafPtr		port;	// QD graphics port, NULL for bitmaps
-    char			*data;	// bitmap data, NULL for windows
+    CGContextRef    c;
+    CGrafPtr        port;	/* QD graphics port, NULL for bitmaps. */
+    char            *data;	/* bitmap data, NULL for windows. */
+    int             widthCode;  /* Used to depixelize the strokes:
+                                 * 0: not integer width
+                                 * 1: odd integer width
+                                 * 2: even intege width */
 } TkPathContext_;
 
 typedef struct PathATSUIRecord {
-    ATSUStyle 		atsuStyle;
-    ATSUTextLayout 	atsuLayout;
-    UniChar 		*buffer;	/* @@@ Not sure this needs to be cached! */
+    ATSUStyle       atsuStyle;
+    ATSUTextLayout  atsuLayout;
+    UniChar         *buffer;	/* @@@ Not sure this needs to be cached! */
 } PathATSUIRecord;
+
+
+HIShapeRef
+TkMacOSXGetClipRgn(
+    Drawable drawable)		/* Drawable. */
+{
+    MacDrawable *macDraw = (MacDrawable *) drawable;
+    HIShapeRef clipRgn = NULL;
+    CGRect r;
+
+    if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
+	TkMacOSXUpdateClipRgn(macDraw->winPtr);
+#ifdef TK_MAC_DEBUG_DRAWING
+	TkMacOSXDbgMsg("%s visRgn  ", macDraw->winPtr->pathName);
+	TkMacOSXDebugFlashRegion(drawable, macDraw->visRgn);
+#endif /* TK_MAC_DEBUG_DRAWING */
+    }
+
+    if (macDraw->flags & TK_CLIPPED_DRAW) {
+	r = CGRectOffset(macDraw->drawRect, macDraw->xOff, macDraw->yOff);
+    }
+    if (macDraw->visRgn) {
+	if (macDraw->flags & TK_CLIPPED_DRAW) {
+	    HIShapeRef rgn = HIShapeCreateWithRect(&r);
+
+	    clipRgn = HIShapeCreateIntersection(macDraw->visRgn, rgn);
+	    CFRelease(rgn);
+	} else {
+	    clipRgn = HIShapeCreateCopy(macDraw->visRgn);
+	}
+    } else if (macDraw->flags & TK_CLIPPED_DRAW) {
+	clipRgn = HIShapeCreateWithRect(&r);
+    }
+#ifdef TK_MAC_DEBUG_DRAWING
+    TkMacOSXDbgMsg("%s clipRgn ", macDraw->winPtr->pathName);
+    TkMacOSXDebugFlashRegion(drawable, clipRgn);
+#endif /* TK_MAC_DEBUG_DRAWING */
+
+    return clipRgn;
+}
 
 void
 PathSetUpCGContext(    
         Drawable d,
         CGContextRef *contextPtr)
 {
-    CGContextRef outContext;
+    CGContextRef context;
     CGrafPtr port;
-    Rect boundsRect;
-    CGAffineTransform transform;
+    Rect bounds;
+    MacDrawable *macDraw = (MacDrawable *) d;
 
     port = TkMacOSXGetDrawablePort(d);
 #ifdef TKPATH_AQUA_USE_CACHED_CONTEXT
     // Seems that the CG context is cached in MacDrawable but don't know how it works!
-    MacDrawable *macDraw = ((MacDrawable*)d);
-    outContext = macDraw->context;
+    context = macDraw->context;
 #else
     OSStatus err;
-    err = QDBeginCGContext(port, contextPtr);
-    outContext = *contextPtr;
+    err = QDBeginCGContext(port, &context);
+    if (err != noErr) {
+        Tcl_Panic("QDBeginCGContext(): context failed !");
+    }
+    *contextPtr = context;
+    
+    /* http://developer.apple.com/qa/qa2001/qa1010.html */
+    SyncCGContextOriginWithPort(context, port);
 #endif
     
-    CGContextSaveGState(outContext);    
-    GetPortBounds(port, &boundsRect);
-    CGContextResetCTM(outContext);
-    transform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0, 
-            (float)(boundsRect.bottom - boundsRect.top));
-    CGContextConcatCTM(outContext, transform);
+    HIShapeRef clipRgn;
+    clipRgn = TkMacOSXGetClipRgn(d);
     
-    CGContextSetShouldAntialias(outContext, gUseAntiAlias);
-    CGContextSetInterpolationQuality(outContext, kCGInterpolationHigh);
-    
-    /* Since we are using Pixmaps only we need no clipping or shifting. */
+    /*
+     * Core Graphics defines the origin to be the bottom left 
+     * corner of the CGContext and the positive y-axis points up.
+     * Move the origin and flip the y-axis for all subsequent 
+     * Core Graphics drawing operations.
+     */
+    CGContextSaveGState(context);    
+    GetPortBounds(port, &bounds);
+    CGContextConcatCTM(context, CGAffineTransformMake(1.0, 0.0, 0.0,
+            -1.0, 0.0, bounds.bottom - bounds.top));
+  
+    HIShapeReplacePathInCGContext(clipRgn, context);
+    CGContextEOClip(context);
+    CFRelease(clipRgn);
+
+    CGContextTranslateCTM(context, macDraw->xOff, macDraw->yOff);
+   
+    CGContextSetShouldAntialias(context, gAntiAlias);
+    CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
 }
 
 void
 PathReleaseCGContext(
         CGrafPtr destPort, 
-        CGContextRef *outContext)
+        CGContextRef context)
 {
-    CGContextResetCTM(*outContext);
-    CGContextRestoreGState(*outContext);
+    CGContextRestoreGState(context);
+#ifndef TKPATH_AQUA_USE_CACHED_CONTEXT
     if (destPort) {
-        QDEndCGContext(destPort, outContext);
+        QDEndCGContext(destPort, &context);
     }
+#endif
 }
 
 CGColorSpaceRef GetTheColorSpaceRef(void)
@@ -137,7 +199,7 @@ static LookupTable LineJoinStyleLookupTable[] = {
 void
 PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
 {
-    Tk_Dash *dash;
+    Tk_PathDash *dashPtr;
     int fill = 0, stroke = 0;
     
     /** Drawing attribute functions. **/
@@ -157,18 +219,9 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     CGContextSetMiterLimit(c, style->miterLimit);
 
     /* Set the line dash patttern in the current graphics state. */
-    dash = &(style->dash);
-    if ((dash != NULL) && (dash->number != 0)) {
-        int	len;
-        float 	phase;
-        float 	*array;
-    
-        PathParseDashToArray(dash, style->strokeWidth, &len, &array);
-        if (len > 0) {
-            phase = 0.0;
-            CGContextSetLineDash(c, phase, array, len);
-            ckfree((char *) array);
-        }
+    dashPtr = style->dashPtr;
+    if ((dashPtr != NULL) && (dashPtr->number != 0)) {
+        CGContextSetLineDash(c, 0.0, dashPtr->array, dashPtr->number);
     }
     
     /* Set the current fill colorspace in the context `c' to `DeviceRGB' and
@@ -285,12 +338,13 @@ TkPathContext
 TkPathInit(Tk_Window tkwin, Drawable d)
 {
     CGContextRef cgContext;
-    TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
+    TkPathContext_ *context = (TkPathContext_ *) ckalloc(sizeof(TkPathContext_));
     
     PathSetUpCGContext(d, &cgContext);
     context->c = cgContext;
     context->port = TkMacOSXGetDrawablePort(d);
     context->data = NULL;
+    context->widthCode = 0;
     return (TkPathContext) context;
 }
 
@@ -314,7 +368,7 @@ TkPathInitSurface(int width, int height)
             GetTheColorSpaceRef(), kCGImageAlphaPremultipliedLast);
     if (cgContext == NULL) {
         ckfree((char *) context);
-        return NULL;
+        return (TkPathContext) NULL;
     }
     CGContextClearRect(cgContext, CGRectMake(0, 0, width, height));
     CGContextTranslateCTM(cgContext, 0, height);
@@ -360,14 +414,27 @@ void
 TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    int nint;
+    double width;
     CGContextBeginPath(context->c);
     PathSetCGContextStyle(context->c, stylePtr);
+    if (stylePtr->strokeColor == NULL) {
+        context->widthCode = 0;
+    } else {
+        width = stylePtr->strokeWidth;
+        nint = (int) (width + 0.5);
+        context->widthCode = fabs(width - nint) > 0.01 ? 0 : 2 - nint % 2;
+    }
 }
 
 void
 TkPathMoveTo(TkPathContext ctx, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     CGContextMoveToPoint(context->c, x, y);
 }
 
@@ -375,6 +442,10 @@ void
 TkPathLineTo(TkPathContext ctx, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     CGContextAddLineToPoint(context->c, x, y);
 }
 
@@ -390,6 +461,10 @@ void
 TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     CGContextAddQuadCurveToPoint(context->c, ctrlX, ctrlY, x, y);
 }
 
@@ -398,6 +473,10 @@ TkPathCurveTo(TkPathContext ctx, double ctrlX1, double ctrlY1,
         double ctrlX2, double ctrlY2, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     CGContextAddCurveToPoint(context->c, ctrlX1, ctrlY1, ctrlX2, ctrlY2, x, y);
 }
 
@@ -407,8 +486,12 @@ TkPathArcTo(TkPathContext ctx,
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
-    //TkPathContext_ *context = (TkPathContext_ *) ctx;
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
     // @@@ Should we try to use the native arc functions here?
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
@@ -417,6 +500,10 @@ TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGRect r;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     r = CGRectMake(x, y, width, height);
     CGContextAddRect(context->c, r);
 }
@@ -719,10 +806,10 @@ void
 TkPathFree(TkPathContext ctx)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-#ifdef TKPATH_AQUA_USE_DRAWABEL_CONTEXT
+#ifdef TKPATH_AQUA_USE_DRAWABLE_CONTEXT
 
 #else
-    PathReleaseCGContext(context->port, &(context->c));
+    PathReleaseCGContext(context->port, context->c);
 #endif
     if (context->data) {
         ckfree(context->data);
