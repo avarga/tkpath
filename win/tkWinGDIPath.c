@@ -4,7 +4,7 @@
  *		This file implements path drawing API's on Windows using the GDI lib.
  *  	GDI is missing several features found in GDI+.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -21,7 +21,7 @@
 #define Green255FromXColorPtr(xc)  (((xc)->pixel >> 8) & 0xFF)
 #define Blue255FromXColorPtr(xc)   (((xc)->pixel >> 16) & 0xFF)
 
-extern int gUseAntiAlias;
+extern int gAntiAlias;
 
 /*
  * This is used as a place holder for platform dependent stuff between each call.

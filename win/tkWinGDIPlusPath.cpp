@@ -3,7 +3,7 @@
  *
  *		This file implements path drawing API's on Windows using the GDI+ lib.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -26,7 +26,7 @@
 using namespace Gdiplus;
 
 extern Tcl_Interp *gInterp;
-extern "C" int gUseAntiAlias;
+extern "C" int gAntiAlias;
 extern "C" int gSurfaceCopyPremultiplyAlpha;
 
 #define MakeGDIPlusColor(xc, opacity) 	Color(BYTE(opacity*255), 				\
@@ -145,7 +145,7 @@ PathC::PathC(HDC hdc)
     mGraphics = new Graphics(mMemHdc);
 	mPath = NULL;
 	mCointainerTop = 0;
-    if (gUseAntiAlias) {
+    if (gAntiAlias) {
         mGraphics->SetSmoothingMode(SmoothingModeAntiAlias);
     }
     return;    
@@ -163,11 +163,11 @@ inline PathC::~PathC(void)
 
 Pen* PathC::PathCreatePen(Tk_PathStyle *style)
 {
-	LineCap 	cap;
-	DashCap 	dashCap;
+    LineCap 	cap;
+    DashCap 	dashCap;
     LineJoin 	lineJoin;
-	Pen 		*penPtr;
-    Tk_Dash 	*dash;
+    Pen		*penPtr;
+    Tk_PathDash *dashPtr;
     
     penPtr = new Pen(MakeGDIPlusColor(style->strokeColor, style->strokeOpacity), (float) style->strokeWidth);
 
@@ -180,16 +180,9 @@ Pen* PathC::PathCreatePen(Tk_PathStyle *style)
     
     penPtr->SetMiterLimit((float) style->miterLimit);
 
-    dash = &(style->dash);
-    if ((dash != NULL) && (dash->number != 0)) {
-        int	len;
-        float *array;
-    
-        PathParseDashToArray(dash, style->strokeWidth, &len, &array);
-        if (len > 0) {
-			penPtr->SetDashPattern(array, len);
-			ckfree((char *) array);
-        }
+    dashPtr = style->dashPtr;
+    if ((dashPtr != NULL) && (dashPtr->number != 0)) {
+	penPtr->SetDashPattern(dashPtr->array, dashPtr->number);
         penPtr->SetDashOffset((float) style->offset);
     }    
     return penPtr;
@@ -257,7 +250,7 @@ inline void PathC::AddRectangle(float x, float y, float width, float height)
 {
     RectF rect(x, y, width, height);
     mPath->AddRectangle(rect);
-    // @@@ this depends
+    // @@@ TODO: this depends
     mCurrentPoint.X = x;
     mCurrentPoint.Y = y;
 }
@@ -265,7 +258,7 @@ inline void PathC::AddRectangle(float x, float y, float width, float height)
 inline void PathC::AddEllipse(float cx, float cy, float rx, float ry)
 {
     mPath->AddEllipse(cx-rx, cy-ry, 2*rx, 2*ry);
-    // @@@ this depends
+    // @@@ TODO: this depends
     mCurrentPoint.X = cx+rx;
     mCurrentPoint.Y = cy;
 }
@@ -370,7 +363,7 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
     float ascentPixels = font.GetSize() * 
             fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
     PointF point(x, y - ascentPixels);
-	if (gUseAntiAlias) {
+	if (gAntiAlias) {
 		mGraphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
 	}
     if (GetColorFromPathColor(style->fill) != NULL) {

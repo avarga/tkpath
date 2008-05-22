@@ -5,7 +5,7 @@
  *
  *  TODO: implement text drawing using glyphs instead of the "toy" text API.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -24,7 +24,7 @@
 #define GreenDoubleFromXColorPtr(xc)  (double) ((((xc)->pixel >> 8) & 0xFF)) / 255.0
 #define RedDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
-extern int gUseAntiAlias;
+extern int gAntiAlias;
 extern int gSurfaceCopyPremultiplyAlpha;
 extern Tcl_Interp *gInterp;
 
@@ -476,7 +476,7 @@ void TkPathReleaseClipToPath(TkPathContext ctx)
 void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    Tk_Dash *dash;
+    Tk_Dash *dashPtr;
 
     cairo_set_source_rgba(context->c,             
             RedDoubleFromXColorPtr(style->strokeColor),
@@ -510,22 +510,15 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
     }
     cairo_set_miter_limit(context->c, style->miterLimit);
 
-    dash = &(style->dash);
-    if ((dash != NULL) && (dash->number != 0)) {
-        int	i, len;
-        float 	*array;
-    
-        PathParseDashToArray(dash, style->strokeWidth, &len, &array);
-        if (len > 0) {
-            double *dashes = (double *) ckalloc(len*sizeof(double));
-
-            for (i = 0; i < len; i++) {
-                dashes[i] = array[i];
-            }
-            cairo_set_dash(context->c, dashes, len, style->offset);
-            ckfree((char *) dashes);
-            ckfree((char *) array);
+    dashPtr = style->dashPtr;
+    if ((dashPtr != NULL) && (dashPtr->number != 0)) {
+        int i;
+        double *dashes = (double *) ckalloc(dashPtr->number * sizeof(double));
+        
+        for (i = 0; i < dashPtr->number; i++) {
+            dashes[i] = dashPtr->array[i];
         }
+        cairo_set_dash(context->c, dashes, dashPtr->number, style->offset);
     }
 
     cairo_stroke(context->c);

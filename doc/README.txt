@@ -2,8 +2,115 @@
                              tkpath README
                              _____________
 
-This package implements path drawing modelled after its SVG counterpart,
-see http://www.w3.org/TR/SVG11/.
+
+This package implements a canvas widget which supports all features of the
+original canvas but adds a number of additional features. There are a
+number of additional item types that are modelled after its SVG counterpart,
+see http://www.w3.org/TR/SVG11/. In addition, all items are put in a tree
+structure with a persistent root item with id 0. All other items are
+descendants of this root item. The standard canvas items will always be a
+child of the root item. The tkpath items, described below, are by default
+a child of the root item, but can be configured to be a child of any group
+item using the -parent option.
+
+
+
+ o Syntax: The canvas is created using:
+
+        ::tkp::canvas pathName ?options?
+
+    It creates a command as usual:
+
+    pathName option ?arg arg ...?
+
+ o The canvas tree structure:
+
+      0----
+	  1
+	  2
+	  3
+	  4
+	  5----
+	      6
+	      7
+	  8----
+	      9
+	     10
+	 11
+	 12
+
+ o Additional commands
+
+    pathName ancestors tagOrId
+
+        Returns a list of item id's of the first item matching tagOrId
+	starting with the root item with id 0.
+
+    pathName children tagOrId
+
+        Lists all children of the first item matching tagOrId.
+
+    pathName distance tagOrId x y
+
+        Returns the closest distance between the point (x, y) and the first
+	item matching tagOrId.
+
+    pathName firstchild tagOrId
+
+        Returns the first child item of the first item matching tagOrId.
+        Applies only for groups.
+
+    pathName gradient command ?options?
+
+        See tkp::gradient for the commands. The gradients created with this
+	command are local to the canvas instance. Only gradients defined
+	this way can be used.
+
+    pathName lastchild tagOrId
+
+        Returns the last child item of the first item matching tagOrId.
+        Applies only for groups.
+
+    pathName nextsibling tagOrId
+
+        Returns the next sibling item of the first item matching tagOrId.
+	If tagOrId is the last child we return empty.
+
+    pathName parent tagOrId
+
+        Returns the parent item of the first item matching tagOrId. This
+	command works for all items, also for the standard ones. It is
+	therefore better to use this than 'cget id -parent' which is only
+	supported for the new tkpath items.
+
+    pathName prevsibling tagOrId
+
+        Returns the previous sibling item of the first item matching tagOrId.
+	If tagOrId is the first child we return empty.
+
+    pathName style cmd ?options?
+
+         See tkp::style for the commands. The styles created with this
+	command are local to the canvas instance. Only styles defined
+	this way can be used.
+        
+    pathName types
+
+        List all item types defined in canvas.
+
+ o Additional options
+
+    -tagstyle expr|exact|glob     Not implemented.
+
+ o Commands affected by changes
+
+    lower/raise: movement is constrained to siblings. if reference tagOrId
+    not given it defaults to first/last item of the root items children.
+    Items which are not siblings to the reference tagOrId are silently
+    ignored. Good or bad?
+
+    find above/below: is constrained to siblings. Good or bad?
+
 
 There are various differences compared to SVG. As a canvas item, it also
 behaves a bit differently than an ordinary item.
@@ -38,6 +145,7 @@ if paramters are wrong.
 
     Generic (genericOptions):
         -matrix {{a b} {c d} {tx ty}}
+	-parent tagOrId
         -state
         -style styleToken
         -tags tagList
@@ -46,9 +154,23 @@ if paramters are wrong.
     There are utility functions to create a matrix using simpler transformations,
     such as rotation, translation etc.
 
-    The styleToken can be a style created with tkpath::style. It's options
-    take precedence over any other options set directly. This is how
-    SVG works (bad?).
+    The styleToken is a style created with 'pathName style create'. 
+    It's options take precedence over any other options set directly. 
+    This is how SVG works (bad?).
+
+ o The group item
+
+   A group item is merely a placeholder for other items, similar to how a
+   frame widget is a container for other widgets. It is a building block for
+   the tree structure. Unlike other items, and unlike frame widgets, it 
+   doesn't display anything. It has no coordinates which is an additional
+   difference. The root item is a special group item with id 0 and tags
+   equal to "root". The root group can be configured like other items, but
+   its -tags and -parent options are read only.
+
+
+   .c create group ?fillOptions strokeOptions genericOptions?
+
 
  o The path item
 
@@ -64,7 +186,7 @@ if paramters are wrong.
 
     All path specifications are normalized initially to the fundamental atoms
     M, L, A, Q, and C, all upper case. When you use the canvas 'coords' command
-    it is the normalized path spec that is returned.
+    it is the normalized path spec that is returned. Bad?
 
     Visualize this as a pen which always has a current coordinate after
     the first M. Coordinates are floats:
@@ -81,6 +203,9 @@ if paramters are wrong.
               180 degrees, largeArc is zero, else it is one. If the arc is to be
               drawn in cw direction, sweep is one, and zero for the ccw
               direction.
+              NB: the start and end points may not coincide else the result
+	          is undefined. If you want to make a circle just do two
+		  180 degree arcs.
       Q x1 y1 x y
               Draw a qadratic Bezier curve from the current point to (x, y)
               using control point (x1, y1).
@@ -152,7 +277,7 @@ if paramters are wrong.
    This displays an image in the canvas anchored nw. If -width or -height is
    nonzero then the image is scaled to this size prior to any affine transform.
 
-   .c create pimage x y ?-image -width -height?
+   .c create pimage x y ?-image -width -height genericOptions?
 
  o The ptext item (cairo, quartz, gdi+)
 
@@ -165,34 +290,46 @@ if paramters are wrong.
        ?-fontfamily fontname -fontsize float?
        ?fillOptions strokeOptions genericOptions?
 
- o Antialiasing, if available, is controlled by the variable:
-    ::tkpath::antialias
+ o Antialiasing, if available, is controlled by the variable tkp::antialias.
     Switch on with:
-    set ::tkpath::antialias 1
+    set tkp::antialias 1
 
- o The command ::tkpath::pixelalign returns how pixels are aligned to 
-   coordinates. If 0 then pixels are between the integer coordinates, and if 1
-   they are centered on the integer coordinates. If you draw lines and the
-   graphics lib doesn't do pixel align you may have to draw to half integer
-   coordinates to get sharp 1 pixel width lines.
+ o The command tkp::pixelalign says how the platform graphics library draw
+   when we specify integer coordinates. Some libraries position a one pixel
+   wide line exactly at the pixel boundaries, and smears it out, if
+   antialiasing, over the adjecent pixels. This can look blurred since a
+   one pixel wide black line suddenly becomes a two pixel wide grey line.
+   It seems that cairo and quartz (MacOSX) do this, while gdi+ on Windows
+   doesn't. This command just provides the info for you so you may take
+   actions. Either you can manually position lines with odd integer widths
+   at the center of pixels (adding 0.5), or set the ::tkp::depixelize equal
+   to 1, see below.
+   
+ o With the boolean variable ::tkp::depixelize equal to 1 we try to adjust
+   coordinates for objects with integer line widths so that lines ...
+
 
  o Styles are created and configured using:
 
-    ::tkpath::style cmd ?options?
+    tkp::style cmd ?options?
 
-        ::tkpath::style cget token option
+        tkp::style cget token option
             Returns the value of an option.
 
-        ::tkpath::style configure token ?option? ?value option value...?
+        tkp::style configure token ?option? ?value option value...?
             Configures the object in the usual tcl way.
 
-        ::tkpath::style create ?-key value ...?
+        tkp::style create ?-key value ...?
             Creates a style object and returns its token.
 
-        ::tkpath::style delete token
+        tkp::style delete token
             Deletes the object.
 
-        ::tkpath::style names
+        tkp::style inuse token
+	    If any item is configured with the style token 1 is
+	    returned, else 0.
+
+        tkp::style names
             Returns all existing tokens.
 
     The same options as for the item are supported with the exception of -style,
@@ -202,25 +339,29 @@ if paramters are wrong.
  o Gradients can be of two types, linear and radial. They are created and 
    configured using:
 
-    ::tkpath::gradient cmd ?options?
+    tkp::gradient command ?options?
 
-        ::tkpath::gradient cget token option
+        tkp::gradient cget token option
             Returns the value of an option.
 
-        ::tkpath::gradient configure token ?option? ?value option value...?
+        tkp::gradient configure token ?option? ?value option value...?
             Configures the object in the usual tcl way.
 
-        ::tkpath::gradient create type ?-key value ...?
+        tkp::gradient create type ?-key value ...?
             Creates a linear gradient object with type any of linear or radial
             and returns its token.
 
-        ::tkpath::gradient delete token
+        tkp::gradient delete token
             Deletes the object.
 
-        ::tkpath::gradient names
+        tkp::gradient inuse token
+	    If any item is configured with the gradient token 1 is
+	    returned, else 0.
+
+        tkp::gradient names
             Returns all existing tokens.
 
-        ::tkpath::gradient type token
+        tkp::gradient type token
             Returns the type (linear|radial) of the gradient.
 
     The options for linear gradients are:
@@ -253,12 +394,12 @@ if paramters are wrong.
 
  o In memory drawing surfaces (cairo, quartz, gdi+):
 
-    ::tkpath::surface new width height
+    tkp::surface new width height
 
     creates an in memory drawing surface. Its format is platform dependent.
     It returns a token which is a new command.
 
-    ::tkpath::surface names
+    tkp::surface names
 
     lists the existing surface tokens.
 
@@ -271,7 +412,7 @@ if paramters are wrong.
     set image [$token copy [image create photo]]
     See Tk_PhotoPutBlock for how it affects the existing image.
 
-    The boolean variable ::tkpath::premultiplyalpha controls how the copy
+    The boolean variable tkp::premultiplyalpha controls how the copy
     action handles surfaces with the alpha component premultiplied. If 1 the
     copy process correctly handles any format with premultiplied alpha. This
     gets the highest quality for antialiasing and correct results for partial
@@ -305,17 +446,17 @@ if paramters are wrong.
 
  o Helper function for making transformation matrices:
 
-    ::tkpath::transform cmd ?args?
+    tkp::transform cmd ?args?
 
-        ::tkpath::transform rotate angle ?centerX centerY?
+        tkp::transform rotate angle ?centerX centerY?
 
-        ::tkpath::transform scale factorXY ?factorY?
+        tkp::transform scale factorXY ?factorY?
 
-        ::tkpath::transform skewx angle
+        tkp::transform skewx angle
 
-        ::tkpath::transform skewy angle
+        tkp::transform skewy angle
 
-        ::tkpath::transform translate x y
+        tkp::transform translate x y
 
 
  o Binaries and libraries:
@@ -340,9 +481,6 @@ if paramters are wrong.
    - Any changes made to a style object or a gradient object is not directly
      noticable to a canvas item. Some kind of notifier is needed here.
 
-   - The style and gradient objects should belong to the canvas widget itself,
-     but that requires changes to the canvas code.
-
    - Avoid using the canvas scale command on paths containing arc instructions
      since an arc cannot generally be scaled and still be an arc.
      
@@ -353,7 +491,7 @@ if paramters are wrong.
 
     - http://cairographics.org
 
-Copyright (c) 2005-2007  Mats Bengtsson
+Copyright (c) 2005-2008  Mats Bengtsson
 
 BSD style license.
 
