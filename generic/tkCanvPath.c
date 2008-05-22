@@ -4,15 +4,15 @@
  *	This file implements a path canvas item modelled after its
  *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
 
 #include "tkIntPath.h"
 #include "tkCanvPathUtil.h"
-#include "tkPathCopyTk.h"
-
+#include "tkpCanvas.h"
+#include "tkPathStyle.h"
 
 int gDebugLevel = 2;
 
@@ -29,23 +29,23 @@ enum {
  */
 
 typedef struct PathItem  {
-    Tk_Item header;			/* Generic stuff that's the same for all
+    Tk_PathItem header;     /* Generic stuff that's the same for all
                              * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Outline outline;		/* Outline structure */
-    Tk_PathStyle style;		/* Contains most drawing info. */
-    char *styleName;		/* Name of any inherited style object. */
-    Tcl_Obj *pathObjPtr;	/* The object containing the path definition. */
+    Tk_PathCanvas canvas;   /* Canvas containing item. */
+    Tk_PathOutline outline; /* Outline structure */
+    Tk_PathStyle style;     /* Contains most drawing info. */
+    Tcl_Obj *styleObj;	    /* Object with style name. */
+    Tcl_Obj *pathObjPtr;    /* The object containing the path definition. */
     int pathLen;
     Tcl_Obj *normPathObjPtr;/* The object containing the normalized path. */
     PathAtom *atomPtr;
-    PathRect bareBbox;		/* Bounding box with zero width outline.
+    PathRect bareBbox;      /* Bounding box with zero width outline.
                              * Untransformed coordinates. */
-    PathRect totalBbox;		/* Bounding box including stroke.
+    PathRect totalBbox;     /* Bounding box including stroke.
                              * Untransformed coordinates. */
-    int maxNumSegments;		/* Max number of straight segments (for subpath)
+    int maxNumSegments;     /* Max number of straight segments (for subpath)
                              * needed for Area and Point functions. */
-    long flags;				/* Various flags, see enum. */
+    long flags;             /* Various flags, see enum. */
 } PathItem;
 
 
@@ -53,83 +53,87 @@ typedef struct PathItem  {
  * Prototypes for procedures defined in this file:
  */
 
-static void		ComputePathBbox(Tk_Canvas canvas, PathItem *pathPtr);
-static int		ConfigurePath(Tcl_Interp *interp, Tk_Canvas canvas, 
-                        Tk_Item *itemPtr, int objc,
+static void	ComputePathBbox(Tk_PathCanvas canvas, PathItem *pathPtr);
+static int	ConfigurePath(Tcl_Interp *interp, Tk_PathCanvas canvas, 
+                        Tk_PathItem *itemPtr, int objc,
                         Tcl_Obj *CONST objv[], int flags);
-static int		CreatePath(Tcl_Interp *interp,
-                        Tk_Canvas canvas, struct Tk_Item *itemPtr,
+static int	CreatePath(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static void		DeletePath(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, Display *display);
-static void		DisplayPath(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, Display *display, Drawable dst,
+static void	DeletePath(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, Display *display);
+static void	DisplayPath(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, Display *display, Drawable dst,
                         int x, int y, int width, int height);
-static int		PathCoords(Tcl_Interp *interp,
-                        Tk_Canvas canvas, Tk_Item *itemPtr,
+static int	PathCoords(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static int		PathToArea(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double *areaPtr);
-static double	PathToPoint(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double *coordPtr);
-static int		PathToPostscript(Tcl_Interp *interp,
-                        Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
-static void		ScalePath(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double originX, double originY,
+static int	PathToArea(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double *areaPtr);
+static double	PathToPoint(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double *coordPtr);
+static int	PathToPostscript(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
+static void	ScalePath(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double originX, double originY,
                         double scaleX, double scaleY);
-static void		TranslatePath(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double deltaX, double deltaY);
-
+static void	TranslatePath(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double deltaX, double deltaY);
+static void	PathGradientProc(ClientData clientData, int flags);
 
 /* Support functions. */
 
 static int		GetSubpathMaxNumSegments(PathAtom *atomPtr);
 
 
-PATH_STYLE_CUSTOM_CONFIG_RECORDS
+PATH_STYLE_CUSTOM_OPTION_RECORDS
+PATH_CUSTOM_OPTION_TAGS
 
-static Tk_ConfigSpec configSpecs[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(PathItem, ""),
-    PATH_CONFIG_SPEC_STYLE_MATRIX(PathItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(PathItem, "black"),
-    PATH_CONFIG_SPEC_CORE(PathItem),
-    PATH_END_CONFIG_SPEC
+static Tk_OptionSpec optionSpecs[] = {
+    PATH_OPTION_SPEC_CORE(PathItem),
+    PATH_OPTION_SPEC_PARENT,
+    PATH_OPTION_SPEC_STYLE_FILL(PathItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(PathItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(PathItem, "black"),
+    PATH_OPTION_SPEC_END
 };
+
+static Tk_OptionTable optionTable = NULL;
 
 /*
  * The structures below defines the 'path' item type by means
  * of procedures that can be invoked by generic item code.
  */
 
-Tk_ItemType tkPathType = {
+Tk_PathItemType tkPathType = {
     "path",							/* name */
     sizeof(PathItem),				/* itemSize */
     CreatePath,						/* createProc */
-    configSpecs,					/* configSpecs */
+    optionSpecs,					/* optionSpecs */
     ConfigurePath,					/* configureProc */
     PathCoords,						/* coordProc */
     DeletePath,						/* deleteProc */
     DisplayPath,					/* displayProc */
-    TK_CONFIG_OBJS,					/* flags */
+    0,                              /* flags */
     PathToPoint,					/* pointProc */
     PathToArea,						/* areaProc */
     PathToPostscript,				/* postscriptProc */
     ScalePath,						/* scaleProc */
     TranslatePath,					/* translateProc */
-    (Tk_ItemIndexProc *) NULL,		/* indexProc */
-    (Tk_ItemCursorProc *) NULL,		/* icursorProc */
-    (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
-    (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL,			/* nextPtr */
+    (Tk_PathItemIndexProc *) NULL,		/* indexProc */
+    (Tk_PathItemCursorProc *) NULL,		/* icursorProc */
+    (Tk_PathItemSelectionProc *) NULL,	/* selectionProc */
+    (Tk_PathItemInsertProc *) NULL,		/* insertProc */
+    (Tk_PathItemDCharsProc *) NULL,		/* dTextProc */
+    (Tk_PathItemType *) NULL,			/* nextPtr */
 };
 
 /* This one seems missing. */
 #if 0
 static Tcl_Interp *
-Tk_CanvasInterp(Tk_Canvas canvas)
+Tk_CanvasInterp(Tk_PathCanvas canvas)
 {
-    TkCanvas *canvasPtr = (TkCanvas *) canvas;
+    TkPathCanvas *canvasPtr = (TkPathCanvas *) canvas;
     return canvasPtr->interp;
 }
 #endif
@@ -138,16 +142,16 @@ Tk_CanvasInterp(Tk_Canvas canvas)
 void
 DebugPrintf(Tcl_Interp *interp, int level, char *fmt, ...)
 {
-	va_list		args;
-	char		tmpstr[256];
-	
-	if (level > gDebugLevel) {
-		return;
-	}
-	va_start( args, fmt );
-	vsprintf( tmpstr, fmt, args );	
+    va_list	args;
+    char	tmpstr[256];
+    
+    if (level > gDebugLevel) {
+        return;
+    }
+    va_start( args, fmt );
+    vsprintf( tmpstr, fmt, args );	
     Tcl_VarEval( interp, "puts \"", tmpstr, "\"", (char *) NULL );
-	va_end (args );
+    va_end (args );
 }
 
 /* Be sure rect is not empty (see above) before doing this. */
@@ -155,7 +159,7 @@ static void
 NormalizePathRect(PathRect *r)
 {
     double min, max;
-
+    
     min = MIN(r->x1, r->x2);
     max = MAX(r->x1, r->x2);
     r->x1 = min;
@@ -175,28 +179,28 @@ NormalizePathRect(PathRect *r)
  *
  * CreatePath --
  *
- *		This procedure is invoked to create a new line item in
- *		a canvas.
+ *	This procedure is invoked to create a new line item in
+ *	a canvas.
  *
  * Results:
- *		A standard Tcl return value.  If an error occurred in
- *		creating the item, then an error message is left in
- *		the interp's result;  in this case itemPtr is left uninitialized,
- *		so it can be safely freed by the caller.
+ *	A standard Tcl return value.  If an error occurred in
+ *	creating the item, then an error message is left in
+ *	the interp's result;  in this case itemPtr is left uninitialized,
+ *	so it can be safely freed by the caller.
  *
  * Side effects:
- *		A new line item is created.
+ *	A new line item is created.
  *
  *--------------------------------------------------------------
  */
 
 static int
 CreatePath(
-        Tcl_Interp *interp, 	/* Used for error reporting. */
-        Tk_Canvas canvas, 	/* Canvas containing item. */
-        Tk_Item *itemPtr, 	/* Item to create. */
-        int objc,		/* Number of elements in objv.  */
-        Tcl_Obj *CONST objv[])	/* Arguments describing the item. */
+    Tcl_Interp *interp, 	/* Used for error reporting. */
+    Tk_PathCanvas canvas, 	/* Canvas containing item. */
+    Tk_PathItem *itemPtr, 	/* Item to create. */
+    int objc,                   /* Number of elements in objv.  */
+    Tcl_Obj *CONST objv[])	/* Arguments describing the item. */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
 
@@ -210,13 +214,13 @@ CreatePath(
      * this procedure.
      */
 
-    Tk_CreateOutline(&(pathPtr->outline));
+    Tk_PathCreateOutline(&(pathPtr->outline));
     TkPathCreateStyle(&(pathPtr->style));
     pathPtr->canvas = canvas;
     pathPtr->pathObjPtr = NULL;
     pathPtr->pathLen = 0;
     pathPtr->normPathObjPtr = NULL;
-    pathPtr->styleName = NULL;
+    pathPtr->styleObj = NULL;
     pathPtr->atomPtr = NULL;
     pathPtr->bareBbox = NewEmptyPathRect();
     pathPtr->totalBbox = NewEmptyPathRect();
@@ -225,6 +229,15 @@ CreatePath(
     
     /* Forces a computation of the normalized path in PathCoords. */
     pathPtr->flags |= kPathItemNeedNewNormalizedPath;
+
+    if (optionTable == NULL) {
+        optionTable = Tk_CreateOptionTable(interp, optionSpecs);
+    } 
+    itemPtr->optionTable = optionTable;
+    if (Tk_InitOptions(interp, (char *) pathPtr, optionTable, 
+	    Tk_PathCanvasTkwin(canvas)) != TCL_OK) {
+        goto error;
+    }
 
     /*
      * The first argument must be the path definition list.
@@ -238,7 +251,7 @@ CreatePath(
     }
 
     error:
-    DeletePath(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
+    DeletePath(canvas, itemPtr, Tk_Display(Tk_PathCanvasTkwin(canvas)));
     return TCL_ERROR;
 }
 
@@ -247,27 +260,27 @@ CreatePath(
  *
  * PathCoords --
  *
- *		This procedure is invoked to process the "coords" widget
- *		command on lines.  See the user documentation for details
- *		on what it does.
+ *	This procedure is invoked to process the "coords" widget
+ *	command on lines.  See the user documentation for details
+ *	on what it does.
  *
  * Results:
- *		Returns TCL_OK or TCL_ERROR, and sets the interp's result.
+ *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
  *
  * Side effects:
- *		The coordinates for the given item may be changed.
+ *	The coordinates for the given item may be changed.
  *
  *--------------------------------------------------------------
  */
 
 static int
 PathCoords(
-    Tcl_Interp *interp,			/* Used for error reporting. */
-    Tk_Canvas canvas,			/* Canvas containing item. */
-    Tk_Item *itemPtr,			/* Item whose coordinates are to be
-                                 * read or modified. */
-    int objc,					/*  */
-    Tcl_Obj *CONST objv[])		/*  */
+    Tcl_Interp *interp,     /* Used for error reporting. */
+    Tk_PathCanvas canvas,   /* Canvas containing item. */
+    Tk_PathItem *itemPtr,   /* Item whose coordinates are to be
+                             * read or modified. */
+    int objc,               /*  */
+    Tcl_Obj *CONST objv[])  /*  */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
     PathAtom *atomPtr = NULL;
@@ -315,16 +328,16 @@ PathCoords(
  *
  * ConfigurePath --
  *
- *		This procedure is invoked to configure various aspects
- *		of a line item such as its background color.
+ *	This procedure is invoked to configure various aspects
+ *	of a line item such as its background color.
  *
  * Results:
- *		A standard Tcl result code.  If an error occurs, then
- *		an error message is left in the interp's result.
+ *	A standard Tcl result code.  If an error occurs, then
+ *	an error message is left in the interp's result.
  *
  * Side effects:
- *		Configuration information, such as colors and stipple
- *		patterns, may be set for itemPtr.
+ *	Configuration information, such as colors and stipple
+ *	patterns, may be set for itemPtr.
  *
  *--------------------------------------------------------------
  */
@@ -332,66 +345,91 @@ PathCoords(
 static int
 ConfigurePath(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing itemPtr. */
-    Tk_Item *itemPtr,		/* Line item to reconfigure. */
+    Tk_PathCanvas canvas,	/* Canvas containing itemPtr. */
+    Tk_PathItem *itemPtr,	/* Line item to reconfigure. */
     int objc,			/* Number of elements in objv.  */
     Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
-    Tk_PathStyle *style = &(pathPtr->style);
-    unsigned long mask;
+    Tk_PathStyle *stylePtr = &(pathPtr->style);
+    Tk_PathItem *parentPtr;
     Tk_Window tkwin;
-    Tk_State state;
+    Tk_PathState state;
+    Tk_SavedOptions savedOptions;
+    int mask;
+    int result;
 
-    tkwin = Tk_CanvasTkwin(canvas);
-    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-            (CONST char **) objv, (char *) pathPtr, flags|TK_CONFIG_OBJS)) {
-        return TCL_ERROR;
+    tkwin = Tk_PathCanvasTkwin(canvas);
+    result = Tk_SetOptions(interp, (char *) pathPtr, optionTable, 
+            objc, objv, tkwin, &savedOptions, &mask);
+    if (result != TCL_OK) {
+        return result;
     }
-    
-    style->strokeOpacity = MAX(0.0, MIN(1.0, style->strokeOpacity));
-    style->fillOpacity   = MAX(0.0, MIN(1.0, style->fillOpacity));
-    
+
     /*
      * If we have got a style name it's options take precedence
      * over the actual path configuration options. This is how SVG does it.
      * Good or bad?
      */
-    if (pathPtr->styleName != NULL) {
-        PathStyleMergeStyles(tkwin, style, pathPtr->styleName, 0);
+    if ((pathPtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
+        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, pathPtr->styleObj, 0);
+        if (result != TCL_OK) {
+            Tk_RestoreSavedOptions(&savedOptions);
+            return result;
+        }
     } 
+    if (mask & PATH_CORE_OPTION_PARENT) {
+        result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
+        if (result != TCL_OK) {
+            Tk_RestoreSavedOptions(&savedOptions);
+            return result;
+        }
+        TkPathCanvasSetParent(parentPtr, itemPtr);
+    }
+        
+    /*
+     * Just translate the 'fillObj' (string) to a TkPathColor.
+     * We MUST have this last in the chain of custom option checks!
+     */
+    if (mask & PATH_STYLE_OPTION_FILL) {
+	TkPathColor *fillPtr = NULL;
 
+	if (stylePtr->fillObj != NULL) {
+	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
+		    TkPathCanvasGradientTable(canvas), PathGradientProc,
+		    (ClientData) itemPtr);
+	    if (fillPtr == NULL) {
+		Tk_RestoreSavedOptions(&savedOptions);
+		return TCL_ERROR;
+	    }
+	} else {
+	    fillPtr = NULL;
+	}
+	if (stylePtr->fill != NULL) {
+	    TkPathFreePathColor(stylePtr->fill);
+	}
+	stylePtr->fill = fillPtr;
+    }
+    Tk_FreeSavedOptions(&savedOptions);
+    
+    stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
+    stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
+    
     /*
      * A few of the options require additional processing, such as
      * graphics contexts.
      */
 
     state = itemPtr->state;
-
-    /*
-    if (pathPtr->outline.activeWidth > pathPtr->outline.width ||
-	    pathPtr->outline.activeDash.number != 0 ||
-	    pathPtr->outline.activeColor != NULL ||
-	    pathPtr->outline.activeStipple != None) {
-	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;
-    } else {
-	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
+    if(state == TK_PATHSTATE_NULL) {
+        state = TkPathCanvasState(canvas);
     }
-    */
-    if(state == TK_STATE_NULL) {
-        state = ((TkCanvas *)canvas)->canvas_state;
-    }
-    if (state == TK_STATE_HIDDEN) {
+    if (state == TK_PATHSTATE_HIDDEN) {
         //ComputePathBbox(canvas, pathPtr);
         return TCL_OK;
     }
     
-    /* @@@ Not sure if GC's should be used at all! 
-     *     Used in TkDraw!
-     */
-    mask = Tk_ConfigPathStylesGC(canvas, itemPtr, style);
-
     /*
      * Recompute bounding box for path.
      */
@@ -405,28 +443,32 @@ ConfigurePath(
  *
  * DeletePath --
  *
- *		This procedure is called to clean up the data structure
- *		associated with a line item.
+ *	This procedure is called to clean up the data structure
+ *	associated with a line item.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		Resources associated with itemPtr are released.
+ *	Resources associated with itemPtr are released.
  *
  *--------------------------------------------------------------
  */
 
 static void
 DeletePath(
-    Tk_Canvas canvas,			/* Info about overall canvas widget. */
-    Tk_Item *itemPtr,			/* Item that is being deleted. */
-    Display *display)			/* Display containing window for
-                                 * canvas. */
+    Tk_PathCanvas canvas,   /* Info about overall canvas widget. */
+    Tk_PathItem *itemPtr,   /* Item that is being deleted. */
+    Display *display)       /* Display containing window for
+                             * canvas. */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
+    Tk_PathStyle *stylePtr = &(pathPtr->style);
 
-    Tk_DeleteOutline(display, &(pathPtr->outline));
+    if (stylePtr->fill != NULL) {
+	TkPathFreePathColor(stylePtr->fill);
+    }
+    Tk_PathDeleteOutline(display, &(pathPtr->outline));
     if (pathPtr->pathObjPtr != NULL) {
         Tcl_DecrRefCount(pathPtr->pathObjPtr);
     }
@@ -437,9 +479,7 @@ DeletePath(
         TkPathFreeAtoms(pathPtr->atomPtr);
         pathPtr->atomPtr = NULL;
     }
-    if (pathPtr->styleName != NULL) {
-        ckfree(pathPtr->styleName);
-    }
+    Tk_FreeConfigOptions((char *) pathPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
 
 /*
@@ -447,32 +487,32 @@ DeletePath(
  *
  * ComputePathBbox --
  *
- *		This procedure is invoked to compute the bounding box of
- *		all the pixels that may be drawn as part of a path.
+ *	This procedure is invoked to compute the bounding box of
+ *	all the pixels that may be drawn as part of a path.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		The fields x1, y1, x2, and y2 are updated in the header
- *		for itemPtr.
+ *	The fields x1, y1, x2, and y2 are updated in the header
+ *	for itemPtr.
  *
  *--------------------------------------------------------------
  */
 
 static void
 ComputePathBbox(
-    Tk_Canvas canvas,			/* Canvas that contains item. */
-    PathItem *pathPtr)			/* Item whose bbox is to be
-                                 * recomputed. */
+    Tk_PathCanvas canvas,   /* Canvas that contains item. */
+    PathItem *pathPtr)      /* Item whose bbox is to be
+                             * recomputed. */
 {
     Tk_PathStyle *stylePtr = &(pathPtr->style);
-    Tk_State state = pathPtr->header.state;
+    Tk_PathState state = pathPtr->header.state;
 
-    if(state == TK_STATE_NULL) {
-        state = ((TkCanvas *)canvas)->canvas_state;
+    if(state == TK_PATHSTATE_NULL) {
+        state = TkPathCanvasState(canvas);
     }
-    if (pathPtr->pathObjPtr == NULL || (pathPtr->pathLen < 4) || (state == TK_STATE_HIDDEN)) {
+    if (pathPtr->pathObjPtr == NULL || (pathPtr->pathLen < 4) || (state == TK_PATHSTATE_HIDDEN)) {
         pathPtr->header.x1 = pathPtr->header.x2 =
         pathPtr->header.y1 = pathPtr->header.y2 = -1;
         return;
@@ -494,34 +534,34 @@ ComputePathBbox(
  *
  * DisplayPath --
  *
- *		This procedure is invoked to draw a line item in a given
- *		drawable.
+ *	This procedure is invoked to draw a line item in a given
+ *	drawable.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		ItemPtr is drawn in drawable using the transformation
- *		information in canvas.
+ *	ItemPtr is drawn in drawable using the transformation
+ *	information in canvas.
  *
  *--------------------------------------------------------------
  */
 
 static void
 DisplayPath(
-    Tk_Canvas canvas,		/* Canvas that contains item. */
-    Tk_Item *itemPtr,		/* Item to be displayed. */
-    Display *display,		/* Display on which to draw item. */
-    Drawable drawable,		/* Pixmap or window in which to draw
+    Tk_PathCanvas canvas,   /* Canvas that contains item. */
+    Tk_PathItem *itemPtr,   /* Item to be displayed. */
+    Display *display,       /* Display on which to draw item. */
+    Drawable drawable,      /* Pixmap or window in which to draw
                              * item. */
-    int x, int y, 			/* Describes region of canvas that */
-    int width, int height)	/* must be redisplayed (not used). */
+    int x, int y,           /* Describes region of canvas that */
+    int width, int height)  /* must be redisplayed (not used). */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
     TMatrix m = GetCanvasTMatrix(canvas);
 
     if (pathPtr->pathLen > 2) {
-        TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, pathPtr->atomPtr, &(pathPtr->style),
+        TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, pathPtr->atomPtr, &(pathPtr->style),
                 &m, &(pathPtr->bareBbox));
     }
 }
@@ -531,30 +571,30 @@ DisplayPath(
  *
  * PathToPoint --
  *
- *		Computes the distance from a given point to a given
- *		line, in canvas units.
+ *	Computes the distance from a given point to a given
+ *	line, in canvas units.
  *
  * Results:
- *		The return value is 0 if the point whose x and y coordinates
- *		are pointPtr[0] and pointPtr[1] is inside the line.  If the
- *		point isn't inside the line then the return value is the
- *		distance from the point to the line.
+ *	The return value is 0 if the point whose x and y coordinates
+ *	are pointPtr[0] and pointPtr[1] is inside the line.  If the
+ *	point isn't inside the line then the return value is the
+ *	distance from the point to the line.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 static double
 PathToPoint(
-    Tk_Canvas canvas,		/* Canvas containing item. */
-    Tk_Item *itemPtr,		/* Item to check against point. */
+    Tk_PathCanvas canvas,	/* Canvas containing item. */
+    Tk_PathItem *itemPtr,	/* Item to check against point. */
     double *pointPtr)		/* Pointer to x and y coordinates. */
 {
-    PathItem 		*pathPtr = (PathItem *) itemPtr;
-    PathAtom		*atomPtr = pathPtr->atomPtr;
-    Tk_PathStyle 	*stylePtr = &(pathPtr->style);
+    PathItem        *pathPtr = (PathItem *) itemPtr;
+    PathAtom        *atomPtr = pathPtr->atomPtr;
+    Tk_PathStyle    *stylePtr = &(pathPtr->style);
 
     return GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
             pathPtr->maxNumSegments, pointPtr);
@@ -738,29 +778,29 @@ GetSubpathMaxNumSegments(PathAtom *atomPtr)
  *
  * PathToArea --
  *
- *		This procedure is called to determine whether an item
- *		lies entirely inside, entirely outside, or overlapping
- *		a given rectangular area.
+ *	This procedure is called to determine whether an item
+ *	lies entirely inside, entirely outside, or overlapping
+ *	a given rectangular area.
  *	
- *		Each subpath is treated in turn. Generate straight line
- *		segments for each subpath and treat it as a polygon.
+ *	Each subpath is treated in turn. Generate straight line
+ *	segments for each subpath and treat it as a polygon.
  *
  * Results:
- *		-1 is returned if the item is entirely outside the
- *		area, 0 if it overlaps, and 1 if it is entirely
- *		inside the given area.
+ *	-1 is returned if the item is entirely outside the
+ *	area, 0 if it overlaps, and 1 if it is entirely
+ *	inside the given area.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 static int
 PathToArea(
-    Tk_Canvas canvas,		/* Canvas containing item. */
-    Tk_Item *itemPtr,		/* Item to check against line. */
-    double *areaPtr)		/* Pointer to array of four coordinates
+    Tk_PathCanvas canvas,   /* Canvas containing item. */
+    Tk_PathItem *itemPtr,   /* Item to check against line. */
+    double *areaPtr)        /* Pointer to array of four coordinates
                              * (x1, y1, x2, y2) describing rectangular
                              * area.  */
 {
@@ -775,28 +815,28 @@ PathToArea(
  *
  * ScalePath --
  *
- *		This procedure is invoked to rescale a line item.
+ *	This procedure is invoked to rescale a line item.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		The line referred to by itemPtr is rescaled so that the
- *		following transformation is applied to all point
- *		coordinates:
- *		x' = originX + scaleX*(x-originX)
- *		y' = originY + scaleY*(y-originY)
+ *	The line referred to by itemPtr is rescaled so that the
+ *	following transformation is applied to all point
+ *	coordinates:
+ *	x' = originX + scaleX*(x-originX)
+ *	y' = originY + scaleY*(y-originY)
  *
  *--------------------------------------------------------------
  */
 
 static void
 ScalePath(
-    Tk_Canvas canvas,			/* Canvas containing line. */
-    Tk_Item *itemPtr,			/* Line to be scaled. */
-    double originX, double originY,	/* Origin about which to scale rect. */
-    double scaleX,			/* Amount to scale in X direction. */
-    double scaleY)			/* Amount to scale in Y direction. */
+    Tk_PathCanvas canvas,           /* Canvas containing line. */
+    Tk_PathItem *itemPtr,           /* Line to be scaled. */
+    double originX, double originY, /* Origin about which to scale rect. */
+    double scaleX,                  /* Amount to scale in X direction. */
+    double scaleY)                  /* Amount to scale in Y direction. */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
     PathAtom *atomPtr = pathPtr->atomPtr;
@@ -836,24 +876,24 @@ ScalePath(
  *
  * TranslatePath --
  *
- *		This procedure is called to move a path by a given amount.
+ *	This procedure is called to move a path by a given amount.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		The position of the line is offset by (xDelta, yDelta), and
- *		the bounding box is updated in the generic part of the item
- *		structure.
+ *	The position of the line is offset by (xDelta, yDelta), and
+ *	the bounding box is updated in the generic part of the item
+ *	structure.
  *
  *--------------------------------------------------------------
  */
 
 static void
 TranslatePath(
-    Tk_Canvas canvas, 			/* Canvas containing item. */
-    Tk_Item *itemPtr, 			/* Item that is being moved. */
-    double deltaX,				/* Amount by which item is to be */
+    Tk_PathCanvas canvas,       /* Canvas containing item. */
+    Tk_PathItem *itemPtr, 	/* Item that is being moved. */
+    double deltaX,		/* Amount by which item is to be */
     double deltaY)              /* moved. */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
@@ -879,34 +919,52 @@ TranslatePath(
  *
  * PathToPostscript --
  *
- *		This procedure is called to generate Postscript for
- *		path items.
+ *	This procedure is called to generate Postscript for
+ *	path items.
  *
  * Results:
- *		The return value is a standard Tcl result.  If an error
- *		occurs in generating Postscript then an error message is
- *		left in the interp's result, replacing whatever used
- *		to be there.  If no error occurs, then Postscript for the
- *		item is appended to the result.
+ *	The return value is a standard Tcl result.  If an error
+ *	occurs in generating Postscript then an error message is
+ *	left in the interp's result, replacing whatever used
+ *	to be there.  If no error occurs, then Postscript for the
+ *	item is appended to the result.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 static int
 PathToPostscript(interp, canvas, itemPtr, prepass)
-    Tcl_Interp *interp;			/* Leave Postscript or error message
-					 * here. */
-    Tk_Canvas canvas;			/* Information about overall canvas. */
-    Tk_Item *itemPtr;			/* Item for which Postscript is
-					 * wanted. */
-    int prepass;			/* 1 means this is a prepass to
-					 * collect font information;  0 means
-					 * final Postscript is being created. */
+    Tcl_Interp *interp;     /* Leave Postscript or error message
+                             * here. */
+    Tk_PathCanvas canvas;   /* Information about overall canvas. */
+    Tk_PathItem *itemPtr;   /* Item for which Postscript is
+                             * wanted. */
+    int prepass;            /* 1 means this is a prepass to
+                             * collect font information;  0 means
+                             * final Postscript is being created. */
 {
     return TCL_ERROR;
 }
 
+static void	
+PathGradientProc(ClientData clientData, int flags)
+{
+    PathItem *pathPtr = (PathItem *)clientData;
+    Tk_PathStyle *stylePtr = &(pathPtr->style);
+    
+    if (flags) {
+	if (flags & PATH_GRADIENT_FLAG_DELETE) {
+	    TkPathFreePathColor(stylePtr->fill);	
+	    stylePtr->fill = NULL;
+	    Tcl_DecrRefCount(stylePtr->fillObj);
+	    stylePtr->fillObj = NULL;
+	}
+	Tk_PathCanvasEventuallyRedraw(pathPtr->canvas,
+		pathPtr->header.x1, pathPtr->header.y1,
+		pathPtr->header.x2, pathPtr->header.y2);
+    }
+}
 

@@ -9,7 +9,7 @@
  *		Tk drawing only. It fails in a number of places such as
  *		filled and overlapping subpaths.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -18,7 +18,7 @@
 
 #define _PATH_N_BUFFER_POINTS 		2000
 
-extern int gUseAntiAlias;
+extern int gAntiAlias;
 
 extern void	CurveSegments(double control[], int includeFirst, int numSteps, register double *coordPtr);
 
@@ -360,7 +360,7 @@ void TkPathReleaseClipToPath(TkPathContext ctx)
     /* empty */
 }
 
-/* @@@ This is a very much simplified version of TkCanvTranslatePath that
+/* @@@ This is a very much simplified version of TkPathCanvTranslatePath that
  * doesn't do any clipping and no translation since we do that with
  * the more general affine matrix transform.
  */

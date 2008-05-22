@@ -1,9 +1,9 @@
 /*
  * tkIntPath.h --
  *
- *		Header file for the internals of the tkpath package.
+ *	Header file for the internals of the tkpath package.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -65,29 +65,30 @@ extern "C" {
 #define DEGREES_TO_RADIANS (M_PI/180.0)
 #define RADIANS_TO_DEGREES (180.0/M_PI)
 
-/* Takes a double and aligns it to the closest pixels center.
- * This is useful when not antialiasing since some systems 
- * (CoreGraphics on MacOSX 10.2 and cairo) consistantly gives 2 pixel
- * line widths when 1 is expected.
- * This works fine on verical and horizontal lines using CG but terrible else!
- * Best to use this on tcl level.
- */
-#define ALIGN_TO_PIXEL(x) 	(gUseAntiAlias ? (x) : (((int) x) + 0.5))
 
-/* This can be useful to estimate the segmentation detail necessary.
+/* 
+ * This can be useful to estimate the segmentation detail necessary.
  * A conservative measure.
  */
 #define TMATRIX_ABS_MAX(mPtr)		MAX(fabs(mPtr->a), MAX(fabs(mPtr->b), MAX(fabs(mPtr->c), fabs(mPtr->d))))
 
-/* This can be used for simplifying Area and Point functions.
+/* 
+ * This can be used for simplifying Area and Point functions.
  */
 #define TMATRIX_IS_RECTILINEAR(mPtr)   	(fabs(mPtr->b) == 0.0) && (fabs(mPtr->c) == 0.0)
 
 #define TMATRIX_DETERMINANT(mPtr)		(mPtr->a * mPtr->d - mPtr->c * mPtr->d)
 
+/*
+ * Iff stroke width is an integer, widthCode=1,2, move coordinate
+ * to pixel boundary if even stroke width, widthCode=2,
+ * or to pixel center if odd stroke width, widthCode=1.
+ */
+#define PATH_DEPIXELIZE(widthCode,x)     (!(widthCode) ? (x) : ((int) ((x) + 0.001) + (((widthCode) == 1) ? 0.5 : 0)));
+
 #define GetColorFromPathColor(pcol) 		(((pcol != NULL) && (pcol->color != NULL)) ? pcol->color : NULL )
-#define GetGradientNameFromPathColor(pcol) 	(((pcol != NULL) && (pcol->gradientName != NULL)) ? pcol->gradientName : NULL )
-#define HaveAnyFillFromPathColor(pcol) 		(((pcol != NULL) && ((pcol->color != NULL) || (pcol->gradientName != NULL))) ? 1 : 0 )
+#define GetGradientMasterFromPathColor(pcol)	(((pcol != NULL) && (pcol->gradientInstPtr != NULL)) ? pcol->gradientInstPtr->masterPtr : NULL )
+#define HaveAnyFillFromPathColor(pcol) 		(((pcol != NULL) && ((pcol->color != NULL) || (pcol->gradientInstPtr != NULL))) ? 1 : 0 )
 
 /*
  * So far we use a fixed number of straight line segments when
@@ -95,16 +96,29 @@ extern "C" {
  * algorithm to iterate these segments.
  */
 #define kPathNumSegmentsCurveTo     	18
-#define kPathNumSegmentsQuadBezier 		12
-#define kPathNumSegmentsMax		  		18
+#define kPathNumSegmentsQuadBezier 	12
+#define kPathNumSegmentsMax		18
 #define kPathNumSegmentsEllipse         48
 
 #define kPathUnitTMatrix  {1.0, 0.0, 0.0, 1.0, 0.0, 0.0}
 
-extern int gUseAntiAlias;
+/*
+ * Flag bits for gradient and style changes.
+ */
+enum {
+    PATH_GRADIENT_FLAG_CONFIGURE	= (1L << 0),
+    PATH_GRADIENT_FLAG_DELETE
+};
 
 enum {
-    kPathTextAnchorStart = 			0L,
+    PATH_STYLE_FLAG_CONFIGURE		= (1L << 0),
+    PATH_STYLE_FLAG_DELETE
+};
+
+extern int gAntiAlias;
+
+enum {
+    kPathTextAnchorStart =		0L,
     kPathTextAnchorMiddle,
     kPathTextAnchorEnd
 };
@@ -152,7 +166,7 @@ typedef struct LookupTable {
  * Records used for parsing path to a linked list of primitive 
  * drawing instructions.
  *
- * PathAtom: vaguely modelled after Tk_Item. Each atom has a PathAtom record
+ * PathAtom: vaguely modelled after Tk_PathItem. Each atom has a PathAtom record
  * in its first position, padded with type specific data.
  */
 
@@ -221,7 +235,7 @@ typedef struct RectAtom {
 } RectAtom;
 
 /*
- * Flags for 'PathStyleMergeStyles'.
+ * Flags for 'TkPathStyleMergeStyles'.
  */
  
 enum {
@@ -271,10 +285,36 @@ void		TkPathPaintPath(TkPathContext context, PathAtom *atomPtr,
 PathRect	TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr);
 
 void		TkPathMakePrectAtoms(double *pointsPtr, double rx, double ry, PathAtom **atomPtrPtr);
-TkPathColor *TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObjPtr);
+TkPathColor *	TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObj);
 void		TkPathFreePathColor(TkPathColor *colorPtr);
+TkPathColor *	TkPathGetPathColor(Tcl_Interp *interp, Tk_Window tkwin, 
+		    Tcl_Obj *nameObj, Tcl_HashTable *tablePtr,
+		    TkPathGradientChangedProc *changeProc, ClientData clientData);
 
-/* Various stuff. */
+/*
+ * From the generic tk code normally in tkIntDecls.h 
+ */
+
+void		TkPathIncludePoint(register Tk_PathItem *itemPtr, double *pointPtr);
+void		TkPathBezierScreenPoints(Tk_PathCanvas canvas, double control[],
+					int numSteps, register XPoint *xPointPtr);
+void		TkPathBezierPoints(double control[], int numSteps,
+					register double *coordPtr);
+int			TkPathMakeBezierCurve(Tk_PathCanvas canvas, double *pointPtr,
+					int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]);
+int			TkPathMakeRawCurve(Tk_PathCanvas canvas, double *pointPtr,
+					int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]);
+void		TkPathMakeBezierPostscript(Tcl_Interp *interp, Tk_PathCanvas canvas,
+					double *pointPtr, int numPoints);
+void		TkPathMakeRawCurvePostscript(Tcl_Interp *interp, Tk_PathCanvas canvas,
+					double *pointPtr, int numPoints);
+void		TkPathFillPolygon(Tk_PathCanvas canvas, double *coordPtr, int numPoints,
+					Display *display, Drawable drawable, GC gc, GC outlineGC);
+		
+/* 
+ * Various stuff.
+ */
+ 
 int 		TableLookup(LookupTable *map, int n, int from);
 void		PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayPtrPtr);
 void 		PathApplyTMatrix(TMatrix *m, double *x, double *y);
@@ -291,12 +331,12 @@ void		PathCopyBitsPremultipliedAlphaARGB(unsigned char *from, unsigned char *to,
 void		PathCopyBitsPremultipliedAlphaBGRA(unsigned char *from, unsigned char *to, 
                     int width, int height, int bytesPerRow);
 
-int			ObjectIsEmpty(Tcl_Obj *objPtr);
-int			PathGetTMatrix(Tcl_Interp* interp, CONST char *list, TMatrix *matrixPtr);
-int			PathGetTclObjFromTMatrix(Tcl_Interp* interp, TMatrix *matrixPtr,
+int		ObjectIsEmpty(Tcl_Obj *objPtr);
+int		PathGetTMatrix(Tcl_Interp* interp, CONST char *list, TMatrix *matrixPtr);
+int		PathGetTclObjFromTMatrix(Tcl_Interp* interp, TMatrix *matrixPtr,
                     Tcl_Obj **listObjPtrPtr);
 
-int			EndpointToCentralArcParameters(
+int		EndpointToCentralArcParameters(
                     double x1, double y1, double x2, double y2,	/* The endpoints. */
                     double rx, double ry,				/* Radius. */
                     double phi, char largeArcFlag, char sweepFlag,
@@ -304,25 +344,136 @@ int			EndpointToCentralArcParameters(
                     double *rxPtr, double *ryPtr,
                     double *theta1Ptr, double *dthetaPtr);
 
-int 		PathGenericCmdDispatcher( 
-                    Tcl_Interp* interp,
-                    int objc,
-                    Tcl_Obj* CONST objv[],
-                    char *baseName,
-                    int *baseNameUIDPtr,
-                    Tcl_HashTable *hashTablePtr,
-                    Tk_OptionTable optionTable,
-                    char *(*createAndConfigProc)(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]),
-                    void (*configNotifyProc)(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]),
-                    void (*freeProc)(Tcl_Interp *interp, char *recordPtr));
-void		PathStyleInit(Tcl_Interp* interp);
-void		PathGradientInit(Tcl_Interp* interp);
-int			PathStyleHaveWithName(CONST char *name);
-int			HaveGradientStyleWithName(CONST char *name);
-void		PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName, long flags);
+MODULE_SCOPE int    TkPathGenericCmdDispatcher( 
+			Tcl_Interp* interp,
+			Tk_Window tkwin,
+			int objc,
+			Tcl_Obj* CONST objv[],
+			char *baseName,
+			int *baseNameUIDPtr,
+			Tcl_HashTable *hashTablePtr,
+			Tk_OptionTable optionTable,
+			char *(*createAndConfigProc)(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]),
+			void (*configNotifyProc)(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]),
+			void (*freeProc)(Tcl_Interp *interp, char *recordPtr));
+void		    PathStyleInit(Tcl_Interp* interp);
+void		    PathGradientInit(Tcl_Interp* interp);
+int		    TkPathStyleMergeStyles_DEPRECIATED(Tk_Window tkwin, Tcl_HashTable *hashTablePtr,
+			Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags);
+MODULE_SCOPE void   TkPathStyleMergeStyles(Tk_PathStyle *srcStyle, Tk_PathStyle *dstStyle, long flags);
+MODULE_SCOPE void   PathGradientPaint(TkPathContext ctx, PathRect *bbox, 
+			TkPathGradientMaster *gradientStylePtr, int fillRule);
 
-void		PathPaintGradientFromName(TkPathContext ctx, PathRect *bbox, char *name, int fillRule);
 
+MODULE_SCOPE Tk_PathSmoothMethod	tkPathBezierSmoothMethod;
+
+MODULE_SCOPE int	Tk_PathCanvasObjCmd(ClientData clientData,
+							Tcl_Interp *interp, int argc,
+							Tcl_Obj *const objv[]);
+
+/*
+ * Gradient support functions.
+ */
+ 
+MODULE_SCOPE int    PathGradientCget(Tcl_Interp *interp, Tk_Window tkwin, 
+			int objc, Tcl_Obj * CONST objv[], 
+			Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE int    PathGradientConfigure(Tcl_Interp *interp, Tk_Window tkwin, 
+			int objc, Tcl_Obj * CONST objv[], 
+			Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE int    PathGradientCreate(Tcl_Interp *interp, Tk_Window tkwin, 
+			int objc, Tcl_Obj * CONST objv[],
+			Tcl_HashTable *hashTablePtr, char *tokenName);
+MODULE_SCOPE int    PathGradientDelete(Tcl_Interp *interp, Tcl_Obj *obj, 
+			Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE int    PathGradientInUse(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr);
+MODULE_SCOPE void   PathGradientNames(Tcl_Interp *interp, Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE int    PathGradientType(Tcl_Interp *interp, Tcl_Obj *obj, 
+			Tcl_HashTable *hashTablePtr);
+
+/*
+ * Style support functions.
+ */
+
+MODULE_SCOPE int    PathStyleCget(Tcl_Interp *interp, Tk_Window tkwin, 
+			int objc, Tcl_Obj * CONST objv[], 
+			Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE int    PathStyleConfigure(Tcl_Interp *interp, Tk_Window tkwin, 
+			int objc, Tcl_Obj * CONST objv[], 
+			Tcl_HashTable *hashTablePtr, Tcl_HashTable *gradTablePtr);
+MODULE_SCOPE int    PathStyleCreate(Tcl_Interp *interp, Tk_Window tkwin, 
+			int objc, Tcl_Obj * CONST objv[],
+			Tcl_HashTable *styleTablePtr, 
+			Tcl_HashTable *gradTablePtr, char *tokenName);
+MODULE_SCOPE int    PathStyleDelete(Tcl_Interp *interp, Tcl_Obj *obj, 
+			Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE int    PathStyleInUse(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr);
+MODULE_SCOPE void   PathStyleNames(Tcl_Interp *interp, Tcl_HashTable *hashTablePtr);
+
+/*
+ * As TK_OPTION_PIXELS but double internal value instead of int.
+ */
+ 
+MODULE_SCOPE int	Tk_PathPixelOptionSetProc(ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value,	
+			    char *recordPtr, int internalOffset, char *oldInternalPtr, int flags);
+MODULE_SCOPE Tcl_Obj *	Tk_PathPixelOptionGetProc(ClientData clientData,
+			    Tk_Window tkwin, char *recordPtr, int internalOffset);
+MODULE_SCOPE void	Tk_PathPixelOptionRestoreProc(ClientData clientData,
+			    Tk_Window tkwin, char *internalPtr, char *oldInternalPtr);
+
+MODULE_SCOPE int	Tk_DashOptionSetProc(ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value,
+			    char *recordPtr, int internalOffset, char *oldInternalPtr,
+			    int flags);
+MODULE_SCOPE Tcl_Obj *	Tk_DashOptionGetProc(ClientData clientData,
+			    Tk_Window tkwin, char *recordPtr, int internalOffset);
+MODULE_SCOPE void	Tk_DashOptionRestoreProc(ClientData clientData,
+			    Tk_Window tkwin, char *internalPtr, char *oldInternalPtr);
+MODULE_SCOPE void	Tk_DashOptionFreeProc(ClientData clientData,
+			    Tk_Window tkwin, char *internalPtr);
+
+MODULE_SCOPE int	TkPathOffsetOptionSetProc(ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value,
+			    char *recordPtr, int internalOffset, char *oldInternalPtr,
+			    int flags);
+MODULE_SCOPE Tcl_Obj *	TkPathOffsetOptionGetProc(ClientData clientData,
+			    Tk_Window tkwin, char *recordPtr, int internalOffset);
+MODULE_SCOPE void	TkPathOffsetOptionRestoreProc(ClientData clientData,
+			    Tk_Window tkwin, char *internalPtr, char *oldInternalPtr);
+MODULE_SCOPE void	TkPathOffsetOptionFreeProc(ClientData clientData,
+			    Tk_Window tkwin, char *internalPtr);
+
+MODULE_SCOPE int	TkPathSmoothOptionSetProc(ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value,
+			    char *recordPtr, int internalOffset, char *oldInternalPtr,
+			    int flags);
+MODULE_SCOPE Tcl_Obj *	TkPathSmoothOptionGetProc(ClientData clientData,
+			    Tk_Window tkwin, char *recordPtr, int internalOffset);
+MODULE_SCOPE void	TkPathSmoothOptionRestoreProc(ClientData clientData,
+			    Tk_Window tkwin, char *internalPtr, char *oldInternalPtr);
+
+MODULE_SCOPE int	TkPathPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
+			    Tk_PostscriptInfo psInfo, XImage *ximage,
+			    int x, int y, int width, int height);
+MODULE_SCOPE void	TkPathDeleteStyles(Tk_Window tkwin, Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE int	TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_Window tkwin, 
+			    Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags);
+MODULE_SCOPE Tk_TSOffset TkPathGetOffsetFromBbox(Tk_TSOffset *offsetPtr, double bbox[4]);
+
+MODULE_SCOPE TkPathColor *  TkPathGetPathColorStatic(Tcl_Interp *interp, 
+			    Tk_Window tkwin, Tcl_Obj *nameObj);
+
+/* 
+ * Support functions for gradient instances.
+ */
+MODULE_SCOPE TkPathGradientInst *TkPathGetGradient(Tcl_Interp *interp, CONST char *name, 
+			    Tcl_HashTable *tablePtr, TkPathGradientChangedProc *changeProc, 
+			    ClientData clientData);
+MODULE_SCOPE void	TkPathFreeGradient(TkPathGradientInst *gradientPtr);
+MODULE_SCOPE void	TkPathGradientChanged(TkPathGradientMaster *masterPtr, int flags);
+
+MODULE_SCOPE void	TkPathStyleChanged(Tk_PathStyle *masterPtr, int flags);
 
 /*
  * end block for C++

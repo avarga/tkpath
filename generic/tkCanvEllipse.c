@@ -4,32 +4,32 @@
  *	This file implements the circle and ellipse canvas items modelled after its
  *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2007  Mats Bengtsson
+ * Copyright (c) 2007-2008  Mats Bengtsson
  *
  * $Id$
  */
 
 #include "tkIntPath.h"
+#include "tkpCanvas.h"
 #include "tkCanvPathUtil.h"
-#include "tkPathCopyTk.h"
+#include "tkPathStyle.h"
 
 /* For debugging. */
 extern Tcl_Interp *gInterp;
-
 
 /*
  * The structure below defines the record for each circle and ellipse item.
  */
 
 typedef struct EllipseItem  {
-    Tk_Item header;			/* Generic stuff that's the same for all
+    Tk_PathItem header;	    /* Generic stuff that's the same for all
                              * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_PathStyle style;		/* Contains most drawing info. */
-    char *styleName;		/* Name of any inherited style object. */
-    char type;				/* Circle or ellipse. */
-    double center[2];		/* Center coord. */
-    double rx;				/* Radius. Circle uses rx for overall radius. */
+    Tk_PathCanvas canvas;   /* Canvas containing item. */
+    Tk_PathStyle style;	    /* Contains most drawing info. */
+    Tcl_Obj *styleObj;	    /* Object with style name. */
+    char type;		    /* Circle or ellipse. */
+    double center[2];	    /* Center coord. */
+    double rx;		    /* Radius. Circle uses rx for overall radius. */
     double ry;
 } EllipseItem;
 
@@ -42,144 +42,159 @@ enum {
  * Prototypes for procedures defined in this file:
  */
 
-static void		ComputeEllipseBbox(Tk_Canvas canvas, EllipseItem *ellPtr);
-static int		ConfigureEllipse(Tcl_Interp *interp, Tk_Canvas canvas, 
-                        Tk_Item *itemPtr, int objc,
+static void	ComputeEllipseBbox(Tk_PathCanvas canvas, EllipseItem *ellPtr);
+static int	ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, 
+                        Tk_PathItem *itemPtr, int objc,
                         Tcl_Obj *CONST objv[], int flags);
-static int		CreateAny(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
+static int	CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[], char type);
-static int		CreateCircle(Tcl_Interp *interp,
-                        Tk_Canvas canvas, struct Tk_Item *itemPtr,
+static int	CreateCircle(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static int		CreateEllipse(Tcl_Interp *interp,
-                        Tk_Canvas canvas, struct Tk_Item *itemPtr,
+static int	CreateEllipse(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static void		DeleteEllipse(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, Display *display);
-static void		DisplayEllipse(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, Display *display, Drawable drawable,
+static void	DeleteEllipse(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, Display *display);
+static void	DisplayEllipse(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, Display *display, Drawable drawable,
                         int x, int y, int width, int height);
-static int		EllipseCoords(Tcl_Interp *interp,
-                        Tk_Canvas canvas, Tk_Item *itemPtr,
+static int	EllipseCoords(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
-static int		EllipseToArea(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double *rectPtr);
-static double	EllipseToPoint(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double *coordPtr);
-static int		EllipseToPostscript(Tcl_Interp *interp,
-                        Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
-static void		ScaleEllipse(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double originX, double originY,
+static int	EllipseToArea(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double *rectPtr);
+static double	EllipseToPoint(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double *coordPtr);
+static int	EllipseToPostscript(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
+static void	ScaleEllipse(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double originX, double originY,
                         double scaleX, double scaleY);
-static void		TranslateEllipse(Tk_Canvas canvas,
-                        Tk_Item *itemPtr, double deltaX, double deltaY);
+static void	TranslateEllipse(Tk_PathCanvas canvas,
+                        Tk_PathItem *itemPtr, double deltaX, double deltaY);
+static void	EllipseGradientProc(ClientData clientData, int flags);
 
 
-PATH_STYLE_CUSTOM_CONFIG_RECORDS
-
-static Tk_ConfigSpec configSpecsCircle[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(EllipseItem, ""),
-    PATH_CONFIG_SPEC_STYLE_MATRIX(EllipseItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(EllipseItem, "black"),
-    PATH_CONFIG_SPEC_CORE(EllipseItem),
-    
-    {TK_CONFIG_DOUBLE, "-r", (char *) NULL, (char *) NULL,
-        "0.0", Tk_Offset(EllipseItem, rx), 0, 0},
-
-    PATH_END_CONFIG_SPEC
+enum {
+    ELLIPSE_OPTION_INDEX_RX		    = (1L << (PATH_STYLE_OPTION_INDEX_END + 0)),
+    ELLIPSE_OPTION_INDEX_RY		    = (1L << (PATH_STYLE_OPTION_INDEX_END + 1)),
+    ELLIPSE_OPTION_INDEX_R		    = (1L << (PATH_STYLE_OPTION_INDEX_END + 2)),
 };
-
-/* @@@ Better way? */
-#define PELLIPSE_OPTION_INDEX_R 	(sizeof(configSpecsCircle)/sizeof(Tk_ConfigSpec) - 2)
-
-static Tk_ConfigSpec configSpecsEllipse[] = {
-    PATH_CONFIG_SPEC_STYLE_FILL(EllipseItem, ""),
-    PATH_CONFIG_SPEC_STYLE_MATRIX(EllipseItem),
-    PATH_CONFIG_SPEC_STYLE_STROKE(EllipseItem, "black"),
-    PATH_CONFIG_SPEC_CORE(EllipseItem),
-    
-    {TK_CONFIG_DOUBLE, "-rx", (char *) NULL, (char *) NULL,
-        "0.0", Tk_Offset(EllipseItem, rx), 0, 0},
-    {TK_CONFIG_DOUBLE, "-ry", (char *) NULL, (char *) NULL,
-        "0.0", Tk_Offset(EllipseItem, ry), 0, 0},
-
-    PATH_END_CONFIG_SPEC
-};
-
-/* @@@ Better way? */
-#define PELLIPSE_OPTION_INDEX_RX 	(sizeof(configSpecsEllipse)/sizeof(Tk_ConfigSpec) - 3)
-#define PELLIPSE_OPTION_INDEX_RY 	(sizeof(configSpecsEllipse)/sizeof(Tk_ConfigSpec) - 2)
  
+PATH_STYLE_CUSTOM_OPTION_RECORDS
+PATH_CUSTOM_OPTION_TAGS
+
+#define PATH_OPTION_SPEC_R(typeName)		    \
+    {TK_OPTION_DOUBLE, "-rx", NULL, NULL,	    \
+        "0.0", -1, Tk_Offset(typeName, rx),	    \
+	0, 0, ELLIPSE_OPTION_INDEX_R}
+
+#define PATH_OPTION_SPEC_RX(typeName)		    \
+    {TK_OPTION_DOUBLE, "-rx", NULL, NULL,	    \
+        "0.0", -1, Tk_Offset(typeName, rx),	    \
+	0, 0, ELLIPSE_OPTION_INDEX_RX}
+
+#define PATH_OPTION_SPEC_RY(typeName)		    \
+    {TK_OPTION_DOUBLE, "-ry", NULL, NULL,	    \
+        "0.0", -1, Tk_Offset(typeName, ry),	    \
+	0, 0, ELLIPSE_OPTION_INDEX_RY}
+
+static Tk_OptionSpec optionSpecsCircle[] = {
+    PATH_OPTION_SPEC_CORE(EllipseItem),
+    PATH_OPTION_SPEC_PARENT,
+    PATH_OPTION_SPEC_STYLE_FILL(EllipseItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(EllipseItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(EllipseItem, "black"),
+    PATH_OPTION_SPEC_R(EllipseItem),
+    PATH_OPTION_SPEC_END
+};
+
+static Tk_OptionSpec optionSpecsEllipse[] = {
+    PATH_OPTION_SPEC_CORE(EllipseItem),
+    PATH_OPTION_SPEC_PARENT,
+    PATH_OPTION_SPEC_STYLE_FILL(EllipseItem, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(EllipseItem),
+    PATH_OPTION_SPEC_STYLE_STROKE(EllipseItem, "black"),
+    PATH_OPTION_SPEC_RX(EllipseItem),
+    PATH_OPTION_SPEC_RY(EllipseItem),
+    PATH_OPTION_SPEC_END
+};
+
+static Tk_OptionTable optionTableCircle = NULL;
+static Tk_OptionTable optionTableEllipse = NULL;
+
 /*
  * The structures below define the 'circle' and 'ellipse' item types by means
  * of procedures that can be invoked by generic item code.
  */
 
-Tk_ItemType tkCircleType = {
-    "circle",						/* name */
-    sizeof(EllipseItem),			/* itemSize */
-    CreateCircle,					/* createProc */
-    configSpecsCircle,				/* configSpecs */
-    ConfigureEllipse,				/* configureProc */
-    EllipseCoords,					/* coordProc */
-    DeleteEllipse,					/* deleteProc */
-    DisplayEllipse,					/* displayProc */
-    TK_CONFIG_OBJS,					/* flags */
-    EllipseToPoint,					/* pointProc */
-    EllipseToArea,					/* areaProc */
-    EllipseToPostscript,			/* postscriptProc */
-    ScaleEllipse,					/* scaleProc */
-    TranslateEllipse,				/* translateProc */
-    (Tk_ItemIndexProc *) NULL,		/* indexProc */
-    (Tk_ItemCursorProc *) NULL,		/* icursorProc */
-    (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
-    (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL,			/* nextPtr */
+Tk_PathItemType tkCircleType = {
+    "circle",				/* name */
+    sizeof(EllipseItem),		/* itemSize */
+    CreateCircle,			/* createProc */
+    optionSpecsCircle,			/* optionSpecs */
+    ConfigureEllipse,			/* configureProc */
+    EllipseCoords,			/* coordProc */
+    DeleteEllipse,			/* deleteProc */
+    DisplayEllipse,			/* displayProc */
+    0,					/* flags */
+    EllipseToPoint,			/* pointProc */
+    EllipseToArea,			/* areaProc */
+    EllipseToPostscript,		/* postscriptProc */
+    ScaleEllipse,			/* scaleProc */
+    TranslateEllipse,			/* translateProc */
+    (Tk_PathItemIndexProc *) NULL,	/* indexProc */
+    (Tk_PathItemCursorProc *) NULL,	/* icursorProc */
+    (Tk_PathItemSelectionProc *) NULL,	/* selectionProc */
+    (Tk_PathItemInsertProc *) NULL,	/* insertProc */
+    (Tk_PathItemDCharsProc *) NULL,	/* dTextProc */
+    (Tk_PathItemType *) NULL,		/* nextPtr */
 };
 
-Tk_ItemType tkEllipseType = {
-    "ellipse",						/* name */
-    sizeof(EllipseItem),			/* itemSize */
-    CreateEllipse,					/* createProc */
-    configSpecsEllipse,				/* configSpecs */
-    ConfigureEllipse,				/* configureProc */
-    EllipseCoords,					/* coordProc */
-    DeleteEllipse,					/* deleteProc */
-    DisplayEllipse,					/* displayProc */
-    TK_CONFIG_OBJS,					/* flags */
-    EllipseToPoint,					/* pointProc */
-    EllipseToArea,					/* areaProc */
-    EllipseToPostscript,			/* postscriptProc */
-    ScaleEllipse,					/* scaleProc */
-    TranslateEllipse,				/* translateProc */
-    (Tk_ItemIndexProc *) NULL,		/* indexProc */
-    (Tk_ItemCursorProc *) NULL,		/* icursorProc */
-    (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
-    (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL,			/* nextPtr */
+Tk_PathItemType tkEllipseType = {
+    "ellipse",				/* name */
+    sizeof(EllipseItem),		/* itemSize */
+    CreateEllipse,			/* createProc */
+    optionSpecsEllipse,			/* optionSpecs */
+    ConfigureEllipse,			/* configureProc */
+    EllipseCoords,			/* coordProc */
+    DeleteEllipse,			/* deleteProc */
+    DisplayEllipse,			/* displayProc */
+    0,					/* flags */
+    EllipseToPoint,			/* pointProc */
+    EllipseToArea,			/* areaProc */
+    EllipseToPostscript,		/* postscriptProc */
+    ScaleEllipse,			/* scaleProc */
+    TranslateEllipse,			/* translateProc */
+    (Tk_PathItemIndexProc *) NULL,	/* indexProc */
+    (Tk_PathItemCursorProc *) NULL,	/* icursorProc */
+    (Tk_PathItemSelectionProc *) NULL,	/* selectionProc */
+    (Tk_PathItemInsertProc *) NULL,	/* insertProc */
+    (Tk_PathItemDCharsProc *) NULL,	/* dTextProc */
+    (Tk_PathItemType *) NULL,		/* nextPtr */
 };
                         
 static int		
-CreateCircle(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
+CreateCircle(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[])
 {
     return CreateAny(interp, canvas, itemPtr, objc, objv, kOvalTypeCircle);
 }
 
 static int		
-CreateEllipse(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
+CreateEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[])
 {
     return CreateAny(interp, canvas, itemPtr, objc, objv, kOvalTypeEllipse);
 }
 
 static int		
-CreateAny(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
+CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], char type)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    Tk_OptionTable optionTable;
     int	i;
 
     if (objc == 0) {
@@ -195,7 +210,24 @@ CreateAny(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     TkPathCreateStyle(&(ellPtr->style));
     ellPtr->canvas = canvas;
     ellPtr->type = type;
-    ellPtr->styleName = NULL;
+    ellPtr->styleObj = NULL;
+
+    if (ellPtr->type == kOvalTypeCircle) {
+	if (optionTableCircle == NULL) {
+	    optionTableCircle = Tk_CreateOptionTable(interp, optionSpecsCircle);
+	}
+	optionTable = optionTableCircle;
+    } else {
+	if (optionTableEllipse == NULL) {
+	    optionTableEllipse = Tk_CreateOptionTable(interp, optionSpecsEllipse);
+	}
+	optionTable = optionTableEllipse;    
+    }
+    itemPtr->optionTable = optionTable;
+    if (Tk_InitOptions(interp, (char *) ellPtr, optionTable, 
+	    Tk_PathCanvasTkwin(canvas)) != TCL_OK) {
+        goto error;
+    }
     
     for (i = 1; i < objc; i++) {
         char *arg = Tcl_GetString(objv[i]);
@@ -212,18 +244,18 @@ CreateAny(Tcl_Interp *interp, Tk_Canvas canvas, struct Tk_Item *itemPtr,
     }
 
     error:
-    DeleteEllipse(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
+    DeleteEllipse(canvas, itemPtr, Tk_Display(Tk_PathCanvasTkwin(canvas)));
     return TCL_ERROR;
 }
 
 static int		
-EllipseCoords(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, 
+EllipseCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
         int objc, Tcl_Obj *CONST objv[])
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     int result;
 
-	result = CoordsForPointItems(interp, canvas, ellPtr->center, objc, objv);
+    result = CoordsForPointItems(interp, canvas, ellPtr->center, objc, objv);
     if ((result == TCL_OK) && ((objc == 1) || (objc == 2))) {
         ComputeEllipseBbox(canvas, ellPtr);
     }
@@ -243,16 +275,16 @@ GetBareBbox(EllipseItem *ellPtr)
 }
 
 static void
-ComputeEllipseBbox(Tk_Canvas canvas, EllipseItem *ellPtr)
+ComputeEllipseBbox(Tk_PathCanvas canvas, EllipseItem *ellPtr)
 {
     Tk_PathStyle *stylePtr = &(ellPtr->style);
-    Tk_State state = ellPtr->header.state;
+    Tk_PathState state = ellPtr->header.state;
     PathRect totalBbox, bbox;
 
-    if(state == TK_STATE_NULL) {
-        state = ((TkCanvas *)canvas)->canvas_state;
+    if(state == TK_PATHSTATE_NULL) {
+	state = TkPathCanvasState(canvas);
     }
-    if (state == TK_STATE_HIDDEN) {
+    if (state == TK_PATHSTATE_HIDDEN) {
         ellPtr->header.x1 = ellPtr->header.x2 =
         ellPtr->header.y1 = ellPtr->header.y2 = -1;
         return;
@@ -263,27 +295,75 @@ ComputeEllipseBbox(Tk_Canvas canvas, EllipseItem *ellPtr)
 }
 
 static int		
-ConfigureEllipse(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, 
+ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(ellPtr->style);
     Tk_Window tkwin;
-    Tk_State state;
-    unsigned long mask;
+    Tk_PathState state;
+    Tk_SavedOptions savedOptions;
+    Tk_PathItem *parentPtr;
+    int mask;
     int result = TCL_OK;
 
-    tkwin = Tk_CanvasTkwin(canvas);
+    tkwin = Tk_PathCanvasTkwin(canvas);
     if (ellPtr->type == kOvalTypeCircle) {
-        result = Tk_ConfigureWidget(interp, tkwin, configSpecsCircle, objc,
-                (CONST char **) objv, (char *) ellPtr, flags|TK_CONFIG_OBJS);
+	result = Tk_SetOptions(interp, (char *) ellPtr, optionTableCircle, 
+		objc, objv, tkwin, &savedOptions, &mask);
     } else {
-        result = Tk_ConfigureWidget(interp, tkwin, configSpecsEllipse, objc,
-                (CONST char **) objv, (char *) ellPtr, flags|TK_CONFIG_OBJS);
+	result = Tk_SetOptions(interp, (char *) ellPtr, optionTableEllipse, 
+		objc, objv, tkwin, &savedOptions, &mask);
     }	
     if (result != TCL_OK) {
         return TCL_ERROR;
     }
+
+    /*
+     * If we have got a style name it's options take precedence
+     * over the actual path configuration options. This is how SVG does it.
+     * Good or bad?
+     */
+    if ((ellPtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
+        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, ellPtr->styleObj, 0);
+	if (result != TCL_OK) {
+	    Tk_RestoreSavedOptions(&savedOptions);
+	    return result;
+	}
+    } 
+    if (mask & PATH_CORE_OPTION_PARENT) {
+	result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
+	if (result != TCL_OK) {
+	    Tk_RestoreSavedOptions(&savedOptions);
+	    return result;
+	}
+	TkPathCanvasSetParent(parentPtr, itemPtr);
+    }
+    
+    /*
+     * Just translate the 'fillObj' (string) to a TkPathColor.
+     * We MUST have this last in the chain of custom option checks!
+     */
+    if (mask & PATH_STYLE_OPTION_FILL) {
+	TkPathColor *fillPtr = NULL;
+
+	if (stylePtr->fillObj != NULL) {
+	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
+		    TkPathCanvasGradientTable(canvas), EllipseGradientProc,
+		    (ClientData) itemPtr);
+	    if (fillPtr == NULL) {
+		Tk_RestoreSavedOptions(&savedOptions);
+		return TCL_ERROR;
+	    }
+	} else {
+	    fillPtr = NULL;
+	}
+	if (stylePtr->fill != NULL) {
+	    TkPathFreePathColor(stylePtr->fill);
+	}
+	stylePtr->fill = fillPtr;
+    }
+    Tk_FreeSavedOptions(&savedOptions);
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
@@ -292,36 +372,14 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
     if (ellPtr->type == kOvalTypeCircle) {
         /* Practical. */
         ellPtr->ry = ellPtr->rx;
-    }
-    /*
-     * If we have got a style name it's options take precedence
-     * over the actual path configuration options. This is how SVG does it.
-     * Good or bad?
-     */
-    if (ellPtr->styleName != NULL) {
-        PathStyleMergeStyles(tkwin, stylePtr, ellPtr->styleName, 0);
-    } 
-    
+    }    
     state = itemPtr->state;
-    if(state == TK_STATE_NULL) {
-        state = ((TkCanvas *)canvas)->canvas_state;
+    if(state == TK_PATHSTATE_NULL) {
+	state = TkPathCanvasState(canvas);
     }
-    if (state == TK_STATE_HIDDEN) {
+    if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-    
-    /*
-     * Only -rx and -ry affect the path geometry.
-     */
-    if ((configSpecsEllipse[PELLIPSE_OPTION_INDEX_RX].specFlags & TK_CONFIG_OPTION_SPECIFIED) ||
-            (configSpecsEllipse[PELLIPSE_OPTION_INDEX_RY].specFlags & TK_CONFIG_OPTION_SPECIFIED)) {
-
-    }
-    
-    /* 
-     * Handle the strokeGC and fillGC used only (?) for Tk drawing. 
-     */
-    mask = Tk_ConfigPathStylesGC(canvas, itemPtr, stylePtr);
 
     /*
      * Recompute bounding box for path.
@@ -331,13 +389,21 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr,
 }
 
 static void		
-DeleteEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display)
+DeleteEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
 {
-    /* Empty? */
+    EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    Tk_OptionTable optionTable;
+    Tk_PathStyle *stylePtr = &(ellPtr->style);
+
+    if (stylePtr->fill != NULL) {
+	TkPathFreePathColor(stylePtr->fill);
+    }
+    optionTable = (ellPtr->type == kOvalTypeCircle) ? optionTableCircle : optionTableEllipse;
+    Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
 
 static void		
-DisplayEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable drawable,
+DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawable drawable,
         int x, int y, int width, int height)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
@@ -358,11 +424,11 @@ DisplayEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, Display *display, Drawable dr
     ellAtom.ry = ellPtr->ry;
     
     bbox = GetBareBbox(ellPtr);
-    TkPathDrawPath(Tk_CanvasTkwin(canvas), drawable, atomPtr, &(ellPtr->style), &m, &bbox);
+    TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &(ellPtr->style), &m, &bbox);
 }
 
 static double	
-EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
+EllipseToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(ellPtr->style);
@@ -436,7 +502,7 @@ EllipseToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, double *pointPtr)
 }
 
 static int		
-EllipseToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
+EllipseToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     Tk_PathStyle *stylePtr = &(ellPtr->style);
@@ -528,20 +594,20 @@ EllipseToArea(Tk_Canvas canvas, Tk_Item *itemPtr, double *areaPtr)
 }
 
 static int		
-EllipseToPostscript(Tcl_Interp *interp, Tk_Canvas canvas, Tk_Item *itemPtr, int prepass)
+EllipseToPostscript(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass)
 {
     return TCL_ERROR;
 }
 
 static void		
-ScaleEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, double originX, double originY,
+ScaleEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
     /* This doesn't work very well with general affine matrix transforms! Arcs ? */
 }
 
 static void		
-TranslateEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double deltaY)
+TranslateEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
 
@@ -553,6 +619,25 @@ TranslateEllipse(Tk_Canvas canvas, Tk_Item *itemPtr, double deltaX, double delta
     ellPtr->header.x2 += (int) deltaX;
     ellPtr->header.y1 += (int) deltaY;
     ellPtr->header.y2 += (int) deltaY;
+}
+
+static void	
+EllipseGradientProc(ClientData clientData, int flags)
+{
+    EllipseItem *ellPtr = (EllipseItem *)clientData;
+    Tk_PathStyle *stylePtr = &(ellPtr->style);
+    
+    if (flags) {
+	if (flags & PATH_GRADIENT_FLAG_DELETE) {
+	    TkPathFreePathColor(stylePtr->fill);	
+	    stylePtr->fill = NULL;
+	    Tcl_DecrRefCount(stylePtr->fillObj);
+	    stylePtr->fillObj = NULL;
+	}
+	Tk_PathCanvasEventuallyRedraw(ellPtr->canvas,
+		ellPtr->header.x1, ellPtr->header.y1,
+		ellPtr->header.x2, ellPtr->header.y2);
+    }
 }
 
 /*----------------------------------------------------------------------*/

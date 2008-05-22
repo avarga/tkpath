@@ -5,7 +5,7 @@
  *      SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *		It contains the generic parts that do not refer to the canvas.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -322,6 +322,23 @@ NewCurveToAtom(double ctrlX1, double ctrlY1, double ctrlX2, double ctrlY2,
     curveToAtomPtr->ctrlY2 = ctrlY2;
     curveToAtomPtr->anchorX = anchorX;
     curveToAtomPtr->anchorY = anchorY;
+    return atomPtr;
+}
+
+PathAtom *
+NewRectAtom(double pointsPtr[])
+{
+    PathAtom *atomPtr;
+    RectAtom *rectAtomPtr;
+
+    rectAtomPtr = (RectAtom *) ckalloc((unsigned) (sizeof(RectAtom)));
+    atomPtr = (PathAtom *) rectAtomPtr;    
+    atomPtr->nextPtr = NULL;
+    atomPtr->type = PATH_ATOM_RECT;
+    rectAtomPtr->x = pointsPtr[0];
+    rectAtomPtr->y = pointsPtr[1];
+    rectAtomPtr->width = pointsPtr[2] - pointsPtr[0];
+    rectAtomPtr->height = pointsPtr[3] - pointsPtr[1];
     return atomPtr;
 }
 

@@ -1,10 +1,9 @@
 /*
  * tkCanvPathUtil.h --
  *
- *	    This file implements style objects used when drawing paths.
- *      See http://www.w3.org/TR/SVG11/.
+ *	Header for support functions common to many path canvas items.
  *
- * Copyright (c) 2007  Mats Bengtsson
+ * Copyright (c) 2007-2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -18,203 +17,81 @@
 extern "C" {
 #endif
 
-int			Tk_ConfigPathStylesGC(Tk_Canvas canvas, Tk_Item *itemPtr, 
-                    Tk_PathStyle *stylePtr);
-int 		Tk_ConfigStrokePathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
-                    Tk_Item *item, Tk_PathStyle *style);
-int 		Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
-                    Tk_Item *item, Tk_PathStyle *style);
+MODULE_SCOPE int	TkPathCanvasStyleMergeStyles(Tk_Window tkwin, Tk_PathCanvas canvas,
+				Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags);
 
-int			CoordsForPointItems(Tcl_Interp *interp, Tk_Canvas canvas, 
+
+int	    CoordsForPointItems(Tcl_Interp *interp, Tk_PathCanvas canvas, 
                     double *pointPtr, int objc, Tcl_Obj *CONST objv[]);
-int			CoordsForRectangularItems(Tcl_Interp *interp, Tk_Canvas canvas, 
+int	    CoordsForRectangularItems(Tcl_Interp *interp, Tk_PathCanvas canvas, 
                     PathRect *rectPtr, int objc, Tcl_Obj *CONST objv[]);
-PathRect	GetGenericBarePathBbox(PathAtom *atomPtr);
-PathRect	GetGenericPathTotalBboxFromBare(PathAtom *atomPtr, Tk_PathStyle *stylePtr, PathRect *bboxPtr);
-void		SetGenericPathHeaderBbox(Tk_Item *headerPtr, TMatrix *mPtr,
+PathRect    GetGenericBarePathBbox(PathAtom *atomPtr);
+PathRect    GetGenericPathTotalBboxFromBare(PathAtom *atomPtr, Tk_PathStyle *stylePtr, PathRect *bboxPtr);
+void	    SetGenericPathHeaderBbox(Tk_PathItem *headerPtr, TMatrix *mPtr,
                     PathRect *totalBboxPtr);
-TMatrix		GetCanvasTMatrix(Tk_Canvas canvas);
-PathRect	NewEmptyPathRect(void);
-int			IsPathRectEmpty(PathRect *r);
-void		IncludePointInRect(PathRect *r, double x, double y);
-double		GenericPathToPoint(Tk_Canvas canvas, Tk_Item *itemPtr, Tk_PathStyle *stylePtr,
-                    PathAtom *atomPtr, int maxNumSegments, double *pointPtr);
-int			GenericPathToArea(Tk_Canvas canvas,	Tk_Item *itemPtr, Tk_PathStyle *stylePtr,
+TMatrix	    GetCanvasTMatrix(Tk_PathCanvas canvas);
+PathRect    NewEmptyPathRect(void);
+int	    IsPathRectEmpty(PathRect *r);
+void	    IncludePointInRect(PathRect *r, double x, double y);
+double	    GenericPathToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Tk_PathStyle *stylePtr,
+		    PathAtom *atomPtr, int maxNumSegments, double *pointPtr);
+int	    GenericPathToArea(Tk_PathCanvas canvas,	Tk_PathItem *itemPtr, Tk_PathStyle *stylePtr,
                     PathAtom * atomPtr, int maxNumSegments, double *areaPtr);
-void		TranslatePathAtoms(PathAtom *atomPtr, double deltaX, double deltaY);
-void		ScalePathAtoms(PathAtom *atomPtr, double originX, double originY,
+void	    TranslatePathAtoms(PathAtom *atomPtr, double deltaX, double deltaY);
+void	    ScalePathAtoms(PathAtom *atomPtr, double originX, double originY,
                     double scaleX, double scaleY);
-void		TranslatePathRect(PathRect *r, double deltaX, double deltaY);
-
-
-/* For processing custom options. */
-
-int		FillRuleParseProc(ClientData clientData,
-                     Tcl_Interp *interp, Tk_Window tkwin,
-                        CONST char *value, char *recordPtr, int offset);
-char *	FillRulePrintProc(ClientData clientData, Tk_Window tkwin, 
-                        char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
-int		TextAnchorParseProc(ClientData clientData,
-                     Tcl_Interp *interp, Tk_Window tkwin,
-                        CONST char *value, char *recordPtr, int offset);
-char *	TextAnchorPrintProc(ClientData clientData, Tk_Window tkwin, 
-                        char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
-int		MatrixParseProc(ClientData clientData,
-                        Tcl_Interp *interp, Tk_Window tkwin,
-                        CONST char *value, char *recordPtr, int offset);
-char *	MatrixPrintProc(ClientData clientData, Tk_Window tkwin, 
-                        char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
-int		StyleParseProc(ClientData clientData,
-                        Tcl_Interp *interp, Tk_Window tkwin,
-                        CONST char *value, char *recordPtr, int offset);
-char *	StylePrintProc(ClientData clientData, Tk_Window tkwin, 
-                        char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
-int		PathColorParseProc(ClientData clientData,
-                        Tcl_Interp *interp, Tk_Window tkwin,
-                        CONST char *value, char *recordPtr, int offset);
-char *	PathColorPrintProc(ClientData clientData, Tk_Window tkwin, 
-                        char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+void	    TranslatePathRect(PathRect *r, double deltaX, double deltaY);
 
 /*
  * The canvas 'Area' and 'Point' functions.
  */
-int			PathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
+int		PathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
 double		PathThickPolygonToPoint(int joinStyle, int capStyle, double width, 
-                    int isclosed, double *polyPtr, int numPoints, double *pointPtr);
+			int isclosed, double *polyPtr, int numPoints, double *pointPtr);
 double		PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, 
-                    int *intersectionsPtr, int *nonzerorulePtr);
+			int *intersectionsPtr, int *nonzerorulePtr);
 double		PathRectToPoint(double rectPtr[], double width, int filled, double pointPtr[]);
-int			PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr);
-int			PathRectToAreaWithMatrix(PathRect bbox, TMatrix *mPtr, double *areaPtr);
-int			PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
-
-
-/*
- * Information used for parsing configuration specs.  If you change any
- * of the default strings, be sure to change the corresponding default
- * values in CreatePath.
- */
-
-#define PATH_STYLE_CUSTOM_CONFIG_STATE   \
-    static Tk_CustomOption stateOption = {					\
-        (Tk_OptionParseProc *) PathTkStateParseProc,		\
-        PathTkStatePrintProc,								\
-        (ClientData) 2										\
-    };
-    
-#define PATH_STYLE_CUSTOM_CONFIG_TAGS   \
-    static Tk_CustomOption tagsOption = {					\
-        (Tk_OptionParseProc *) PathTk_CanvasTagsParseProc,	\
-        PathTk_CanvasTagsPrintProc,							\
-        (ClientData) NULL									\
-    };
-    
-#define PATH_STYLE_CUSTOM_CONFIG_DASH   \
-    static Tk_CustomOption dashOption = {					\
-        (Tk_OptionParseProc *) PathTkCanvasDashParseProc, 	\
-        PathTkCanvasDashPrintProc,							\
-        (ClientData) NULL									\
-    };
-
-#define PATH_STYLE_CUSTOM_CONFIG_PIXEL   \
-    static Tk_CustomOption pixelOption = {					\
-        (Tk_OptionParseProc *) PathTkPixelParseProc,		\
-        PathTkPixelPrintProc,								\
-        (ClientData) NULL									\
-    };
-
-#define PATH_STYLE_CUSTOM_CONFIG_FILLRULE   \
-    static Tk_CustomOption fillRuleOption = {				\
-        (Tk_OptionParseProc *) FillRuleParseProc, 			\
-        FillRulePrintProc,									\
-        (ClientData) NULL									\
-    };
-
-#define PATH_STYLE_CUSTOM_CONFIG_MATRIX   \
-    static Tk_CustomOption matrixOption = {					\
-        (Tk_OptionParseProc *) MatrixParseProc,				\
-        MatrixPrintProc,									\
-        (ClientData) NULL									\
-    };
-
-#define PATH_STYLE_CUSTOM_CONFIG_STYLE   \
-    static Tk_CustomOption styleOption = {					\
-        (Tk_OptionParseProc *) StyleParseProc,				\
-        StylePrintProc,										\
-        (ClientData) NULL									\
-    };
-
-#define PATH_STYLE_CUSTOM_CONFIG_PATHCOLOR   \
-    static Tk_CustomOption pathColorOption = {				\
-        (Tk_OptionParseProc *) PathColorParseProc,			\
-        PathColorPrintProc,									\
-        (ClientData) NULL									\
-    };
-
-#define PATH_STYLE_CUSTOM_CONFIG_RECORDS   \
-    PATH_STYLE_CUSTOM_CONFIG_STATE					\
-    PATH_STYLE_CUSTOM_CONFIG_TAGS					\
-    PATH_STYLE_CUSTOM_CONFIG_DASH					\
-    PATH_STYLE_CUSTOM_CONFIG_PIXEL					\
-    PATH_STYLE_CUSTOM_CONFIG_FILLRULE				\
-    PATH_STYLE_CUSTOM_CONFIG_MATRIX 				\
-    PATH_STYLE_CUSTOM_CONFIG_STYLE					\
-    PATH_STYLE_CUSTOM_CONFIG_PATHCOLOR
-
-
-#define PATH_CONFIG_SPEC_STYLE_FILL(typeName, theColor)                     \
-    {TK_CONFIG_CUSTOM, "-fill", (char *) NULL, (char *) NULL,       		\
-        theColor, Tk_Offset(typeName, style.fill),   		      	\
-        TK_CONFIG_NULL_OK, &pathColorOption},                               \
-    {TK_CONFIG_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,        \
-        "1.0", Tk_Offset(typeName, style.fillOpacity), 0},                  \
-    {TK_CONFIG_CUSTOM, "-fillrule", (char *) NULL, (char *) NULL,           \
-        "nonzero", Tk_Offset(typeName, style.fillRule),                     \
-        TK_CONFIG_DONT_SET_DEFAULT, &fillRuleOption}
-        
-#define PATH_CONFIG_SPEC_STYLE_MATRIX(typeName)                             \
-    {TK_CONFIG_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,             \
-        (char *) NULL, Tk_Offset(typeName, style.matrixPtr),                \
-        TK_CONFIG_NULL_OK, &matrixOption}
-
-#define PATH_CONFIG_SPEC_STYLE_STROKE(typeName, theColor)                   \
-    {TK_CONFIG_COLOR, "-stroke", (char *) NULL, (char *) NULL,              \
-        theColor, Tk_Offset(typeName, style.strokeColor),                   \
-        TK_CONFIG_NULL_OK},                                                 \
-    {TK_CONFIG_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,    \
-        (char *) NULL, Tk_Offset(typeName, style.dash),                     \
-        TK_CONFIG_NULL_OK, &dashOption},                                    \
-    {TK_CONFIG_CAP_STYLE, "-strokelinecap", (char *) NULL, (char *) NULL,   \
-        "butt", Tk_Offset(typeName, style.capStyle),                        \
-        TK_CONFIG_DONT_SET_DEFAULT},                                        \
-    {TK_CONFIG_JOIN_STYLE, "-strokelinejoin", (char *) NULL, (char *) NULL, \
-        "round", Tk_Offset(typeName, style.joinStyle),                      \
-        TK_CONFIG_DONT_SET_DEFAULT},                                        \
-    {TK_CONFIG_DOUBLE, "-strokemiterlimit", (char *) NULL, (char *) NULL,   \
-        "4.0", Tk_Offset(typeName, style.miterLimit), 0},                   \
-    {TK_CONFIG_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,      \
-        "1.0", Tk_Offset(typeName, style.strokeOpacity), 0},                \
-    {TK_CONFIG_CUSTOM, "-strokewidth", (char *) NULL, (char *) NULL,        \
-        "1.0", Tk_Offset(typeName, style.strokeWidth),                      \
-        TK_CONFIG_DONT_SET_DEFAULT, &pixelOption}
+int		PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr);
+int		PathRectToAreaWithMatrix(PathRect bbox, TMatrix *mPtr, double *areaPtr);
+int		PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
 
 /*
- * This macro REQUIRES that we have a 'styleName' struct member.
+ * New API option parsing.
  */
 
-#define PATH_CONFIG_SPEC_CORE(typeName)  \
-    {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,              \
-        (char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,        \
-        &stateOption},                                                      \
-    {TK_CONFIG_CUSTOM, "-style", (char *) NULL, (char *) NULL,              \
-        (char *) NULL, Tk_Offset(typeName, styleName),                      \
-        TK_CONFIG_DONT_SET_DEFAULT, &styleOption},                          \
-    {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,               \
-        (char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption}
+#define PATH_DEF_STATE "normal"
 
-#define PATH_END_CONFIG_SPEC   \
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,            \
-        (char *) NULL, 0, 0}
+/* These MUST be kept in sync with Tk_PathState! */
+
+static char *stateStrings[] = {
+    "active", "disabled", "normal", "hidden", NULL
+};
+
+#define PATH_CUSTOM_OPTION_TAGS					    \
+    static Tk_ObjCustomOption tagsCO = {			    \
+        "tags",							    \
+        Tk_PathCanvasTagsOptionSetProc,				    \
+        Tk_PathCanvasTagsOptionGetProc,				    \
+        Tk_PathCanvasTagsOptionRestoreProc,			    \
+        Tk_PathCanvasTagsOptionFreeProc,			    \
+        (ClientData) NULL					    \
+    };
+
+#define PATH_OPTION_SPEC_PARENT					    \
+    {TK_OPTION_STRING, "-parent", NULL, NULL,			    \
+        "0", Tk_Offset(Tk_PathItem, parentObj), -1,		    \
+	0, 0, PATH_CORE_OPTION_PARENT}
+
+#define PATH_OPTION_SPEC_CORE(typeName)				    \
+    {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,		    \
+        PATH_DEF_STATE, -1, Tk_Offset(Tk_PathItem, state),	    \
+        0, (ClientData) stateStrings, 0},			    \
+    {TK_OPTION_STRING, "-style", (char *) NULL, (char *) NULL,	    \
+	"", Tk_Offset(typeName, styleObj), -1,			    \
+	TK_OPTION_NULL_OK, 0, PATH_CORE_OPTION_STYLENAME},	    \
+    {TK_OPTION_CUSTOM, "-tags", NULL, NULL,			    \
+	NULL, -1, Tk_Offset(Tk_PathItem, pathTagsPtr),		    \
+	TK_OPTION_NULL_OK, (ClientData) &tagsCO, PATH_CORE_OPTION_TAGS}
 
 
 #ifdef __cplusplus

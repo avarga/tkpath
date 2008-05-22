@@ -4,7 +4,7 @@
  *	This file implements a path canvas item modelled after its
  *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2007  Mats Bengtsson
+ * Copyright (c) 2008  Mats Bengtsson
  *
  * $Id$
  */
@@ -27,177 +27,6 @@ static void		MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr,
 static int		SubPathToArea(Tk_PathStyle *stylePtr, double *polyPtr, int numPoints,
                         int	numStrokes,	double *rectPtr, int inside);
 
-/*
- *--------------------------------------------------------------
- *
- * Tk_ConfigPathStylesGC
- *
- *		This procedure should be called in the canvas path object
- *		during the configure command. The strokeGC and fillGC
- *		are updated according to the information in the stylePtr.
- *
- *		@@@ Only for Tk drawing?
- *
- * Results:
- *		The return-value is a mask, indicating which
- *		elements of gcValues have been updated.
- *
- * Side effects:
- *		GC information in strokeGC and fillGC is updated.
- *
- *--------------------------------------------------------------
- */
-
-int
-Tk_ConfigPathStylesGC(Tk_Canvas canvas, Tk_Item *itemPtr, Tk_PathStyle *stylePtr)
-{
-    XGCValues gcValues;
-    GC newGC;
-    unsigned long maskStroke, maskFill;
-    Tk_Window tkwin;
-
-    tkwin = Tk_CanvasTkwin(canvas);
-
-    /* 
-     * Handle the strokeGC and fillGC used only (?) for Tk drawing. 
-     */
-    maskStroke = Tk_ConfigStrokePathStyleGC(&gcValues, canvas, itemPtr, stylePtr);
-    if (maskStroke) {
-        newGC = Tk_GetGC(tkwin, maskStroke, &gcValues);
-    } else {
-        newGC = None;
-    }
-    if (stylePtr->strokeGC != None) {
-        Tk_FreeGC(Tk_Display(tkwin), stylePtr->strokeGC);
-    }
-    stylePtr->strokeGC = newGC;
-
-    maskFill = Tk_ConfigFillPathStyleGC(&gcValues, canvas, itemPtr, stylePtr);
-    if (maskFill) {
-        newGC = Tk_GetGC(tkwin, maskFill, &gcValues);
-    } else {
-        newGC = None;
-    }
-    if (stylePtr->fillGC != None) {
-        Tk_FreeGC(Tk_Display(tkwin), stylePtr->fillGC);
-    }
-    stylePtr->fillGC = newGC;
-
-    return maskStroke | maskFill;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_ConfigStrokePathStyleGC
- *
- *		This procedure should be called in the canvas object
- *		during the configure command. The graphics context
- *		description in gcValues is updated according to the
- *		information in the dash structure, as far as possible.
- *
- * Results:
- *		The return-value is a mask, indicating which
- *		elements of gcValues have been updated.
- *		0 means there is no outline.
- *
- * Side effects:
- *		GC information in gcValues is updated.
- *
- *--------------------------------------------------------------
- */
-
-/* @@@ Note: this is likely to be incomplete! */
-
-int 
-Tk_ConfigStrokePathStyleGC(
-        XGCValues *gcValues, Tk_Canvas canvas,
-        Tk_Item *item, Tk_PathStyle *stylePtr)
-{
-    int 	mask = 0;
-    double 	width;
-    Tk_Dash *dash;
-    XColor 	*color;
-    Tk_State state = item->state;
-
-    if (stylePtr->strokeWidth < 0.0) {
-        stylePtr->strokeWidth = 0.0;
-    }
-    if (state == TK_STATE_HIDDEN) {
-        return 0;
-    }
-
-    width = stylePtr->strokeWidth;
-    if (width < 1.0) {
-        width = 1.0;
-    }
-    dash = &(stylePtr->dash);
-    color = stylePtr->strokeColor;
-    if (color == NULL) {
-        return 0;
-    }
-
-    gcValues->line_width = (int) (width + 0.5);
-    if (color != NULL) {
-        gcValues->foreground = color->pixel;
-        mask = GCForeground|GCLineWidth;
-    }
-    if (mask && (dash->number != 0)) {
-        gcValues->line_style = LineOnOffDash;
-        gcValues->dash_offset = stylePtr->offset;
-        if (dash->number >= 2) {
-            gcValues->dashes = 4;
-        } else if (dash->number > 0) {
-            gcValues->dashes = dash->pattern.array[0];
-        } else {
-            gcValues->dashes = (char) (4 * width);
-        }
-        mask |= GCLineStyle|GCDashList|GCDashOffset;
-    }
-    gcValues->cap_style = stylePtr->capStyle;
-    mask |= GCCapStyle;
-    gcValues->join_style = stylePtr->joinStyle;
-    mask |= GCJoinStyle;
-    return mask;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_ConfigFillPathStyleGC
- *
- *		This procedure should be called in the canvas object
- *		during the configure command. The graphics context
- *		description in gcValues is updated according to the
- *		information in the dash structure, as far as possible.
- *
- * Results:
- *		The return-value is a mask, indicating which
- *		elements of gcValues have been updated.
- *		0 means there is no outline.
- *
- * Side effects:
- *		GC information in gcValues is updated.
- *
- *--------------------------------------------------------------
- */
-
-/* @@@ Note: this is likely to be incomplete! */
-
-int 
-Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
-        Tk_Item *item, Tk_PathStyle *stylePtr)
-{
-    int 	mask = 0;
-    XColor 	*color;
-
-    color = GetColorFromPathColor(stylePtr->fill);
-    if (color != NULL) {
-        gcValues->foreground = color->pixel;
-        mask = GCForeground;
-    }
-    return mask;
-}
 
 /*
  *--------------------------------------------------------------
@@ -218,7 +47,7 @@ Tk_ConfigFillPathStyleGC(XGCValues *gcValues, Tk_Canvas canvas,
 int		
 CoordsForPointItems(
         Tcl_Interp *interp, 
-        Tk_Canvas canvas, 
+        Tk_PathCanvas canvas, 
         double *pointPtr, 		/* Sets or gets the point here. */
         int objc, 
         Tcl_Obj *CONST objv[])
@@ -242,8 +71,8 @@ CoordsForPointItems(
                 return TCL_ERROR;
             }
         }
-        if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &x) != TCL_OK)
-            || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1], &y) != TCL_OK)) {
+        if ((Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[0], &x) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[1], &y) != TCL_OK)) {
             return TCL_ERROR;
         }
         pointPtr[0] = x;
@@ -274,7 +103,7 @@ CoordsForPointItems(
 int		
 CoordsForRectangularItems(
         Tcl_Interp *interp, 
-        Tk_Canvas canvas, 
+        Tk_PathCanvas canvas, 
         PathRect *rectPtr, 		/* Sets or gets the box here. */
         int objc, 
         Tcl_Obj *CONST objv[])
@@ -302,10 +131,10 @@ CoordsForRectangularItems(
                 return TCL_ERROR;
             }
         }
-        if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &x1) != TCL_OK)
-            || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1], &y1) != TCL_OK)
-            || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[2], &x2) != TCL_OK)
-            || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[3], &y2) != TCL_OK)) {
+        if ((Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[0], &x1) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[1], &y1) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[2], &x2) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[3], &y2) != TCL_OK)) {
             return TCL_ERROR;
         }
         
@@ -889,7 +718,7 @@ GetGenericPathTotalBboxFromBare(PathAtom *atomPtr, Tk_PathStyle *stylePtr, PathR
      * (e.g. X may round differently than we do).
      */
      
-    if (gUseAntiAlias) {
+    if (gAntiAlias) {
         fudge = 2;
     }
     rect.x1 -= fudge;
@@ -920,7 +749,7 @@ GetGenericPathTotalBboxFromBare(PathAtom *atomPtr, Tk_PathStyle *stylePtr, PathR
 
 void
 SetGenericPathHeaderBbox(
-        Tk_Item *headerPtr,
+        Tk_PathItem *headerPtr,
         TMatrix *mPtr,
         PathRect *totalBboxPtr)
 {
@@ -978,8 +807,8 @@ SetGenericPathHeaderBbox(
 
 double
 GenericPathToPoint(
-    Tk_Canvas canvas,		/* Canvas containing item. */
-    Tk_Item *itemPtr,		/* Item to check against point. */
+    Tk_PathCanvas canvas,		/* Canvas containing item. */
+    Tk_PathItem *itemPtr,		/* Item to check against point. */
     Tk_PathStyle *stylePtr,
     PathAtom *atomPtr,
     int maxNumSegments,
@@ -991,12 +820,12 @@ GenericPathToPoint(
     int				sumIntersections = 0, sumNonzerorule = 0;
     double 			*polyPtr;
     double 			bestDist, radius, width, dist;
-    Tk_State 		state = itemPtr->state;
+    Tk_PathState 		state = itemPtr->state;
     TMatrix 		*matrixPtr = stylePtr->matrixPtr;
 
     bestDist = 1.0e36;
 
-    if (state == TK_STATE_HIDDEN) {
+    if (state == TK_PATHSTATE_HIDDEN) {
         return bestDist;
     }
     if (!HaveAnyFillFromPathColor(stylePtr->fill) && (stylePtr->strokeColor == NULL)) {
@@ -1125,8 +954,8 @@ done:
 
 int
 GenericPathToArea(
-    Tk_Canvas canvas,		/* Canvas containing item. */
-    Tk_Item *itemPtr,		/* Item to check against line. */
+    Tk_PathCanvas canvas,		/* Canvas containing item. */
+    Tk_PathItem *itemPtr,		/* Item to check against line. */
     Tk_PathStyle *stylePtr,
     PathAtom *atomPtr,
     int maxNumSegments,
@@ -1145,16 +974,16 @@ GenericPathToArea(
     int				isclosed = 0;
     double 			*polyPtr;
     double			currentT[2];
-    Tk_State 		state = itemPtr->state;
+    Tk_PathState 		state = itemPtr->state;
     TMatrix 		*matrixPtr = stylePtr->matrixPtr;
     MoveToAtom		*move;
 
 #if 0
-    if(state == TK_STATE_NULL) {
-        state = ((TkCanvas *)canvas)->canvas_state;
+    if(state == TK_PATHSTATE_NULL) {
+        state = TkPathCanvasState(canvas);
     }
 #endif
-    if (state == TK_STATE_HIDDEN) {
+    if (state == TK_PATHSTATE_HIDDEN) {
         return -1;
     }
     if ((GetColorFromPathColor(stylePtr->fill) == NULL) && (stylePtr->strokeColor == NULL)) {
@@ -2039,13 +1868,13 @@ ScalePathAtoms(
 /*------------------*/
 
 TMatrix
-GetCanvasTMatrix(Tk_Canvas canvas)
+GetCanvasTMatrix(Tk_PathCanvas canvas)
 {
     short originX, originY;
     TMatrix m = kPathUnitTMatrix;
     
     /* @@@ Any scaling involved as well??? */
-    Tk_CanvasDrawableCoords(canvas, 0.0, 0.0, &originX, &originY);
+    Tk_PathCanvasDrawableCoords(canvas, 0.0, 0.0, &originX, &originY);
     m.tx = originX;
     m.ty = originY;    
     return m;
@@ -2089,405 +1918,6 @@ TranslatePathRect(PathRect *r, double deltaX, double deltaY)
     r->x2 += deltaX;
     r->y1 += deltaY;
     r->y2 += deltaY;
-}
-
-
-/*
- * +++ A bunch of custum option processing functions needed +++
- */
- 
-/*
- *--------------------------------------------------------------
- *
- * FillRuleParseProc --
- *
- *		This procedure is invoked during option processing to handle
- *		the "-fillrule" option.
- *
- * Results:
- *		A standard Tcl return value.
- *
- * Side effects:
- *
- *--------------------------------------------------------------
- */
-
-int
-FillRuleParseProc(
-    ClientData clientData,		/* some flags.*/
-    Tcl_Interp *interp,			/* Used for reporting errors. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    CONST char *value,			/* Value of option. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset)				/* Offset into item. */
-{
-    int c;
-    size_t length;
-    
-    register int *fillRulePtr = (int *) (widgRec + offset);
-
-    if(value == NULL || *value == 0) {
-        *fillRulePtr = WindingRule;
-        return TCL_OK;
-    }
-
-    c = value[0];
-    length = strlen(value);
-
-    if ((c == 'n') && (strncmp(value, "nonzero", length) == 0)) {
-        *fillRulePtr = WindingRule;
-        return TCL_OK;
-    }
-    if ((c == 'e') && (strncmp(value, "evenodd", length) == 0)) {
-        *fillRulePtr = EvenOddRule;
-        return TCL_OK;
-    }
-    Tcl_AppendResult(interp, "bad value \"", value, 
-            "\": must be \"nonzero\" or \"evenodd\"",
-	    (char *) NULL);
-        *fillRulePtr = WindingRule;
-    return TCL_ERROR;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * FillRulePrintProc --
- *
- *		This procedure is invoked by the Tk configuration code
- *		to produce a printable string for the "-fillrule"
- *		configuration option.
- *
- * Results:
- *		The return value is a string describing the state for
- *		the item referred to by "widgRec".  In addition, *freeProcPtr
- *		is filled in with the address of a procedure to call to free
- *		the result string when it's no longer needed (or NULL to
- *		indicate that the string doesn't need to be freed).
- *
- * Side effects:
- *		None.
- *
- *--------------------------------------------------------------
- */
-
-char *
-FillRulePrintProc(
-    ClientData clientData,		/* Ignored. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset,				/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)		/* Pointer to variable to fill in with
-					 * information about how to reclaim
-					 * storage for return string. */
-{
-    register int *fillRulePtr = (int *) (widgRec + offset);
-    *freeProcPtr = NULL;
-
-    if (*fillRulePtr == WindingRule) {
-        return "nonzero";
-    } else if (*fillRulePtr == EvenOddRule) {
-        return "evenodd";
-    } else {
-        return "";
-    }
-}
-
-/*** Text Anchor ***/
-
-int
-TextAnchorParseProc(
-    ClientData clientData,		/* some flags.*/
-    Tcl_Interp *interp,			/* Used for reporting errors. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    CONST char *value,			/* Value of option. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset)				/* Offset into item. */
-{
-    int c;
-    size_t length;    
-    register int *textAnchorPtr = (int *) (widgRec + offset);
-
-    if(value == NULL || *value == 0) {
-        *textAnchorPtr = kPathTextAnchorStart;
-        return TCL_OK;
-    }
-    c = value[0];
-    length = strlen(value);
-    if ((c == 's') && (strncmp(value, "start", length) == 0)) {
-        *textAnchorPtr = kPathTextAnchorStart;
-        return TCL_OK;
-    }
-    if ((c == 'm') && (strncmp(value, "middle", length) == 0)) {
-        *textAnchorPtr = kPathTextAnchorMiddle;
-        return TCL_OK;
-    }
-    if ((c == 'e') && (strncmp(value, "end", length) == 0)) {
-        *textAnchorPtr = kPathTextAnchorEnd;
-        return TCL_OK;
-    }
-    Tcl_AppendResult(interp, "bad value \"", value, 
-            "\": must be \"start\", \"middle\" or \"end\"",
-	    (char *) NULL);
-        *textAnchorPtr = kPathTextAnchorStart;
-    return TCL_ERROR;
-}
-
-char *
-TextAnchorPrintProc(
-    ClientData clientData,		/* Ignored. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset,				/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)		/* Pointer to variable to fill in with
-					 * information about how to reclaim
-					 * storage for return string. */
-{
-    register int *textAnchorPtr = (int *) (widgRec + offset);
-    *freeProcPtr = NULL;
-
-    if (*textAnchorPtr == kPathTextAnchorStart) {
-        return "start";
-    } else if (*textAnchorPtr == kPathTextAnchorMiddle) {
-        return "middle";
-    } else if (*textAnchorPtr == kPathTextAnchorEnd) {
-        return "end";
-    } else {
-        return "";
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * StyleParseProc --
- *
- *		This procedure is invoked during option processing to handle
- *		the "-style" option.
- *
- * Results:
- *		A standard Tcl return value.
- *
- * Side effects:
- *
- *--------------------------------------------------------------
- */
-
-int
-StyleParseProc(
-    ClientData clientData,		/* some flags.*/
-    Tcl_Interp *interp,			/* Used for reporting errors. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    CONST char *value,			/* Value of option. */
-    char *widgRec,				/* Pointer to record for item. */
-    int offset)					/* Offset into item. */
-{
-    char *old, *new;    
-    register char *ptr = (char *) (widgRec + offset);
-
-    if(value == NULL || *value == 0) {
-        new = NULL;
-    } else {
-    
-        /* 
-         * We only check that the style name exist here and
-         * do the processing after configuration.
-         */
-        if (PathStyleHaveWithName(value) != TCL_OK) {
-            Tcl_AppendResult(interp, "bad value \"", value, 
-                    "\": does not exist",
-                    (char *) NULL);
-            return TCL_ERROR;
-        } else {
-            new = (char *) ckalloc((unsigned) (strlen(value) + 1));
-            strcpy(new, value);
-        }
-    }
-    old = *((char **) ptr);
-    if (old != NULL) {
-        ckfree(old);
-    }
-    
-    /* Note: the _value_ of the address is in turn a pointer to string. */
-    *((char **) ptr) = new;
-    return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * StylePrintProc --
- *
- *		This procedure is invoked by the Tk configuration code
- *		to produce a printable string for the "-style"
- *		configuration option.
- *
- * Results:
- *		The return value is a string describing the state for
- *		the item referred to by "widgRec".  In addition, *freeProcPtr
- *		is filled in with the address of a procedure to call to free
- *		the result string when it's no longer needed (or NULL to
- *		indicate that the string doesn't need to be freed).
- *
- * Side effects:
- *		None.
- *
- *--------------------------------------------------------------
- */
-
-char *
-StylePrintProc(
-    ClientData clientData,		/* Ignored. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset,				/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)		/* Pointer to variable to fill in with
-					 * information about how to reclaim
-					 * storage for return string. */
-{
-    char *result;
-    register char *ptr = (char *) (widgRec + offset);
-
-    result = (*(char **) ptr);
-    if (result == NULL) {
-        result = "";
-    }
-    return result;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * MatrixParseProc --
- *
- *		This procedure is invoked during option processing to handle
- *		the "-matrix" option. It translates the (string) option 
- *		into a double array.
- *
- * Results:
- *		A standard Tcl return value.
- *
- * Side effects:
- *		None.
- *
- *--------------------------------------------------------------
- */
-
-int
-MatrixParseProc(
-    ClientData clientData,		/* some flags.*/
-    Tcl_Interp *interp,			/* Used for reporting errors. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    CONST char *value,			/* Value of option. */
-    char *widgRec,			/* Pointer to record for item. */
-    int offset)				/* Offset into item. */
-{
-    char *old, *new;
-    TMatrix *matrixPtr;
-    register char *ptr = (char *) (widgRec + offset);
-
-    if(value == NULL || *value == 0) {
-        new = NULL;
-    } else {
-        matrixPtr = (TMatrix *) ckalloc(sizeof(TMatrix));
-        if (PathGetTMatrix(interp, value, matrixPtr) != TCL_OK) {
-            ckfree((char *) matrixPtr);
-            return TCL_ERROR;
-        }
-        new = (char *) matrixPtr;
-    }
-    old = *((char **) ptr);
-    if (old != NULL) {
-        ckfree(old);
-    }
-    
-    /* Note: the _value_ of the address is in turn a pointer to string. */
-    *((char **) ptr) = new;    
-    return TCL_OK;
-}
-
-char *
-MatrixPrintProc(
-    ClientData clientData,		/* Ignored. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    char *widgRec,				/* Pointer to record for item. */
-    int offset,					/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
-                                 * information about how to reclaim
-                                 * storage for return string. */
-{
-    char *buffer, *str;
-    int len;
-    TMatrix *matrixPtr;
-    Tcl_Obj *listObj;
-    register char *ptr = (char *) (widgRec + offset);
-
-    *freeProcPtr = TCL_DYNAMIC;
-
-    matrixPtr = (*(TMatrix **) ptr); 
-    PathGetTclObjFromTMatrix(NULL, matrixPtr, &listObj);
-    str = Tcl_GetStringFromObj(listObj, &len);
-    buffer = (char *) ckalloc((unsigned int) (len + 1));
-    strcpy(buffer, str);
-    Tcl_DecrRefCount(listObj);
-    return buffer;
-}
-
-int
-PathColorParseProc(
-    ClientData clientData,		/* some flags.*/
-    Tcl_Interp *interp,			/* Used for reporting errors. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    CONST char *value,			/* Value of option. */
-    char *widgRec,				/* Pointer to record for item. */
-    int offset)					/* Offset into item. */
-{
-    register char *ptr = (char *) (widgRec + offset);
-    TkPathColor *oldPtr, *newPtr;
-
-    if(value == NULL || *value == 0) {
-        newPtr = NULL;
-    } else {
-        newPtr = TkPathNewPathColor(interp, tkwin, Tcl_NewStringObj(value, -1));
-        if (newPtr == NULL) {
-            return TCL_ERROR;
-        }
-    }
-    oldPtr = *((TkPathColor **) ptr);
-    if (oldPtr != NULL) {
-        TkPathFreePathColor(oldPtr);
-    }
-
-    /* Note: the _value_ of the address is in turn a pointer to string. */
-    *((TkPathColor **) ptr) = newPtr;    
-    return TCL_OK;
-}
-
-char *
-PathColorPrintProc(
-    ClientData clientData,		/* Ignored. */
-    Tk_Window tkwin,			/* Window containing canvas widget. */
-    char *widgRec,				/* Pointer to record for item. */
-    int offset,					/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
-                                 * information about how to reclaim
-                                 * storage for return string. */
-{
-    register char *ptr = (char *) (widgRec + offset);
-    char *result;
-    TkPathColor *colorPtr = *((TkPathColor **) ptr);
-
-    *freeProcPtr = NULL;
-    result = "";
-    if (colorPtr != NULL) {
-        if (colorPtr->color != NULL) {
-            // not sure how to handle const here.
-            result = Tk_NameOfColor(colorPtr->color);
-        } else if (colorPtr->gradientName != NULL) {
-            result = colorPtr->gradientName;
-		}
-    }
-    return result;
 }
 
 /*

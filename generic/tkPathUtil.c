@@ -3,13 +3,16 @@
  *
  *		This file contains support functions for tkpath.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * $Id$
  */
 
+#include <float.h>
 #include "tkIntPath.h"
 #include "tkCanvPathUtil.h"
+
+#define DOUBLE_EQUALS(x,y)      (abs((x) - (y)) < DBL_EPSILON)
 
 /*
  *--------------------------------------------------------------
@@ -47,39 +50,36 @@ TkPathMakePrectAtoms(double *pointsPtr, double rx, double ry, PathAtom **atomPtr
     } else if (ry < epsilon) {
         ry = rx;
     }
-    
-    /* There are certain constraints on rx and ry. */
-    rx = MIN(rx, width/2.0);
-    ry = MIN(ry, height/2.0);
-
-    atomPtr = NewMoveToAtom(x+rx, y);
-    firstAtomPtr = atomPtr;
-    atomPtr->nextPtr = NewLineToAtom(x+width-rx, y);
-    atomPtr = atomPtr->nextPtr;
     if (round) {
+        
+        /* There are certain constraints on rx and ry. */
+        rx = MIN(rx, width/2.0);
+        ry = MIN(ry, height/2.0);
+        
+        atomPtr = NewMoveToAtom(x+rx, y);
+        firstAtomPtr = atomPtr;
+        atomPtr->nextPtr = NewLineToAtom(x+width-rx, y);
+        atomPtr = atomPtr->nextPtr;
         atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+width, y+ry);
         atomPtr = atomPtr->nextPtr;
-    }
-    atomPtr->nextPtr = NewLineToAtom(x+width, y+height-ry);
-    atomPtr = atomPtr->nextPtr;
-    if (round) {
+        atomPtr->nextPtr = NewLineToAtom(x+width, y+height-ry);
+        atomPtr = atomPtr->nextPtr;
         atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+width-rx, y+height);
         atomPtr = atomPtr->nextPtr;
-    }
-    atomPtr->nextPtr = NewLineToAtom(x+rx, y+height);
-    atomPtr = atomPtr->nextPtr;
-    if (round) {
+        atomPtr->nextPtr = NewLineToAtom(x+rx, y+height);
+        atomPtr = atomPtr->nextPtr;
         atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x, y+height-ry);
         atomPtr = atomPtr->nextPtr;
-    }
-    atomPtr->nextPtr = NewLineToAtom(x, y+ry);
-    atomPtr = atomPtr->nextPtr;
-    if (round) {
+        atomPtr->nextPtr = NewLineToAtom(x, y+ry);
+        atomPtr = atomPtr->nextPtr;
         atomPtr->nextPtr = NewArcAtom(rx, ry, 0.0, 0, 1, x+rx, y);
         atomPtr = atomPtr->nextPtr;
+        atomPtr->nextPtr = NewCloseAtom(x, y);
+        *atomPtrPtr = firstAtomPtr;
+    } else {
+        atomPtr = NewRectAtom(pointsPtr);
+        *atomPtrPtr = atomPtr;        
     }
-    atomPtr->nextPtr = NewCloseAtom(x, y);
-    *atomPtrPtr = firstAtomPtr;
 }
 
 /*
@@ -151,33 +151,31 @@ TkPathDrawPath(
  */
 
 void
-TkPathPaintPath(TkPathContext context, 
+TkPathPaintPath(
+    TkPathContext context, 
     PathAtom *atomPtr,		/* The actual path as a linked list
                              * of PathAtoms. */
     Tk_PathStyle *stylePtr,	/* The paths style. */
     PathRect *bboxPtr)
 {
+    TkPathGradientMaster *gradientPtr = GetGradientMasterFromPathColor(stylePtr->fill);
     
-    /*
-     * What if both -fill and -fillgradient?
-     */     
-    if (GetGradientNameFromPathColor(stylePtr->fill) != NULL) {
-        if (HaveGradientStyleWithName(stylePtr->fill->gradientName) == TCL_OK) {
-            TkPathClipToPath(context, stylePtr->fillRule);
-            PathPaintGradientFromName(context, bboxPtr, 
-                    stylePtr->fill->gradientName, stylePtr->fillRule);
-
-            /* Note: Both CoreGraphics on MacOSX and Win32 GDI (and cairo from 1.0) clear the current path
-             *       when setting clipping. Need therefore to redo the path. 
-             */
-            if (TkPathDrawingDestroysPath()) {
-                TkPathMakePath(context, atomPtr, stylePtr);
-            }
-            
-            /* We shall remove the path clipping here! */
-            TkPathReleaseClipToPath(context);
+    if (gradientPtr != NULL) {
+        TkPathClipToPath(context, stylePtr->fillRule);
+        PathGradientPaint(context, bboxPtr, gradientPtr, stylePtr->fillRule);
+        
+        /* NB: Both CoreGraphics on MacOSX and Win32 GDI (and cairo from 1.0) 
+         *     clear the current path when setting clipping. Need therefore
+         *     to redo the path. 
+         */
+        if (TkPathDrawingDestroysPath()) {
+            TkPathMakePath(context, atomPtr, stylePtr);
         }
+        
+        /* We shall remove the path clipping here! */
+        TkPathReleaseClipToPath(context);
     }
+
     if ((GetColorFromPathColor(stylePtr->fill) != NULL) && (stylePtr->strokeColor != NULL)) {
         TkPathFillAndStroke(context, stylePtr);
     } else if (GetColorFromPathColor(stylePtr->fill) != NULL) {
@@ -199,27 +197,84 @@ TkPathGetTotalBbox(PathAtom *atomPtr, Tk_PathStyle *stylePtr)
 
 /* Return NULL on error and leave error message */
 
+// @@@ OBSOLETE SOON!!!
+// As a temporary mean before trashing it we ignore gradients.
+
 TkPathColor *
-TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObjPtr)
+TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObj)
 {
     char *name;
     TkPathColor *colorPtr;
     XColor *color = NULL;
     
-    name = Tcl_GetStringFromObj(nameObjPtr, NULL);
+    name = Tcl_GetStringFromObj(nameObj, NULL);
     colorPtr = (TkPathColor *) ckalloc(sizeof(TkPathColor));
     colorPtr->color = NULL;
-    colorPtr->gradientName = NULL;
-    if (HaveGradientStyleWithName(name) == TCL_OK) {
-        colorPtr->gradientName = ckalloc(strlen(name) + 1);
-        strcpy(colorPtr->gradientName, name);
+    colorPtr->gradientInstPtr = NULL;
+
+    color = Tk_AllocColorFromObj(interp, tkwin, nameObj);
+    if (color == NULL) {
+        char tmp[256];
+        ckfree((char *) colorPtr);
+        sprintf(tmp, "unrecognized color or gradient name \"%s\"", name);
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(tmp, -1));
+        return NULL;
+    }
+    colorPtr->color = color;     
+    return colorPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkPathGetPathColor --
+ *
+ *		Parses a string in nameObj to either a valid XColor or
+ *      looks up a gradient name for the hash table tablePtr.
+ *      Makes a new TkPathColor struct from a string value.
+ *      Like Tk_GetImage() but for TkPathColor instead of Tk_Image.
+ *
+ * Results:
+ *		Pointer to a TkPathColor struct or returns NULL on error 
+ *      and leaves an error message.
+ *
+ * Side effects:
+ *		TkPathColor mallocod if OK.
+ *
+ *--------------------------------------------------------------
+ */
+
+TkPathColor *
+TkPathGetPathColor(Tcl_Interp *interp, Tk_Window tkwin, 
+    Tcl_Obj *nameObj, Tcl_HashTable *tablePtr,
+    TkPathGradientChangedProc *changeProc, ClientData clientData)
+{
+    char *name;
+    TkPathColor *colorPtr;
+    XColor *color = NULL;
+    TkPathGradientInst *gradientInstPtr;
+    
+    name = Tcl_GetString(nameObj);
+    colorPtr = (TkPathColor *) ckalloc(sizeof(TkPathColor));
+    
+    /*
+     * Only one of them can be non NULL.
+     */
+    colorPtr->color = NULL;
+    colorPtr->gradientInstPtr = NULL;
+    
+    gradientInstPtr = TkPathGetGradient(interp, name, tablePtr, changeProc, clientData);
+    if (gradientInstPtr != NULL) {
+        colorPtr->gradientInstPtr = gradientInstPtr;
     } else {
-        color = Tk_AllocColorFromObj(interp, tkwin, nameObjPtr);
+        Tcl_ResetResult(interp);
+        color = Tk_AllocColorFromObj(interp, tkwin, nameObj);
         if (color == NULL) {
-            char tmp[256];
+            Tcl_Obj *resultObj;
             ckfree((char *) colorPtr);
-            sprintf(tmp, "unrecognized color or gradient name \"%s\"", name);
-            Tcl_SetObjResult(interp, Tcl_NewStringObj(tmp, -1));
+            resultObj = Tcl_NewStringObj("unrecognized color or gradient name \"", -1);
+            Tcl_AppendStringsToObj(resultObj, name, "\"", (char *) NULL);
+            Tcl_SetObjResult(interp, resultObj);
             return NULL;
         }
         colorPtr->color = color;     
@@ -233,8 +288,8 @@ TkPathFreePathColor(TkPathColor *colorPtr)
     if (colorPtr != NULL) {
         if (colorPtr->color != NULL) {
             Tk_FreeColor(colorPtr->color);
-        } else if (colorPtr->gradientName != NULL) {
-            ckfree(colorPtr->gradientName);
+        } else if (colorPtr->gradientInstPtr != NULL) {
+            TkPathFreeGradient(colorPtr->gradientInstPtr);
         }
         ckfree((char *) colorPtr);
     }
@@ -523,7 +578,7 @@ EndpointToCentralArcParameters(
      * If the endpoints (x1, y1) and (x2, y2) are identical, then this
      * is equivalent to omitting the elliptical arc segment entirely
      */
-    if (x1 == x2 && y1 == y2) {
+    if (DOUBLE_EQUALS(x1, x2) && DOUBLE_EQUALS(y1, y2)) {
         return kPathArcSkip;
     }
     
@@ -816,7 +871,7 @@ PathGetTclObjFromTMatrix(
 /*
  *----------------------------------------------------------------------
  *
- * PathGenericCmdDispatcher --
+ * TkPathGenericCmdDispatcher --
  *
  *		Supposed to be a generic command dispatcher.  
  *
@@ -843,8 +898,9 @@ enum {
 };
 
 int 
-PathGenericCmdDispatcher( 
+TkPathGenericCmdDispatcher( 
         Tcl_Interp* interp,
+        Tk_Window tkwin,
         int objc,
       	Tcl_Obj* CONST objv[],
         char *baseName,
@@ -861,7 +917,6 @@ PathGenericCmdDispatcher(
     int 		index;
     int			mask;
     Tcl_HashEntry *hPtr;
-    Tk_Window tkwin = Tk_MainWindow(interp); /* Should have been the canvas. */
 
     if (objc < 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "command ?arg arg...?");

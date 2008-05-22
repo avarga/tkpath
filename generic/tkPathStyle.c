@@ -1,10 +1,10 @@
 /*
  * tkPathStyle.c --
  *
- *	    This file implements style objects used when drawing paths.
+ *	This file implements style objects used when drawing paths.
  *      See http://www.w3.org/TR/SVG11/.
  *
- * Copyright (c) 2005-2007  Mats Bengtsson
+ * Copyright (c) 2005-2008  Mats Bengtsson
  *
  * Note: It would be best to have this in the canvas widget as a special
  *       object, but I see no way of doing this without touching
@@ -20,23 +20,21 @@
 #include "tkIntPath.h"
 #include "tkPathStyle.h"
 
-static Tcl_HashTable 	*gStyleHashPtr;
-static Tk_OptionTable 	gStyleOptionTable;
-static int 				gStyleNameUid = 0;
-static char 			*kStyleNameBase = "tkpath::style";
+extern Tcl_HashTable 	*gGradientHashPtr;
 
+static Tcl_HashTable 	*gStyleHashPtr;
+static Tk_OptionTable 	styleOptionTable;
+static int 		gStyleNameUid = 0;
+static char 		*kStyleNameBase = "tkp::style";
 
 /*
  * Declarationd for functions local to this file.
  */
 
-static int 		StyleObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
-static char *	StyleCreateAndConfig(Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[]);
-static void 	StyleConfigNotify(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[]);
-static void		StyleFree(Tcl_Interp *interp, char *recordPtr);
+static int 	StyleObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CONST objv[]);
 
 /*
- * Custom option support.
+ * Custom option processing code.
  */
 
 /*
@@ -45,18 +43,18 @@ static void		StyleFree(Tcl_Interp *interp, char *recordPtr);
 
 int MatrixSetOption(
     ClientData clientData,
-    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
-    Tk_Window tkwin,		/* Window for which option is being set. */
-    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+    Tcl_Interp *interp,	    /* Current interp; may be used for errors. */
+    Tk_Window tkwin,	    /* Window for which option is being set. */
+    Tcl_Obj **value,	    /* Pointer to the pointer to the value object.
                              * We use a pointer to the pointer because
                              * we may need to return a value (NULL). */
-    char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
+    char *recordPtr,	    /* Pointer to storage for the widget record. */
+    int internalOffset,	    /* Offset within *recordPtr at which the
                                internal value is to be stored. */
-    char *oldInternalPtr,	/* Pointer to storage for the old value. */
-    int flags)				/* Flags for the option, set Tk_SetOptions. */
+    char *oldInternalPtr,   /* Pointer to storage for the old value. */
+    int flags)		    /* Flags for the option, set Tk_SetOptions. */
 {
-    char *internalPtr;		/* Points to location in record where
+    char *internalPtr;	    /* Points to location in record where
                              * internal representation of value should
                              * be stored, or NULL. */
     char *list;
@@ -71,21 +69,21 @@ int MatrixSetOption(
         internalPtr = NULL;
     }
     if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
-		valuePtr = NULL;
+	valuePtr = NULL;
     }
     if (internalPtr != NULL) {
-		if (valuePtr != NULL) {
+	if (valuePtr != NULL) {
             list = Tcl_GetStringFromObj(valuePtr, &length);
             newPtr = (TMatrix *) ckalloc(sizeof(TMatrix));
             if (PathGetTMatrix(interp, list, newPtr) != TCL_OK) {
                 ckfree((char *) newPtr);
                 return TCL_ERROR;
             }
-		} else {
-		    newPtr = NULL;
+	} else {
+	    newPtr = NULL;
         }
-		*((TMatrix **) oldInternalPtr) = *((TMatrix **) internalPtr);
-		*((TMatrix **) internalPtr) = newPtr;
+	*((TMatrix **) oldInternalPtr) = *((TMatrix **) internalPtr);
+	*((TMatrix **) internalPtr) = newPtr;
     }
     return TCL_OK;
 }
@@ -94,11 +92,11 @@ Tcl_Obj *
 MatrixGetOption(
     ClientData clientData,
     Tk_Window tkwin,
-    char *recordPtr,		/* Pointer to widget record. */
-    int internalOffset)		/* Offset within *recordPtr containing the
+    char *recordPtr,	    /* Pointer to widget record. */
+    int internalOffset)	    /* Offset within *recordPtr containing the
                              * value. */
 {
-    char 		*internalPtr;
+    char 	*internalPtr;
     TMatrix 	*matrixPtr;
     Tcl_Obj 	*listObj;
     
@@ -131,80 +129,147 @@ MatrixFreeOption(
     }
 }
 
+/* Return NULL on error and leave error message */
+
+Tk_PathDash *
+TkPathDashNew(Tcl_Interp *interp, Tcl_Obj *dashObjPtr)
+{
+    Tk_PathDash *dashPtr;
+    int objc, i;
+    double value;
+    Tcl_Obj **objv;
+    
+    dashPtr = (Tk_PathDash *) ckalloc(sizeof(Tk_PathDash));
+    dashPtr->number = 0;
+    dashPtr->array = NULL;
+    if (Tcl_ListObjGetElements(interp, dashObjPtr, &objc, (Tcl_Obj ***) &objv) != TCL_OK) {
+	goto error;
+    }
+    dashPtr->number = objc;
+    dashPtr->array = (float *) ckalloc(objc * sizeof(float));
+    for (i = 0; i < objc; i++) {
+	if (Tcl_GetDoubleFromObj(interp, objv[i], &value) != TCL_OK) {
+	    goto error;
+	}
+	dashPtr->array[i] = (float) value;
+    }
+    return dashPtr;
+    
+error:
+    TkPathDashFree(dashPtr);
+    return NULL;
+}
+
+void
+TkPathDashFree(Tk_PathDash *dashPtr)
+{
+    if (dashPtr->array) {
+	ckfree((char *) dashPtr->array);
+    }
+    ckfree((char *) dashPtr);
+}
+
 /*
  * The -strokedasharray custom option.
  */
 
-int DashSetOption(
+/*
+ *--------------------------------------------------------------
+ *
+ * Tk_PathDashOptionSetProc, Tk_PathDashOptionGetProc, 
+ *	Tk_PathDashOptionRestoreProc, Tk_PathDashOptionRestoreProc --
+ *
+ *	These functions are invoked during option processing to handle 
+ *	"-strokedasharray" option for canvas objects.
+ *
+ * Results:
+ *	According to the Tk_ObjCustomOption struct.
+ *
+ * Side effects:
+ *	Memory allocated or freed.
+ *
+ *--------------------------------------------------------------
+ */
+
+int Tk_PathDashOptionSetProc(
     ClientData clientData,
-    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
-    Tk_Window tkwin,		/* Window for which option is being set. */
-    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+    Tcl_Interp *interp,	    /* Current interp; may be used for errors. */
+    Tk_Window tkwin,	    /* Window for which option is being set. */
+    Tcl_Obj **value,	    /* Pointer to the pointer to the value object.
                              * We use a pointer to the pointer because
                              * we may need to return a value (NULL). */
-    char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
+    char *recordPtr,	    /* Pointer to storage for the widget record. */
+    int internalOffset,	    /* Offset within *recordPtr at which the
                                internal value is to be stored. */
-    char *oldInternalPtr,	/* Pointer to storage for the old value. */
-    int flags)				/* Flags for the option, set Tk_SetOptions. */
+    char *oldInternalPtr,   /* Pointer to storage for the old value. */
+    int flags)		    /* Flags for the option, set Tk_SetOptions. */
 {
-    char *internalPtr;
-    char *string;
+    char *internalPtr;	    /* Points to location in record where
+                             * internal representation of value should
+                             * be stored, or NULL. */
+    Tcl_Obj *valuePtr;
+    Tk_PathDash *newPtr;
     
+    valuePtr = *value;
     if (internalOffset >= 0) {
         internalPtr = recordPtr + internalOffset;
     } else {
         internalPtr = NULL;
     }
-    string = Tcl_GetStringFromObj(*value, NULL);
-    return Tk_GetDash(interp, string, (Tk_Dash *) internalPtr);
+    if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
+	valuePtr = NULL;
+	newPtr = NULL;
+    }
+    if (internalPtr != NULL) {
+	if (valuePtr != NULL) {
+	    newPtr = TkPathDashNew(interp, valuePtr);
+	    if (newPtr == NULL) {
+		return TCL_ERROR;
+	    }
+        }
+	*((Tk_PathDash **) oldInternalPtr) = *((Tk_PathDash **) internalPtr);
+	*((Tk_PathDash **) internalPtr) = newPtr;
+    }
+    return TCL_OK;
 }
 
 Tcl_Obj *
-DashGetOption(
+Tk_PathDashOptionGetProc(
     ClientData clientData,
     Tk_Window tkwin,
     char *recordPtr,		/* Pointer to widget record. */
     int internalOffset)		/* Offset within *recordPtr containing the
-                             * value. */
+				 * value. */
 {
-    Tk_Dash *dash = (Tk_Dash *) (recordPtr + internalOffset);
-    char *buffer;
-    char *p;
-    int i = dash->number;
+    Tk_PathDash *dashPtr = (Tk_PathDash *) (recordPtr + internalOffset);
+    Tcl_Obj *listObj = Tcl_NewListObj(0, NULL);
+    int i;
 
-    if (i < 0) {
-        i = -i;
-        buffer = (char *) ckalloc((unsigned int) (i+1));
-        p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-        memcpy(buffer, p, (unsigned int) i);
-        buffer[i] = 0;
-    } else if (!i) {
-        buffer = (char *) ckalloc(1);
-        buffer[0] = '\0';
-    } else {
-        buffer = (char *)ckalloc((unsigned int) (4*i));
-        p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-        sprintf(buffer, "%d", *p++ & 0xff);
-        while(--i) {
-            sprintf(buffer+strlen(buffer), " %d", *p++ & 0xff);
-        }
+    for (i = 0; i < dashPtr->number; i++) {
+        Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewDoubleObj(dashPtr->array[i]));
     }
-    return Tcl_NewStringObj(buffer, -1);
+    return listObj;
 }
 
 void
-DashFreeOption(
+Tk_PathDashOptionRestoreProc(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr,		/* Pointer to storage for value. */
+    char *oldInternalPtr)	/* Pointer to old value. */
+{
+    *(Tk_PathDash **)internalPtr = *(Tk_PathDash **)oldInternalPtr;
+}
+
+void
+Tk_PathDashOptionFreeProc(
     ClientData clientData,
     Tk_Window tkwin,
     char *internalPtr)		/* Pointer to storage for value. */
 {
     if (*((char **) internalPtr) != NULL) {
-        Tk_Dash *dash = (Tk_Dash *) internalPtr;
-
-        if (ABS(dash->number) > sizeof(char *)) {
-            ckfree((char *) dash->pattern.pt);
-        }
+        TkPathDashFree(*(Tk_PathDash **) internalPtr);
+        *((char **) internalPtr) = NULL;
     }
 }
 
@@ -214,18 +279,18 @@ DashFreeOption(
  
 int PathColorSetOption(
     ClientData clientData,
-    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
-    Tk_Window tkwin,		/* Window for which option is being set. */
-    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+    Tcl_Interp *interp,	    /* Current interp; may be used for errors. */
+    Tk_Window tkwin,	    /* Window for which option is being set. */
+    Tcl_Obj **value,	    /* Pointer to the pointer to the value object.
                              * We use a pointer to the pointer because
                              * we may need to return a value (NULL). */
-    char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
+    char *recordPtr,	    /* Pointer to storage for the widget record. */
+    int internalOffset,	    /* Offset within *recordPtr at which the
                                internal value is to be stored. */
-    char *oldInternalPtr,	/* Pointer to storage for the old value. */
-    int flags)				/* Flags for the option, set Tk_SetOptions. */
+    char *oldInternalPtr,   /* Pointer to storage for the old value. */
+    int flags)		    /* Flags for the option, set Tk_SetOptions. */
 {
-    char *internalPtr;		/* Points to location in record where
+    char *internalPtr;	    /* Points to location in record where
                              * internal representation of value should
                              * be stored, or NULL. */
     Tcl_Obj *valuePtr;
@@ -238,10 +303,10 @@ int PathColorSetOption(
         internalPtr = NULL;
     }
     if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
-		valuePtr = NULL;
+	valuePtr = NULL;
     }
     if (internalPtr != NULL) {
-		if (valuePtr != NULL) {
+	if (valuePtr != NULL) {
             newPtr = TkPathNewPathColor(interp, tkwin, valuePtr);
             if (newPtr == NULL) {
                 return TCL_ERROR;
@@ -249,8 +314,8 @@ int PathColorSetOption(
         } else {
             newPtr = NULL;
         }
-		*((TkPathColor **) oldInternalPtr) = *((TkPathColor **) internalPtr);
-		*((TkPathColor **) internalPtr) = newPtr;
+	*((TkPathColor **) oldInternalPtr) = *((TkPathColor **) internalPtr);
+	*((TkPathColor **) internalPtr) = newPtr;
     }
     return TCL_OK;
 }
@@ -259,11 +324,11 @@ Tcl_Obj *
 PathColorGetOption(
     ClientData clientData,
     Tk_Window tkwin,
-    char *recordPtr,		/* Pointer to widget record. */
-    int internalOffset)		/* Offset within *recordPtr containing the
+    char *recordPtr,	    /* Pointer to widget record. */
+    int internalOffset)	    /* Offset within *recordPtr containing the
                              * value. */
 {
-    char 		*internalPtr;
+    char 	*internalPtr;
     Tcl_Obj 	*objPtr = NULL;
     TkPathColor *pathColor = NULL;
     
@@ -272,8 +337,8 @@ PathColorGetOption(
     if (pathColor != NULL) {
         if (pathColor->color) {
             objPtr = Tcl_NewStringObj(Tk_NameOfColor(pathColor->color), -1);
-        } else if (pathColor->gradientName) {
-            objPtr = Tcl_NewStringObj(pathColor->gradientName, -1);
+        } else if (pathColor->gradientInstPtr) {
+            objPtr = Tcl_NewStringObj(pathColor->gradientInstPtr->masterPtr->name, -1);
         }
     }
     return objPtr;
@@ -303,64 +368,59 @@ PathColorFreeOption(
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 
-/* Just a placeholder for not yet implemented stuff. */
-static char *nullST[] = {
-    "", (char *) NULL
-};
 
-// @@@ BAD I had to duplicate this record here and in tkPathStyle.h.
+// @@@ TODO: BAD I had to duplicate this record here and in tkPathStyle.h.
 //     Else I get problems with Tk_Offset and records.
 
 static Tk_OptionSpec styleOptionSpecs[] = {
-	{TK_OPTION_CUSTOM, "-fill", (char *) NULL, (char *) NULL,
-		"", -1, Tk_Offset(Tk_PathStyle, fill),
-		TK_OPTION_NULL_OK, (ClientData) &pathColorCO, 
-        PATH_STYLE_OPTION_FILL},
-	{TK_OPTION_STRING_TABLE, "-filloffset", (char *) NULL, (char *) NULL,	/* @@@ TODO */
-		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, null),
-		0, (ClientData) &nullST, PATH_STYLE_OPTION_FILL_OFFSET},
-    {TK_OPTION_DOUBLE, "-fillopacity", (char *) NULL, (char *) NULL,
+#if 0
+    {TK_OPTION_CUSTOM, "-fill", NULL, NULL,
+	"", -1, Tk_Offset(Tk_PathStyle, fill),
+	TK_OPTION_NULL_OK, (ClientData) &pathColorCO, 
+	PATH_STYLE_OPTION_FILL},
+#endif
+    {TK_OPTION_STRING, "-fill", NULL, NULL,
+	"", Tk_Offset(Tk_PathStyle, fillObj), -1,
+	TK_OPTION_NULL_OK, 0, PATH_STYLE_OPTION_FILL},
+    {TK_OPTION_DOUBLE, "-fillopacity", NULL, NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, fillOpacity), 0, 0, 
-        PATH_STYLE_OPTION_FILL_OPACITY},
-    {TK_OPTION_STRING_TABLE, "-fillrule", (char *) NULL, (char *) NULL,
+	PATH_STYLE_OPTION_FILL_OPACITY},
+    {TK_OPTION_STRING_TABLE, "-fillrule", NULL, NULL,
         "nonzero", -1, Tk_Offset(Tk_PathStyle, fillRule), 
-        0, (ClientData) fillRuleST, PATH_STYLE_OPTION_FILL_RULE},
-	{TK_OPTION_CUSTOM, "-matrix", (char *) NULL, (char *) NULL,
-		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, matrixPtr),
-		TK_OPTION_NULL_OK, (ClientData) &matrixCO, PATH_STYLE_OPTION_MATRIX},
-    {TK_OPTION_COLOR, "-stroke", (char *) NULL, (char *) NULL,
+	0, (ClientData) fillRuleST, PATH_STYLE_OPTION_FILL_RULE},
+    {TK_OPTION_CUSTOM, "-matrix", NULL, NULL,
+	NULL, -1, Tk_Offset(Tk_PathStyle, matrixPtr),
+	TK_OPTION_NULL_OK, (ClientData) &matrixCO, PATH_STYLE_OPTION_MATRIX},
+    {TK_OPTION_COLOR, "-stroke", NULL, NULL,
         "black", -1, Tk_Offset(Tk_PathStyle, strokeColor), TK_OPTION_NULL_OK, 0, 
-        PATH_STYLE_OPTION_STROKE},
-	{TK_OPTION_CUSTOM, "-strokedasharray", (char *) NULL, (char *) NULL,
-		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, dash),
-		TK_OPTION_NULL_OK, (ClientData) &dashCO, PATH_STYLE_OPTION_STROKE_DASHARRAY},
-    {TK_OPTION_STRING_TABLE, "-strokelinecap", (char *) NULL, (char *) NULL,
+	PATH_STYLE_OPTION_STROKE},
+    {TK_OPTION_CUSTOM, "-strokedasharray", NULL, NULL,
+	NULL, -1, Tk_Offset(Tk_PathStyle, dashPtr),
+	TK_OPTION_NULL_OK, (ClientData) &dashCO, PATH_STYLE_OPTION_STROKE_DASHARRAY},
+    {TK_OPTION_STRING_TABLE, "-strokelinecap", NULL, NULL,
         "butt", -1, Tk_Offset(Tk_PathStyle, capStyle), 
-        0, (ClientData) lineCapST, PATH_STYLE_OPTION_STROKE_LINECAP},
-    {TK_OPTION_STRING_TABLE, "-strokelinejoin", (char *) NULL, (char *) NULL,
+	0, (ClientData) lineCapST, PATH_STYLE_OPTION_STROKE_LINECAP},
+    {TK_OPTION_STRING_TABLE, "-strokelinejoin", NULL, NULL,
         "round", -1, Tk_Offset(Tk_PathStyle, joinStyle), 
-        0, (ClientData) lineJoinST, PATH_STYLE_OPTION_STROKE_LINEJOIN},
-    {TK_OPTION_DOUBLE, "-strokemiterlimit", (char *) NULL, (char *) NULL,
+	0, (ClientData) lineJoinST, PATH_STYLE_OPTION_STROKE_LINEJOIN},
+    {TK_OPTION_DOUBLE, "-strokemiterlimit", NULL, NULL,
         "4.0", -1, Tk_Offset(Tk_PathStyle, miterLimit), 0, 0, 
-        PATH_STYLE_OPTION_STROKE_MITERLIMIT},
-	{TK_OPTION_STRING_TABLE, "-strokeoffset", (char *) NULL, (char *) NULL,	/* @@@ TODO */
-		(char *) NULL, -1, Tk_Offset(Tk_PathStyle, null),
-		0, (ClientData) &nullST, PATH_STYLE_OPTION_STROKE_OFFSET},
-    {TK_OPTION_DOUBLE, "-strokeopacity", (char *) NULL, (char *) NULL,
+	PATH_STYLE_OPTION_STROKE_MITERLIMIT},
+    {TK_OPTION_DOUBLE, "-strokeopacity", NULL, NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, strokeOpacity), 0, 0, 
-        PATH_STYLE_OPTION_STROKE_OPACITY},
-    {TK_OPTION_DOUBLE, "-strokewidth", (char *) NULL, (char *) NULL,
+	PATH_STYLE_OPTION_STROKE_OPACITY},
+    {TK_OPTION_DOUBLE, "-strokewidth", NULL, NULL,
         "1.0", -1, Tk_Offset(Tk_PathStyle, strokeWidth), 0, 0, 
-        PATH_STYLE_OPTION_STROKE_WIDTH},
+	PATH_STYLE_OPTION_STROKE_WIDTH},
     
     /* @@@ TODO: When this comes into canvas code we should add a -tags option here??? */
     
-	{TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-		(char *) NULL, 0, -1, 0, (ClientData) NULL, 0}
+    {TK_OPTION_END, NULL, NULL, NULL,
+	NULL, 0, -1, 0, (ClientData) NULL, 0}
 };
 
 void
-PathStyleInit(Tcl_Interp* interp) 
+PathStyleInit(Tcl_Interp *interp) 
 {
     gStyleHashPtr = (Tcl_HashTable *) ckalloc( sizeof(Tcl_HashTable) );
     Tcl_InitHashTable(gStyleHashPtr, TCL_STRING_KEYS);
@@ -368,10 +428,246 @@ PathStyleInit(Tcl_Interp* interp)
     /*
      * The option table must only be made once and not for each instance.
      */
-    gStyleOptionTable = Tk_CreateOptionTable(interp, styleOptionSpecs);
+    styleOptionTable = Tk_CreateOptionTable(interp, styleOptionSpecs);
 
-    Tcl_CreateObjCommand(interp, "::tkpath::style",
+    Tcl_CreateObjCommand(interp, "tkp::style",
             StyleObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+}
+
+/*
+ * StyleGradientProc: callback to style when gradient changes.
+ */
+ 
+static void	
+StyleGradientProc(ClientData clientData, int flags)
+{
+    Tk_PathStyle *stylePtr = (Tk_PathStyle *)clientData;
+        
+    if (flags) {
+	if (flags & PATH_GRADIENT_FLAG_DELETE) {
+	    TkPathFreePathColor(stylePtr->fill);	
+	    stylePtr->fill = NULL;
+	    Tcl_DecrRefCount(stylePtr->fillObj);
+	    stylePtr->fillObj = NULL;
+	}
+	TkPathStyleChanged(stylePtr, flags);
+    }
+}
+
+static void
+PathStyleFree(Tk_PathStyle *stylePtr)
+{
+    if (stylePtr->fill != NULL) {
+	TkPathFreePathColor(stylePtr->fill);
+    }
+    Tk_FreeConfigOptions((char *) stylePtr, stylePtr->optionTable, NULL);
+    ckfree((char *) stylePtr);
+}
+
+static int
+FindPathStyle(Tcl_Interp *interp, Tcl_Obj *nameObj, Tcl_HashTable *tablePtr, Tk_PathStyle **s)
+{
+    Tcl_HashEntry   *hPtr;
+    char *name = Tcl_GetString(nameObj);
+    *s = NULL;
+    hPtr = Tcl_FindHashEntry(tablePtr, name);
+    if (hPtr == NULL) {
+	Tcl_Obj *resultObj;
+	resultObj = Tcl_NewStringObj("style \"", -1);
+	Tcl_AppendStringsToObj(resultObj, name, "\" doesn't exist", (char *) NULL);
+	Tcl_SetObjResult(interp, resultObj);
+	return TCL_ERROR;
+    }
+    *s = Tcl_GetHashValue(hPtr);
+    return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * PathStyleCget, Configure, Create, Delete, InUse, Names --
+ *
+ *	These functions implement style object commands in a generic way.
+ *	The Tcl_HashTable defines the style namespace.
+ *
+ * Results:
+ *	Varies: typically a standard tcl result or void.
+ *
+ * Side effects:
+ *	Varies.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+PathStyleCget(Tcl_Interp *interp, Tk_Window tkwin, int objc, Tcl_Obj * CONST objv[], 
+    Tcl_HashTable *tablePtr)
+{
+    Tk_PathStyle    *stylePtr = NULL;
+    Tcl_Obj	    *resultObj = NULL;
+
+    if (FindPathStyle(interp, objv[0], tablePtr, &stylePtr) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    resultObj = Tk_GetOptionValue(interp, (char *)stylePtr, 
+	    stylePtr->optionTable, objv[1], tkwin);
+    if (resultObj == NULL) {
+	return TCL_ERROR;
+    } else {
+	Tcl_SetObjResult(interp, resultObj);
+    }
+    return TCL_OK;
+}
+
+int
+PathStyleConfigure(Tcl_Interp *interp, Tk_Window tkwin, int objc, Tcl_Obj * CONST objv[], 
+    Tcl_HashTable *styleTablePtr, Tcl_HashTable *gradTablePtr)
+{
+    int		    mask;
+    Tk_PathStyle    *stylePtr = NULL;
+    Tcl_Obj	    *resultObj = NULL;
+
+    if (FindPathStyle(interp, objv[0], styleTablePtr, &stylePtr) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc <= 2) {
+	resultObj = Tk_GetOptionInfo(interp, (char *)stylePtr, 
+		stylePtr->optionTable,
+		(objc == 1) ? (Tcl_Obj *) NULL : objv[1], tkwin);
+	if (resultObj == NULL) {
+	    return TCL_ERROR;
+	}
+	Tcl_SetObjResult(interp, resultObj);
+    } else {
+	TkPathColor *fillPtr = NULL;
+
+	// @@@ TODO: loop error to recover using savedOptions!
+	if (Tk_SetOptions(interp, (char *)stylePtr, stylePtr->optionTable, 
+		objc - 1, objv + 1, tkwin, NULL, &mask) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (stylePtr->fillObj != NULL) {
+	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
+		    gradTablePtr, StyleGradientProc, (ClientData) stylePtr);
+	    if (fillPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	} else {
+	    fillPtr = NULL;
+	}
+	/* Free any old and store the new. */
+	if (stylePtr->fill != NULL) {
+	    TkPathFreePathColor(stylePtr->fill);
+	}
+	stylePtr->fill = fillPtr;	
+	/* 
+	 * Let mask be the cumalative options set. 
+	 */
+	stylePtr->mask |= mask;
+    }
+    TkPathStyleChanged(stylePtr, PATH_STYLE_FLAG_CONFIGURE);
+    return TCL_OK;
+}
+
+int
+PathStyleCreate(Tcl_Interp *interp, Tk_Window tkwin, int objc, Tcl_Obj * CONST objv[],
+    Tcl_HashTable *styleTablePtr, Tcl_HashTable *gradTablePtr, char *tokenName)
+{
+    int		    isNew;
+    int		    mask;
+    Tcl_HashEntry   *hPtr;
+    Tk_PathStyle    *stylePtr = NULL;
+    TkPathColor	    *fillPtr = NULL;
+    
+    stylePtr = (Tk_PathStyle *) ckalloc(sizeof(Tk_PathStyle));
+    memset(stylePtr, '\0', sizeof(Tk_PathStyle));
+
+    /* Fill in defaults. */
+    TkPathCreateStyle(stylePtr);
+    
+    /*
+     * Create the option table for this class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+    stylePtr->optionTable = styleOptionTable; 
+    stylePtr->name = Tk_GetUid(tokenName);
+    
+    if (Tk_InitOptions(interp, (char *)stylePtr, 
+	    stylePtr->optionTable, tkwin) != TCL_OK) {
+	ckfree((char *)stylePtr);
+	return TCL_ERROR;
+    }
+    if (Tk_SetOptions(interp, (char *)stylePtr, stylePtr->optionTable, 	
+	    objc, objv, tkwin, NULL, &mask) != TCL_OK) {
+	Tk_FreeConfigOptions((char *)stylePtr, stylePtr->optionTable, NULL);
+	ckfree((char *)stylePtr);
+	return TCL_ERROR;
+    }
+    if (stylePtr->fillObj != NULL) {
+	fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
+		gradTablePtr, StyleGradientProc, (ClientData) stylePtr);
+	if (fillPtr == NULL) {
+	    Tk_FreeConfigOptions((char *)stylePtr, stylePtr->optionTable, NULL);
+	    ckfree((char *)stylePtr);
+	    return TCL_ERROR;
+	}
+    } else {
+	fillPtr = NULL;
+    }
+    stylePtr->fill = fillPtr;
+
+    /* 
+     * Let mask be the cumalative options set. 
+     */
+    stylePtr->mask |= mask;
+    hPtr = Tcl_CreateHashEntry(styleTablePtr, tokenName, &isNew);
+    Tcl_SetHashValue(hPtr, stylePtr);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(tokenName, -1));
+    return TCL_OK;
+}
+
+int
+PathStyleDelete(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr)
+{
+    Tk_PathStyle    *stylePtr = NULL;
+
+    if (FindPathStyle(interp, obj, tablePtr, &stylePtr) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    TkPathStyleChanged(stylePtr, PATH_STYLE_FLAG_DELETE);
+    Tcl_DeleteHashEntry(Tcl_FindHashEntry(tablePtr, Tcl_GetString(obj)));
+    PathStyleFree(stylePtr);
+    return TCL_OK;
+}
+
+int
+PathStyleInUse(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr)
+{
+    Tk_PathStyle    *stylePtr = NULL;
+
+    if (FindPathStyle(interp, obj, tablePtr, &stylePtr) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), stylePtr->instancePtr != NULL);
+    return TCL_OK;
+}
+
+void
+PathStyleNames(Tcl_Interp *interp, Tcl_HashTable *tablePtr)
+{
+    char	    *name;
+    Tcl_HashEntry   *hPtr;
+    Tcl_Obj	    *listObj;
+    Tcl_HashSearch  search;
+
+    listObj = Tcl_NewListObj(0, NULL);
+    hPtr = Tcl_FirstHashEntry(tablePtr, &search);
+    while (hPtr != NULL) {
+	name = Tcl_GetHashKey(tablePtr, hPtr);
+	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(name, -1));
+	hPtr = Tcl_NextHashEntry(&search);
+    }
+    Tcl_SetObjResult(interp, listObj);
 }
 
 /*
@@ -379,110 +675,162 @@ PathStyleInit(Tcl_Interp* interp)
  *
  * TkPathConfigStyle --
  *
- *		Parses a list of Tcl objects to an already allocated Tk_PathStyle.
+ *	Parses a list of Tcl objects to an already allocated Tk_PathStyle.
  *
  * Results:
- *		Standard Tcl result
+ *	Standard Tcl result
  *
  * Side effects:
- *		Options allocated. Use Tk_FreeConfigOptions when finished.
+ *	Options allocated. Use Tk_FreeConfigOptions when finished.
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkPathConfigStyle(Tcl_Interp* interp, Tk_PathStyle *stylePtr, int objc, Tcl_Obj* CONST objv[])
+TkPathConfigStyle(Tcl_Interp *interp, Tk_PathStyle *stylePtr, int objc, Tcl_Obj * CONST objv[])
 {
     Tk_Window tkwin = Tk_MainWindow(interp);    
-	stylePtr->optionTable = gStyleOptionTable; 
-    if (Tk_InitOptions(interp, (char *)stylePtr, gStyleOptionTable, tkwin) != TCL_OK) {
+    stylePtr->optionTable = styleOptionTable; 
+    if (Tk_InitOptions(interp, (char *)stylePtr, styleOptionTable, tkwin) != TCL_OK) {
         return TCL_ERROR;
     }
-    if (Tk_SetOptions(interp, (char *)stylePtr, gStyleOptionTable, 	
+    if (Tk_SetOptions(interp, (char *)stylePtr, styleOptionTable, 	
             objc, objv, tkwin, NULL, NULL) != TCL_OK) {
-        Tk_FreeConfigOptions((char *)stylePtr, gStyleOptionTable, NULL);
+        Tk_FreeConfigOptions((char *)stylePtr, styleOptionTable, NULL);
         return TCL_ERROR;
     }
     return TCL_OK;
 }
+
+static CONST char *styleCmds[] = {
+    "cget", "configure", "create", "delete", "inuse", "names",
+    (char *) NULL
+};
+
+enum {
+    kPathStyleCmdCget	= 0L,
+    kPathStyleCmdConfigure,
+    kPathStyleCmdCreate,
+    kPathStyleCmdDelete,
+    kPathStyleCmdInUse,
+    kPathStyleCmdNames
+};
 
 /*
  *----------------------------------------------------------------------
  *
  * StyleObjCmd --
  *
- *		This implements the tkpath::style command.  
+ *	This implements the standalone tkp::style command.  
  *
  * Results:
- *		Standard Tcl result
+ *	Standard Tcl result
  *
  * Side effects:
- *		None
+ *	None
  *
  *----------------------------------------------------------------------
  */
 
-int 
+static int 
 StyleObjCmd( 
         ClientData clientData,
-        Tcl_Interp* interp,
+        Tcl_Interp *interp,
         int objc,
-      	Tcl_Obj* CONST objv[] )
+      	Tcl_Obj * CONST objv[] )
 {
-    return PathGenericCmdDispatcher(interp, objc, objv, 
-            kStyleNameBase, &gStyleNameUid, gStyleHashPtr, gStyleOptionTable,
-            StyleCreateAndConfig, StyleConfigNotify, StyleFree);
-}
-
-
-static char *
-StyleCreateAndConfig(
-        Tcl_Interp *interp, char *name, int objc, Tcl_Obj *CONST objv[])
-{
-	Tk_PathStyle *stylePtr;
-
-	stylePtr = (Tk_PathStyle *) ckalloc(sizeof(Tk_PathStyle));
-	memset(stylePtr, '\0', sizeof(Tk_PathStyle));
-
-    /* Fill in defaults */
-    TkPathCreateStyle(stylePtr);
+    int index;
+    int result = TCL_OK;
+    Tk_Window tkwin = Tk_MainWindow(interp);
     
     /*
-     * Create the option table for this class.  If it has already
-     * been created, the cached pointer will be returned.
+     * objv[1] is the subcommand: cget | configure | create | delete | names
      */
-	stylePtr->optionTable = gStyleOptionTable; 
-	stylePtr->name = Tk_GetUid(name);
-    
-    return (char *) stylePtr;
-}
-
-static void 
-StyleConfigNotify(char *recordPtr, int mask, int objc, Tcl_Obj *CONST objv[])
-{
-    Tk_PathStyle *stylePtr = (Tk_PathStyle *) recordPtr;
-
-    /* Let mask be the cumalative options set. */
-    stylePtr->mask |= mask;
-}
-
-static void
-StyleFree(Tcl_Interp *interp, char *recordPtr) 
-{
-    TkPathDeleteStyle(Tk_Display(Tk_MainWindow(interp)), (Tk_PathStyle *) recordPtr);
-    ckfree(recordPtr);
-}
-
-int
-PathStyleHaveWithName(CONST char *name)
-{
-	Tcl_HashEntry *hPtr;
-
-	hPtr = Tcl_FindHashEntry(gStyleHashPtr, name);
-	if (hPtr == NULL) {
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "command ?arg arg...?");
         return TCL_ERROR;
-    } else {
-        return TCL_OK;
+    }
+    if (Tcl_GetIndexFromObj(interp, objv[1], styleCmds, "command", 0,
+	    &index) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    switch (index) {
+	    
+        case kPathStyleCmdCget: {            
+	    if (objc != 4) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name option");
+		return TCL_ERROR;
+	    }
+	    result = PathStyleCget(interp, tkwin, objc-2, objv+2, gStyleHashPtr);
+            break;
+        }
+	    
+        case kPathStyleCmdConfigure: {
+	    if (objc < 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name ?option? ?value option value...?");
+		return TCL_ERROR;
+	    }
+	    result = PathStyleConfigure(interp, tkwin, objc-2, objv+2, 
+		    gStyleHashPtr, gGradientHashPtr);
+            break;
+        }
+	    
+        case kPathStyleCmdCreate: {
+	    char str[255];
+
+	    if (objc < 2) {
+		Tcl_WrongNumArgs(interp, 1, objv, "?option value...?");
+		return TCL_ERROR;
+	    }
+            sprintf(str, "%s%d", kStyleNameBase, gStyleNameUid++);
+	    result = PathStyleCreate(interp, tkwin, objc-2, objv+2, 
+		    gStyleHashPtr, gGradientHashPtr, str);
+            break;
+        }
+	    
+        case kPathStyleCmdDelete: {
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name");
+		return TCL_ERROR;
+	    }
+	    result = PathStyleDelete(interp, objv[2], gStyleHashPtr);
+	    break;
+        }
+
+	case kPathStyleCmdInUse: {
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name");
+		return TCL_ERROR;
+	    }
+	    result = PathStyleInUse(interp, objv[2], gStyleHashPtr);
+	    break;
+	}
+	    
+        case kPathStyleCmdNames: {
+	    if (objc != 2) {
+		Tcl_WrongNumArgs(interp, 2, objv, NULL);
+		return TCL_ERROR;
+	    }
+	    PathStyleNames(interp, gStyleHashPtr);
+            break;
+        }
+    }
+    return result;
+}
+
+void
+TkPathDeleteStyles(Tk_Window tkwin, Tcl_HashTable *hashTablePtr)
+{
+    Tcl_HashEntry 	*hPtr;
+    Tcl_HashSearch	search;
+    char		*recordPtr;
+
+    hPtr = Tcl_FirstHashEntry(hashTablePtr, &search);
+    while (hPtr != NULL) {
+	recordPtr = Tcl_GetHashValue(hPtr);
+	Tcl_DeleteHashEntry(hPtr);
+	PathStyleFree((Tk_PathStyle *)recordPtr);
+	hPtr = Tcl_NextHashEntry(&search);
     }
 }
 
@@ -523,29 +871,23 @@ CopyTMatrix(TMatrix **dstPtrPtr, TMatrix *srcPtr)
 }
 
 static void
-CopyTkDash(Tk_Dash *dstPtr, Tk_Dash *srcPtr)
+CopyTkDash(Tk_PathDash *dstPtr, Tk_PathDash *srcPtr)
 {
-
-    /* @@@ TODO */
-}
-
-#if 0 	// Keep for Backup
-static void
-CopyOptionString(char **dstPtrPtr, char *srcPtr)
-{
-    if ((*dstPtrPtr == NULL) && (srcPtr == NULL)) {
-        /* empty */
-    } else if (*dstPtrPtr == NULL) {
-        *dstPtrPtr = (char *) ckalloc(strlen(srcPtr) + 1);
-        strcpy(*dstPtrPtr, srcPtr);
-    } else {
-        ckfree(*dstPtrPtr);
-        *dstPtrPtr = (char *) ckalloc(strlen(srcPtr) + 1);
-        strcpy(*dstPtrPtr, srcPtr);
+    int i;
+    float *dptr, *sptr;
+    
+    if (dstPtr != NULL) {
+	TkPathDashFree(dstPtr);
+    }
+    dstPtr->number = srcPtr->number;
+    dptr = dstPtr->array;
+    sptr = srcPtr->array;
+    for (i = 0; i < srcPtr->number; i++) {
+	*dptr++ = *sptr++;
     }
 }
-#endif
 
+#if 0
 static void
 CopyPathColor(Tk_Window tkwin, TkPathColor **dstPtrPtr, TkPathColor *srcPtr)
 {
@@ -560,8 +902,12 @@ CopyPathColor(Tk_Window tkwin, TkPathColor **dstPtrPtr, TkPathColor *srcPtr)
             TkPathFreePathColor(dstPtr);
         }
         pathColorPtr = (TkPathColor *) ckalloc(sizeof(TkPathColor));
+	pathColorPtr->color = NULL;
+	pathColorPtr->gradientName = NULL;
         if (srcPtr->color != NULL) {
             pathColorPtr->color = Tk_GetColorByValue(tkwin, srcPtr->color);
+	    
+	    // @@@ TODO
         } else if (srcPtr->gradientName != NULL) {
             pathColorPtr->gradientName = (char *) ckalloc(strlen(srcPtr->gradientName) + 1);
             strcpy(pathColorPtr->gradientName, srcPtr->gradientName);
@@ -569,37 +915,48 @@ CopyPathColor(Tk_Window tkwin, TkPathColor **dstPtrPtr, TkPathColor *srcPtr)
     }
     *dstPtrPtr = pathColorPtr;
 }
+#endif
+
+int
+TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_Window tkwin,
+	Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags)
+{
+    return TkPathStyleMergeStyles_DEPRECIATED(tkwin, gStyleHashPtr, stylePtr, styleObj, flags);
+}
 
 /*
  *--------------------------------------------------------------
  *
- * PathStyleMergeStyles --
+ * TkPathStyleMergeStyles --
  *
- *		Copies the style options set in 'styleName' to the one in 'stylePtr'.
- *		Depending on 'flags' only fill or stroke options set.
+ *	Copies the style options set in 'styleName' to the one in 'stylePtr'.
+ *	Depending on 'flags' only fill or stroke options set.
  *
  * Results:
- *		None.
+ *	A standard Tcl return value.
  *
  * Side effects:
- *		Variables in 'stylePtr' set.
+ *	Variables in 'stylePtr' set.
  *
  *--------------------------------------------------------------
  */
 
-void
-PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleName, long flags)
+/* @@@ TODO: add result in interp */
+
+int
+TkPathStyleMergeStyles_DEPRECIATED(Tk_Window tkwin, Tcl_HashTable *hashTablePtr,
+	Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags)
 {
     int mask;
-	Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr;
     Tk_PathStyle *srcStylePtr;
 
-    if (styleName == NULL) {
-        return;
+    if (styleObj == NULL) {
+        return TCL_OK;
     }
-	hPtr = Tcl_FindHashEntry(gStyleHashPtr, styleName);
-	if (hPtr == NULL) {
-        return;
+    hPtr = Tcl_FindHashEntry(hashTablePtr, Tcl_GetString(styleObj));
+    if (hPtr == NULL) {
+        return TCL_ERROR;
     }
     srcStylePtr = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
 
@@ -610,7 +967,7 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
     mask = srcStylePtr->mask;
     if (!(flags & kPathMergeStyleNotFill)) {
         if (mask & PATH_STYLE_OPTION_FILL) {
-            CopyPathColor(tkwin, &(stylePtr->fill), srcStylePtr->fill);
+            //CopyPathColor(tkwin, &(stylePtr->fill), srcStylePtr->fill);
         }
         if (mask & PATH_STYLE_OPTION_FILL_OFFSET) {
             /* @@@ TODO */
@@ -633,7 +990,7 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
             CopyXColor(tkwin, &(stylePtr->strokeColor), srcStylePtr->strokeColor);
         }
         if (mask & PATH_STYLE_OPTION_STROKE_DASHARRAY) {
-            CopyTkDash(&(stylePtr->dash), &(srcStylePtr->dash));
+            CopyTkDash(stylePtr->dashPtr, srcStylePtr->dashPtr);
         }
         if (mask & PATH_STYLE_OPTION_STROKE_LINECAP) {
             stylePtr->capStyle = srcStylePtr->capStyle;
@@ -655,6 +1012,76 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
         }
         if (mask & PATH_STYLE_OPTION_STROKE_WIDTH) {
             stylePtr->strokeWidth = srcStylePtr->strokeWidth;
+        }
+    }
+    return TCL_OK;
+}
+
+
+// This just copy pointers. For short lived style records only!
+void
+TkPathStyleMergeStyles(
+    Tk_PathStyle *srcStyle, 
+    Tk_PathStyle *dstStyle,
+    long flags)
+{
+    int mask = srcStyle->mask;
+
+    if (mask == 0) {
+	return;
+    }
+
+    /*
+     * Go through all options set in srcStylePtr and merge
+     * these into dstStylePtr.
+     */
+    if (!(flags & kPathMergeStyleNotFill)) {
+        if (mask & PATH_STYLE_OPTION_FILL) {
+	    dstStyle->fill = srcStyle->fill;
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_OFFSET) {
+            /* @@@ TODO */
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_OPACITY) {
+            dstStyle->fillOpacity = srcStyle->fillOpacity;
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_RULE) {
+            dstStyle->fillRule = srcStyle->fillRule;
+        }
+        if (mask & PATH_STYLE_OPTION_FILL_STIPPLE) {
+            /* @@@ TODO */
+        }
+    }
+    if (mask & PATH_STYLE_OPTION_MATRIX) {
+	dstStyle->matrixPtr = srcStyle->matrixPtr;
+    }
+    if (!(flags & kPathMergeStyleNotStroke)) {
+        if (mask & PATH_STYLE_OPTION_STROKE) {
+	    dstStyle->strokeColor = srcStyle->strokeColor;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_DASHARRAY) {
+	    dstStyle->dashPtr = srcStyle->dashPtr;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_LINECAP) {
+            dstStyle->capStyle = srcStyle->capStyle;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_LINEJOIN) {
+            dstStyle->joinStyle = srcStyle->joinStyle;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_MITERLIMIT) {
+            dstStyle->miterLimit = srcStyle->miterLimit;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_OFFSET) {
+            /* @@@ TODO */
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_OPACITY) {
+            dstStyle->strokeOpacity = srcStyle->strokeOpacity;
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_STIPPLE) {
+            /* @@@ TODO */
+        }
+        if (mask & PATH_STYLE_OPTION_STROKE_WIDTH) {
+            dstStyle->strokeWidth = srcStyle->strokeWidth;
         }
     }
 }
@@ -679,23 +1106,23 @@ PathStyleMergeStyles(Tk_Window tkwin, Tk_PathStyle *stylePtr, CONST char *styleN
 void 
 TkPathCreateStyle(Tk_PathStyle *style)
 {
-	memset(style, '\0', sizeof(Tk_PathStyle));
+    memset(style, '\0', sizeof(Tk_PathStyle));
 
     style->mask = 0;
-    style->strokeGC = None;
     style->strokeColor = NULL;
     style->strokeWidth = 1.0;
     style->strokeOpacity = 1.0;
     style->offset = 0;
-    style->dash.number = 0;
+    style->dashPtr = NULL;
     style->capStyle = CapButt;
     style->joinStyle = JoinRound;
 
-    style->fillGC = None;
     style->fillOpacity = 1.0;
     style->fillRule = WindingRule;
+    style->fillObj = NULL;
     style->fill = NULL;
     style->matrixPtr = NULL;
+    style->instancePtr = NULL;
 }
 
 /*
@@ -703,9 +1130,8 @@ TkPathCreateStyle(Tk_PathStyle *style)
  *
  * TkPathDeleteStyle
  *
- *	This procedure frees all memory that might be
- *	allocated and referenced in the Tk_PathStyle structure.
- *  @@@ Not sure how this interacts with Tk_FreeConfigOptions!
+ *	This procedure frees all memory in the Tk_PathStyle structure
+ *	that is not freed by Tk_FreeConfigOptions.
  *
  * Results:
  *	None
@@ -717,36 +1143,149 @@ TkPathCreateStyle(Tk_PathStyle *style)
  */
 
 void 
-TkPathDeleteStyle(Display *display, Tk_PathStyle *style)
+TkPathDeleteStyle(Tk_PathStyle *style)
 {
-    if (style->strokeGC != None) {
-        Tk_FreeGC(display, style->strokeGC);
-    }
-    if (ABS(style->dash.number) > sizeof(char *)) {
-        ckfree((char *) style->dash.pattern.pt);
-    }
-    if (style->strokeColor != NULL) {
-        Tk_FreeColor(style->strokeColor);
-    }
-
-    if (style->fillGC != None) {
-        Tk_FreeGC(display, style->fillGC);
-    }
-#if 0
-    if (style->fillColor != NULL) {
-        Tk_FreeColor(style->fillColor);
-    }
-#endif
     if (style->fill != NULL) {
-        if (style->fill->color != NULL) {
-            Tk_FreeColor(style->fill->color);
-        }
-        if (style->fill->gradientName) {
-            ckfree(style->fill->gradientName);
-        }
+	TkPathFreePathColor(style->fill);
     }
     if (style->matrixPtr != NULL) {
         ckfree((char *) style->matrixPtr);
+    }
+}
+
+
+/*
+ * These functions are called by users of styles, typically items,
+ * that make instances of styles from a style object (master).
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkPathGetStyle --
+ *
+ *	This function is invoked by an item when it wants to use a particular
+ *	style for a particular hash table. Compare Tk_GetImage.
+ *
+ * Results:
+ *	The return value is a token for the style. If there is no style by the
+ *	given name, then NULL is returned and an error message is left in the
+ *	interp's result.
+ *
+ * Side effects:
+ *	Tk records the fact that the item is using the style, and it will
+ *	invoke changeProc later if the item needs redisplay. The caller must 
+ *	eventually invoke TkPathFreeStyle when it no longer needs the style.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkPathStyleInst *
+TkPathGetStyle(
+    Tcl_Interp *interp, 
+    CONST char *name, 
+    Tcl_HashTable *tablePtr,
+    TkPathGradientChangedProc *changeProc, 
+    ClientData clientData)
+{
+    Tcl_HashEntry *hPtr;
+    TkPathStyleInst *stylePtr;
+    Tk_PathStyle *masterPtr;
+
+    hPtr = Tcl_FindHashEntry(tablePtr, name);
+    if (hPtr == NULL) {
+	if (interp != NULL) {
+            Tcl_Obj *resultObj;
+            resultObj = Tcl_NewStringObj("style \"", -1);
+            Tcl_AppendStringsToObj(resultObj, name, "\" doesn't exist", (char *) NULL);
+            Tcl_SetObjResult(interp, resultObj);
+	}
+	return NULL;
+    }
+    masterPtr = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
+    stylePtr = (TkPathStyleInst *) ckalloc(sizeof(TkPathStyleInst));
+    stylePtr->masterPtr = masterPtr;
+    stylePtr->changeProc = changeProc;
+    stylePtr->clientData = clientData;
+    stylePtr->nextPtr = masterPtr->instancePtr;
+    masterPtr->instancePtr = stylePtr;
+    return stylePtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkPathFreeStyle --
+ *
+ *	This function is invoked by an item when it no longer needs a gradient
+ *	acquired by a previous call to TkPathGetGradient. For each call to
+ *	TkPathGetGradient there must be exactly one call to TkPathFreeGradient.
+ *	Compare Tk_FreeImage.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The association between the gradient and the item is removed.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+void
+TkPathFreeStyle(
+    TkPathStyleInst *stylePtr)
+{
+    Tk_PathStyle *masterPtr = stylePtr->masterPtr;
+    TkPathStyleInst *walkPtr;
+    
+    walkPtr = masterPtr->instancePtr;
+    if (walkPtr == stylePtr) {
+	masterPtr->instancePtr = stylePtr->nextPtr;
+    } else {
+	while(walkPtr->nextPtr != stylePtr) {
+	    walkPtr = walkPtr->nextPtr;
+	}
+	walkPtr->nextPtr = stylePtr->nextPtr;
+    }
+    ckfree((char *)stylePtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkPathStyleChanged --
+ *
+ *	This function is called by a style manager whenever something has
+ *	happened that requires the style to be redrawn or it has been deleted.
+ *	Compare Tk_ImageChanged,
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Any items that display the style are notified so that they can
+ *	redisplay themselves as appropriate.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+void
+TkPathStyleChanged(Tk_PathStyle *masterPtr, int flags)
+{
+    TkPathStyleInst *walkPtr, *nextPtr;
+
+    if (flags) {
+	/*
+	 * NB: We may implicitly call TkPathFreeGradient if being deleted! 
+	 *     Therefore cache the nextPtr before invoking changeProc.
+	 */
+	for (walkPtr = masterPtr->instancePtr; walkPtr != NULL; ) {
+	    nextPtr = walkPtr->nextPtr;
+	    if (walkPtr->changeProc != NULL) {
+		(*walkPtr->changeProc)(walkPtr->clientData, flags);
+	    }
+	    walkPtr = nextPtr;
+	}
     }
 }
 
