@@ -1017,8 +1017,24 @@ TkPathStyleMergeStyles_DEPRECIATED(Tk_Window tkwin, Tcl_HashTable *hashTablePtr,
     return TCL_OK;
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * TkPathStyleMergeStyles --
+ *
+ *	Overwrites values in dsStyle if set in srcStyle.
+ *	This is indicated by the mask of the srcStyle.
+ *	This just copy pointers. For short lived style records only!
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Changes *values* in dstStyle.
+ *
+ *--------------------------------------------------------------
+ */
 
-// This just copy pointers. For short lived style records only!
 void
 TkPathStyleMergeStyles(
     Tk_PathStyle *srcStyle, 

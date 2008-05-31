@@ -364,6 +364,11 @@ MODULE_SCOPE int	    CanvasGradientObjCmd(Tcl_Interp* interp, TkPathCanvas *canv
 MODULE_SCOPE int	    CanvasStyleObjCmd(Tcl_Interp* interp, TkPathCanvas *canvasPtr, 
 				int objc, Tcl_Obj* CONST objv[]);
 
+MODULE_SCOPE int	    ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, 
+				    Tk_PathItemEx *itemExPtr, int mask);
+MODULE_SCOPE void	    PathGradientChangedProc(ClientData clientData, int flags);
+MODULE_SCOPE void	    PathStyleChangedProc(ClientData clientData, int flags);
+
 /*
  * Standard item types provided by Tk:
  */

@@ -28,13 +28,8 @@ enum {
  */
 
 typedef struct PrectItem  {
-    Tk_PathItem header;	    /* Generic stuff that's the same for all
-                             * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_PathCanvas canvas;   /* Canvas containing item. */
-    Tk_PathStyle style;	    /* Contains most drawing info. */
-    Tcl_Obj *styleObj;	    /* Object with style name. */
-    TkPathStyleInst *styleInst;
-			    /* The referenced style instance from styleObj. */
+    Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
+                             * path types.  MUST BE FIRST IN STRUCTURE. */
     double rx;		    /* Radius of corners. */
     double ry;
     PathRect rect;	    /* Bounding box with zero width outline.
@@ -46,7 +41,6 @@ typedef struct PrectItem  {
     long flags;		    /* Various flags, see enum. */
     char *null;		    /* Just a placeholder for not yet implemented stuff. */ 
 } PrectItem;
-
 
 /*
  * Prototypes for procedures defined in this file:
@@ -79,8 +73,6 @@ static void	ScalePrect(Tk_PathCanvas canvas,
 static void	TranslatePrect(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double deltaX, double deltaY);
 static PathAtom * MakePathAtoms(PrectItem *prectPtr);
-static void	PrectGradientProc(ClientData clientData, int flags);
-static void	PrectStyleProc(ClientData clientData, int flags);
 
 
 enum {
@@ -102,11 +94,11 @@ PATH_CUSTOM_OPTION_TAGS
 	0, 0, PRECT_OPTION_INDEX_RY}
 
 static Tk_OptionSpec optionSpecs[] = {
-    PATH_OPTION_SPEC_CORE(PrectItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_FILL(PrectItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(PrectItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(PrectItem, "black"),
+    PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
     PATH_OPTION_SPEC_RX(PrectItem),
     PATH_OPTION_SPEC_RY(PrectItem),
     PATH_OPTION_SPEC_END
@@ -147,6 +139,7 @@ static int
 CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[])
 {
+    Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *) itemPtr;
     PrectItem *prectPtr = (PrectItem *) itemPtr;
     int	i;
 
@@ -159,10 +152,10 @@ CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&(prectPtr->style));
-    prectPtr->canvas = canvas;
-    prectPtr->styleObj = NULL;
-    prectPtr->styleInst = NULL;
+    TkPathCreateStyle(&itemExPtr->style);
+    itemExPtr->canvas = canvas;
+    itemExPtr->styleObj = NULL;
+    itemExPtr->styleInst = NULL;
     prectPtr->rect = NewEmptyPathRect();
     prectPtr->totalBbox = NewEmptyPathRect();
     prectPtr->maxNumSegments = 100;		/* Crude overestimate. */
@@ -194,7 +187,6 @@ CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (ConfigurePrect(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
         prectPtr->flags &= ~kPrectItemNoNewPathAtoms;
-        MakePathAtoms(prectPtr);
         ComputePrectBbox(canvas, prectPtr);
         return TCL_OK;
     }
@@ -211,7 +203,7 @@ PrectCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     PrectItem *prectPtr = (PrectItem *) itemPtr;
     int result;
 
-    result = CoordsForRectangularItems(interp, canvas, &(prectPtr->rect), objc, objv);
+    result = CoordsForRectangularItems(interp, canvas, &prectPtr->rect, objc, objv);
     if ((result == TCL_OK) && ((objc == 1) || (objc == 4))) {
         if (!(prectPtr->flags & kPrectItemNoNewPathAtoms)) {
             ComputePrectBbox(canvas, prectPtr);
@@ -223,19 +215,23 @@ PrectCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 void
 ComputePrectBbox(Tk_PathCanvas canvas, PrectItem *prectPtr)
 {
-    Tk_PathStyle *stylePtr = &(prectPtr->style);
-    Tk_PathState state = prectPtr->header.state;
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathState state = itemExPtr->header.state;
 
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
     }
     if (state == TK_PATHSTATE_HIDDEN) {
-        prectPtr->header.x1 = prectPtr->header.x2 =
-        prectPtr->header.y1 = prectPtr->header.y2 = -1;
+        itemExPtr->header.x1 = itemExPtr->header.x2 =
+        itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
-    prectPtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, stylePtr, &(prectPtr->rect));
-    SetGenericPathHeaderBbox(&(prectPtr->header), stylePtr->matrixPtr, &(prectPtr->totalBbox));
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
+    prectPtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &prectPtr->rect);
+    SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &prectPtr->totalBbox);
 }
 
 static int		
@@ -243,27 +239,13 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(prectPtr->style);
-    Tk_PathItem *parentPtr;
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
     Tk_PathState state;
     Tk_SavedOptions savedOptions;
-    int mask;
     Tcl_Obj *errorResult = NULL;
-    int error;
-    
-    // @@@ NB: We could try to make something much more generic with these options !!!
-    //         There is a lot of code duplicated for each path type item...
-    // ItemGenericConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
-    //	    int objc, Tcl_Obj *CONST objv[], Tk_PathStyle *stylePtr,
-    //	    TkPathGradientChangedProc *changeGradProc, 
-    //	    TkPathStyleChangedProc *changeStyleProc);
-    // See the Tk_PathItemEx record. Then perhaps:
-    // ItemGenericConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItemEx *itemPtr,
-    //	    int objc, Tcl_Obj *CONST objv[]);
-    //
-    // Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *) itemPtr;
-
+    int error, mask;
      
     tkwin = Tk_PathCanvasTkwin(canvas);
     for (error = 0; error <= 1; error++) {
@@ -276,62 +258,11 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	    errorResult = Tcl_GetObjResult(interp);
 	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
-	}
-	if (mask & PATH_CORE_OPTION_PARENT) {
-	    if (TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr) != TCL_OK) {
-		continue;
-	    }
-	    TkPathCanvasSetParent(parentPtr, itemPtr);
+	}	
+	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	    continue;
 	}
 
-	/*
-	 * If we have got a style name it's options take precedence
-	 * over the actual path configuration options. This is how SVG does it.
-	 * Good or bad?
-	 */
-	if (mask & PATH_CORE_OPTION_STYLENAME) {
-	    TkPathStyleInst *styleInst = NULL;
-	    	
-	    if (prectPtr->styleObj != NULL) {
-		styleInst = TkPathGetStyle(interp, Tcl_GetString(prectPtr->styleObj),
-			TkPathCanvasStyleTable(canvas), PrectStyleProc,
-			(ClientData) itemPtr);
-		if (styleInst == NULL) {
-		    continue;
-		}
-	    } else {
-		styleInst = NULL;
-	    }
-	    if (prectPtr->styleInst != NULL) {
-		TkPathFreeStyle(prectPtr->styleInst);
-	    }
-	    prectPtr->styleInst = styleInst;    
-	} 
-        
-	/*
-	 * Just translate the 'fillObj' (string) to a TkPathColor.
-	 * We MUST have this last in the chain of custom option checks!
-	 */
-	if (mask & PATH_STYLE_OPTION_FILL) {
-	    TkPathColor *fillPtr = NULL;
-	    
-	    if (stylePtr->fillObj != NULL) {
-		fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
-			TkPathCanvasGradientTable(canvas), PrectGradientProc,
-			(ClientData) itemPtr);
-		if (fillPtr == NULL) {
-		    continue;
-		}
-	    } else {
-		fillPtr = NULL;
-	    }
-	    /* Free any old and store the new. */
-	    if (stylePtr->fill != NULL) {
-		TkPathFreePathColor(stylePtr->fill);
-	    }
-	    stylePtr->fill = fillPtr;
-	}
-	
 	/*
 	 * If we reach this on the first pass we are OK and continue below.
 	 */
@@ -384,13 +315,14 @@ static void
 DeletePrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(prectPtr->style);
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
 
     if (stylePtr->fill != NULL) {
 	TkPathFreePathColor(stylePtr->fill);
     }
-    if (prectPtr->styleInst != NULL) {
-	TkPathFreeStyle(prectPtr->styleInst);
+    if (itemExPtr->styleInst != NULL) {
+	TkPathFreeStyle(itemExPtr->styleInst);
     }
     Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
@@ -400,17 +332,17 @@ DisplayPrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
-    PathAtom *atomPtr;
-            
-    Tk_PathStyle style = prectPtr->style;
-    if (prectPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(prectPtr->styleInst->masterPtr, &style, 0);
-    }
+    PathAtom *atomPtr;            
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
     atomPtr = MakePathAtoms(prectPtr);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, 
-	    &style, &m, &(prectPtr->rect));
+	    &style, &m, &prectPtr->rect);
     TkPathFreeAtoms(atomPtr);
 }
 
@@ -418,18 +350,22 @@ static double
 PrectToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(prectPtr->style);
-    TMatrix *mPtr = stylePtr->matrixPtr;
-    PathRect *rectPtr = &(prectPtr->rect);
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    TMatrix *mPtr = style.matrixPtr;
+    PathRect *rectPtr = &prectPtr->rect;
     double bareRect[4];
     double width, dist;
     int rectiLinear = 0;
     int filled;
-
-    filled = HaveAnyFillFromPathColor(stylePtr->fill);
+    
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }
+    filled = HaveAnyFillFromPathColor(style.fill);
     width = 0.0;
-    if (stylePtr->strokeColor != NULL) {
-        width = stylePtr->strokeWidth;
+    if (style.strokeColor != NULL) {
+        width = style.strokeWidth;
     }
     
     /* Try to be economical about this for pure rectangles. */
@@ -454,7 +390,7 @@ PrectToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
         dist = PathRectToPoint(bareRect, width, filled, pointPtr);
     } else {
 	PathAtom *atomPtr = MakePathAtoms(prectPtr);
-        dist = GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
+        dist = GenericPathToPoint(canvas, itemPtr, &style, atomPtr, 
             prectPtr->maxNumSegments, pointPtr);
 	TkPathFreeAtoms(atomPtr);
     }
@@ -465,18 +401,22 @@ static int
 PrectToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(prectPtr->style);
-    TMatrix *mPtr = stylePtr->matrixPtr;
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    TMatrix *mPtr = style.matrixPtr;
     PathRect *rectPtr = &(prectPtr->rect);
     double bareRect[4];
     double width;
     int rectiLinear = 0;
     int filled;
 
-    filled = HaveAnyFillFromPathColor(stylePtr->fill);
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }
+    filled = HaveAnyFillFromPathColor(style.fill);
     width = 0.0;
-    if (stylePtr->strokeColor != NULL) {
-        width = stylePtr->strokeWidth;
+    if (style.strokeColor != NULL) {
+        width = style.strokeWidth;
     }
 
     /* Try to be economical about this for pure rectangles. */
@@ -502,7 +442,7 @@ PrectToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
     } else {
 	int area;
 	PathAtom *atomPtr = MakePathAtoms(prectPtr);
-        area = GenericPathToArea(canvas, itemPtr, &(prectPtr->style), 
+        area = GenericPathToArea(canvas, itemPtr, &style, 
                 atomPtr, prectPtr->maxNumSegments, areaPtr);
 	TkPathFreeAtoms(atomPtr);
 	return area;
@@ -512,66 +452,33 @@ PrectToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 static int		
 PrectToPostscript(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass)
 {
-    return TCL_ERROR;
+    return TCL_ERROR;	/* @@@ Anyone? */
 }
 
 static void		
 ScalePrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
-    /* This doesn't work very well with general affine matrix transforms! Arcs ? */
-    //     ScalePathAtoms(atomPtr, originX, originY, scaleX, scaleY);
+    PrectItem *prectPtr = (PrectItem *) itemPtr;
+
+    prectPtr->rect.x1 = originX + scaleX*(prectPtr->rect.x1 - originX);
+    prectPtr->rect.y1 = originY + scaleY*(prectPtr->rect.y1 - originY);
+    prectPtr->rect.x2 = originX + scaleX*(prectPtr->rect.x2 - originX);
+    prectPtr->rect.y2 = originY + scaleY*(prectPtr->rect.y2 - originY);
+    ComputePrectBbox(canvas, prectPtr);
 }
 
 static void		
 TranslatePrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(prectPtr->style);
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
 
     /* Just translate the bbox'es as well. */
-    TranslatePathRect(&(prectPtr->rect), deltaX, deltaY);
-    TranslatePathRect(&(prectPtr->totalBbox), deltaX, deltaY);
-    SetGenericPathHeaderBbox(&(prectPtr->header), stylePtr->matrixPtr, &(prectPtr->totalBbox));
-}
-
-// @@@ TODO: both these two could be made generically by using Tk_PathItemEx.
-
-static void	
-PrectGradientProc(ClientData clientData, int flags)
-{
-    PrectItem *prectPtr = (PrectItem *)clientData;
-    Tk_PathStyle *stylePtr = &(prectPtr->style);
-        
-    if (flags) {
-	if (flags & PATH_GRADIENT_FLAG_DELETE) {
-	    TkPathFreePathColor(stylePtr->fill);	
-	    stylePtr->fill = NULL;
-	    Tcl_DecrRefCount(stylePtr->fillObj);
-	    stylePtr->fillObj = NULL;
-	}
-	Tk_PathCanvasEventuallyRedraw(prectPtr->canvas,
-		prectPtr->header.x1, prectPtr->header.y1,
-		prectPtr->header.x2, prectPtr->header.y2);
-    }
-}
-
-static void	
-PrectStyleProc(ClientData clientData, int flags)
-{
-    PrectItem *prectPtr = (PrectItem *)clientData;
-        
-    if (flags) {
-	if (flags & PATH_STYLE_FLAG_DELETE) {
-	    TkPathFreeStyle(prectPtr->styleInst);	
-	    prectPtr->styleInst = NULL;
-	    Tcl_DecrRefCount(prectPtr->styleObj);
-	    prectPtr->styleObj = NULL;
-	}
-	Tk_PathCanvasEventuallyRedraw(prectPtr->canvas,
-		prectPtr->header.x1, prectPtr->header.y1,
-		prectPtr->header.x2, prectPtr->header.y2);
-    }
+    TranslatePathRect(&prectPtr->rect, deltaX, deltaY);
+    TranslatePathRect(&prectPtr->totalBbox, deltaX, deltaY);
+    SetGenericPathHeaderBbox(&itemExPtr->header, stylePtr->matrixPtr, &prectPtr->totalBbox);
 }
 
 /*----------------------------------------------------------------------*/

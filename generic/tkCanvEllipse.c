@@ -22,11 +22,8 @@ extern Tcl_Interp *gInterp;
  */
 
 typedef struct EllipseItem  {
-    Tk_PathItem header;	    /* Generic stuff that's the same for all
-                             * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_PathCanvas canvas;   /* Canvas containing item. */
-    Tk_PathStyle style;	    /* Contains most drawing info. */
-    Tcl_Obj *styleObj;	    /* Object with style name. */
+    Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
+                             * path types.  MUST BE FIRST IN STRUCTURE. */
     char type;		    /* Circle or ellipse. */
     double center[2];	    /* Center coord. */
     double rx;		    /* Radius. Circle uses rx for overall radius. */
@@ -73,7 +70,6 @@ static void	ScaleEllipse(Tk_PathCanvas canvas,
                         double scaleX, double scaleY);
 static void	TranslateEllipse(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double deltaX, double deltaY);
-static void	EllipseGradientProc(ClientData clientData, int flags);
 
 
 enum {
@@ -101,21 +97,21 @@ PATH_CUSTOM_OPTION_TAGS
 	0, 0, ELLIPSE_OPTION_INDEX_RY}
 
 static Tk_OptionSpec optionSpecsCircle[] = {
-    PATH_OPTION_SPEC_CORE(EllipseItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_FILL(EllipseItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(EllipseItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(EllipseItem, "black"),
+    PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
     PATH_OPTION_SPEC_R(EllipseItem),
     PATH_OPTION_SPEC_END
 };
 
 static Tk_OptionSpec optionSpecsEllipse[] = {
-    PATH_OPTION_SPEC_CORE(EllipseItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_FILL(EllipseItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(EllipseItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(EllipseItem, "black"),
+    PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
     PATH_OPTION_SPEC_RX(EllipseItem),
     PATH_OPTION_SPEC_RY(EllipseItem),
     PATH_OPTION_SPEC_END
@@ -193,6 +189,7 @@ static int
 CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], char type)
 {
+    Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *) itemPtr;
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
     Tk_OptionTable optionTable;
     int	i;
@@ -207,10 +204,11 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&(ellPtr->style));
-    ellPtr->canvas = canvas;
+    TkPathCreateStyle(&itemExPtr->style);
+    itemExPtr->canvas = canvas;
+    itemExPtr->styleObj = NULL;
+    itemExPtr->styleInst = NULL;
     ellPtr->type = type;
-    ellPtr->styleObj = NULL;
 
     if (ellPtr->type == kOvalTypeCircle) {
 	if (optionTableCircle == NULL) {
@@ -277,21 +275,25 @@ GetBareBbox(EllipseItem *ellPtr)
 static void
 ComputeEllipseBbox(Tk_PathCanvas canvas, EllipseItem *ellPtr)
 {
-    Tk_PathStyle *stylePtr = &(ellPtr->style);
-    Tk_PathState state = ellPtr->header.state;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathState state = itemExPtr->header.state;
     PathRect totalBbox, bbox;
 
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
     }
     if (state == TK_PATHSTATE_HIDDEN) {
-        ellPtr->header.x1 = ellPtr->header.x2 =
-        ellPtr->header.y1 = ellPtr->header.y2 = -1;
+        itemExPtr->header.x1 = itemExPtr->header.x2 =
+        itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
     bbox = GetBareBbox(ellPtr);
-    totalBbox = GetGenericPathTotalBboxFromBare(NULL, stylePtr, &bbox);
-    SetGenericPathHeaderBbox(&(ellPtr->header), stylePtr->matrixPtr, &totalBbox);
+    totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &bbox);
+    SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &totalBbox);
 }
 
 static int		
@@ -299,71 +301,40 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ellPtr->style);
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
     Tk_PathState state;
     Tk_SavedOptions savedOptions;
-    Tk_PathItem *parentPtr;
-    int mask;
-    int result = TCL_OK;
+    Tcl_Obj *errorResult = NULL;
+    int mask, error;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
-    if (ellPtr->type == kOvalTypeCircle) {
-	result = Tk_SetOptions(interp, (char *) ellPtr, optionTableCircle, 
-		objc, objv, tkwin, &savedOptions, &mask);
-    } else {
-	result = Tk_SetOptions(interp, (char *) ellPtr, optionTableEllipse, 
-		objc, objv, tkwin, &savedOptions, &mask);
-    }	
-    if (result != TCL_OK) {
-        return TCL_ERROR;
-    }
-
-    /*
-     * If we have got a style name it's options take precedence
-     * over the actual path configuration options. This is how SVG does it.
-     * Good or bad?
-     */
-    if ((ellPtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
-        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, ellPtr->styleObj, 0);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-    } 
-    if (mask & PATH_CORE_OPTION_PARENT) {
-	result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-	TkPathCanvasSetParent(parentPtr, itemPtr);
-    }
-    
-    /*
-     * Just translate the 'fillObj' (string) to a TkPathColor.
-     * We MUST have this last in the chain of custom option checks!
-     */
-    if (mask & PATH_STYLE_OPTION_FILL) {
-	TkPathColor *fillPtr = NULL;
-
-	if (stylePtr->fillObj != NULL) {
-	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
-		    TkPathCanvasGradientTable(canvas), EllipseGradientProc,
-		    (ClientData) itemPtr);
-	    if (fillPtr == NULL) {
-		Tk_RestoreSavedOptions(&savedOptions);
-		return TCL_ERROR;
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    Tk_OptionTable optionTable;
+	    optionTable = (ellPtr->type == kOvalTypeCircle) ? optionTableCircle : optionTableEllipse;
+	    if (Tk_SetOptions(interp, (char *) ellPtr, optionTable, 
+		    objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
+		continue;
 	    }
 	} else {
-	    fillPtr = NULL;
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}	
+	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	    continue;
 	}
-	if (stylePtr->fill != NULL) {
-	    TkPathFreePathColor(stylePtr->fill);
-	}
-	stylePtr->fill = fillPtr;
+
+	/*
+	 * If we reach this on the first pass we are OK and continue below.
+	 */
+	break;
     }
-    Tk_FreeSavedOptions(&savedOptions);
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
+    }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
@@ -392,8 +363,9 @@ static void
 DeleteEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_OptionTable optionTable;
-    Tk_PathStyle *stylePtr = &(ellPtr->style);
 
     if (stylePtr->fill != NULL) {
 	TkPathFreePathColor(stylePtr->fill);
@@ -407,10 +379,16 @@ DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Dra
         int x, int y, int width, int height)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
     PathRect bbox;
     PathAtom *atomPtr;
     EllipseAtom ellAtom;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
     
     /* 
      * We create the atom on the fly to save some memory.
@@ -424,25 +402,29 @@ DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Dra
     ellAtom.ry = ellPtr->ry;
     
     bbox = GetBareBbox(ellPtr);
-    TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &(ellPtr->style), &m, &bbox);
+    TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &bbox);
 }
 
 static double	
 EllipseToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ellPtr->style);
-    TMatrix *mPtr = stylePtr->matrixPtr;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    TMatrix *mPtr = style.matrixPtr;
     double bareOval[4];
     double width, dist;
     int rectiLinear = 0;
     int haveDist = 0;
     int filled;
-
-    filled = HaveAnyFillFromPathColor(stylePtr->fill);
+    
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
+    filled = HaveAnyFillFromPathColor(style.fill);
     width = 0.0;
-    if (stylePtr->strokeColor != NULL) {
-        width = stylePtr->strokeWidth;
+    if (style.strokeColor != NULL) {
+        width = style.strokeWidth;
     }
     if (mPtr == NULL) {
         rectiLinear = 1;
@@ -494,7 +476,7 @@ EllipseToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
             ellAtom.cy = ellPtr->center[1];
             ellAtom.rx = ellPtr->rx;
             ellAtom.ry = ellPtr->ry;
-            dist = GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
+            dist = GenericPathToPoint(canvas, itemPtr, &style, atomPtr, 
                     kPathNumSegmentsEllipse+1, pointPtr);
         }
     }
@@ -505,15 +487,19 @@ static int
 EllipseToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ellPtr->style);
-    TMatrix *mPtr = stylePtr->matrixPtr;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    TMatrix *mPtr = style.matrixPtr;
     double bareOval[4], halfWidth;
     int rectiLinear = 0;
     int result;
     
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
     halfWidth = 0.0;
-    if (stylePtr->strokeColor != NULL) {
-        halfWidth = stylePtr->strokeWidth/2.0;
+    if (style.strokeColor != NULL) {
+        halfWidth = style.strokeWidth/2.0;
     }
     if (mPtr == NULL) {
         rectiLinear = 1;
@@ -548,8 +534,8 @@ EllipseToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
          * of the rectangle's corners are totally inside the oval's
          * unfilled center, in which case we should return "outside".
          */
-        if ((result == 0) && (stylePtr->strokeColor != NULL)
-                && !HaveAnyFillFromPathColor(stylePtr->fill)) {
+        if ((result == 0) && (style.strokeColor != NULL)
+                && !HaveAnyFillFromPathColor(style.fill)) {
             double width, height;
             double xDelta1, yDelta1, xDelta2, yDelta2;
         
@@ -587,7 +573,7 @@ EllipseToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
         ellAtom.cy = ellPtr->center[1];
         ellAtom.rx = ellPtr->rx;
         ellAtom.ry = ellPtr->ry;
-        return GenericPathToArea(canvas, itemPtr, stylePtr, atomPtr, 
+        return GenericPathToArea(canvas, itemPtr, &style, atomPtr, 
                 kPathNumSegmentsEllipse+1, areaPtr);
     }
     return result;
@@ -603,41 +589,34 @@ static void
 ScaleEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
-    /* This doesn't work very well with general affine matrix transforms! Arcs ? */
+    EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
+
+    ellPtr->center[0] = originX + scaleX*(ellPtr->center[0] - originX);
+    ellPtr->center[1] = originY + scaleY*(ellPtr->center[1] - originY);
+    ellPtr->rx *= scaleX;
+    ellPtr->ry *= scaleY;
+
+    itemExPtr->header.x1 = originX + scaleX*(itemExPtr->header.x1 - originX);
+    itemExPtr->header.x2 = originX + scaleX*(itemExPtr->header.x2 - originX);
+    itemExPtr->header.y1 = originY + scaleY*(itemExPtr->header.y1 - originY);
+    itemExPtr->header.y2 = originY + scaleY*(itemExPtr->header.y2 - originY);
 }
 
 static void		
 TranslateEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
 
     /* Just translate the bbox'es as well. */
     ellPtr->center[0] += deltaX;
     ellPtr->center[1] += deltaY;
     /* Beware for cumlated round-off errors! */
-    ellPtr->header.x1 += (int) deltaX;
-    ellPtr->header.x2 += (int) deltaX;
-    ellPtr->header.y1 += (int) deltaY;
-    ellPtr->header.y2 += (int) deltaY;
-}
-
-static void	
-EllipseGradientProc(ClientData clientData, int flags)
-{
-    EllipseItem *ellPtr = (EllipseItem *)clientData;
-    Tk_PathStyle *stylePtr = &(ellPtr->style);
-    
-    if (flags) {
-	if (flags & PATH_GRADIENT_FLAG_DELETE) {
-	    TkPathFreePathColor(stylePtr->fill);	
-	    stylePtr->fill = NULL;
-	    Tcl_DecrRefCount(stylePtr->fillObj);
-	    stylePtr->fillObj = NULL;
-	}
-	Tk_PathCanvasEventuallyRedraw(ellPtr->canvas,
-		ellPtr->header.x1, ellPtr->header.y1,
-		ellPtr->header.x2, ellPtr->header.y2);
-    }
+    itemExPtr->header.x1 += (int) deltaX;
+    itemExPtr->header.x2 += (int) deltaX;
+    itemExPtr->header.y1 += (int) deltaY;
+    itemExPtr->header.y2 += (int) deltaY;
 }
 
 /*----------------------------------------------------------------------*/

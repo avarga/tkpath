@@ -45,15 +45,16 @@ void	    TranslatePathRect(PathRect *r, double deltaX, double deltaY);
 /*
  * The canvas 'Area' and 'Point' functions.
  */
-int		PathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
-double		PathThickPolygonToPoint(int joinStyle, int capStyle, double width, 
+int	PathPolyLineToArea(double *polyPtr, int numPoints, register double *rectPtr);
+double	PathThickPolygonToPoint(int joinStyle, int capStyle, double width, 
 			int isclosed, double *polyPtr, int numPoints, double *pointPtr);
-double		PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, 
+double	PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr, 
 			int *intersectionsPtr, int *nonzerorulePtr);
-double		PathRectToPoint(double rectPtr[], double width, int filled, double pointPtr[]);
-int		PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr);
-int		PathRectToAreaWithMatrix(PathRect bbox, TMatrix *mPtr, double *areaPtr);
-int		PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
+double	PathRectToPoint(double rectPtr[], double width, int filled, double pointPtr[]);
+int	PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr);
+int	PathRectToAreaWithMatrix(PathRect bbox, TMatrix *mPtr, double *areaPtr);
+int	PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
+
 
 /*
  * New API option parsing.

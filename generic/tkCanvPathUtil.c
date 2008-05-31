@@ -9,6 +9,8 @@
  * $Id$
  */
 
+#include "tkPathStyle.h"
+#include "tkpCanvas.h"
 #include "tkCanvPathUtil.h"
 
 /*
@@ -33,13 +35,13 @@ static int		SubPathToArea(Tk_PathStyle *stylePtr, double *polyPtr, int numPoints
  *
  * CoordsForPointItems --
  *
- *		Used as coordProc for items that have plain single point coords.
+ *	Used as coordProc for items that have plain single point coords.
  *
  * Results:
- *		Standard tcl result.
+ *	Standard tcl result.
  *
  * Side effects:
- *		May store new coords in rectPtr.
+ *	May store new coords in rectPtr.
  *
  *--------------------------------------------------------------
  */
@@ -89,13 +91,13 @@ CoordsForPointItems(
  *
  * CoordsForRectangularItems --
  *
- *		Used as coordProc for items that have rectangular coords.
+ *	Used as coordProc for items that have rectangular coords.
  *
  * Results:
- *		Standard tcl result.
+ *	Standard tcl result.
  *
  * Side effects:
- *		May store new coords in rectPtr.
+ *	May store new coords in rectPtr.
  *
  *--------------------------------------------------------------
  */
@@ -159,18 +161,18 @@ CoordsForRectangularItems(
  *
  * GetBareArcBbox
  *
- *		Gets an overestimate of the bounding box rectangle of
- * 		an arc defined using central parametrization assuming
- *		zero stroke width.
- * 		Untransformed coordinates!
- *		Note: 1) all angles clockwise direction!
- *	    	  2) all angles in radians.
+ *	Gets an overestimate of the bounding box rectangle of
+ * 	an arc defined using central parametrization assuming
+ *	zero stroke width.
+ * 	Untransformed coordinates!
+ *	Note: 1) all angles clockwise direction!
+ *	      2) all angles in radians.
  *
  * Results:
- *		A PathRect.
+ *	A PathRect.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -274,15 +276,15 @@ GetBareArcBbox(double cx, double cy, double rx, double ry,
  *
  * GetGenericBarePathBbox
  *
- *		Gets an overestimate of the bounding box rectangle of
- * 		a path assuming zero stroke width.
- * 		Untransformed coordinates!
+ *	Gets an overestimate of the bounding box rectangle of
+ * 	a path assuming zero stroke width.
+ * 	Untransformed coordinates!
  *
  * Results:
- *		A PathRect.
+ *	A PathRect.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -413,35 +415,35 @@ CopyPoint(double ptSrc[2], double ptDst[2])
  *
  * PathGetMiterPoint --
  *
- *		Given three points forming an angle, compute the
- *		coordinates of the outside point of the mitered corner 
- *		formed by a line of a given width at that angle.
+ *	Given three points forming an angle, compute the
+ *	coordinates of the outside point of the mitered corner 
+ *	formed by a line of a given width at that angle.
  *
  * Results:
- *		If the angle formed by the three points is less than
- *		11 degrees then 0 is returned and m isn't modified.
- *	  	Otherwise 1 is returned and the point of the "sharp"
- *		edge is returned.
+ *	If the angle formed by the three points is less than
+ *	11 degrees then 0 is returned and m isn't modified.
+ *	Otherwise 1 is returned and the point of the "sharp"
+ *	edge is returned.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 static int
 PathGetMiterPoint(
-    double p1[],		/* Points to x- and y-coordinates of point
+    double p1[],	/* Points to x- and y-coordinates of point
                          * before vertex. */
-    double p0[],		/* Points to x- and y-coordinates of vertex
+    double p0[],	/* Points to x- and y-coordinates of vertex
                          * for mitered joint. */
-    double p2[],		/* Points to x- and y-coordinates of point
+    double p2[],	/* Points to x- and y-coordinates of point
                          * after vertex. */
-    double width,		/* Width of line.  */
+    double width,	/* Width of line.  */
     double sinThetaLimit,/* Sinus of theta miter limit. */
-    double m[])			/* The miter point; the sharp edge. */
+    double m[])		/* The miter point; the sharp edge. */
 {
-    double n1[2], n2[2];	/* The normalized vectors. */
+    double n1[2], n2[2];    /* The normalized vectors. */
     double len1, len2;
     double sinTheta;
     
@@ -532,10 +534,10 @@ IncludeMiterPointsInRect(double p1[2], double p2[2], double p3[2], PathRect *bou
 static PathRect
 GetMiterBbox(PathAtom *atomPtr, double width, double miterLimit)
 {
-    int			npts;
-    double 		p1[2], p2[2], p3[2];
-    double		current[2], second[2];
-    double 		sinThetaLimit;
+    int		npts;
+    double 	p1[2], p2[2], p3[2];
+    double	current[2], second[2];
+    double 	sinThetaLimit;
     PathRect	bounds = {1.0e36, 1.0e36, -1.0e36, -1.0e36};
     
     npts = 0;
@@ -672,14 +674,14 @@ GetMiterBbox(PathAtom *atomPtr, double width, double miterLimit)
  *
  * GetGenericPathTotalBboxFromBare --
  *
- *		This procedure calculates the items total bbox from the 
- *		bare bbox. Untransformed coords!
+ *	This procedure calculates the items total bbox from the 
+ *	bare bbox. Untransformed coords!
  *
  * Results:
- *		PathRect.
+ *	PathRect.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -734,15 +736,15 @@ GetGenericPathTotalBboxFromBare(PathAtom *atomPtr, Tk_PathStyle *stylePtr, PathR
  *
  * SetGenericPathHeaderBbox --
  *
- *		This procedure sets the (transformed) bbox in the items header.
- *		It is a (too?) conservative measure.
+ *	This procedure sets the (transformed) bbox in the items header.
+ *	It is a (too?) conservative measure.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		The fields x1, y1, x2, and y2 are updated in the header
- *		for itemPtr.
+ *	The fields x1, y1, x2, and y2 are updated in the header
+ *	for itemPtr.
  *
  *--------------------------------------------------------------
  */
@@ -790,38 +792,38 @@ SetGenericPathHeaderBbox(
  *
  * GenericPathToPoint --
  *
- *		Computes the distance from a given point to a given
- *		line, in canvas units.
+ *	Computes the distance from a given point to a given
+ *	line, in canvas units.
  *
  * Results:
- *		The return value is 0 if the point whose x and y coordinates
- *		are pointPtr[0] and pointPtr[1] is inside the line.  If the
- *		point isn't inside the line then the return value is the
- *		distance from the point to the line.
+ *	The return value is 0 if the point whose x and y coordinates
+ *	are pointPtr[0] and pointPtr[1] is inside the line.  If the
+ *	point isn't inside the line then the return value is the
+ *	distance from the point to the line.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 double
 GenericPathToPoint(
-    Tk_PathCanvas canvas,		/* Canvas containing item. */
-    Tk_PathItem *itemPtr,		/* Item to check against point. */
+    Tk_PathCanvas canvas,	/* Canvas containing item. */
+    Tk_PathItem *itemPtr,	/* Item to check against point. */
     Tk_PathStyle *stylePtr,
     PathAtom *atomPtr,
     int maxNumSegments,
     double *pointPtr)		/* Pointer to x and y coordinates. */
 {
-    int				numPoints, numStrokes;
-    int				isclosed;
-    int				intersections, nonzerorule;
-    int				sumIntersections = 0, sumNonzerorule = 0;
-    double 			*polyPtr;
-    double 			bestDist, radius, width, dist;
-    Tk_PathState 		state = itemPtr->state;
-    TMatrix 		*matrixPtr = stylePtr->matrixPtr;
+    int		    numPoints, numStrokes;
+    int		    isclosed;
+    int		    intersections, nonzerorule;
+    int		    sumIntersections = 0, sumNonzerorule = 0;
+    double	    *polyPtr;
+    double	    bestDist, radius, width, dist;
+    Tk_PathState    state = itemPtr->state;
+    TMatrix	    *matrixPtr = stylePtr->matrixPtr;
 
     bestDist = 1.0e36;
 
@@ -934,36 +936,36 @@ done:
  *
  * GenericPathToArea --
  *
- *		This procedure is called to determine whether an item
- *		lies entirely inside, entirely outside, or overlapping
- *		a given rectangular area.
+ *	This procedure is called to determine whether an item
+ *	lies entirely inside, entirely outside, or overlapping
+ *	a given rectangular area.
  *	
- *		Each subpath is treated in turn. Generate straight line
- *		segments for each subpath and treat it as a polygon.
+ *	Each subpath is treated in turn. Generate straight line
+ *	segments for each subpath and treat it as a polygon.
  *
  * Results:
- *		-1 is returned if the item is entirely outside the
- *		area, 0 if it overlaps, and 1 if it is entirely
- *		inside the given area.
+ *	-1 is returned if the item is entirely outside the
+ *	area, 0 if it overlaps, and 1 if it is entirely
+ *	inside the given area.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 int
 GenericPathToArea(
-    Tk_PathCanvas canvas,		/* Canvas containing item. */
-    Tk_PathItem *itemPtr,		/* Item to check against line. */
+    Tk_PathCanvas canvas,   /* Canvas containing item. */
+    Tk_PathItem *itemPtr,   /* Item to check against line. */
     Tk_PathStyle *stylePtr,
     PathAtom *atomPtr,
     int maxNumSegments,
-    double *areaPtr)		/* Pointer to array of four coordinates
+    double *areaPtr)	    /* Pointer to array of four coordinates
                              * (x1, y1, x2, y2) describing rectangular
                              * area.  */
 {
-    int inside;				/* Tentative guess about what to return,
+    int inside;		    /* Tentative guess about what to return,
                              * based on all points seen so far:  one
                              * means everything seen so far was
                              * inside the area;  -1 means everything
@@ -1046,16 +1048,16 @@ done:
  *
  * ArcSegments --
  *
- *		Given the arc parameters it makes a sequence if line segments.
- *		All angles in radians!
- *		Note that segments are transformed!
+ *	Given the arc parameters it makes a sequence if line segments.
+ *	All angles in radians!
+ *	Note that segments are transformed!
  *
  * Results:
- *		The array at *coordPtr gets filled in with 2*numSteps
- *		coordinates, which correspond to the arc.
+ *	The array at *coordPtr gets filled in with 2*numSteps
+ *	coordinates, which correspond to the arc.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1064,8 +1066,8 @@ static void
 ArcSegments(
     CentralArcPars *arcPars,
     TMatrix *matrixPtr,
-    int includeFirst,			/* Should the first point be included? */
-    int numSteps,				/* Number of curve segments to
+    int includeFirst,		/* Should the first point be included? */
+    int numSteps,		/* Number of curve segments to
                                  * generate.  */
     register double *coordPtr)	/* Where to put new points. */
 {
@@ -1137,16 +1139,16 @@ GetArcNumSegments(double currentX, double currentY, ArcAtom *arc)
  *
  * CurveSegments --
  *
- *		Given four control points, create a larger set of points
- *		for a cubic Bezier spline based on the points.
+ *	Given four control points, create a larger set of points
+ *	for a cubic Bezier spline based on the points.
  *
  * Results:
- *		The array at *coordPtr gets filled in with 2*numSteps
- *		coordinates, which correspond to the Bezier spline defined
- *		by the four control points.  
+ *	The array at *coordPtr gets filled in with 2*numSteps
+ *	coordinates, which correspond to the Bezier spline defined
+ *	by the four control points.  
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1189,16 +1191,16 @@ CurveSegments(
  *
  * QuadBezierSegments --
  *
- *		Given three control points, create a larger set of points
- *		for a quadratic Bezier spline based on the points.
+ *	Given three control points, create a larger set of points
+ *	for a quadratic Bezier spline based on the points.
  *
  * Results:
- *		The array at *coordPtr gets filled in with 2*numSteps
- *		coordinates, which correspond to the quadratic Bezier spline defined
- *		by the control points.
+ *	The array at *coordPtr gets filled in with 2*numSteps
+ *	coordinates, which correspond to the quadratic Bezier spline defined
+ *	by the control points.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1258,14 +1260,14 @@ EllipseSegments(
  * AddArcSegments, AddQuadBezierSegments, AddCurveToSegments,
  *   AddEllipseToSegments --
  *
- *		Adds a number of points along the arc (curve) to coordPtr
- *		representing straight line segments.
+ *	Adds a number of points along the arc (curve) to coordPtr
+ *	representing straight line segments.
  *
  * Results:
- *		Number of points added. 
+ *	Number of points added. 
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1443,14 +1445,14 @@ AddRectToSegments(
  *
  * MakeSubPathSegments --
  *
- *		Supposed to be a generic segment generator that can be used 
- *		by both Area and Point functions.
+ *	Supposed to be a generic segment generator that can be used 
+ *	by both Area and Point functions.
  *
  * Results:
- *		Points filled into polyPtr...
+ *	Points filled into polyPtr...
  *
  * Side effects:
- *		Pointer *atomPtrPtr may be updated.
+ *	Pointer *atomPtrPtr may be updated.
  *
  *--------------------------------------------------------------
  */
@@ -1459,15 +1461,15 @@ static void
 MakeSubPathSegments(PathAtom **atomPtrPtr, double *polyPtr, 
         int *numPointsPtr, int *numStrokesPtr, TMatrix *matrixPtr)
 {
-    int 			first = 1;
-    int				numPoints;
-    int				numStrokes;
-    int				numAdded;
-    int				isclosed = 0;
-    double 			current[2];		/* Current untransformed point. */
-    double			*currentTPtr;	/* Pointer to the transformed current point. */
-    double			*coordPtr;
-    PathAtom 		*atomPtr;
+    int 	first = 1;
+    int		numPoints;
+    int		numStrokes;
+    int		numAdded;
+    int		isclosed = 0;
+    double 	current[2];	/* Current untransformed point. */
+    double	*currentTPtr;	/* Pointer to the transformed current point. */
+    double	*coordPtr;
+    PathAtom 	*atomPtr;
     
     /* @@@ 	Note that for unfilled paths we could have made a progressive
      *     	area (point) check which may be faster since we may stop when 0 (overlapping).
@@ -1628,17 +1630,17 @@ done:
  *
  * SubPathToArea --
  *
- *		This procedure is called to determine whether a subpath
- *		lies entirely inside, entirely outside, or overlapping
- *		a given rectangular area.
+ *	This procedure is called to determine whether a subpath
+ *	lies entirely inside, entirely outside, or overlapping
+ *	a given rectangular area.
  *
  * Results:
- *		-1 is returned if the item is entirely outside the
- *		area, 0 if it overlaps, and 1 if it is entirely
- *		inside the given area.
+ *	-1 is returned if the item is entirely outside the
+ *	area, 0 if it overlaps, and 1 if it is entirely
+ *	inside the given area.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1698,13 +1700,13 @@ SubPathToArea(
  *
  * TranslatePathAtoms --
  *
- *		This procedure is called to translate a linked list of path atoms.
+ *	This procedure is called to translate a linked list of path atoms.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		Path atoms changed.
+ *	Path atoms changed.
  *
  *--------------------------------------------------------------
  */
@@ -1780,17 +1782,17 @@ TranslatePathAtoms(
  *
  * ScalePathAtoms --
  *
- *		This procedure is called to scale a linked list of path atoms.
- *		The following transformation is applied to all point
- *		coordinates:
- *		x' = originX + scaleX*(x-originX)
- *		y' = originY + scaleY*(y-originY)
+ *	This procedure is called to scale a linked list of path atoms.
+ *	The following transformation is applied to all point
+ *	coordinates:
+ *	x' = originX + scaleX*(x-originX)
+ *	y' = originY + scaleY*(y-originY)
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		Path atoms changed.
+ *	Path atoms changed.
  *
  *--------------------------------------------------------------
  */
@@ -1925,34 +1927,34 @@ TranslatePathRect(PathRect *r, double deltaX, double deltaY)
  *
  * PathPolyLineToArea --
  *
- *		Determine whether an open polygon lies entirely inside, entirely
- *		outside, or overlapping a given rectangular area.
- * 		Identical to TkPolygonToArea except that it returns outside (-1)
- *		if completely encompassing the area rect.
+ *	Determine whether an open polygon lies entirely inside, entirely
+ *	outside, or overlapping a given rectangular area.
+ * 	Identical to TkPolygonToArea except that it returns outside (-1)
+ *	if completely encompassing the area rect.
  *
  * Results:
- *		-1 is returned if the polygon given by polyPtr and numPoints
- *		is entirely outside the rectangle given by rectPtr.  0 is
- *		returned if the polygon overlaps the rectangle, and 1 is
- *		returned if the polygon is entirely inside the rectangle.
+ *	-1 is returned if the polygon given by polyPtr and numPoints
+ *	is entirely outside the rectangle given by rectPtr.  0 is
+ *	returned if the polygon overlaps the rectangle, and 1 is
+ *	returned if the polygon is entirely inside the rectangle.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 int
 PathPolyLineToArea(
-    double *polyPtr,		/* Points to an array coordinates for
+    double *polyPtr,	    /* Points to an array coordinates for
                              * closed polygon:  x0, y0, x1, y1, ...
                              * The polygon may be self-intersecting. */
-    int numPoints,			/* Total number of points at *polyPtr. */
+    int numPoints,	    /* Total number of points at *polyPtr. */
     register double *rectPtr)	/* Points to coords for rectangle, in the
                              * order x1, y1, x2, y2.  X1 and y1 must
                              * be lower-left corner. */
 {
-    int state;				/* State of all edges seen so far (-1 means
+    int state;		    /* State of all edges seen so far (-1 means
                              * outside, 1 means inside, won't ever be
                              * 0). */
     int count;
@@ -2551,6 +2553,126 @@ PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr)
         }
     }
     return dist;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ItemExConfigure --
+ *
+ *      Takes care of the custom item configuration of the Tk_PathItemEx
+ *	part of any item with style.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItemEx *itemExPtr, int mask)
+{
+    Tk_Window tkwin;
+    Tk_PathItem *parentPtr;
+    Tk_PathItem *itemPtr = (Tk_PathItem *) itemExPtr;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
+
+    tkwin = Tk_PathCanvasTkwin(canvas);
+    if (mask & PATH_CORE_OPTION_PARENT) {
+	if (TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	TkPathCanvasSetParent(parentPtr, itemPtr);
+    }
+    
+    /*
+     * If we have got a style name it's options take precedence
+     * over the actual path configuration options. This is how SVG does it.
+     * Good or bad?
+     */
+    if (mask & PATH_CORE_OPTION_STYLENAME) {
+	TkPathStyleInst *styleInst = NULL;
+	
+	if (itemExPtr->styleObj != NULL) {
+	    styleInst = TkPathGetStyle(interp, Tcl_GetString(itemExPtr->styleObj),
+		    TkPathCanvasStyleTable(canvas), PathStyleChangedProc,
+		    (ClientData) itemExPtr);
+	    if (styleInst == NULL) {
+		return TCL_ERROR;
+	    }
+	} else {
+	    styleInst = NULL;
+	}
+	if (itemExPtr->styleInst != NULL) {
+	    TkPathFreeStyle(itemExPtr->styleInst);
+	}
+	itemExPtr->styleInst = styleInst;    
+    } 
+    
+    /*
+     * Just translate the 'fillObj' (string) to a TkPathColor.
+     * We MUST have this last in the chain of custom option checks!
+     */
+    if (mask & PATH_STYLE_OPTION_FILL) {
+	TkPathColor *fillPtr = NULL;
+	
+	if (stylePtr->fillObj != NULL) {
+	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
+		    TkPathCanvasGradientTable(canvas), PathGradientChangedProc,
+		    (ClientData) itemExPtr);
+	    if (fillPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	} else {
+	    fillPtr = NULL;
+	}
+	/* Free any old and store the new. */
+	if (stylePtr->fill != NULL) {
+	    TkPathFreePathColor(stylePtr->fill);
+	}
+	stylePtr->fill = fillPtr;
+    }
+    return TCL_OK;
+}
+
+void	
+PathGradientChangedProc(ClientData clientData, int flags)
+{
+    Tk_PathItemEx *itemPtr = (Tk_PathItemEx *)clientData;
+    Tk_PathStyle *stylePtr = &(itemPtr->style);
+        
+    if (flags) {
+	if (flags & PATH_GRADIENT_FLAG_DELETE) {
+	    TkPathFreePathColor(stylePtr->fill);	
+	    stylePtr->fill = NULL;
+	    Tcl_DecrRefCount(stylePtr->fillObj);
+	    stylePtr->fillObj = NULL;
+	}
+	Tk_PathCanvasEventuallyRedraw(itemPtr->canvas,
+		itemPtr->header.x1, itemPtr->header.y1,
+		itemPtr->header.x2, itemPtr->header.y2);
+    }
+}
+
+void	
+PathStyleChangedProc(ClientData clientData, int flags)
+{
+    Tk_PathItemEx *itemPtr = (Tk_PathItemEx *)clientData;
+        
+    if (flags) {
+	if (flags & PATH_STYLE_FLAG_DELETE) {
+	    TkPathFreeStyle(itemPtr->styleInst);	
+	    itemPtr->styleInst = NULL;
+	    Tcl_DecrRefCount(itemPtr->styleObj);
+	    itemPtr->styleObj = NULL;
+	}
+	Tk_PathCanvasEventuallyRedraw(itemPtr->canvas,
+		itemPtr->header.x1, itemPtr->header.y1,
+		itemPtr->header.x2, itemPtr->header.y2);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
