@@ -28,21 +28,17 @@ enum {
  */
 
 typedef struct PpolyItem  {
-    Tk_PathItem header;		/* Generic stuff that's the same for all
-				 * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_PathCanvas canvas;	/* Canvas containing item. */
-    Tk_PathStyle style;		/* Contains most drawing info. */
-    Tcl_Obj *styleObj;		/* Object with style name. */
-    char type;			/* Polyline or polygon. */
+    Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
+                             * path types.  MUST BE FIRST IN STRUCTURE. */
+    char type;		    /* Polyline or polygon. */
     PathAtom *atomPtr;
-    PathRect bbox;		/* Bounding box with zero width outline.
-				 * Untransformed coordinates. */
-    PathRect totalBbox;		/* Bounding box including stroke.
-				 * Untransformed coordinates. */
-    int maxNumSegments;		/* Max number of straight segments (for subpath)
-				 * needed for Area and Point functions. */
-    long flags;			/* Various flags, see enum. */
-    char *null;   		/* Just a placeholder for not yet implemented stuff. */ 
+    PathRect bbox;	    /* Bounding box with zero width outline.
+			     * Untransformed coordinates. */
+    PathRect totalBbox;	    /* Bounding box including stroke.
+			     * Untransformed coordinates. */
+    int maxNumSegments;	    /* Max number of straight segments (for subpath)
+			     * needed for Area and Point functions. */
+    long flags;		    /* Various flags, see enum. */
 } PpolyItem;
 
 enum {
@@ -87,27 +83,26 @@ static void	ScalePpoly(Tk_PathCanvas canvas,
                         double scaleX, double scaleY);
 static void	TranslatePpoly(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double deltaX, double deltaY);
-static void	PpolyGradientProc(ClientData clientData, int flags);
 
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 PATH_CUSTOM_OPTION_TAGS
 
 static Tk_OptionSpec optionSpecsPolyline[] = {
-    PATH_OPTION_SPEC_CORE(PpolyItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_FILL(PpolyItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(PpolyItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(PpolyItem, "black"),
+    PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
     PATH_OPTION_SPEC_END
 };
 
 static Tk_OptionSpec optionSpecsPpolygon[] = {
-    PATH_OPTION_SPEC_CORE(PpolyItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_FILL(PpolyItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(PpolyItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(PpolyItem, "black"),
+    PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
     PATH_OPTION_SPEC_END
 };
 
@@ -185,6 +180,7 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], char type)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
     Tk_OptionTable optionTable;
     int	i;
 
@@ -197,9 +193,10 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&(ppolyPtr->style));
-    ppolyPtr->canvas = canvas;
-    ppolyPtr->styleObj = NULL;
+    TkPathCreateStyle(&itemExPtr->style);
+    itemExPtr->canvas = canvas;
+    itemExPtr->styleObj = NULL;
+    itemExPtr->styleInst = NULL;
     ppolyPtr->atomPtr = NULL;
     ppolyPtr->type = type;
     ppolyPtr->bbox = NewEmptyPathRect();
@@ -272,21 +269,25 @@ PpolyCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 void
 ComputePpolyBbox(Tk_PathCanvas canvas, PpolyItem *ppolyPtr)
 {
-    Tk_PathStyle *stylePtr = &(ppolyPtr->style);
-    Tk_PathState state = ppolyPtr->header.state;
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathState state = itemExPtr->header.state;
 
-    if(state == TK_PATHSTATE_NULL) {
+    if (state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
     }
-    if (ppolyPtr->atomPtr == NULL || (state == TK_PATHSTATE_HIDDEN)) {
-        ppolyPtr->header.x1 = ppolyPtr->header.x2 =
-        ppolyPtr->header.y1 = ppolyPtr->header.y2 = -1;
+    if ((ppolyPtr->atomPtr == NULL) || (state == TK_PATHSTATE_HIDDEN)) {
+        itemExPtr->header.x1 = itemExPtr->header.x2 =
+        itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
     ppolyPtr->bbox = GetGenericBarePathBbox(ppolyPtr->atomPtr);
     ppolyPtr->totalBbox = GetGenericPathTotalBboxFromBare(ppolyPtr->atomPtr,
-            stylePtr, &(ppolyPtr->bbox));
-    SetGenericPathHeaderBbox(&(ppolyPtr->header), stylePtr->matrixPtr, &(ppolyPtr->totalBbox));
+            &style, &ppolyPtr->bbox);
+    SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &ppolyPtr->totalBbox);
 }
 
 static int		
@@ -294,72 +295,40 @@ ConfigurePpoly(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ppolyPtr->style);
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
     Tk_PathState state;
     Tk_SavedOptions savedOptions;
-    Tk_PathItem *parentPtr;
-    int mask;
-    int result = TCL_OK;
+    Tcl_Obj *errorResult = NULL;
+    int mask, error;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
-    if (ppolyPtr->type == kPpolyTypePolyline) {
-	result = Tk_SetOptions(interp, (char *) ppolyPtr, optionTablePolyline, 
-		objc, objv, tkwin, &savedOptions, &mask);
-    } else {
-	result = Tk_SetOptions(interp, (char *) ppolyPtr, optionTablePpolygon, 
-		objc, objv, tkwin, &savedOptions, &mask);
-    }	
-    if (result != TCL_OK) {
-        return TCL_ERROR;
-    }
-
-    /*
-     * If we have got a style name it's options take precedence
-     * over the actual path configuration options. This is how SVG does it.
-     * Good or bad?
-     */
-    if ((ppolyPtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
-        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, ppolyPtr->styleObj, 0);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-    } 
-    if (mask & PATH_CORE_OPTION_PARENT) {
-	result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-	TkPathCanvasSetParent(parentPtr, itemPtr);
-    }
-    
-    /*
-     * Just translate the 'fillObj' (string) to a TkPathColor.
-     * We MUST have this last in the chain of custom option checks!
-     */
-    if (mask & PATH_STYLE_OPTION_FILL) {
-	TkPathColor *fillPtr = NULL;
-
-	if (stylePtr->fillObj != NULL) {
-	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
-		    TkPathCanvasGradientTable(canvas), PpolyGradientProc,
-		    (ClientData) itemPtr);
-	    if (fillPtr == NULL) {
-		Tk_RestoreSavedOptions(&savedOptions);
-		return TCL_ERROR;
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    Tk_OptionTable optionTable;
+	    optionTable = (ppolyPtr->type == kPpolyTypePolyline) ? optionTablePolyline : optionTablePpolygon;
+	    if (Tk_SetOptions(interp, (char *) ppolyPtr, optionTable, 
+		    objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
+		continue;
 	    }
 	} else {
-	    fillPtr = NULL;
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}	
+	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	    continue;
 	}
-	if (stylePtr->fill != NULL) {
-	    TkPathFreePathColor(stylePtr->fill);
-	}
-	stylePtr->fill = fillPtr;
+
+	/*
+	 * If we reach this on the first pass we are OK and continue below.
+	 */
+	break;
     }
-    Tk_FreeSavedOptions(&savedOptions);
-    
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
+    }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     
     state = itemPtr->state;
@@ -383,11 +352,15 @@ static void
 DeletePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_OptionTable optionTable;
-    Tk_PathStyle *stylePtr = &(ppolyPtr->style);
 
     if (stylePtr->fill != NULL) {
 	TkPathFreePathColor(stylePtr->fill);
+    }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathFreeStyle(itemExPtr->styleInst);
     }
     if (ppolyPtr->atomPtr != NULL) {
         TkPathFreeAtoms(ppolyPtr->atomPtr);
@@ -402,20 +375,29 @@ DisplayPpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
-
-    TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, ppolyPtr->atomPtr, &(ppolyPtr->style),
-            &m, &(ppolyPtr->bbox));
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
+    TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, ppolyPtr->atomPtr, &style,
+            &m, &ppolyPtr->bbox);
 }
 
 static double	
 PpolyToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     PathAtom *atomPtr = ppolyPtr->atomPtr;
-    Tk_PathStyle *stylePtr = &(ppolyPtr->style);
 
-    return GenericPathToPoint(canvas, itemPtr, stylePtr, atomPtr, 
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }
+    return GenericPathToPoint(canvas, itemPtr, &style, atomPtr, 
             ppolyPtr->maxNumSegments, pointPtr);
 }
 
@@ -423,8 +405,10 @@ static int
 PpolyToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     
-    return GenericPathToArea(canvas, itemPtr, &(ppolyPtr->style), 
+    return GenericPathToArea(canvas, itemPtr, &style, 
             ppolyPtr->atomPtr, ppolyPtr->maxNumSegments, areaPtr);
 }
 
@@ -438,23 +422,34 @@ static void
 ScalePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
-    /* This doesn't work very well with general affine matrix transforms! Arcs ? */
-    //     ScalePathAtoms(atomPtr, originX, originY, scaleX, scaleY);
+    PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    PathAtom *atomPtr = ppolyPtr->atomPtr;
+
+    ScalePathAtoms(atomPtr, originX, originY, scaleX, scaleY);
+
+#if 0
+    prectPtr->rect.x1 = originX + scaleX*(prectPtr->rect.x1 - originX);
+    prectPtr->rect.y1 = originY + scaleY*(prectPtr->rect.y1 - originY);
+    prectPtr->rect.x2 = originX + scaleX*(prectPtr->rect.x2 - originX);
+    prectPtr->rect.y2 = originY + scaleY*(prectPtr->rect.y2 - originY);
+    ComputePrectBbox(canvas, prectPtr);
+#endif
 }
 
 static void		
 TranslatePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     PathAtom *atomPtr = ppolyPtr->atomPtr;
-    Tk_PathStyle *stylePtr = &(ppolyPtr->style);
 
     TranslatePathAtoms(atomPtr, deltaX, deltaY);
 
     /* Just translate the bbox'es as well. */
-    TranslatePathRect(&(ppolyPtr->bbox), deltaX, deltaY);
-    TranslatePathRect(&(ppolyPtr->totalBbox), deltaX, deltaY);
-    SetGenericPathHeaderBbox(&(ppolyPtr->header), stylePtr->matrixPtr, &(ppolyPtr->totalBbox));
+    TranslatePathRect(&ppolyPtr->bbox, deltaX, deltaY);
+    TranslatePathRect(&ppolyPtr->totalBbox, deltaX, deltaY);
+    SetGenericPathHeaderBbox(&itemExPtr->header, stylePtr->matrixPtr, &ppolyPtr->totalBbox);
 }
 
 /*
@@ -570,25 +565,6 @@ CoordsForPolygonline(
         *lenPtr = i/2 + 2;
     }
     return TCL_OK;
-}
-
-static void	
-PpolyGradientProc(ClientData clientData, int flags)
-{
-    PpolyItem *ppolyPtr = (PpolyItem *)clientData;
-    Tk_PathStyle *stylePtr = &(ppolyPtr->style);
-    
-    if (flags) {
-	if (flags & PATH_GRADIENT_FLAG_DELETE) {
-	    TkPathFreePathColor(stylePtr->fill);	
-	    stylePtr->fill = NULL;
-	    Tcl_DecrRefCount(stylePtr->fillObj);
-	    stylePtr->fillObj = NULL;
-	}
-	Tk_PathCanvasEventuallyRedraw(ppolyPtr->canvas,
-		ppolyPtr->header.x1, ppolyPtr->header.y1,
-		ppolyPtr->header.x2, ppolyPtr->header.y2);
-    }
 }
 
 /*----------------------------------------------------------------------*/

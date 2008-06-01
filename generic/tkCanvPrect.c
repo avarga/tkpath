@@ -139,8 +139,8 @@ static int
 CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[])
 {
-    Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *) itemPtr;
     PrectItem *prectPtr = (PrectItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
     int	i;
 
     if (objc == 0) {

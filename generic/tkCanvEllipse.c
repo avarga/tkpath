@@ -189,8 +189,8 @@ static int
 CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], char type)
 {
-    Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *) itemPtr;
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
     Tk_OptionTable optionTable;
     int	i;
 
