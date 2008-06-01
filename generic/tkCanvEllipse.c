@@ -370,6 +370,9 @@ DeleteEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
     if (stylePtr->fill != NULL) {
 	TkPathFreePathColor(stylePtr->fill);
     }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathFreeStyle(itemExPtr->styleInst);
+    }
     optionTable = (ellPtr->type == kOvalTypeCircle) ? optionTableCircle : optionTableEllipse;
     Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
@@ -590,33 +593,22 @@ ScaleEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double 
         double scaleX, double scaleY)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
 
     ellPtr->center[0] = originX + scaleX*(ellPtr->center[0] - originX);
     ellPtr->center[1] = originY + scaleY*(ellPtr->center[1] - originY);
     ellPtr->rx *= scaleX;
     ellPtr->ry *= scaleY;
-
-    itemExPtr->header.x1 = originX + scaleX*(itemExPtr->header.x1 - originX);
-    itemExPtr->header.x2 = originX + scaleX*(itemExPtr->header.x2 - originX);
-    itemExPtr->header.y1 = originY + scaleY*(itemExPtr->header.y1 - originY);
-    itemExPtr->header.y2 = originY + scaleY*(itemExPtr->header.y2 - originY);
+    ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
 static void		
 TranslateEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
 
-    /* Just translate the bbox'es as well. */
     ellPtr->center[0] += deltaX;
     ellPtr->center[1] += deltaY;
-    /* Beware for cumlated round-off errors! */
-    itemExPtr->header.x1 += (int) deltaX;
-    itemExPtr->header.x2 += (int) deltaX;
-    itemExPtr->header.y1 += (int) deltaY;
-    itemExPtr->header.y2 += (int) deltaY;
+    TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 
 /*----------------------------------------------------------------------*/

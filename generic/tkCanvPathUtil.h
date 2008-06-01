@@ -41,6 +41,11 @@ void	    TranslatePathAtoms(PathAtom *atomPtr, double deltaX, double deltaY);
 void	    ScalePathAtoms(PathAtom *atomPtr, double originX, double originY,
                     double scaleX, double scaleY);
 void	    TranslatePathRect(PathRect *r, double deltaX, double deltaY);
+void	    ScalePathRect(PathRect *r, double originX, double originY,
+		    double scaleX, double scaleY);
+void	    TranslateItemHeader(Tk_PathItem *itemPtr, double deltaX, double deltaY);
+void	    ScaleItemHeader(Tk_PathItem *itemPtr, double originX, double originY,
+		    double scaleX, double scaleY);
 
 /*
  * The canvas 'Area' and 'Point' functions.

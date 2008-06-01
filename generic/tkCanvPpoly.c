@@ -423,33 +423,22 @@ ScalePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double or
         double scaleX, double scaleY)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
-    PathAtom *atomPtr = ppolyPtr->atomPtr;
 
-    ScalePathAtoms(atomPtr, originX, originY, scaleX, scaleY);
-
-#if 0
-    prectPtr->rect.x1 = originX + scaleX*(prectPtr->rect.x1 - originX);
-    prectPtr->rect.y1 = originY + scaleY*(prectPtr->rect.y1 - originY);
-    prectPtr->rect.x2 = originX + scaleX*(prectPtr->rect.x2 - originX);
-    prectPtr->rect.y2 = originY + scaleY*(prectPtr->rect.y2 - originY);
-    ComputePrectBbox(canvas, prectPtr);
-#endif
+    ScalePathAtoms(ppolyPtr->atomPtr, originX, originY, scaleX, scaleY);
+    ScalePathRect(&ppolyPtr->bbox, originX, originY, scaleX, scaleY);
+    ScalePathRect(&ppolyPtr->totalBbox, originX, originY, scaleX, scaleY);
+    ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
 static void		
 TranslatePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
-    Tk_PathStyle *stylePtr = &itemExPtr->style;
-    PathAtom *atomPtr = ppolyPtr->atomPtr;
 
-    TranslatePathAtoms(atomPtr, deltaX, deltaY);
-
-    /* Just translate the bbox'es as well. */
+    TranslatePathAtoms(ppolyPtr->atomPtr, deltaX, deltaY);
     TranslatePathRect(&ppolyPtr->bbox, deltaX, deltaY);
     TranslatePathRect(&ppolyPtr->totalBbox, deltaX, deltaY);
-    SetGenericPathHeaderBbox(&itemExPtr->header, stylePtr->matrixPtr, &ppolyPtr->totalBbox);
+    TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 
 /*

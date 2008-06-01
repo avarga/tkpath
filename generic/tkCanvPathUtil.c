@@ -1922,6 +1922,56 @@ TranslatePathRect(PathRect *r, double deltaX, double deltaY)
     r->y2 += deltaY;
 }
 
+void
+ScalePathRect(PathRect *r, double originX, double originY,
+        double scaleX, double scaleY)
+{
+    r->x1 = originX + scaleX*(r->x1 - originX);
+    r->x2 = originX + scaleX*(r->x2 - originX);
+    r->y1 = originY + scaleY*(r->y1 - originY);
+    r->y2 = originY + scaleY*(r->y2 - originY);
+}
+
+void
+TranslateItemHeader(Tk_PathItem *itemPtr, double deltaX, double deltaY)
+{
+    /* @@@ TODO: Beware for cumulated round-off errors! */
+    /* If all coords == -1 the item is hidden. */
+    if ((itemPtr->x1 != -1) || (itemPtr->x2 != -1) ||
+	    (itemPtr->y1 != -1) || (itemPtr->y2 != -1)) {
+	itemPtr->x1 += (int) deltaX;
+	itemPtr->x2 += (int) deltaX;
+	itemPtr->y1 += (int) deltaY;
+	itemPtr->y2 += (int) deltaY;
+    }
+}
+
+void
+ScaleItemHeader(Tk_PathItem *itemPtr, double originX, double originY,
+        double scaleX, double scaleY)
+{
+    /* @@@ TODO: Beware for cumulated round-off errors! */
+    /* If all coords == -1 the item is hidden. */
+    if ((itemPtr->x1 != -1) || (itemPtr->x2 != -1) ||
+	    (itemPtr->y1 != -1) || (itemPtr->y2 != -1)) {
+	int min, max;
+	
+	itemPtr->x1 = originX + scaleX*(itemPtr->x1 - originX);
+	itemPtr->x2 = originX + scaleX*(itemPtr->x2 - originX);
+	itemPtr->y1 = originY + scaleY*(itemPtr->y1 - originY);
+	itemPtr->y2 = originY + scaleY*(itemPtr->y2 - originY);
+	
+	min = MIN(itemPtr->x1, itemPtr->x2);
+	max = MAX(itemPtr->x1, itemPtr->x2);
+	itemPtr->x1 = min;
+	itemPtr->x2 = max;
+	min = MIN(itemPtr->y1, itemPtr->y2);
+	max = MAX(itemPtr->y1, itemPtr->y2);
+	itemPtr->y1 = min;
+	itemPtr->y2 = max;
+    }
+}
+
 /*
  *--------------------------------------------------------------
  *

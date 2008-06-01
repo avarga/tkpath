@@ -461,24 +461,19 @@ ScalePrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double or
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
 
-    prectPtr->rect.x1 = originX + scaleX*(prectPtr->rect.x1 - originX);
-    prectPtr->rect.y1 = originY + scaleY*(prectPtr->rect.y1 - originY);
-    prectPtr->rect.x2 = originX + scaleX*(prectPtr->rect.x2 - originX);
-    prectPtr->rect.y2 = originY + scaleY*(prectPtr->rect.y2 - originY);
-    ComputePrectBbox(canvas, prectPtr);
+    ScalePathRect(&prectPtr->rect, originX, originY, scaleX, scaleY);
+    ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
 static void		
 TranslatePrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
-    Tk_PathStyle *stylePtr = &itemExPtr->style;
 
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&prectPtr->rect, deltaX, deltaY);
     TranslatePathRect(&prectPtr->totalBbox, deltaX, deltaY);
-    SetGenericPathHeaderBbox(&itemExPtr->header, stylePtr->matrixPtr, &prectPtr->totalBbox);
+    TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 
 /*----------------------------------------------------------------------*/
