@@ -26,7 +26,13 @@ typedef struct PimageItem  {
     Tk_PathItem header;	    /* Generic stuff that's the same for all
                              * types.  MUST BE FIRST IN STRUCTURE. */
     Tk_PathCanvas canvas;   /* Canvas containing item. */
-    Tk_PathStyle style;	    /* Contains most drawing info. @@@ Only few (two) elements used! */
+    double fillOpacity;
+    TMatrix *matrixPtr;	    /*  a  b   default (NULL): 1 0
+				c  d		   0 1
+				tx ty 		   0 0 */
+    struct TkPathStyleInst *styleInst;
+			    /* Pointer to first in list of instances
+			     * derived from this style name. */
     Tcl_Obj *styleObj;	    /* Object with style name. */
     double coord[2];	    /* nw coord. */
     Tcl_Obj *imageObj;	    /* Object describing the -image option.
@@ -74,21 +80,23 @@ static void	TranslatePimage(Tk_PathCanvas canvas,
 static void	ImageChangedProc _ANSI_ARGS_((ClientData clientData,
                         int x, int y, int width, int height, int imgWidth,
                         int imgHeight));
+void		PimageStyleChangedProc(ClientData clientData, int flags);
 
 
 enum {
-    PIMAGE_OPTION_INDEX_FILLOPACITY		    = (1L << (PATH_STYLE_OPTION_INDEX_END + 0)),
-    PIMAGE_OPTION_INDEX_HEIGHT			    = (1L << (PATH_STYLE_OPTION_INDEX_END + 1)),
-    PIMAGE_OPTION_INDEX_IMAGE			    = (1L << (PATH_STYLE_OPTION_INDEX_END + 2)),
-    PIMAGE_OPTION_INDEX_WIDTH			    = (1L << (PATH_STYLE_OPTION_INDEX_END + 3)),
+    PIMAGE_OPTION_INDEX_FILLOPACITY	= 1L,
+    PIMAGE_OPTION_INDEX_HEIGHT,
+    PIMAGE_OPTION_INDEX_IMAGE,
+    PIMAGE_OPTION_INDEX_MATRIX,
+    PIMAGE_OPTION_INDEX_WIDTH
 };
  
 PATH_STYLE_CUSTOM_OPTION_MATRIX
 PATH_CUSTOM_OPTION_TAGS
 
-#define PATH_OPTION_SPEC_FILLOPACITY(typeName)		    \
+#define PATH_OPTION_SPEC_FILLOPACITY			    \
     {TK_OPTION_DOUBLE, "-fillopacity", NULL, NULL,	    \
-        "1.0", -1, Tk_Offset(typeName, style.fillOpacity),  \
+        "1.0", -1, Tk_Offset(PimageItem, fillOpacity),	    \
 	0, 0, PIMAGE_OPTION_INDEX_FILLOPACITY}
 
 #define PATH_OPTION_SPEC_HEIGHT				    \
@@ -101,6 +109,12 @@ PATH_CUSTOM_OPTION_TAGS
         NULL, Tk_Offset(PimageItem, imageObj), -1,	    \
 	TK_OPTION_NULL_OK, 0, PIMAGE_OPTION_INDEX_IMAGE}
 
+#define PATH_OPTION_SPEC_MATRIX				    \
+    {TK_OPTION_CUSTOM, "-matrix", NULL, NULL,		    \
+	NULL, -1, Tk_Offset(PimageItem, matrixPtr),	    \
+	TK_OPTION_NULL_OK, (ClientData) &matrixCO,	    \
+	PIMAGE_OPTION_INDEX_MATRIX}
+
 #define PATH_OPTION_SPEC_WIDTH				    \
     {TK_OPTION_DOUBLE, "-width", NULL, NULL,		    \
         "0", -1, Tk_Offset(PimageItem, width),		    \
@@ -109,8 +123,8 @@ PATH_CUSTOM_OPTION_TAGS
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(PimageItem),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_MATRIX(PimageItem),
-    PATH_OPTION_SPEC_FILLOPACITY(PimageItem),
+    PATH_OPTION_SPEC_MATRIX,
+    PATH_OPTION_SPEC_FILLOPACITY,
     PATH_OPTION_SPEC_HEIGHT,
     PATH_OPTION_SPEC_IMAGE,
     PATH_OPTION_SPEC_WIDTH,
@@ -165,10 +179,11 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-     
-    TkPathCreateStyle(&(pimagePtr->style));
     pimagePtr->canvas = canvas;
     pimagePtr->styleObj = NULL;
+    pimagePtr->fillOpacity = 1.0;
+    pimagePtr->matrixPtr = NULL;	
+    pimagePtr->styleInst = NULL;
     pimagePtr->imageObj = NULL;
     pimagePtr->image = NULL;
     pimagePtr->photo = NULL;
@@ -176,7 +191,7 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
     pimagePtr->width = 0;
     pimagePtr->bbox = NewEmptyPathRect();
     
-     if (optionTable == NULL) {
+    if (optionTable == NULL) {
 	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
     } 
     itemPtr->optionTable = optionTable;
@@ -210,7 +225,7 @@ PimageCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     int result;
 
-	result = CoordsForPointItems(interp, canvas, pimagePtr->coord, objc, objv);
+    result = CoordsForPointItems(interp, canvas, pimagePtr->coord, objc, objv);
     if ((result == TCL_OK) && ((objc == 1) || (objc == 2))) {
         ComputePimageBbox(canvas, pimagePtr);
     }
@@ -220,7 +235,6 @@ PimageCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 void
 ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
 {
-    Tk_PathStyle *stylePtr = &(pimagePtr->style);
     Tk_PathState state = pimagePtr->header.state;
 
     if (state == TK_PATHSTATE_NULL) {
@@ -246,7 +260,7 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
         bbox.x2 = bbox.x1 + width;
         bbox.y2 = bbox.y1 + height;
         pimagePtr->bbox = bbox;
-        SetGenericPathHeaderBbox(&(pimagePtr->header), stylePtr->matrixPtr, &bbox);
+        SetGenericPathHeaderBbox(&pimagePtr->header, pimagePtr->matrixPtr, &bbox);
     }
 }
 
@@ -255,79 +269,118 @@ ConfigurePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(pimagePtr->style);
     Tk_Window tkwin;
     Tk_Image image;
     Tk_PhotoHandle photo;
     Tk_SavedOptions savedOptions;
     Tk_PathItem *parentPtr;
-    int mask;
-    int result;
+    Tcl_Obj *errorResult = NULL;
+    int error, mask, state;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
-    result = Tk_SetOptions(interp, (char *) pimagePtr, optionTable, 
-	    objc, objv, tkwin, &savedOptions, &mask);
-    if (result != TCL_OK) {
-	return result;
-    }
-
-    /*
-     * If we have got a style name it's options take precedence
-     * over the actual path configuration options. This is how SVG does it.
-     * Good or bad?
-     */
-    if ((pimagePtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
-        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, pimagePtr->styleObj, 0);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-    } 
-    if (mask & PATH_CORE_OPTION_PARENT) {
-	result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-	TkPathCanvasSetParent(parentPtr, itemPtr);
-    }
-    Tk_FreeSavedOptions(&savedOptions);
-
-    /*
-     * Create the image.  Save the old image around and don't free it
-     * until after the new one is allocated.  This keeps the reference
-     * count from going to zero so the image doesn't have to be recreated
-     * if it hasn't changed.
-     */
-    
-    if (mask & PIMAGE_OPTION_INDEX_IMAGE) {
-	if (pimagePtr->imageObj != NULL) {
-	    image = Tk_GetImage(interp, tkwin, 
-		    Tcl_GetString(pimagePtr->imageObj),
-		    ImageChangedProc, (ClientData) pimagePtr);
-	    if (image == NULL) {
-		return TCL_ERROR;
-	    }
-	    photo = Tk_FindPhoto(interp, Tcl_GetString(pimagePtr->imageObj));
-	    if (photo == NULL) {
-		return TCL_ERROR;
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    if (Tk_SetOptions(interp, (char *) pimagePtr, optionTable, 
+		    objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
+		continue;
 	    }
 	} else {
-	    image = NULL;
-	    photo = NULL;
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}	
+
+	/*
+	 * Take each custom option, not handled in Tk_SetOptions, in turn.
+	 */
+	if (mask & PATH_CORE_OPTION_PARENT) {
+	    if (TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr) != TCL_OK) {
+		continue;
+	    }
+	    TkPathCanvasSetParent(parentPtr, itemPtr);
 	}
-	if (pimagePtr->image != NULL) {
-	    Tk_FreeImage(pimagePtr->image);
+	
+	/*
+	 * If we have got a style name it's options take precedence
+	 * over the actual path configuration options. This is how SVG does it.
+	 * Good or bad?
+	 */
+	if (mask & PATH_CORE_OPTION_STYLENAME) {
+	    TkPathStyleInst *styleInst = NULL;
+	    
+	    if (pimagePtr->styleObj != NULL) {
+		styleInst = TkPathGetStyle(interp, Tcl_GetString(pimagePtr->styleObj),
+			TkPathCanvasStyleTable(canvas), PimageStyleChangedProc,
+			(ClientData) itemPtr);
+		if (styleInst == NULL) {
+		    continue;
+		}
+	    } else {
+		styleInst = NULL;
+	    }
+	    if (pimagePtr->styleInst != NULL) {
+		TkPathFreeStyle(pimagePtr->styleInst);
+	    }
+	    pimagePtr->styleInst = styleInst;    
+	} 
+
+	/*
+	 * Create the image.  Save the old image around and don't free it
+	 * until after the new one is allocated.  This keeps the reference
+	 * count from going to zero so the image doesn't have to be recreated
+	 * if it hasn't changed.
+	 */
+	if (mask & PIMAGE_OPTION_INDEX_IMAGE) {
+	    if (pimagePtr->imageObj != NULL) {
+		image = Tk_GetImage(interp, tkwin, 
+			Tcl_GetString(pimagePtr->imageObj),
+			ImageChangedProc, (ClientData) pimagePtr);
+		if (image == NULL) {
+		    continue;
+		}
+		photo = Tk_FindPhoto(interp, Tcl_GetString(pimagePtr->imageObj));
+		if (photo == NULL) {
+		    continue;
+		}
+	    } else {
+		image = NULL;
+		photo = NULL;
+	    }
+	    if (pimagePtr->image != NULL) {
+		Tk_FreeImage(pimagePtr->image);
+	    }
+	    pimagePtr->image = image;
+	    pimagePtr->photo = photo;
 	}
-	pimagePtr->image = image;
-	pimagePtr->photo = photo;
+
+	/*
+	 * If we reach this on the first pass we are OK and continue below.
+	 */
+	break;
     }
-    
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
+    }
+    pimagePtr->fillOpacity = MAX(0.0, MIN(1.0, pimagePtr->fillOpacity));
+    state = itemPtr->state;
+    if(state == TK_PATHSTATE_NULL) {
+	state = TkPathCanvasState(canvas);
+    }
+    if (state == TK_PATHSTATE_HIDDEN) {
+        return TCL_OK;
+    }
+
     /*
-     * Recompute bounding box for image.
+     * Recompute bounding box for path.
      */
-    ComputePimageBbox(canvas, pimagePtr);
-    return TCL_OK;
+    if (error) {
+	Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	ComputePimageBbox(canvas, pimagePtr);
+	return TCL_OK;
+    }
 }
 
 static void		
@@ -347,13 +400,12 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     TMatrix m = GetCanvasTMatrix(canvas);
-    Tk_PathStyle *stylePtr = &(pimagePtr->style);
     TkPathContext ctx;
 
     ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
     TkPathPushTMatrix(ctx, &m);
-    if (stylePtr->matrixPtr != NULL) {
-        TkPathPushTMatrix(ctx, stylePtr->matrixPtr);
+    if (pimagePtr->matrixPtr != NULL) {
+        TkPathPushTMatrix(ctx, pimagePtr->matrixPtr);
     }
     /* @@@ Maybe we should taking care of x, y etc.? */
     TkPathImage(ctx, pimagePtr->image, pimagePtr->photo, pimagePtr->coord[0], pimagePtr->coord[1], 
@@ -365,16 +417,14 @@ static double
 PimageToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(pimagePtr->style);
-    return PathRectToPointWithMatrix(pimagePtr->bbox, stylePtr->matrixPtr, pointPtr);
+    return PathRectToPointWithMatrix(pimagePtr->bbox, pimagePtr->matrixPtr, pointPtr);
 }
 
 static int		
 PimageToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(pimagePtr->style);
-    return PathRectToAreaWithMatrix(pimagePtr->bbox, stylePtr->matrixPtr, areaPtr);
+    return PathRectToAreaWithMatrix(pimagePtr->bbox, pimagePtr->matrixPtr, areaPtr);
 }
 
 static int		
@@ -394,13 +444,12 @@ static void
 TranslatePimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(pimagePtr->style);
 
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&(pimagePtr->bbox), deltaX, deltaY);
     pimagePtr->coord[0] += deltaX;
     pimagePtr->coord[1] += deltaY;
-    SetGenericPathHeaderBbox(&(pimagePtr->header), stylePtr->matrixPtr, &(pimagePtr->bbox));
+    TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 
 static void
@@ -435,6 +484,25 @@ ImageChangedProc(
     Tk_PathCanvasEventuallyRedraw(pimagePtr->canvas, pimagePtr->header.x1 + x,
             pimagePtr->header.y1 + y, (int) (pimagePtr->header.x1 + x + width),
             (int) (pimagePtr->header.y1 + y + height));
+}
+
+void	
+PimageStyleChangedProc(ClientData clientData, int flags)
+{
+    Tk_PathItem *itemPtr = (Tk_PathItem *) clientData;
+    PimageItem *pimagePtr = (PimageItem *) itemPtr;
+        
+    if (flags) {
+	if (flags & PATH_STYLE_FLAG_DELETE) {
+	    TkPathFreeStyle(pimagePtr->styleInst);	
+	    pimagePtr->styleInst = NULL;
+	    Tcl_DecrRefCount(pimagePtr->styleObj);
+	    pimagePtr->styleObj = NULL;
+	}
+	Tk_PathCanvasEventuallyRedraw(pimagePtr->canvas,
+		itemPtr->x1, itemPtr->y1,
+		itemPtr->x2, itemPtr->y2);
+    }
 }
 
 /*----------------------------------------------------------------------*/

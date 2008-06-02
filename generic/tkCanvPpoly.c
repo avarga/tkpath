@@ -282,7 +282,8 @@ ComputePpolyBbox(Tk_PathCanvas canvas, PpolyItem *ppolyPtr)
         return;
     }
     if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
     }    
     ppolyPtr->bbox = GetGenericBarePathBbox(ppolyPtr->atomPtr);
     ppolyPtr->totalBbox = GetGenericPathTotalBboxFromBare(ppolyPtr->atomPtr,
@@ -338,14 +339,16 @@ ConfigurePpoly(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-    
-    /*
-     * Recompute bounding box for path.
-     */
-    if (!(ppolyPtr->flags & kPpolyItemNoBboxCalculation)) {
-        ComputePpolyBbox(canvas, ppolyPtr);
+    if (error) {
+	Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	if (!(ppolyPtr->flags & kPpolyItemNoBboxCalculation)) {
+	    ComputePpolyBbox(canvas, ppolyPtr);
+	}
+	return TCL_OK;
     }
-    return TCL_OK;
 }
 
 static void		

@@ -26,11 +26,8 @@ enum {
  */
 
 typedef struct PtextItem  {
-    Tk_PathItem header;		/* Generic stuff that's the same for all
-				 * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_PathCanvas canvas;	/* Canvas containing item. */
-    Tk_PathStyle style;		/* Contains most drawing info. */
-    Tcl_Obj *styleObj;		/* Object with style name. */
+    Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
+                             * path types.  MUST BE FIRST IN STRUCTURE. */
     Tk_PathTextStyle textStyle;
     int textAnchor;
     double x;
@@ -75,7 +72,6 @@ static void	ScalePtext(Tk_PathCanvas canvas,
                         double scaleX, double scaleY);
 static void	TranslatePtext(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double deltaX, double deltaY);
-static void	PtextGradientProc(ClientData clientData, int flags);
 #if 0
 static void	PtextDeleteChars(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
                         int first, int last);
@@ -120,11 +116,11 @@ static char *textAnchorST[] = {
         0, (ClientData) textAnchorST, 0}
 
 static Tk_OptionSpec optionSpecs[] = {
-    PATH_OPTION_SPEC_CORE(PtextItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_FILL(PtextItem, "black"),
-    PATH_OPTION_SPEC_STYLE_MATRIX(PtextItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(PtextItem, ""),
+    PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, "black"),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, ""),
     PATH_OPTION_SPEC_FONTFAMILY,
     PATH_OPTION_SPEC_FONTSIZE,
     PATH_OPTION_SPEC_TEXT,
@@ -169,6 +165,7 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
         int objc, Tcl_Obj *CONST objv[])
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
     int	i;
 
     if (objc == 0) {
@@ -180,9 +177,10 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&(ptextPtr->style));
-    ptextPtr->canvas = canvas;
-    ptextPtr->styleObj = NULL;
+    TkPathCreateStyle(&itemExPtr->style);
+    itemExPtr->canvas = canvas;
+    itemExPtr->styleObj = NULL;
+    itemExPtr->styleInst = NULL;
     ptextPtr->bbox = NewEmptyPathRect();
     ptextPtr->utf8Obj = NULL;
     ptextPtr->numChars = 0;
@@ -246,8 +244,8 @@ PtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
                 return TCL_ERROR;
             }
         }
-        if ((Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[0], &(ptextPtr->x)) != TCL_OK)
-            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[1], &(ptextPtr->y)) != TCL_OK)) {
+        if ((Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[0], &ptextPtr->x) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[1], &ptextPtr->y) != TCL_OK)) {
             return TCL_ERROR;
         }
         if (!(ptextPtr->flags & kPtextItemNoBboxCalculation)) {
@@ -263,8 +261,9 @@ PtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 void
 ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
 {
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
-    Tk_PathState state = ptextPtr->header.state;
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathState state = itemExPtr->header.state;
     double width;
     PathRect bbox, r;
 
@@ -272,10 +271,14 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
 	state = TkPathCanvasState(canvas);
     }
     if (ptextPtr->utf8Obj == NULL || (state == TK_PATHSTATE_HIDDEN)) {
-        ptextPtr->header.x1 = ptextPtr->header.x2 =
-        ptextPtr->header.y1 = ptextPtr->header.y2 = -1;
+        itemExPtr->header.x1 = itemExPtr->header.x2 =
+        itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
+    }    
     r = TkPathTextMeasureBbox(&ptextPtr->textStyle, 
 	    Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     width = r.x2 - r.x1;
@@ -301,15 +304,15 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
     bbox.y1 -= 1.0;
     bbox.x2 += 1.0;
     bbox.y2 += 1.0;
-    if (stylePtr->strokeColor) {
-        double halfWidth = stylePtr->strokeWidth/2;
+    if (style.strokeColor) {
+        double halfWidth = style.strokeWidth/2;
         bbox.x1 -= halfWidth;
         bbox.y1 -= halfWidth;
         bbox.x2 += halfWidth;
         bbox.x2 += halfWidth;
     }
     ptextPtr->bbox = bbox;
-    SetGenericPathHeaderBbox(&ptextPtr->header, stylePtr->matrixPtr, &bbox);
+    SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &bbox);
 }
 
 static int		
@@ -317,74 +320,47 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
-    Tk_PathItem *parentPtr;
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
     Tk_PathState state;
     Tk_SavedOptions savedOptions;
-    int mask;
-    int result;
+    Tcl_Obj *errorResult = NULL;
+    int error, mask;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
-    result = Tk_SetOptions(interp, (char *) ptextPtr, optionTable, 
-	    objc, objv, tkwin, &savedOptions, &mask);
-    if (result != TCL_OK) {
-	return result;
-    }
-
-    /*
-     * If we have got a style name it's options take precedence
-     * over the actual path configuration options. This is how SVG does it.
-     * Good or bad?
-     */
-    if ((ptextPtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
-        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, ptextPtr->styleObj, 0);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-    } 
-    if (mask & PATH_CORE_OPTION_PARENT) {
-	result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-	TkPathCanvasSetParent(parentPtr, itemPtr);
-    }
-    
-    /*
-     * Just translate the 'fillObj' (string) to a TkPathColor.
-     * We MUST have this last in the chain of custom option checks!
-     */
-    if (mask & PATH_STYLE_OPTION_FILL) {
-	TkPathColor *fillPtr = NULL;
-
-	if (stylePtr->fillObj != NULL) {
-	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
-		    TkPathCanvasGradientTable(canvas), PtextGradientProc,
-		    (ClientData) itemPtr);
-	    if (fillPtr == NULL) {
-		Tk_RestoreSavedOptions(&savedOptions);
-		return TCL_ERROR;
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    if (Tk_SetOptions(interp, (char *) ptextPtr, optionTable, 
+		    objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
+		continue;
 	    }
 	} else {
-	    fillPtr = NULL;
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}	
+	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	    continue;
 	}
-	/* Free any old and store the new. */
-	if (stylePtr->fill != NULL) {
-	    TkPathFreePathColor(stylePtr->fill);
+	// @@@ TkPathTextConfig needs to be reworked!
+	if (TkPathTextConfig(interp, &(ptextPtr->textStyle), 
+		Tcl_GetString(ptextPtr->utf8Obj), &ptextPtr->custom) != TCL_OK) {
+	    continue;
 	}
-	stylePtr->fill = fillPtr;
+
+	/*
+	 * If we reach this on the first pass we are OK and continue below.
+	 */
+	break;
     }
-    Tk_FreeSavedOptions(&savedOptions);
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
+    }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
-    if (ptextPtr->styleObj != NULL) {
-	TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, ptextPtr->styleObj, 0);
-    }         
     state = itemPtr->state;
-    if(state == TK_PATHSTATE_NULL) {
+    if (state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
     }
     if (ptextPtr->utf8Obj != NULL) {
@@ -398,15 +374,15 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-    // @@@ TkPathTextConfig needs to be reworked!
-    if (TkPathTextConfig(interp, &(ptextPtr->textStyle), 
-	    Tcl_GetString(ptextPtr->utf8Obj), &(ptextPtr->custom)) == TCL_OK) {
-        if (!(ptextPtr->flags & kPtextItemNoBboxCalculation)) {
+    if (error) {
+	Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	if (!(ptextPtr->flags & kPtextItemNoBboxCalculation)) {
             ComputePtextBbox(canvas, ptextPtr);
         }
-        return TCL_OK;
-    } else {
-        return TCL_ERROR;
+	return TCL_OK;
     }
 }
 
@@ -414,10 +390,14 @@ static void
 DeletePtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
 
     if (stylePtr->fill != NULL) {
 	TkPathFreePathColor(stylePtr->fill);
+    }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathFreeStyle(itemExPtr->styleInst);
     }
     TkPathTextFree(&(ptextPtr->textStyle), ptextPtr->custom);
     Tk_FreeConfigOptions((char *) ptextPtr, optionTable, 
@@ -429,23 +409,27 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     TMatrix m = GetCanvasTMatrix(canvas);
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
     TkPathContext ctx;
     
     if (ptextPtr->utf8Obj == NULL) {
         return;
     }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
     ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
     TkPathPushTMatrix(ctx, &m);
-    if (stylePtr->matrixPtr != NULL) {
-        TkPathPushTMatrix(ctx, stylePtr->matrixPtr);
+    if (style.matrixPtr != NULL) {
+        TkPathPushTMatrix(ctx, style.matrixPtr);
     }
-    TkPathBeginPath(ctx, stylePtr);
+    TkPathBeginPath(ctx, &style);
     /* @@@ We need to handle gradients as well here!
            Wait to see what the other APIs have to say.
     */
-    TkPathTextDraw(ctx, stylePtr, &(ptextPtr->textStyle), ptextPtr->bbox.x1, ptextPtr->y, 
+    TkPathTextDraw(ctx, &style, &ptextPtr->textStyle, ptextPtr->bbox.x1, ptextPtr->y, 
             Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     TkPathEndPath(ctx);
     TkPathFree(ctx);
@@ -455,16 +439,26 @@ static double
 PtextToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
-    return PathRectToPointWithMatrix(ptextPtr->bbox, stylePtr->matrixPtr, pointPtr);    
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill | kPathMergeStyleNotStroke);
+    }    
+    return PathRectToPointWithMatrix(ptextPtr->bbox, style.matrixPtr, pointPtr);    
 }
 
 static int		
 PtextToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
-    return PathRectToAreaWithMatrix(ptextPtr->bbox, stylePtr->matrixPtr, areaPtr);
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill | kPathMergeStyleNotStroke);
+    }    
+    return PathRectToAreaWithMatrix(ptextPtr->bbox, style.matrixPtr, areaPtr);
 }
 
 static int		
@@ -477,37 +471,23 @@ static void
 ScalePtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
-    /* Skip? */
+    PtextItem *ptextPtr = (PtextItem *) itemPtr;
+
+    ptextPtr->x = originX + scaleX*(ptextPtr->x - originX);
+    ptextPtr->y = originY + scaleY*(ptextPtr->y - originY);
+    ScalePathRect(&ptextPtr->bbox, originX, originY, scaleX, scaleY);
+    ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
 static void		
 TranslatePtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
+
     ptextPtr->x += deltaX;
     ptextPtr->y += deltaY;
-    TranslatePathRect(&(ptextPtr->bbox), deltaX, deltaY);
-    SetGenericPathHeaderBbox(&(ptextPtr->header), stylePtr->matrixPtr, &(ptextPtr->bbox));
-}
-
-static void	
-PtextGradientProc(ClientData clientData, int flags)
-{
-    PtextItem *ptextPtr = (PtextItem *)clientData;
-    Tk_PathStyle *stylePtr = &(ptextPtr->style);
-        
-    if (flags) {
-	if (flags & PATH_GRADIENT_FLAG_DELETE) {
-	    TkPathFreePathColor(stylePtr->fill);	
-	    stylePtr->fill = NULL;
-	    Tcl_DecrRefCount(stylePtr->fillObj);
-	    stylePtr->fillObj = NULL;
-	}
-	Tk_PathCanvasEventuallyRedraw(ptextPtr->canvas,
-		ptextPtr->header.x1, ptextPtr->header.y1,
-		ptextPtr->header.x2, ptextPtr->header.y2);
-    }
+    TranslatePathRect(&ptextPtr->bbox, deltaX, deltaY);
+    TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 
 #if 0	// TODO

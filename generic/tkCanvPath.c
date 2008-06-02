@@ -36,7 +36,7 @@ typedef struct PathItem  {
     int pathLen;
     Tcl_Obj *normPathObjPtr;/* The object containing the normalized path. */
     PathAtom *atomPtr;
-    PathRect bareBbox;      /* Bounding box with zero width outline.
+    PathRect bbox;          /* Bounding box with zero width outline.
                              * Untransformed coordinates. */
     PathRect totalBbox;     /* Bounding box including stroke.
                              * Untransformed coordinates. */
@@ -208,7 +208,7 @@ CreatePath(
     pathPtr->pathLen = 0;
     pathPtr->normPathObjPtr = NULL;
     pathPtr->atomPtr = NULL;
-    pathPtr->bareBbox = NewEmptyPathRect();
+    pathPtr->bbox = NewEmptyPathRect();
     pathPtr->totalBbox = NewEmptyPathRect();
     pathPtr->maxNumSegments = 0;
     pathPtr->flags = 0L;
@@ -391,9 +391,14 @@ ConfigurePath(
     /*
      * Recompute bounding box for path.
      */
-    ComputePathBbox(canvas, pathPtr);
-
-    return TCL_OK;
+    if (error) {
+	Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+        ComputePathBbox(canvas, pathPtr);
+	return TCL_OK;
+    }
 }
 
 /*
@@ -481,17 +486,18 @@ ComputePathBbox(
         return;
     }
     if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+                kPathMergeStyleNotFill);
     }    
     
     /*
      * Get an approximation of the path's bounding box
      * assuming zero width outline (stroke).
      */
-    pathPtr->bareBbox = GetGenericBarePathBbox(pathPtr->atomPtr);
+    pathPtr->bbox = GetGenericBarePathBbox(pathPtr->atomPtr);
 
     pathPtr->totalBbox = GetGenericPathTotalBboxFromBare(pathPtr->atomPtr,
-            &style, &pathPtr->bareBbox);
+            &style, &pathPtr->bbox);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &pathPtr->totalBbox);
 }
 
@@ -533,7 +539,7 @@ DisplayPath(
             TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
         }    
         TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, pathPtr->atomPtr, 
-                &style, &m, &pathPtr->bareBbox);
+                &style, &m, &pathPtr->bbox);
     }
 }
 
@@ -834,8 +840,8 @@ ScalePath(
     pathPtr->flags |= kPathItemNeedNewNormalizedPath;
 
     /* Just scale the bbox'es as well. */
-    ScalePathRect(&pathPtr->bareBbox, originX, originY, scaleX, scaleY);
-    NormalizePathRect(&pathPtr->bareBbox);
+    ScalePathRect(&pathPtr->bbox, originX, originY, scaleX, scaleY);
+    NormalizePathRect(&pathPtr->bbox);
     
     ScalePathRect(&pathPtr->totalBbox, originX, originY, scaleX, scaleY);
     NormalizePathRect(&r);
@@ -879,7 +885,7 @@ TranslatePath(
     pathPtr->flags |= kPathItemNeedNewNormalizedPath;
 
     /* Just translate the bbox'es as well. */
-    TranslatePathRect(&pathPtr->bareBbox, deltaX, deltaY);
+    TranslatePathRect(&pathPtr->bbox, deltaX, deltaY);
     TranslatePathRect(&pathPtr->totalBbox, deltaX, deltaY);
     TranslateItemHeader(itemPtr, deltaX, deltaY);
 }

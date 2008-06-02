@@ -28,16 +28,12 @@ enum {
  */
 
 typedef struct PlineItem  {
-    Tk_PathItem header;		/* Generic stuff that's the same for all
-				 * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_PathCanvas canvas;	/* Canvas containing item. */
-    Tk_PathStyle style;		/* Contains most drawing info. */
-    Tcl_Obj *styleObj;		/* Object with style name. */
+    Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
+                             * path types.  MUST BE FIRST IN STRUCTURE. */
     PathRect coords;		/* Coordinates (unorders bare bbox). */
     PathRect totalBbox;		/* Bounding box including stroke.
 				 * Untransformed coordinates. */
     long flags;			/* Various flags, see enum. */
-    char *null;   		/* Just a placeholder for not yet implemented stuff. */ 
 } PlineItem;
 
 
@@ -78,10 +74,10 @@ PATH_STYLE_CUSTOM_OPTION_DASH
 PATH_CUSTOM_OPTION_TAGS
 
 static Tk_OptionSpec optionSpecs[] = {
-    PATH_OPTION_SPEC_CORE(PlineItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_MATRIX(PlineItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(PlineItem, "black"),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
     PATH_OPTION_SPEC_END
 };
 
@@ -120,6 +116,7 @@ CreatePline(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPt
         int objc, Tcl_Obj *CONST objv[])
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
     int	i;
 
     if (objc == 0) {
@@ -131,9 +128,10 @@ CreatePline(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPt
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&(plinePtr->style));
-    plinePtr->canvas = canvas;
-    plinePtr->styleObj = NULL;
+    TkPathCreateStyle(&itemExPtr->style);
+    itemExPtr->canvas = canvas;
+    itemExPtr->styleObj = NULL;
+    itemExPtr->styleInst = NULL;
     plinePtr->totalBbox = NewEmptyPathRect();
     plinePtr->flags = 0L;
     
@@ -177,7 +175,7 @@ PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[])
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-    PathRect *p = &(plinePtr->coords);
+    PathRect *p = &plinePtr->coords;
 
     if (objc == 0) {
         Tcl_Obj *obj = Tcl_NewObj();
@@ -200,10 +198,10 @@ PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
                 return TCL_ERROR;
             }
         }
-        if ((Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[0], &(p->x1)) != TCL_OK)
-            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[1], &(p->y1)) != TCL_OK)
-            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[2], &(p->x2)) != TCL_OK)
-            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[3], &(p->y2)) != TCL_OK)) {
+        if ((Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[0], &p->x1) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[1], &p->y1) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[2], &p->x2) != TCL_OK)
+            || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[3], &p->y2) != TCL_OK)) {
             return TCL_ERROR;
         }
         MakePathAtoms(plinePtr);
@@ -220,24 +218,29 @@ PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 static void
 ComputePlineBbox(Tk_PathCanvas canvas, PlineItem *plinePtr)
 {
-    Tk_PathStyle *stylePtr = &(plinePtr->style);
-    Tk_PathState state = plinePtr->header.state;
+    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathState state = itemExPtr->header.state;
     PathRect r;
 
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
     }
     if (state == TK_PATHSTATE_HIDDEN) {
-        plinePtr->header.x1 = plinePtr->header.x2 =
-        plinePtr->header.y1 = plinePtr->header.y2 = -1;
+        itemExPtr->header.x1 = itemExPtr->header.x2 =
+        itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
+    }    
     r.x1 = MIN(plinePtr->coords.x1, plinePtr->coords.x2);
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
-    plinePtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, stylePtr, &r);
-    SetGenericPathHeaderBbox(&(plinePtr->header), stylePtr->matrixPtr, &(plinePtr->totalBbox));
+    plinePtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &r);
+    SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &plinePtr->totalBbox);
 }
 
 static int		
@@ -245,42 +248,37 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         int objc, Tcl_Obj *CONST objv[], int flags)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(plinePtr->style);
-    Tk_PathItem *parentPtr;
+    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
     Tk_Window tkwin;
     Tk_PathState state;
     Tk_SavedOptions savedOptions;
-    int mask;
-    int result;
+    Tcl_Obj *errorResult = NULL;
+    int error, mask;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
-    result = Tk_SetOptions(interp, (char *) plinePtr, optionTable, 
-	    objc, objv, tkwin, &savedOptions, &mask);
-    if (result != TCL_OK) {
-	return result;
-    }
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    if (Tk_SetOptions(interp, (char *) plinePtr, optionTable, 
+		    objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
+		continue;
+	    }
+	} else {
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}	
+	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	    continue;
+	}
 
-    /*
-     * If we have got a style name it's options take precedence
-     * over the actual path configuration options. This is how SVG does it.
-     * Good or bad?
-     */
-    if ((plinePtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
-        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, plinePtr->styleObj, 0);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-    } 
-    if (mask & PATH_CORE_OPTION_PARENT) {
-	result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-	TkPathCanvasSetParent(parentPtr, itemPtr);
+	/*
+	 * If we reach this on the first pass we are OK and continue below.
+	 */
+	break;
     }
-    Tk_FreeSavedOptions(&savedOptions);
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
+    }
     
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
@@ -289,14 +287,16 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-    
-    /*
-     * Recompute bounding box for path.
-     */
-    if (!(plinePtr->flags & kPlineItemNoBboxCalculation)) {
-        ComputePlineBbox(canvas, plinePtr);
+    if (error) {
+	Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	if (!(plinePtr->flags & kPlineItemNoBboxCalculation)) {
+	    ComputePlineBbox(canvas, plinePtr);
+	}
+	return TCL_OK;
     }
-    return TCL_OK;
 }
 
 static PathAtom *
@@ -312,6 +312,12 @@ MakePathAtoms(PlineItem *plinePtr)
 static void		
 DeletePline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
 {
+    PlineItem *plinePtr = (PlineItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
+
+    if (itemExPtr->styleInst != NULL) {
+	TkPathFreeStyle(itemExPtr->styleInst);
+    }
     Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
 
@@ -320,17 +326,23 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
     PathRect r;
     PathAtom *atomPtr;
-
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
+    }    
     r.x1 = MIN(plinePtr->coords.x1, plinePtr->coords.x2);
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
 
     atomPtr = MakePathAtoms(plinePtr);
-    TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &(plinePtr->style), &m, &r);
+    TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &r);
     TkPathFreeAtoms(atomPtr);
 }
 
@@ -338,12 +350,19 @@ static double
 PlineToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     PathAtom *atomPtr;
     double point;
     
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
+    }    
+
     /* @@@ Perhaps we should do a simplified treatment here instead of the generic. */
     atomPtr = MakePathAtoms(plinePtr);
-    point = GenericPathToPoint(canvas, itemPtr, &(plinePtr->style), 
+    point = GenericPathToPoint(canvas, itemPtr, &style, 
             atomPtr, 2, pointPtr);
     TkPathFreeAtoms(atomPtr);
     return point;
@@ -353,12 +372,19 @@ static int
 PlineToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
+    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     PathAtom *atomPtr;
     int area;
     
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
+    }    
+
     /* @@@ Perhaps we should do a simplified treatment here instead of the generic. */
     atomPtr = MakePathAtoms(plinePtr);
-    area = GenericPathToArea(canvas, itemPtr, &(plinePtr->style), 
+    area = GenericPathToArea(canvas, itemPtr, &style, 
             atomPtr, 2, areaPtr);
     TkPathFreeAtoms(atomPtr);
     return area;
@@ -367,26 +393,29 @@ PlineToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 static int		
 PlineToPostscript(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass)
 {
-    return TCL_ERROR;
+    return TCL_ERROR;	/* @@@ Anyone? */
 }
 
 static void		
 ScalePline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double originY,
         double scaleX, double scaleY)
 {
+    PlineItem *plinePtr = (PlineItem *) itemPtr;
 
+    ScalePathRect(&plinePtr->totalBbox, originX, originY, scaleX, scaleY);
+    ScalePathRect(&plinePtr->coords, originX, originY, scaleX, scaleY);
+    ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
 static void		
 TranslatePline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(plinePtr->style);
 
     /* Just translate the bbox as well. */
-    TranslatePathRect(&(plinePtr->totalBbox), deltaX, deltaY);
-    TranslatePathRect(&(plinePtr->coords), deltaX, deltaY);
-    SetGenericPathHeaderBbox(&(plinePtr->header), stylePtr->matrixPtr, &(plinePtr->totalBbox));
+    TranslatePathRect(&plinePtr->totalBbox, deltaX, deltaY);
+    TranslatePathRect(&plinePtr->coords, deltaX, deltaY);
+    TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 
 /*----------------------------------------------------------------------*/

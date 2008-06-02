@@ -688,10 +688,17 @@ PathRect
 TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
-    ATSTrapezoid b;
-    ItemCount numBounds;
     PathRect r;
     
+    /*
+     * See Apple header ATSUnicodeDrawing.h for the difference
+     * between these two. Brief: ATSUMeasureTextImage considers
+     * the actual inked rect only.
+     */
+#if 0
+    ATSTrapezoid b;
+    ItemCount numBounds;
+
     b.upperRight.x = b.upperLeft.x = 0;
     ATSUGetGlyphBounds(recordPtr->atsuLayout, 0, 0, 
             kATSUFromTextBeginning, kATSUToTextEnd, 
@@ -700,6 +707,16 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     r.y1 = MIN(Fix2X(b.upperLeft.y), Fix2X(b.upperRight.y));
     r.x2 = MAX(Fix2X(b.upperRight.x), Fix2X(b.lowerRight.x));
     r.y2 = MAX(Fix2X(b.lowerLeft.y), Fix2X(b.lowerRight.y));
+#else
+    Rect rect;
+
+    ATSUMeasureTextImage(recordPtr->atsuLayout, 
+            kATSUFromTextBeginning, kATSUToTextEnd, 0, 0, &rect);
+    r.x1 = rect.left;
+    r.y1 = rect.top;
+    r.x2 = rect.right;
+    r.y2 = rect.bottom;
+#endif
     return r;
 }
 

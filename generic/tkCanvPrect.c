@@ -228,7 +228,8 @@ ComputePrectBbox(Tk_PathCanvas canvas, PrectItem *prectPtr)
         return;
     }
     if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
     }    
     prectPtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &prectPtr->rect);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &prectPtr->totalBbox);
@@ -287,12 +288,12 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     /*
      * Recompute bounding box for path.
      */
-    ComputePrectBbox(canvas, prectPtr);
     if (error) {
 	Tcl_SetObjResult(interp, errorResult);
 	Tcl_DecrRefCount(errorResult);
 	return TCL_ERROR;
     } else {
+	ComputePrectBbox(canvas, prectPtr);
 	return TCL_OK;
     }
 }

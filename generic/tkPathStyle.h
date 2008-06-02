@@ -101,14 +101,6 @@ static char *lineJoinST[] = {
  * This assumes that we have a Tk_PathStyle struct element named 'style'.
  */
 
-#if 0
-    // Backup of old custom -fill option parsing.
-    {TK_OPTION_CUSTOM, "-fill", NULL, NULL,				\
-	theColor, -1, Tk_Offset(typeName, style.fill),			\
-	TK_OPTION_NULL_OK, (ClientData) &pathColorCO,	 		\
-        PATH_STYLE_OPTION_FILL}
-#endif
-
 #define PATH_OPTION_SPEC_STYLE_FILL(typeName, theColor)			\
     {TK_OPTION_STRING, "-fill", NULL, NULL,				\
 	theColor, Tk_Offset(typeName, style.fillObj), -1,		\

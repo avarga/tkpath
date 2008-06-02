@@ -289,7 +289,8 @@ ComputeEllipseBbox(Tk_PathCanvas canvas, EllipseItem *ellPtr)
         return;
     }
     if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+		kPathMergeStyleNotFill);
     }    
     bbox = GetBareBbox(ellPtr);
     totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &bbox);
@@ -351,12 +352,14 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-
-    /*
-     * Recompute bounding box for path.
-     */
-    ComputeEllipseBbox(canvas, ellPtr);
-    return TCL_OK;
+    if (error) {
+	Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	ComputeEllipseBbox(canvas, ellPtr);
+	return TCL_OK;
+    }
 }
 
 static void		

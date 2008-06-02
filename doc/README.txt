@@ -104,7 +104,7 @@ item using the -parent option.
 
  o Commands affected by changes
 
-    lower/raise: movement is constrained to siblings. if reference tagOrId
+    lower/raise: movement is constrained to siblings. If reference tagOrId
     not given it defaults to first/last item of the root items children.
     Items which are not siblings to the reference tagOrId are silently
     ignored. Good or bad?
@@ -168,7 +168,6 @@ if paramters are wrong.
    equal to "root". The root group can be configured like other items, but
    its -tags and -parent options are read only.
 
-
    .c create group ?fillOptions strokeOptions genericOptions?
 
 
@@ -224,7 +223,7 @@ if paramters are wrong.
               point.
 
     You may use lower case characters for all atoms which then means that all
-    coordinates where relevant, are interpreted as coordinates relative the
+    coordinates, where relevant, are interpreted as coordinates relative the
     current point.
 
  o The prect item
@@ -279,7 +278,7 @@ if paramters are wrong.
 
    .c create pimage x y ?-image -width -height genericOptions?
 
- o The ptext item (cairo, quartz, gdi+)
+ o The ptext item
 
    Displays text as expected. Note that the x coordinate marks the baseline
    of the text. Gradient fills unsupported so far. Not implemented in the
@@ -392,7 +391,7 @@ if paramters are wrong.
            start point.
 
 
- o In memory drawing surfaces (cairo, quartz, gdi+):
+ o In memory drawing surface
 
     tkp::surface new width height
 
@@ -473,13 +472,8 @@ if paramters are wrong.
    WinXP: GDI+. On pre XP systems it should be possible to get the gdiplus.dll
    to make it work. Maybe there is also an issue with the MSCRT.LIB.
 
-   Win32: GDI. Features like opacity and antialiasing are missing here.
-
 
  o Known issues:
-
-   - Any changes made to a style object or a gradient object is not directly
-     noticable to a canvas item. Some kind of notifier is needed here.
 
    - Avoid using the canvas scale command on paths containing arc instructions
      since an arc cannot generally be scaled and still be an arc.
