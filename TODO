@@ -15,10 +15,6 @@ TODO for tkpath
  o Perhaps it would be useful to allow multiple objects on a single item
    by supplying many coordinates for pline, prect, circle, and ellipse ?
 
- o In the new items Configure proc we duplicate a lot of code.
-   If we had a larger generic Tk_PathItemEx struct we could perhaps
-   also have generic code for this.
-
  o I would like to move the TkPathInit/TkPathFree to the canvas
    Display function instead of having it in the items Display function.
    This is currently not possible due to the X11 emulation code
@@ -26,6 +22,11 @@ TODO for tkpath
    in particular.
 
  o Try to get rid of the Tk_Uid.   
+
+ o Perhaps hace the Tk_PathItem's x1, y1, ... as doubles.
+   That would make translations and scaling easier since we don't have
+   to bother about roundoffs. Separate flag for hidden?
+
 
 
 

@@ -98,6 +98,7 @@ static char *textAnchorST[] = {
     "start", "middle", "end", NULL
 };
 
+// @@@ TODO: have platform specific default font family.
 #define PATH_OPTION_SPEC_FONTFAMILY		    \
     {TK_OPTION_STRING, "-fontfamily", NULL, NULL,   \
         "Helvetica", -1, Tk_Offset(PtextItem, textStyle.fontFamily),   \
@@ -275,7 +276,7 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
         ptextPtr->header.y1 = ptextPtr->header.y2 = -1;
         return;
     }
-    r = TkPathTextMeasureBbox(&(ptextPtr->textStyle), 
+    r = TkPathTextMeasureBbox(&ptextPtr->textStyle, 
 	    Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     width = r.x2 - r.x1;
     switch (ptextPtr->textAnchor) {
@@ -301,14 +302,14 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
     bbox.x2 += 1.0;
     bbox.y2 += 1.0;
     if (stylePtr->strokeColor) {
-        double halfWidth = stylePtr->strokeWidth;
+        double halfWidth = stylePtr->strokeWidth/2;
         bbox.x1 -= halfWidth;
         bbox.y1 -= halfWidth;
         bbox.x2 += halfWidth;
         bbox.x2 += halfWidth;
     }
     ptextPtr->bbox = bbox;
-    SetGenericPathHeaderBbox(&(ptextPtr->header), stylePtr->matrixPtr, &bbox);
+    SetGenericPathHeaderBbox(&ptextPtr->header, stylePtr->matrixPtr, &bbox);
 }
 
 static int		

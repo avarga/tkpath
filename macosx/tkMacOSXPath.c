@@ -688,15 +688,18 @@ PathRect
 TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
-    ATSUTextMeasurement before, after, ascent, descent;	/* Fixed */
+    ATSTrapezoid b;
+    ItemCount numBounds;
     PathRect r;
     
-    ATSUGetUnjustifiedBounds(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 	
-            &before, &after, &ascent, &descent);
-    r.x1 = 0.0;
-    r.y1 = -Fix2X(ascent);
-    r.x2 = Fix2X(after - before);
-    r.y2 = Fix2X(descent);
+    b.upperRight.x = b.upperLeft.x = 0;
+    ATSUGetGlyphBounds(recordPtr->atsuLayout, 0, 0, 
+            kATSUFromTextBeginning, kATSUToTextEnd, 
+            kATSUseFractionalOrigins, 1, &b, &numBounds);
+    r.x1 = MIN(Fix2X(b.upperLeft.x), Fix2X(b.lowerLeft.x));
+    r.y1 = MIN(Fix2X(b.upperLeft.y), Fix2X(b.upperRight.y));
+    r.x2 = MAX(Fix2X(b.upperRight.x), Fix2X(b.lowerRight.x));
+    r.y2 = MAX(Fix2X(b.lowerLeft.y), Fix2X(b.lowerRight.y));
     return r;
 }
 
@@ -724,7 +727,7 @@ TkPathSurfaceToPhoto(Tcl_Interp *interp, TkPathContext ctx, Tk_PhotoHandle photo
     bytesPerRow = CGBitmapContextGetBytesPerRow(c);
     
     Tk_PhotoGetImage(photo, &block);    
-    pixel = ckalloc(height*bytesPerRow);
+    pixel = (unsigned char *) ckalloc(height*bytesPerRow);
     if (gSurfaceCopyPremultiplyAlpha) {
         PathCopyBitsPremultipliedAlphaRGBA(data, pixel, width, height, bytesPerRow);
     } else {
