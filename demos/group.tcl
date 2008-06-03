@@ -2,35 +2,36 @@ package require tkpath 0.3.0
 
 
 set t .c_group
+destroy $t
 toplevel $t
 set w $t.c
 pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
-$w create prect 10 10 300 200
-$w create prect 15 15 295 195
-$w create prect 20 20 290 190
-$w create prect 25 25 285 185
+array set stroke [list 1 "#c8c8c8" 2 "#a19de2" 3 "#9ac790" 4 "#e2a19d"]
+array set fill   [list 1 "#e6e6e6" 2 "#d6d6ff" 3 "#cae2c5" 4 "#ffd6d6"]
 
-$w create group -tags g1
-$w create prect 20 20 40 40 -rx 4 -parent g1
-$w create prect 50 50 70 70 -rx 4 -parent g1 -stroke red
+$w create prect 10 10 390 390 -rx 20 -strokewidth 4 -stroke gray70 -tags g0
 
-$w create group -tags g2
-$w create prect 100 20 140 140 -rx 10 -parent g2
-$w create prect 150 20 170 70 -rx 4 -parent g2 -stroke blue
+foreach i {1 2 3 4} {
+    set s($i) [$w style create -strokewidth 3 -stroke $stroke($i)]
+    set f($i) [$w style create -strokewidth 3 -stroke $stroke($i) -fill $fill($i)]
 
-return
+    $w create group -tags g$i
+    $w create prect 10 10 180 180 -rx 10 -parent g$i -style $s($i)
 
-#set g1 [$w create group -tags g1]
-set g1 [$w create group]
-$w create prect 20 20 40 40 -rx 4 -parent $g1
-$w create prect 50 50 70 70 -rx 4 -parent $g1 -stroke red
+    set id [$w create path "M 0 0 l 30 40 h -60 z" -parent g$i -style $f($i)]
+    $w move $id 60 40
+    
+    set id [$w create path "M -20 0 h 40 l -40 80 h 40 z" -parent g$i -style $f($i)]
+    $w move $id 140 40
 
-#set g2 [$w create group -tags g2]
-set g2 [$w create group]
-$w create prect 100 20 140 140 -rx 10 -parent $g2
-$w create prect 150 20 170 70 -rx 4 -parent $g2 -stroke blue
+    set id [$w create ellipse 0 0 -rx 30 -ry 20 -parent g$i -style $f($i)]
+    $w move $id 60 140
+}
 
-
+$w move g1 10 10
+$w move g2 200 10
+$w move g3 10 200
+$w move g4 200 200
 
 

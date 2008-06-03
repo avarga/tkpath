@@ -259,6 +259,8 @@ SurfaceDeletedProc(ClientData clientData)
     ckfree((char *)surfacePtr);
 }
 
+// @@@ TODO: should we have a group item?
+
 static CONST char *surfaceItemCmds[] = {
     "circle",    "ellipse",  "path", 
     "pimage",    "pline",    "polyline", 
@@ -531,7 +533,7 @@ SurfaceCreateEllipse(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int 
     EllipseAtom 	ellAtom;
     PathRect		bbox;
     SurfEllipseItem	ellipse;
-    Tk_PathStyle	*style = &(ellipse.style);
+    Tk_PathStyle	*style = &ellipse.style;
     int			result = TCL_OK;
 
     ellipse.styleObj = NULL;
@@ -597,12 +599,12 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
     PathAtom 		*atomPtr = NULL;
     PathRect		bbox;
     SurfGenericItem	item;
-    Tk_PathStyle	*style = &(item.style);
+    Tk_PathStyle	*style = &item.style;
     int			len;
     int			result = TCL_OK;
     
     item.styleObj = NULL;
-    TkPathCreateStyle(&(item.style));
+    TkPathCreateStyle(&item.style);
     if (TkPathParseToAtoms(interp, objv[3], &atomPtr, &len) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -631,7 +633,6 @@ bail:
     TkPathDeleteStyle(style);
     TkPathFreeAtoms(atomPtr);
     TkPathRestoreState(context);
-    // CRASH!!!
     Tk_FreeConfigOptions((char *)&item, gOptionTablePath, Tk_MainWindow(interp));
     return result;
 }
@@ -712,30 +713,29 @@ SurfaceCreatePline(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     
     item.styleObj = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(&(item.style));
+    TkPathCreateStyle(&item.style);
     if (GetTwoPointsCoords(interp, points, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
     }
     if (SurfaceParseOptions(interp, (char *)&item, gOptionTablePline, objc-i, objv+i) != TCL_OK) {
         return TCL_ERROR;
     }
-    TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_MainWindow(interp), &(item.style), item.styleObj, 0);
+    TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_MainWindow(interp), &item.style, item.styleObj, 0);
     atomPtr = NewMoveToAtom(points[0], points[1]);
     atomPtr->nextPtr = NewLineToAtom(points[2], points[3]);
     TkPathSaveState(context);
     TkPathPushTMatrix(context, item.style.matrixPtr);
-    if (TkPathMakePath(context, atomPtr, &(item.style)) != TCL_OK) {
+    if (TkPathMakePath(context, atomPtr, &item.style) != TCL_OK) {
         result = TCL_ERROR;
         goto bail;
     }
-    bbox = TkPathGetTotalBbox(atomPtr, &(item.style));
-    TkPathPaintPath(context, atomPtr, &(item.style), &bbox);
+    bbox = TkPathGetTotalBbox(atomPtr, &item.style);
+    TkPathPaintPath(context, atomPtr, &item.style, &bbox);
     
 bail:
     TkPathDeleteStyle(&item.style);
     TkPathFreeAtoms(atomPtr);
     TkPathRestoreState(context);
-    // Crash!
     Tk_FreeConfigOptions((char *)&item, gOptionTablePline, Tk_MainWindow(interp));
     return result;
 }
@@ -762,7 +762,7 @@ SurfaceCreatePpoly(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int ob
     int			i;
     PathRect		bbox;
     SurfGenericItem	item;
-    Tk_PathStyle	*style = &(item.style);
+    Tk_PathStyle	*style = &item.style;
     PathAtom 		*atomPtr = NULL;
     int			result = TCL_OK;
 
@@ -828,7 +828,7 @@ SurfaceCreatePrect(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     TkPathContext 	context = surfacePtr->ctx;
     int			i;
     SurfPrectItem	prect;
-    Tk_PathStyle	*style = &(prect.style);
+    Tk_PathStyle	*style = &prect.style;
     PathRect		bbox;
     PathAtom 		*atomPtr = NULL;
     double		points[4];
@@ -912,7 +912,7 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     int 		i;
     double 		point[2];
     SurfPtextItem 	item;
-    Tk_PathStyle	*style = &(item.style);
+    Tk_PathStyle	*style = &item.style;
     PathRect		r;
     void 		*custom = NULL;
     int			result = TCL_OK;
@@ -922,7 +922,7 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     item.utf8 = NULL;
     item.textStyle.fontFamily = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(&(item.style));
+    TkPathCreateStyle(&item.style);
 	if (GetPointCoords(interp, point, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -938,11 +938,11 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
 	}
     }
     TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_MainWindow(interp), style, item.styleObj, 0);
-    if (TkPathTextConfig(interp, &(item.textStyle), item.utf8, &custom) != TCL_OK) {
+    if (TkPathTextConfig(interp, &item.textStyle, item.utf8, &custom) != TCL_OK) {
         result = TCL_ERROR;
         goto bail;
     }
-    r = TkPathTextMeasureBbox(&(item.textStyle), item.utf8, custom);
+    r = TkPathTextMeasureBbox(&item.textStyle, item.utf8, custom);
     switch (item.textAnchor) {
         case kPathTextAnchorMiddle:
             point[0] -= (r.x2 - r.x1)/2;
@@ -954,9 +954,9 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     TkPathSaveState(context);
     TkPathPushTMatrix(context, item.style.matrixPtr);
     TkPathBeginPath(context, style);
-    TkPathTextDraw(context, style, &(item.textStyle), point[0], point[1], item.utf8, custom);
+    TkPathTextDraw(context, style, &item.textStyle, point[0], point[1], item.utf8, custom);
     TkPathEndPath(context);
-    TkPathTextFree(&(item.textStyle), custom);
+    TkPathTextFree(&item.textStyle, custom);
     
 bail:
     TkPathDeleteStyle(style);

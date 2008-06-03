@@ -212,6 +212,11 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
     
+    /*
+     * @@@ TODO: When the style inheritance has been implemented we must
+     *           notify all children to update theirself.
+     */
+    
 #if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {

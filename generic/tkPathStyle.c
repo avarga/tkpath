@@ -919,6 +919,22 @@ CopyPathColor(Tk_Window tkwin, TkPathColor **dstPtrPtr, TkPathColor *srcPtr)
 #endif
 
 int
+TkPathStyleMergeGlobalStyle(Tcl_Interp* interp, Tcl_Obj *styleObj, Tk_PathStyle *dstStyle, long flags)
+{
+    Tcl_HashEntry *hPtr;
+    Tk_PathStyle *srcStyle;
+
+    hPtr = Tcl_FindHashEntry(gStyleHashPtr, Tcl_GetString(styleObj));
+    if (hPtr == NULL) {
+	//Tcl_SetObjResult(interp, );
+        return TCL_ERROR;
+    }
+    srcStyle = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
+    TkPathStyleMergeStyles(srcStyle, dstStyle, flags);
+    return TCL_OK;
+}
+
+int
 TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_Window tkwin,
 	Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags)
 {

@@ -150,27 +150,9 @@ int Tkpath_SafeInit(Tcl_Interp *interp)	    { return Tkpath_Init(interp); }
 int Tkpath_Unload(Tcl_Interp *interp)	    { return TCL_ERROR; }
 int Tkpath_SafeUnload(Tcl_Interp *interp)   { return Tkpath_Unload( interp ); }
 
-/* This is for the tk based drawing backend. */
-#ifdef _WIN32
-    __declspec(dllexport)
-#endif
-
-int Tkpathtk_Init(Tcl_Interp *interp)
-{
-    return Tkpath_Init(interp);
-}
-
-#ifdef _WIN32
-    __declspec(dllexport)
-#endif
-
-int Tkpathtk_SafeInit(Tcl_Interp *interp)
-{
-    return Tkpath_SafeInit(interp);
-}
-
 /*
  * On Windows we've got two different libs for GDI and GDI+ named differently.
+ * @@@ TODO: skip these!
  */
 #ifdef _WIN32
     __declspec(dllexport)
