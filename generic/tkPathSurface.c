@@ -499,6 +499,9 @@ typedef struct SurfEllipseItem {
     double rx, ry;
 } SurfEllipseItem;
 
+PATH_OPTION_STRING_TABLES_FILL
+PATH_OPTION_STRING_TABLES_STROKE
+
 static Tk_OptionSpec circleOptionSpecs[] = {
     PATH_OPTION_SPEC_STYLENAME(SurfEllipseItem),
     PATH_OPTION_SPEC_STYLE_FILL(SurfEllipseItem, ""),

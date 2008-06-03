@@ -69,9 +69,10 @@ int	PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
 
 /* These MUST be kept in sync with Tk_PathState! */
 
-static char *stateStrings[] = {
-    "active", "disabled", "normal", "hidden", NULL
-};
+#define PATH_OPTION_STRING_TABLES_STATE				    \
+    static char *stateStrings[] = {				    \
+	"active", "disabled", "normal", "hidden", NULL		    \
+    };
 
 #define PATH_CUSTOM_OPTION_TAGS					    \
     static Tk_ObjCustomOption tagsCO = {			    \

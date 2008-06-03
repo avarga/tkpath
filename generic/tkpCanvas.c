@@ -613,7 +613,8 @@ CanvasWidgetCmd(
     static CONST char *optionStrings[] = {
 	"addtag",	"ancestors",	"bbox",		"bind",		    "canvasx",
 	"canvasy",	"cget",		"children",	"configure",	    "coords",
-	"create",	"dchars",	"delete",	"distance",	    "dtag",
+	"create",	"dchars",	"delete",	
+	"depth",	"distance",	"dtag",
 	"find",		"firstchild",	"focus",	"gettags",	    
 	"gradient",	"icursor",
 	"index",	"insert",	"itemcget",	"itemconfigure",    "lastchild",
@@ -630,7 +631,8 @@ CanvasWidgetCmd(
     enum options {
 	CANV_ADDTAG,	CANV_ANCESTORS,	    CANV_BBOX,		CANV_BIND,	    CANV_CANVASX,
 	CANV_CANVASY,	CANV_CGET,	    CANV_CHILDREN,	CANV_CONFIGURE,	    CANV_COORDS,
-	CANV_CREATE,	CANV_DCHARS,	    CANV_DELETE,	CANV_DISTANCE,	    CANV_DTAG,
+	CANV_CREATE,	CANV_DCHARS,	    CANV_DELETE,	
+	CANV_DEPTH,	CANV_DISTANCE,	    CANV_DTAG,
 	CANV_FIND,	CANV_FIRSTCHILD,    CANV_FOCUS,		CANV_GETTAGS,	    
 	CANV_GRADIENT,	CANV_ICURSOR,
 	CANV_INDEX,	CANV_INSERT,	    CANV_ITEMCGET,	CANV_ITEMCONFIGURE, CANV_LASTCHILD,
@@ -1226,6 +1228,10 @@ CanvasWidgetCmd(
 		ItemDelete(canvasPtr, itemPtr);
 	    }
 	}
+	break;
+    }
+    case CANV_DEPTH: {
+    
 	break;
     }
     case CANV_DISTANCE: {
@@ -3098,7 +3104,7 @@ TkPathCanvasScaleGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     Tk_PathItem *walkPtr;
     
     /*
-     * Invoke all its childs translateProc. Any child groups will call this
+     * Invoke all its childs scaleProc. Any child groups will call this
      * function recursively.
      */
     for (walkPtr = itemPtr->firstChildPtr; walkPtr != NULL; walkPtr = walkPtr->nextPtr) {

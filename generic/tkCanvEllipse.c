@@ -80,6 +80,9 @@ enum {
  
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 PATH_CUSTOM_OPTION_TAGS
+PATH_OPTION_STRING_TABLES_FILL
+PATH_OPTION_STRING_TABLES_STROKE
+PATH_OPTION_STRING_TABLES_STATE
 
 #define PATH_OPTION_SPEC_R(typeName)		    \
     {TK_OPTION_DOUBLE, "-rx", NULL, NULL,	    \
@@ -305,7 +308,7 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
     Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
-    Tk_PathState state;
+    //Tk_PathState state;
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
     int mask, error;
@@ -345,6 +348,7 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         /* Practical. */
         ellPtr->ry = ellPtr->rx;
     }    
+#if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
@@ -352,6 +356,7 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
+#endif
     if (error) {
 	Tcl_SetObjResult(interp, errorResult);
 	Tcl_DecrRefCount(errorResult);

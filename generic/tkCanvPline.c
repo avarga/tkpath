@@ -72,6 +72,8 @@ static PathAtom * MakePathAtoms(PlineItem *plinePtr);
 PATH_STYLE_CUSTOM_OPTION_MATRIX
 PATH_STYLE_CUSTOM_OPTION_DASH
 PATH_CUSTOM_OPTION_TAGS
+PATH_OPTION_STRING_TABLES_STROKE
+PATH_OPTION_STRING_TABLES_STATE
 
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
@@ -250,7 +252,7 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     PlineItem *plinePtr = (PlineItem *) itemPtr;
     Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
     Tk_Window tkwin;
-    Tk_PathState state;
+    //Tk_PathState state;
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
     int error, mask;
@@ -280,6 +282,7 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	Tk_FreeSavedOptions(&savedOptions);
     }
     
+#if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
@@ -287,6 +290,7 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
+#endif
     if (error) {
 	Tcl_SetObjResult(interp, errorResult);
 	Tcl_DecrRefCount(errorResult);

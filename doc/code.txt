@@ -12,6 +12,9 @@ The idea is that path drawing should be kept completely independent from
 any canvas code. This makes it possible to use path drawing as a tile
 element, in a memory surface, or just anywhere else.
 
+The naming convention isn't that precise. Functions and records that have
+some kind of generality typically have names Tk_Path* or TkPath*.
+
 This note is mainly written for myself to help remember that I must
 try to follow it. Work in progress...
 

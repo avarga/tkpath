@@ -215,8 +215,6 @@ enum {
 
 #define PATH_STYLE_OPTION_INDEX_END 17	/* Use this for item specific flags */
 
-// sizeof(Tk_PathStyle)=84
-
 typedef struct Tk_PathStyle {
     Tk_OptionTable optionTable;	/* Not used for canvas. */
     Tk_Uid name;		/* Not used for canvas. */

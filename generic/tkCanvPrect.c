@@ -82,6 +82,9 @@ enum {
  
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 PATH_CUSTOM_OPTION_TAGS
+PATH_OPTION_STRING_TABLES_FILL
+PATH_OPTION_STRING_TABLES_STROKE
+PATH_OPTION_STRING_TABLES_STATE
 
 #define PATH_OPTION_SPEC_RX(typeName)		    \
     {TK_OPTION_DOUBLE, "-rx", NULL, NULL,	    \
@@ -243,11 +246,13 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
     Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
-    Tk_PathState state;
+    //Tk_PathState state;
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
     int error, mask;
      
+    // @@@ Maybe this error loop should also be made in a function since it
+    //     is repeated in several items?
     tkwin = Tk_PathCanvasTkwin(canvas);
     for (error = 0; error <= 1; error++) {
 	if (!error) {
@@ -276,7 +281,8 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
     prectPtr->rx = MAX(0.0, prectPtr->rx);
     prectPtr->ry = MAX(0.0, prectPtr->ry);
-    
+
+#if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
@@ -284,7 +290,7 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-
+#endif
     /*
      * Recompute bounding box for path.
      */

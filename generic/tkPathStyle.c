@@ -367,7 +367,8 @@ PathColorFreeOption(
 }
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
-
+PATH_OPTION_STRING_TABLES_FILL
+PATH_OPTION_STRING_TABLES_STROKE
 
 // @@@ TODO: BAD I had to duplicate this record here and in tkPathStyle.h.
 //     Else I get problems with Tk_Offset and records.

@@ -1171,18 +1171,6 @@ Tk_PathDeleteOutline(
     }
 #endif
 
-// this is handled implicitly by Option code.  MORE?
-#if 0
-    if (outline->dashPtr != NULL) {
-	TkDashFree(outline->dashPtr);
-    }
-    if (outline->activeDashPtr != NULL) {
-	TkDashFree(outline->activeDashPtr);
-    }
-    if (outline->disabledDashPtr != NULL) {
-	TkDashFree(outline->disabledDashPtr);
-    }
-#endif
     if (outline->color != NULL) {
 	Tk_FreeColor(outline->color);
     }

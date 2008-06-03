@@ -78,20 +78,24 @@ MODULE_SCOPE void	    TkPathStyleChanged(Tk_PathStyle *masterPtr, int flags);
     PATH_STYLE_CUSTOM_OPTION_MATRIX 		\
     PATH_STYLE_CUSTOM_OPTION_DASH
     
-	//PATH_STYLE_CUSTOM_OPTION_PATHCOLOR
 
 /* 
  * These must be kept in sync with defines in X.h! 
  */
-static char *fillRuleST[] = {
-    "evenodd", "nonzero", (char *) NULL
-};
-static char *lineCapST[] = {
-    "notlast", "butt", "round", "projecting", (char *) NULL
-};
-static char *lineJoinST[] = {
-    "miter", "round", "bevel", (char *) NULL
-};
+
+#define PATH_OPTION_STRING_TABLES_FILL		\
+    static char *fillRuleST[] = {		\
+	"evenodd", "nonzero", (char *) NULL	\
+    };
+
+#define PATH_OPTION_STRING_TABLES_STROKE	\
+    static char *lineCapST[] = {		\
+	"notlast", "butt", "round", "projecting", (char *) NULL	\
+    };						\
+    static char *lineJoinST[] = {		\
+	"miter", "round", "bevel", (char *) NULL \
+    };
+
 
 #define PATH_OPTION_SPEC_STYLENAME(typeName)				\
     {TK_OPTION_STRING, "-style", NULL, NULL,				\
@@ -117,32 +121,32 @@ static char *lineJoinST[] = {
 	NULL, -1, Tk_Offset(typeName, style.matrixPtr),			\
 	TK_OPTION_NULL_OK, (ClientData) &matrixCO, PATH_STYLE_OPTION_MATRIX}
 
-#define PATH_OPTION_SPEC_STYLE_STROKE(typeName, theColor)                   \
-    {TK_OPTION_COLOR, "-stroke", NULL, NULL,              \
-        theColor, -1, Tk_Offset(typeName, style.strokeColor),               \
-        TK_OPTION_NULL_OK, 0, PATH_STYLE_OPTION_STROKE},                    \
-    {TK_OPTION_CUSTOM, "-strokedasharray", NULL, NULL,    \
-	NULL, -1, Tk_Offset(typeName, style.dashPtr),                 \
-	0, (ClientData) &dashCO,                            \
-        PATH_STYLE_OPTION_STROKE_DASHARRAY},                                \
-    {TK_OPTION_STRING_TABLE, "-strokelinecap", NULL, NULL,\
-        "butt", -1, Tk_Offset(typeName, style.capStyle),                    \
-        0, (ClientData) lineCapST, PATH_STYLE_OPTION_STROKE_LINECAP},       \
-    {TK_OPTION_STRING_TABLE, "-strokelinejoin", NULL, NULL,\
-        "round", -1, Tk_Offset(typeName, style.joinStyle),                  \
-        0, (ClientData) lineJoinST, PATH_STYLE_OPTION_STROKE_LINEJOIN},     \
-    {TK_OPTION_DOUBLE, "-strokemiterlimit", NULL, NULL,   \
-        "4.0", -1, Tk_Offset(typeName, style.miterLimit), 0, 0,             \
-        PATH_STYLE_OPTION_STROKE_MITERLIMIT},                               \
-    {TK_OPTION_DOUBLE, "-strokeopacity", NULL, NULL,      \
-        "1.0", -1, Tk_Offset(typeName, style.strokeOpacity), 0, 0,          \
-        PATH_STYLE_OPTION_STROKE_OPACITY},                                  \
-    {TK_OPTION_DOUBLE, "-strokewidth", NULL, NULL,        \
-        "1.0", -1, Tk_Offset(typeName, style.strokeWidth), 0, 0,    		\
+#define PATH_OPTION_SPEC_STYLE_STROKE(typeName, theColor)		\
+    {TK_OPTION_COLOR, "-stroke", NULL, NULL,				\
+        theColor, -1, Tk_Offset(typeName, style.strokeColor),		\
+        TK_OPTION_NULL_OK, 0, PATH_STYLE_OPTION_STROKE},		\
+    {TK_OPTION_CUSTOM, "-strokedasharray", NULL, NULL,			\
+	NULL, -1, Tk_Offset(typeName, style.dashPtr),			\
+	0, (ClientData) &dashCO,					\
+        PATH_STYLE_OPTION_STROKE_DASHARRAY},				\
+    {TK_OPTION_STRING_TABLE, "-strokelinecap", NULL, NULL,		\
+        "butt", -1, Tk_Offset(typeName, style.capStyle),		\
+        0, (ClientData) lineCapST, PATH_STYLE_OPTION_STROKE_LINECAP},	\
+    {TK_OPTION_STRING_TABLE, "-strokelinejoin", NULL, NULL,		\
+        "round", -1, Tk_Offset(typeName, style.joinStyle),		\
+        0, (ClientData) lineJoinST, PATH_STYLE_OPTION_STROKE_LINEJOIN}, \
+    {TK_OPTION_DOUBLE, "-strokemiterlimit", NULL, NULL,			\
+        "4.0", -1, Tk_Offset(typeName, style.miterLimit), 0, 0,		\
+        PATH_STYLE_OPTION_STROKE_MITERLIMIT},                           \
+    {TK_OPTION_DOUBLE, "-strokeopacity", NULL, NULL,			\
+        "1.0", -1, Tk_Offset(typeName, style.strokeOpacity), 0, 0,	\
+        PATH_STYLE_OPTION_STROKE_OPACITY},				\
+    {TK_OPTION_DOUBLE, "-strokewidth", NULL, NULL,			\
+        "1.0", -1, Tk_Offset(typeName, style.strokeWidth), 0, 0,    	\
         PATH_STYLE_OPTION_STROKE_WIDTH}
         
-#define PATH_OPTION_SPEC_END                                                \
-	{TK_OPTION_END, NULL, NULL, NULL,            \
+#define PATH_OPTION_SPEC_END						\
+	{TK_OPTION_END, NULL, NULL, NULL,				\
 		NULL, 0, -1, 0, (ClientData) NULL, 0}
 
 

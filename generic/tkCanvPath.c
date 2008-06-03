@@ -31,7 +31,6 @@ enum {
 typedef struct PathItem  {
     Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
                              * path types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_PathOutline outline; /* Outline structure */
     Tcl_Obj *pathObjPtr;    /* The object containing the path definition. */
     int pathLen;
     Tcl_Obj *normPathObjPtr;/* The object containing the normalized path. */
@@ -84,6 +83,9 @@ static int		GetSubpathMaxNumSegments(PathAtom *atomPtr);
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 PATH_CUSTOM_OPTION_TAGS
+PATH_OPTION_STRING_TABLES_FILL
+PATH_OPTION_STRING_TABLES_STROKE
+PATH_OPTION_STRING_TABLES_STATE
 
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
@@ -200,7 +202,6 @@ CreatePath(
      * this procedure.
      */
     TkPathCreateStyle(&itemExPtr->style);
-    Tk_PathCreateOutline(&pathPtr->outline);
     itemExPtr->canvas = canvas;
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
@@ -341,7 +342,7 @@ ConfigurePath(
     Tk_PathItemEx *itemExPtr = &pathPtr->headerEx;
     Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
-    Tk_PathState state;
+    //Tk_PathState state;
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
     int mask, error;
@@ -373,12 +374,8 @@ ConfigurePath(
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
-    
-    /*
-     * A few of the options require additional processing, such as
-     * graphics contexts.
-     */
 
+#if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
         state = TkPathCanvasState(canvas);
@@ -387,7 +384,7 @@ ConfigurePath(
         //ComputePathBbox(canvas, pathPtr);
         return TCL_OK;
     }
-    
+#endif    
     /*
      * Recompute bounding box for path.
      */
@@ -435,7 +432,6 @@ DeletePath(
     if (itemExPtr->styleInst != NULL) {
 	TkPathFreeStyle(itemExPtr->styleInst);
     }
-    Tk_PathDeleteOutline(display, &(pathPtr->outline));
     if (pathPtr->pathObjPtr != NULL) {
         Tcl_DecrRefCount(pathPtr->pathObjPtr);
     }
@@ -492,7 +488,7 @@ ComputePathBbox(
     
     /*
      * Get an approximation of the path's bounding box
-     * assuming zero width outline (stroke).
+     * assuming zero stroke width.
      */
     pathPtr->bbox = GetGenericBarePathBbox(pathPtr->atomPtr);
 

@@ -30,10 +30,10 @@ typedef struct PimageItem  {
     TMatrix *matrixPtr;	    /*  a  b   default (NULL): 1 0
 				c  d		   0 1
 				tx ty 		   0 0 */
+    Tcl_Obj *styleObj;	    /* Object with style name. */
     struct TkPathStyleInst *styleInst;
 			    /* Pointer to first in list of instances
 			     * derived from this style name. */
-    Tcl_Obj *styleObj;	    /* Object with style name. */
     double coord[2];	    /* nw coord. */
     Tcl_Obj *imageObj;	    /* Object describing the -image option.
 			     * NULL means no image right now. */
@@ -84,15 +84,16 @@ void		PimageStyleChangedProc(ClientData clientData, int flags);
 
 
 enum {
-    PIMAGE_OPTION_INDEX_FILLOPACITY	= 1L,
-    PIMAGE_OPTION_INDEX_HEIGHT,
-    PIMAGE_OPTION_INDEX_IMAGE,
-    PIMAGE_OPTION_INDEX_MATRIX,
-    PIMAGE_OPTION_INDEX_WIDTH
+    PIMAGE_OPTION_INDEX_FILLOPACITY	= (1L << (PATH_STYLE_OPTION_INDEX_END + 1)),
+    PIMAGE_OPTION_INDEX_HEIGHT		= (1L << (PATH_STYLE_OPTION_INDEX_END + 2)),
+    PIMAGE_OPTION_INDEX_IMAGE		= (1L << (PATH_STYLE_OPTION_INDEX_END + 3)),
+    PIMAGE_OPTION_INDEX_MATRIX		= (1L << (PATH_STYLE_OPTION_INDEX_END + 4)),
+    PIMAGE_OPTION_INDEX_WIDTH		= (1L << (PATH_STYLE_OPTION_INDEX_END + 5))
 };
  
 PATH_STYLE_CUSTOM_OPTION_MATRIX
 PATH_CUSTOM_OPTION_TAGS
+PATH_OPTION_STRING_TABLES_STATE
 
 #define PATH_OPTION_SPEC_FILLOPACITY			    \
     {TK_OPTION_DOUBLE, "-fillopacity", NULL, NULL,	    \
@@ -232,10 +233,25 @@ PimageCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     return result;
 }
 
+/*
+ * This is just a convenience function to obtain any style matrix.
+ */
+static TMatrix *
+GetTMatrix(PimageItem *pimagePtr)
+{
+    TMatrix *matrixPtr = pimagePtr->matrixPtr;
+    if (pimagePtr->styleInst != NULL) {
+	matrixPtr = pimagePtr->styleInst->masterPtr->matrixPtr;
+    }	
+    return matrixPtr;
+}
+
 void
 ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
 {
     Tk_PathState state = pimagePtr->header.state;
+    int width = 0, height = 0;
+    PathRect bbox;
 
     if (state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
@@ -244,24 +260,20 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
         pimagePtr->header.x1 = pimagePtr->header.x2 =
         pimagePtr->header.y1 = pimagePtr->header.y2 = -1;
         return;
-    } else {
-        int width = 0, height = 0;
-        PathRect bbox;
-        
-        Tk_SizeOfImage(pimagePtr->image, &width, &height);
-        if (pimagePtr->width > 0.0) {
-            width = (int) (pimagePtr->width + 1.0);
-        }
-        if (pimagePtr->height > 0.0) {
-            height = (int) (pimagePtr->height + 1.0);
-        }
-        bbox.x1 = pimagePtr->coord[0];
-        bbox.y1 = pimagePtr->coord[1];
-        bbox.x2 = bbox.x1 + width;
-        bbox.y2 = bbox.y1 + height;
-        pimagePtr->bbox = bbox;
-        SetGenericPathHeaderBbox(&pimagePtr->header, pimagePtr->matrixPtr, &bbox);
+    }    
+    Tk_SizeOfImage(pimagePtr->image, &width, &height);
+    if (pimagePtr->width > 0.0) {
+	width = (int) (pimagePtr->width + 1.0);
     }
+    if (pimagePtr->height > 0.0) {
+	height = (int) (pimagePtr->height + 1.0);
+    }
+    bbox.x1 = pimagePtr->coord[0];
+    bbox.y1 = pimagePtr->coord[1];
+    bbox.x2 = bbox.x1 + width;
+    bbox.y2 = bbox.y1 + height;
+    pimagePtr->bbox = bbox;
+    SetGenericPathHeaderBbox(&pimagePtr->header, GetTMatrix(pimagePtr), &bbox);
 }
 
 static int		
@@ -275,7 +287,7 @@ ConfigurePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     Tk_SavedOptions savedOptions;
     Tk_PathItem *parentPtr;
     Tcl_Obj *errorResult = NULL;
-    int error, mask, state;
+    int error, mask;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
     for (error = 0; error <= 1; error++) {
@@ -362,6 +374,8 @@ ConfigurePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	Tk_FreeSavedOptions(&savedOptions);
     }
     pimagePtr->fillOpacity = MAX(0.0, MIN(1.0, pimagePtr->fillOpacity));
+
+#if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
@@ -369,7 +383,7 @@ ConfigurePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-
+#endif
     /*
      * Recompute bounding box for path.
      */
@@ -388,6 +402,9 @@ DeletePimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
 
+    if (pimagePtr->styleInst != NULL) {
+	TkPathFreeStyle(pimagePtr->styleInst);
+    }
     if (pimagePtr->image != NULL) {
         Tk_FreeImage(pimagePtr->image);
     }
@@ -400,15 +417,17 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     TMatrix m = GetCanvasTMatrix(canvas);
+    TMatrix *matrixPtr = GetTMatrix(pimagePtr);
     TkPathContext ctx;
 
     ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
     TkPathPushTMatrix(ctx, &m);
-    if (pimagePtr->matrixPtr != NULL) {
-        TkPathPushTMatrix(ctx, pimagePtr->matrixPtr);
+    if (matrixPtr != NULL) {
+        TkPathPushTMatrix(ctx, matrixPtr);
     }
     /* @@@ Maybe we should taking care of x, y etc.? */
-    TkPathImage(ctx, pimagePtr->image, pimagePtr->photo, pimagePtr->coord[0], pimagePtr->coord[1], 
+    TkPathImage(ctx, pimagePtr->image, pimagePtr->photo, 
+	    pimagePtr->coord[0], pimagePtr->coord[1], 
             pimagePtr->width, pimagePtr->height);
     TkPathFree(ctx);
 }
@@ -417,14 +436,14 @@ static double
 PimageToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    return PathRectToPointWithMatrix(pimagePtr->bbox, pimagePtr->matrixPtr, pointPtr);
+    return PathRectToPointWithMatrix(pimagePtr->bbox, GetTMatrix(pimagePtr), pointPtr);
 }
 
 static int		
 PimageToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    return PathRectToAreaWithMatrix(pimagePtr->bbox, pimagePtr->matrixPtr, areaPtr);
+    return PathRectToAreaWithMatrix(pimagePtr->bbox, GetTMatrix(pimagePtr), areaPtr);
 }
 
 static int		

@@ -30,15 +30,11 @@ enum {
  */
 
 typedef struct GroupItem  {
-    Tk_PathItem header;		/* Generic stuff that's the same for all
-				 * types.  MUST BE FIRST IN STRUCTURE. */
-    Tk_PathCanvas canvas;	/* Canvas containing item. */
-    Tk_PathStyle style;		/* Contains most drawing info. */
-    Tcl_Obj *styleObj;		/* Object with style name. */
+    Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
+                             * path types.  MUST BE FIRST IN STRUCTURE. */
     PathRect totalBbox;		/* Bounding box including stroke.
 				 * Untransformed coordinates. */
     long flags;			/* Various flags, see enum. */
-    char *null;   		/* Just a placeholder for not yet implemented stuff. */ 
 } GroupItem;
 
 
@@ -72,18 +68,20 @@ static void	ScaleGroup(Tk_PathCanvas canvas,
 		    double scaleX, double scaleY);
 static void	TranslateGroup(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, double deltaX, double deltaY);
-static void	GroupGradientProc(ClientData clientData, int flags);
 
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 PATH_CUSTOM_OPTION_TAGS
+PATH_OPTION_STRING_TABLES_FILL
+PATH_OPTION_STRING_TABLES_STROKE
+PATH_OPTION_STRING_TABLES_STATE
 
 static Tk_OptionSpec optionSpecs[] = {
-    PATH_OPTION_SPEC_CORE(GroupItem),
+    PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
-    PATH_OPTION_SPEC_STYLE_FILL(GroupItem, ""),
-    PATH_OPTION_SPEC_STYLE_MATRIX(GroupItem),
-    PATH_OPTION_SPEC_STYLE_STROKE(GroupItem, "black"),
+    PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
+    PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
+    PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
     PATH_OPTION_SPEC_END
 };
 
@@ -124,19 +122,21 @@ CreateGroup(Tcl_Interp *interp,
         int objc, Tcl_Obj *CONST objv[])
 {
     GroupItem *groupPtr = (GroupItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &groupPtr->headerEx;
 
     /*
      * Carry out initialization that is needed to set defaults and to
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&(groupPtr->style));
-    groupPtr->canvas = canvas;
-    groupPtr->styleObj = NULL;
+    TkPathCreateStyle(&itemExPtr->style);
+    itemExPtr->canvas = canvas;
+    itemExPtr->styleObj = NULL;
+    itemExPtr->styleInst = NULL;
     groupPtr->totalBbox = NewEmptyPathRect();
     groupPtr->flags = 0L;
-    groupPtr->header.x1 = groupPtr->header.x2 =
-    groupPtr->header.y1 = groupPtr->header.y2 = -1;
+    itemExPtr->header.x1 = itemExPtr->header.x2 =
+    itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
     
     if (optionTable == NULL) {
 	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -161,88 +161,58 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
         Tcl_Obj *CONST objv[], int flags)
 {
     GroupItem *groupPtr = (GroupItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(groupPtr->style);
-    Tk_PathItem *parentPtr;
+    Tk_PathItemEx *itemExPtr = &groupPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
-    Tk_PathState state;
+    //Tk_PathState state;
     Tk_SavedOptions savedOptions;
-    int mask;
-    int result;
+    Tcl_Obj *errorResult = NULL;
+    int error, mask;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
-    result = Tk_SetOptions(interp, (char *) groupPtr, optionTable, 
-	    objc, objv, tkwin, &savedOptions, &mask);
-    if (result != TCL_OK) {
-	return result;
-    }
-
-    /*
-     * If we have got a style name it's options take precedence
-     * over the actual path configuration options. This is how SVG does it.
-     * Good or bad?
-     */
-    if ((groupPtr->styleObj != NULL) && (mask & PATH_CORE_OPTION_STYLENAME)) {
-        result = TkPathCanvasStyleMergeStyles(tkwin, canvas, stylePtr, groupPtr->styleObj, 0);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-    } 
-    if (mask & PATH_CORE_OPTION_PARENT) {
-	result = TkPathCanvasFindGroup(interp, canvas, itemPtr->parentObj, &parentPtr);
-	if (result != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return result;
-	}
-	TkPathCanvasSetParent(parentPtr, itemPtr);
-    }
-
-    /*
-     * Root item's -tags and -parent is read only.
-     */
-    if (itemPtr->id == 0) {
-	if (mask & PATH_CORE_OPTION_PARENT) {
-	    Tcl_SetObjResult(interp, 
-		    Tcl_NewStringObj("root items -parent is not configurable", -1));
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return TCL_ERROR; 
-	}
-	if (mask & PATH_CORE_OPTION_TAGS) {
-	    Tcl_SetObjResult(interp, 
-		    Tcl_NewStringObj("root items -tags is not configurable", -1));	
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    return TCL_ERROR; 
-	}
-    }
-
-    /*
-     * Just translate the 'fillObj' (string) to a TkPathColor.
-     * We MUST have this last in the chain of custom option checks!
-     */
-    if (mask & PATH_STYLE_OPTION_FILL) {
-	TkPathColor *fillPtr = NULL;
-
-	if (stylePtr->fillObj != NULL) {
-	    fillPtr = TkPathGetPathColor(interp, tkwin, stylePtr->fillObj,
-		    TkPathCanvasGradientTable(canvas), GroupGradientProc,
-		    (ClientData) itemPtr);
-	    if (fillPtr == NULL) {
-		Tk_RestoreSavedOptions(&savedOptions);
-		return TCL_ERROR;
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    if (Tk_SetOptions(interp, (char *) groupPtr, optionTable, 
+		    objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
+		continue;
 	    }
 	} else {
-	    fillPtr = NULL;
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}	
+	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	    continue;
 	}
-	if (stylePtr->fill != NULL) {
-	    TkPathFreePathColor(stylePtr->fill);
+
+	/*
+	 * Root item's -tags and -parent is read only.
+	 */
+	if (itemPtr->id == 0) {
+	    if (mask & PATH_CORE_OPTION_PARENT) {
+		Tcl_SetObjResult(interp, 
+			Tcl_NewStringObj("root items -parent is not configurable", -1));
+		continue;
+	    }
+	    if (mask & PATH_CORE_OPTION_TAGS) {
+		Tcl_SetObjResult(interp, 
+			Tcl_NewStringObj("root items -tags is not configurable", -1));	
+		continue;
+	    }
 	}
-	stylePtr->fill = fillPtr;
+
+	/*
+	 * If we reach this on the first pass we are OK and continue below.
+	 */
+	break;
     }
-    Tk_FreeSavedOptions(&savedOptions);
-    
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
+    }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
     
+#if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
 	state = TkPathCanvasState(canvas);
@@ -250,7 +220,15 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     if (state == TK_PATHSTATE_HIDDEN) {
         return TCL_OK;
     }
-    return TCL_OK;
+#endif
+    if (error) {
+	Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	//ComputePrectBbox(canvas, prectPtr);
+	return TCL_OK;
+    }
 }
 
 static void	
@@ -258,10 +236,14 @@ DeleteGroup(Tk_PathCanvas canvas,
     Tk_PathItem *itemPtr, Display *display)
 {
     GroupItem *groupPtr = (GroupItem *) itemPtr;
-    Tk_PathStyle *stylePtr = &(groupPtr->style);
+    Tk_PathItemEx *itemExPtr = &groupPtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
 
     if (stylePtr->fill != NULL) {
 	TkPathFreePathColor(stylePtr->fill);
+    }
+    if (itemExPtr->styleInst != NULL) {
+	TkPathFreeStyle(itemExPtr->styleInst);
     }
     Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
@@ -363,25 +345,6 @@ TkPathCanvasUpdateGroupBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
 	TkPathCanvasGroupBbox(canvas, itemPtr,
 		&itemPtr->x1, &itemPtr->y1, &itemPtr->x2, &itemPtr->y2);    
 	groupPtr->flags &= ~GROUP_FLAG_DIRTY_BBOX;
-    }
-}
-
-static void	
-GroupGradientProc(ClientData clientData, int flags)
-{
-    GroupItem *groupPtr = (GroupItem *)clientData;
-    Tk_PathStyle *stylePtr = &(groupPtr->style);
-    
-    if (flags) {
-	if (flags & PATH_GRADIENT_FLAG_DELETE) {
-	    TkPathFreePathColor(stylePtr->fill);	
-	    stylePtr->fill = NULL;
-	    Tcl_DecrRefCount(stylePtr->fillObj);
-	    stylePtr->fillObj = NULL;
-	}
-	Tk_PathCanvasEventuallyRedraw(groupPtr->canvas,
-		groupPtr->header.x1, groupPtr->header.y1,
-		groupPtr->header.x2, groupPtr->header.y2);
     }
 }
 

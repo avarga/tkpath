@@ -23,11 +23,11 @@ TODO for tkpath
 
  o Try to get rid of the Tk_Uid.   
 
- o Perhaps hace the Tk_PathItem's x1, y1, ... as doubles.
+ o Perhaps have the Tk_PathItem's x1, y1, ... as doubles.
    That would make translations and scaling easier since we don't have
    to bother about roundoffs. Separate flag for hidden?
 
-
+ o What to do with the -state option for the new items?
 
 
 
