@@ -50,6 +50,11 @@ item using the -parent option.
 
         Lists all children of the first item matching tagOrId.
 
+    pathName depth tagOrId
+	Returns the depth in the tree hierarchy of the first
+	item matching tagOrId. The root item has depth 0 and children
+	of the root has depth 1 and so on.
+
     pathName distance tagOrId x y
 
         Returns the closest distance between the point (x, y) and the first

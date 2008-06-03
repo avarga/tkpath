@@ -308,6 +308,7 @@ static int		ItemCreate(Tcl_Interp *interp, TkPathCanvas *canvasPtr,
 				int objc, Tcl_Obj *CONST objv[]);
 static int		ItemGetNumTags(Tk_PathItem *itemPtr);
 static void		SetAncestorsDirtyBbox(Tk_PathItem *itemPtr);
+static int		GetDepth(Tk_PathItem *itemPtr);
 			    
 static void		DebugGetItemInfo(Tk_PathItem *itemPtr, char *s);
 
@@ -1231,7 +1232,19 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_DEPTH: {
-    
+    	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId");
+	    result = TCL_ERROR;
+	    goto done;
+	}    
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
+ 	if (itemPtr != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(GetDepth(itemPtr)));
+	} else {
+	    Tcl_AppendResult(interp, "tag \"", Tcl_GetString(objv[2]),
+		    "\" doesn't match any items", NULL);
+	    goto done;
+	}
 	break;
     }
     case CANV_DISTANCE: {
@@ -3567,6 +3580,19 @@ ItemDelete(TkPathCanvas *canvasPtr, Tk_PathItem *itemPtr)
 	canvasPtr->hotPtr = NULL;
     }
     ckfree((char *) itemPtr);
+}
+
+static int
+GetDepth(Tk_PathItem *itemPtr)
+{
+    int depth = 0;
+    Tk_PathItem *walkPtr = itemPtr;
+
+    while (walkPtr->parentPtr != NULL) {
+	depth++;
+	walkPtr = walkPtr->parentPtr;
+    }
+    return depth;
 }
 
 static void
