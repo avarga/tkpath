@@ -657,6 +657,7 @@ typedef struct SurfPimageItem {
     double height;
     double width;
     TMatrix *matrixPtr;
+    Tcl_Obj *styleObj;	    /* We only use matrixPtr from style. */
 } SurfPimageItem;
 
 static Tk_OptionSpec pimageOptionSpecs[] = {
@@ -667,6 +668,8 @@ static Tk_OptionSpec pimageOptionSpecs[] = {
 	TK_OPTION_NULL_OK, (ClientData) &matrixCO, 0},
     {TK_OPTION_STRING, "-image", (char *) NULL, (char *) NULL,
         "", -1, Tk_Offset(SurfPimageItem, imageName), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-style", (char *) NULL, (char *) NULL,
+        "", Tk_Offset(SurfPimageItem, styleObj), -1, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-width", (char *) NULL, (char *) NULL,
         "0", -1, Tk_Offset(SurfPimageItem, width), 0, 0, 0},
     PATH_OPTION_SPEC_END
@@ -676,36 +679,47 @@ static int
 SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
 {
     TkPathContext 	context = surfacePtr->ctx;
-    int			i;
-    double		point[2];
     SurfPimageItem	item;
     Tk_Image		image;
     Tk_PhotoHandle	photo;
+    Tk_PathStyle	style;
+    double		point[2];
+    int			i;
+    int			result = TCL_OK;
 
     item.imageName = NULL;
     item.matrixPtr = NULL;
+    TkPathCreateStyle(&style);
     i = GetFirstOptionIndex(objc, objv);
     if (GetPointCoords(interp, point, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
     }
     if (SurfaceParseOptions(interp, (char *)&item, gOptionTablePimage, objc-i, objv+i) != TCL_OK) {
         return TCL_ERROR;
+    }    
+    style.matrixPtr = item.matrixPtr;
+    if (TkPathStyleMergeStyleStatic(interp, item.styleObj, &style, 0) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
     }
     if (item.imageName != NULL) {
         photo = Tk_FindPhoto(interp, item.imageName);
         if (photo == NULL) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj("no photo with the given name", -1));
-            return TCL_ERROR;
-        }
+	    result = TCL_ERROR;
+	    goto bail;
+         }
         image = Tk_GetImage(interp, Tk_MainWindow(interp), item.imageName, NULL, (ClientData) NULL);
         TkPathSaveState(context);
-        TkPathPushTMatrix(context, item.matrixPtr);
+        TkPathPushTMatrix(context, style.matrixPtr);
         TkPathImage(context, image, photo, point[0], point[1], item.width, item.height);
         Tk_FreeImage(image);
         TkPathRestoreState(context);
     }
+
+bail:
     Tk_FreeConfigOptions((char *)&item, gOptionTablePimage, Tk_MainWindow(interp));
-    return TCL_OK;
+    return result;
 }
 
 static Tk_OptionSpec plineOptionSpecs[] = {
