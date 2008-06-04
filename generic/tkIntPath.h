@@ -358,9 +358,10 @@ MODULE_SCOPE int    TkPathGenericCmdDispatcher(
 			void (*freeProc)(Tcl_Interp *interp, char *recordPtr));
 void		    PathStyleInit(Tcl_Interp* interp);
 void		    PathGradientInit(Tcl_Interp* interp);
-int		    TkPathStyleMergeStyles_DEPRECIATED(Tk_Window tkwin, Tcl_HashTable *hashTablePtr,
-			Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags);
-MODULE_SCOPE void   TkPathStyleMergeStyles(Tk_PathStyle *srcStyle, Tk_PathStyle *dstStyle, long flags);
+MODULE_SCOPE void   TkPathStyleMergeStyles(Tk_PathStyle *srcStyle, Tk_PathStyle *dstStyle, 
+			long flags);
+MODULE_SCOPE int    TkPathStyleMergeStyleStatic(Tcl_Interp* interp, Tcl_Obj *styleObj, 
+			Tk_PathStyle *dstStyle, long flags);
 MODULE_SCOPE void   PathGradientPaint(TkPathContext ctx, PathRect *bbox, 
 			TkPathGradientMaster *gradientStylePtr, int fillRule);
 
@@ -457,10 +458,7 @@ MODULE_SCOPE int	TkPathPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
 MODULE_SCOPE void	TkPathDeleteStyles(Tk_Window tkwin, Tcl_HashTable *hashTablePtr);
-MODULE_SCOPE int	TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_Window tkwin, 
-			    Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags);
 MODULE_SCOPE Tk_TSOffset TkPathGetOffsetFromBbox(Tk_TSOffset *offsetPtr, double bbox[4]);
-
 MODULE_SCOPE TkPathColor *  TkPathGetPathColorStatic(Tcl_Interp *interp, 
 			    Tk_Window tkwin, Tcl_Obj *nameObj);
 

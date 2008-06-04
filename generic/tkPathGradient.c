@@ -894,8 +894,24 @@ GradientMasterFree(TkPathGradientMaster *gradientPtr)
 }
 
 /*
- * Used by the surface command to parse its -fill option.
+ *----------------------------------------------------------------------
+ *
+ * TkPathGetPathColorStatic --
+ *
+ *	Looks up named color or gradient in the global (static) gradient
+ *	hash table. Used by the surface command to parse its -fill option.
+ *	Else see TkPathGetPathColor.
+ *
+ * Results:
+ *	Pointer to a TkPathColor struct or returns NULL on error 
+ *      and leaves an error message.
+ *
+ * Side effects:
+ *	TkPathColor malloced if OK.
+ *
+ *----------------------------------------------------------------------
  */
+ 
 TkPathColor *
 TkPathGetPathColorStatic(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObj)
 {

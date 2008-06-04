@@ -239,7 +239,7 @@ TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObj)
  *      and leaves an error message.
  *
  * Side effects:
- *		TkPathColor mallocod if OK.
+ *		TkPathColor malloced if OK.
  *
  *--------------------------------------------------------------
  */

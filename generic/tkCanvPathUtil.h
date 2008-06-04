@@ -17,10 +17,6 @@
 extern "C" {
 #endif
 
-MODULE_SCOPE int	TkPathCanvasStyleMergeStyles(Tk_Window tkwin, Tk_PathCanvas canvas,
-				Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags);
-
-
 int	    CoordsForPointItems(Tcl_Interp *interp, Tk_PathCanvas canvas, 
                     double *pointPtr, int objc, Tcl_Obj *CONST objv[]);
 int	    CoordsForRectangularItems(Tcl_Interp *interp, Tk_PathCanvas canvas, 

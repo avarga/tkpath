@@ -835,6 +835,7 @@ TkPathDeleteStyles(Tk_Window tkwin, Tcl_HashTable *hashTablePtr)
     }
 }
 
+#if 0
 static void
 CopyXColor(Tk_Window tkwin, XColor **dstPtrPtr, XColor *srcPtr)
 {
@@ -852,7 +853,9 @@ CopyXColor(Tk_Window tkwin, XColor **dstPtrPtr, XColor *srcPtr)
     }
     *dstPtrPtr = colorPtr;
 }
+#endif
 
+#if 0
 static void
 CopyTMatrix(TMatrix **dstPtrPtr, TMatrix *srcPtr)
 {
@@ -870,7 +873,9 @@ CopyTMatrix(TMatrix **dstPtrPtr, TMatrix *srcPtr)
     }
     *dstPtrPtr = matrixPtr;
 }
+#endif
 
+#if 0
 static void
 CopyTkDash(Tk_PathDash *dstPtr, Tk_PathDash *srcPtr)
 {
@@ -887,6 +892,7 @@ CopyTkDash(Tk_PathDash *dstPtr, Tk_PathDash *srcPtr)
 	*dptr++ = *sptr++;
     }
 }
+#endif
 
 #if 0
 static void
@@ -918,15 +924,37 @@ CopyPathColor(Tk_Window tkwin, TkPathColor **dstPtrPtr, TkPathColor *srcPtr)
 }
 #endif
 
+/*
+ *--------------------------------------------------------------
+ *
+ * TkPathStyleMergeStyleStatic --
+ *
+ *	Looks up the named style in styleObj in the globally defined
+ *	style hash table.
+ *	Overwrites values in dstStyle if set in styleObj.
+ *	This is indicated by the mask of the srcStyle.
+ *	This just copy pointers. For short lived style records only!
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Changes *values* in dstStyle. Leaves any error string in interp.
+ *
+ *--------------------------------------------------------------
+ */
+
 int
-TkPathStyleMergeGlobalStyle(Tcl_Interp* interp, Tcl_Obj *styleObj, Tk_PathStyle *dstStyle, long flags)
+TkPathStyleMergeStyleStatic(Tcl_Interp* interp, Tcl_Obj *styleObj, Tk_PathStyle *dstStyle, long flags)
 {
     Tcl_HashEntry *hPtr;
     Tk_PathStyle *srcStyle;
 
     hPtr = Tcl_FindHashEntry(gStyleHashPtr, Tcl_GetString(styleObj));
     if (hPtr == NULL) {
-	//Tcl_SetObjResult(interp, );
+	Tcl_AppendStringsToObj(Tcl_GetObjResult(interp), 
+		"the global style \"", Tcl_GetString(styleObj),
+		"\" does not exist", NULL);
         return TCL_ERROR;
     }
     srcStyle = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
@@ -934,114 +962,16 @@ TkPathStyleMergeGlobalStyle(Tcl_Interp* interp, Tcl_Obj *styleObj, Tk_PathStyle 
     return TCL_OK;
 }
 
-int
-TkPathStyleMergeStylesGlobal_DEPRECIATED(Tk_Window tkwin,
-	Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags)
-{
-    return TkPathStyleMergeStyles_DEPRECIATED(tkwin, gStyleHashPtr, stylePtr, styleObj, flags);
-}
-
 /*
  *--------------------------------------------------------------
  *
  * TkPathStyleMergeStyles --
  *
- *	Copies the style options set in 'styleName' to the one in 'stylePtr'.
- *	Depending on 'flags' only fill or stroke options set.
- *
- * Results:
- *	A standard Tcl return value.
- *
- * Side effects:
- *	Variables in 'stylePtr' set.
- *
- *--------------------------------------------------------------
- */
-
-/* @@@ TODO: add result in interp */
-
-int
-TkPathStyleMergeStyles_DEPRECIATED(Tk_Window tkwin, Tcl_HashTable *hashTablePtr,
-	Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags)
-{
-    int mask;
-    Tcl_HashEntry *hPtr;
-    Tk_PathStyle *srcStylePtr;
-
-    if (styleObj == NULL) {
-        return TCL_OK;
-    }
-    hPtr = Tcl_FindHashEntry(hashTablePtr, Tcl_GetString(styleObj));
-    if (hPtr == NULL) {
-        return TCL_ERROR;
-    }
-    srcStylePtr = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
-
-    /*
-     * Go through all options set in srcStylePtr and merge
-     * these into stylePtr.
-     */
-    mask = srcStylePtr->mask;
-    if (!(flags & kPathMergeStyleNotFill)) {
-        if (mask & PATH_STYLE_OPTION_FILL) {
-            //CopyPathColor(tkwin, &(stylePtr->fill), srcStylePtr->fill);
-        }
-        if (mask & PATH_STYLE_OPTION_FILL_OFFSET) {
-            /* @@@ TODO */
-        }
-        if (mask & PATH_STYLE_OPTION_FILL_OPACITY) {
-            stylePtr->fillOpacity = srcStylePtr->fillOpacity;
-        }
-        if (mask & PATH_STYLE_OPTION_FILL_RULE) {
-            stylePtr->fillRule = srcStylePtr->fillRule;
-        }
-        if (mask & PATH_STYLE_OPTION_FILL_STIPPLE) {
-            /* @@@ TODO */
-        }
-    }
-    if (mask & PATH_STYLE_OPTION_MATRIX) {
-        CopyTMatrix(&(stylePtr->matrixPtr), srcStylePtr->matrixPtr);
-    }
-    if (!(flags & kPathMergeStyleNotStroke)) {
-        if (mask & PATH_STYLE_OPTION_STROKE) {
-            CopyXColor(tkwin, &(stylePtr->strokeColor), srcStylePtr->strokeColor);
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_DASHARRAY) {
-            CopyTkDash(stylePtr->dashPtr, srcStylePtr->dashPtr);
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_LINECAP) {
-            stylePtr->capStyle = srcStylePtr->capStyle;
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_LINEJOIN) {
-            stylePtr->joinStyle = srcStylePtr->joinStyle;
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_MITERLIMIT) {
-            stylePtr->miterLimit = srcStylePtr->miterLimit;
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_OFFSET) {
-            /* @@@ TODO */
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_OPACITY) {
-            stylePtr->strokeOpacity = srcStylePtr->strokeOpacity;
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_STIPPLE) {
-            /* @@@ TODO */
-        }
-        if (mask & PATH_STYLE_OPTION_STROKE_WIDTH) {
-            stylePtr->strokeWidth = srcStylePtr->strokeWidth;
-        }
-    }
-    return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * TkPathStyleMergeStyles --
- *
- *	Overwrites values in dsStyle if set in srcStyle.
+ *	Overwrites values in dstStyle if set in srcStyle.
  *	This is indicated by the mask of the srcStyle.
  *	This just copy pointers. For short lived style records only!
+ *	Be sure to NEVER free any pointers in this style since we
+ *	don't own theme!
  *
  * Results:
  *	None.
@@ -1170,7 +1100,7 @@ TkPathCreateStyle(Tk_PathStyle *style)
  *	None
  *
  * Side effects:
- *	None
+ *	Memory freed
  *
  *--------------------------------------------------------------
  */

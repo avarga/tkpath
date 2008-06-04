@@ -264,7 +264,7 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     OSStatus	err = noErr;
     ATSUStyle 	style;
     ATSUFontID	atsuFont;
-    Fixed		atsuSize;
+    Fixed	atsuSize;
     static const ATSUAttributeTag tags[] = { 
         kATSUFontTag, kATSUSizeTag, 
         kATSUQDBoldfaceTag, kATSUQDItalicTag, kATSUQDUnderlineTag // @@@ didn't help.

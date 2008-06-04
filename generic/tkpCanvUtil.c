@@ -2175,29 +2175,6 @@ TkPathCanvTranslatePath(
     return numOutput;
 }
 
-/*
- *--------------------------------------------------------------
- *
- * TkPathCanvasStyleMergeStyles
- *
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *
- *--------------------------------------------------------------
- */
-
-int
-TkPathCanvasStyleMergeStyles(Tk_Window tkwin, Tk_PathCanvas canvas,
-	Tk_PathStyle *stylePtr, Tcl_Obj *styleObj, long flags)
-{
-    TkPathCanvas *canvasPtr = (TkPathCanvas *) canvas;
-
-    return TkPathStyleMergeStyles_DEPRECIATED(tkwin, &(canvasPtr->styleTable), stylePtr, 
-	    styleObj, flags);
-}
 
 /*
  * Local Variables:

@@ -1,6 +1,10 @@
 
-TODO for tkpath
----------------
+TODO and undecided for tkpath
+-----------------------------
+
+ o Style inheritance from the group item to do.
+
+ o Scaling arcs. Much math!
 
  o Optimize segmentation computations used for hittesting in the 'Point'
    functions.
@@ -13,7 +17,7 @@ TODO for tkpath
  o I have paid no attention to if strokes are transformed or not. Sort out!
 
  o Perhaps it would be useful to allow multiple objects on a single item
-   by supplying many coordinates for pline, prect, circle, and ellipse ?
+   by supplying many coordinates for pline, prect, circle, and ellipse?
 
  o I would like to move the TkPathInit/TkPathFree to the canvas
    Display function instead of having it in the items Display function.
@@ -29,7 +33,8 @@ TODO for tkpath
 
  o What to do with the -state option for the new items?
 
+ o Perhaps it would be useful to have the precedence order between
+   item options and style options configurable.
 
-
-
+ o Maybe there should be a group item also for tkp::surface?
 
