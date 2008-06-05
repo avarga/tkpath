@@ -243,7 +243,7 @@ int TkPathOffsetOptionSetProc(
                              * internal representation of value should
                              * be stored, or NULL. */
     Tcl_Obj *valuePtr;
-    Tk_TSOffset *newPtr;
+    Tk_TSOffset *newPtr = NULL;
     
     valuePtr = *value;
     if (internalOffset >= 0) {

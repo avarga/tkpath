@@ -473,7 +473,7 @@ int Tk_PathCanvasTagsOptionSetProc(
                              * internal representation of value should
                              * be stored, or NULL. */
     Tcl_Obj *valuePtr;
-    Tk_PathTags *newPtr;
+    Tk_PathTags *newPtr = NULL;
     
     valuePtr = *value;
     if (internalOffset >= 0) {
@@ -721,7 +721,7 @@ int Tk_DashOptionSetProc(
                              * internal representation of value should
                              * be stored, or NULL. */
     Tcl_Obj *valuePtr;
-    Tk_Dash *newPtr;
+    Tk_Dash *newPtr = NULL;
     
     valuePtr = *value;
     if (internalOffset >= 0) {
@@ -1043,7 +1043,7 @@ TkPathSmoothOptionSetProc(
                              * internal representation of value should
                              * be stored, or NULL. */
     Tcl_Obj *valuePtr;
-    Tk_PathSmoothMethod *newPtr;
+    Tk_PathSmoothMethod *newPtr = NULL;
     
     valuePtr = *value;
     if (internalOffset >= 0) {

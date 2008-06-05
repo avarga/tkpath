@@ -476,7 +476,7 @@ void TkPathReleaseClipToPath(TkPathContext ctx)
 void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    Tk_Dash *dashPtr;
+    Tk_PathDash *dashPtr;
 
     cairo_set_source_rgba(context->c,             
             RedDoubleFromXColorPtr(style->strokeColor),
