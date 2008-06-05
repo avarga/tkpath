@@ -433,7 +433,7 @@ Tk_PathCanvasObjCmd(
 	return TCL_ERROR;
     }
 
-    newWin = Tk_CreateWindowFromPath(interp,tkwin,Tcl_GetString(argv[1]),NULL);
+    newWin = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(argv[1]), NULL);
     if (newWin == NULL) {
 	return TCL_ERROR;
     }
@@ -2095,10 +2095,10 @@ DestroyCanvas(
     Tcl_DeleteHashTable(&canvasPtr->idTable);
     
     // @@@ TODO: tkwin = NULL!
-    //TkPathDeleteStyles(canvasPtr->tkwin, &canvasPtr->styleTable);
+    PathStylesFree(canvasPtr->tkwin, &canvasPtr->styleTable);
     Tcl_DeleteHashTable(&canvasPtr->styleTable);
     
-    // @@@ TODO: cleanup! */
+    CanvasGradientsFree(canvasPtr);
     Tcl_DeleteHashTable(&canvasPtr->gradientTable);
     
     if (canvasPtr->pixmapGC != None) {
@@ -2184,15 +2184,14 @@ ConfigureCanvas(
 	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
 	}
-#if 0
-	if ((canvasPtr->flags & BUTTON_DELETED)) {
-	    // @@@ TODO:
+	if ((canvasPtr->flags & CANVAS_DELETED)) {
+
 	    /*
-	     * Somehow button was deleted - just abort now. [Bug #824479]
+	     * From tkButton.c_
+	     * Somehow canvas was deleted - just abort now. [Bug #824479]
 	     */
 	    return TCL_ERROR;
 	}
-#endif
    
 	/*
 	 * Recompute the scroll region.
@@ -2414,11 +2413,11 @@ DisplayCanvas(
     Tk_PathItem *itemPtr;
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
+    int flags;
 
-    if (canvasPtr->tkwin == NULL) {
+    if (canvasPtr->flags & CANVAS_DELETED) {
 	return;
     }
-
     if (!Tk_IsMapped(tkwin)) {
 	goto done;
     }
@@ -2432,9 +2431,9 @@ DisplayCanvas(
 	Tcl_Preserve((ClientData) canvasPtr);
 	canvasPtr->flags &= ~REPICK_NEEDED;
 	PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
-	tkwin = canvasPtr->tkwin;
+	flags = canvasPtr->flags;
 	Tcl_Release((ClientData) canvasPtr);
-	if (tkwin == NULL) {
+	if (flags & CANVAS_DELETED) {
 	    return;
 	}
     }
@@ -2670,17 +2669,16 @@ CanvasEventProc(
 	    canvasPtr->flags |= REDRAW_BORDERS;
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	if (canvasPtr->tkwin != NULL) {
-	    // @@@ TODO: Problematic since we use it in DestroyCanvas */
-	    canvasPtr->tkwin = NULL;
+	if (!(canvasPtr->flags & CANVAS_DELETED)) {
+	    canvasPtr->flags |= CANVAS_DELETED;
 	    Tcl_DeleteCommandFromToken(canvasPtr->interp,
 		    canvasPtr->widgetCmd);
+	    if (canvasPtr->flags & REDRAW_PENDING) {
+		Tcl_CancelIdleCall(DisplayCanvas, (ClientData) canvasPtr);
+	    }
+	    Tcl_EventuallyFree((ClientData) canvasPtr,
+		    (Tcl_FreeProc *) DestroyCanvas);
 	}
-	if (canvasPtr->flags & REDRAW_PENDING) {
-	    Tcl_CancelIdleCall(DisplayCanvas, (ClientData) canvasPtr);
-	}
-	Tcl_EventuallyFree((ClientData) canvasPtr,
-		(Tcl_FreeProc *) DestroyCanvas);
     } else if (eventPtr->type == ConfigureNotify) {
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 
@@ -2745,7 +2743,6 @@ CanvasCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
     TkPathCanvas *canvasPtr = (TkPathCanvas *) clientData;
-    Tk_Window tkwin = canvasPtr->tkwin;
 
     /*
      * This function could be invoked either because the window was destroyed
@@ -2754,9 +2751,8 @@ CanvasCmdDeletedProc(
      * widget.
      */
 
-    if (tkwin != NULL) {
-	canvasPtr->tkwin = NULL;
-	Tk_DestroyWindow(tkwin);
+    if (!(canvasPtr->flags & CANVAS_DELETED)) {
+ 	Tk_DestroyWindow(canvasPtr->tkwin);
     }
 }
 
@@ -2786,16 +2782,11 @@ Tk_PathCanvasEventuallyRedraw(
 				 * Pixels on edge are not redrawn. */
 {
     TkPathCanvas *canvasPtr = (TkPathCanvas *) canvas;
+    Tk_Window tkwin = canvasPtr->tkwin;
 
-    /*
-     * If tkwin is NULL, the canvas has been destroyed, so we can't really
-     * redraw it.
-     */
-
-    if (canvasPtr->tkwin == NULL) {
+    if ((canvasPtr->flags & CANVAS_DELETED) || !Tk_IsMapped(tkwin)) {
 	return;
     }
-
     if ((x1 >= x2) || (y1 >= y2) ||
  	    (x2 < canvasPtr->xOrigin) || (y2 < canvasPtr->yOrigin) ||
 	    (x1 >= canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin)) ||
@@ -3475,7 +3466,9 @@ ItemDetach(Tk_PathItem *itemPtr)
 	parentPtr->lastChildPtr = itemPtr->prevPtr;
     }
     
-    /* This signals an orfan item. */
+    /* 
+     * This signals an orfan item. 
+     */
     itemPtr->nextPtr = itemPtr->prevPtr = itemPtr->parentPtr = NULL;
 }
 

@@ -391,6 +391,7 @@ MODULE_SCOPE int    PathGradientInUse(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_Hash
 MODULE_SCOPE void   PathGradientNames(Tcl_Interp *interp, Tcl_HashTable *hashTablePtr);
 MODULE_SCOPE int    PathGradientType(Tcl_Interp *interp, Tcl_Obj *obj, 
 			Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE void   PathGradientMasterFree(TkPathGradientMaster *gradientPtr);
 
 /*
  * Style support functions.
@@ -407,7 +408,7 @@ MODULE_SCOPE int    PathStyleCreate(Tcl_Interp *interp, Tk_Window tkwin,
 			Tcl_HashTable *styleTablePtr, 
 			Tcl_HashTable *gradTablePtr, char *tokenName);
 MODULE_SCOPE int    PathStyleDelete(Tcl_Interp *interp, Tcl_Obj *obj, 
-			Tcl_HashTable *hashTablePtr);
+			Tcl_HashTable *hashTablePtr, Tk_Window tkwin);
 MODULE_SCOPE int    PathStyleInUse(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr);
 MODULE_SCOPE void   PathStyleNames(Tcl_Interp *interp, Tcl_HashTable *hashTablePtr);
 
@@ -457,7 +458,7 @@ MODULE_SCOPE void	TkPathSmoothOptionRestoreProc(ClientData clientData,
 MODULE_SCOPE int	TkPathPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
-MODULE_SCOPE void	TkPathDeleteStyles(Tk_Window tkwin, Tcl_HashTable *hashTablePtr);
+MODULE_SCOPE void	PathStylesFree(Tk_Window tkwin, Tcl_HashTable *hashTablePtr);
 MODULE_SCOPE Tk_TSOffset TkPathGetOffsetFromBbox(Tk_TSOffset *offsetPtr, double bbox[4]);
 MODULE_SCOPE TkPathColor *  TkPathGetPathColorStatic(Tcl_Interp *interp, 
 			    Tk_Window tkwin, Tcl_Obj *nameObj);

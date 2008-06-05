@@ -28,7 +28,6 @@ static char *		kGradientNameBase = "tkp::gradient";
 
 static int 	GradientObjCmd(ClientData clientData, Tcl_Interp* interp,
 			int objc, Tcl_Obj* CONST objv[]);
-static void	GradientMasterFree(TkPathGradientMaster *gradientPtr);
 
 /*
  * Custom option processing code.
@@ -721,7 +720,7 @@ PathGradientDelete(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr)
     }
     TkPathGradientChanged(gradientPtr, PATH_GRADIENT_FLAG_DELETE);
     Tcl_DeleteHashEntry(Tcl_FindHashEntry(tablePtr, Tcl_GetString(obj)));
-    GradientMasterFree(gradientPtr); 
+    PathGradientMasterFree(gradientPtr); 
     return TCL_OK;
 }
 
@@ -886,8 +885,8 @@ GradientObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* CON
 }
 
 
-static void
-GradientMasterFree(TkPathGradientMaster *gradientPtr)
+void
+PathGradientMasterFree(TkPathGradientMaster *gradientPtr)
 {
     Tk_FreeConfigOptions((char *) gradientPtr, gradientPtr->optionTable, NULL);
     ckfree((char *) gradientPtr);

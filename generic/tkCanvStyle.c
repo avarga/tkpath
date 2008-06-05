@@ -101,7 +101,8 @@ CanvasStyleObjCmd(Tcl_Interp* interp, TkPathCanvas *canvasPtr,
 		Tcl_WrongNumArgs(interp, 3, objv, "name");
 		return TCL_ERROR;
 	    }
-	    result = PathStyleDelete(interp, objv[3], &canvasPtr->styleTable);
+	    result = PathStyleDelete(interp, objv[3], &canvasPtr->styleTable,
+		    canvasPtr->tkwin);
 	    break;
         }
 

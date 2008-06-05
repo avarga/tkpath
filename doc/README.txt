@@ -2,17 +2,15 @@
                              tkpath README
                              _____________
 
-
 This package implements a canvas widget which supports all features of the
-original canvas but adds a number of additional features. There are a
-number of additional item types that are modelled after its SVG counterpart,
+original canvas but adds a number of additional things. There are a
+number of new item types that are modelled after its SVG counterpart,
 see http://www.w3.org/TR/SVG11/. In addition, all items are put in a tree
 structure with a persistent root item with id 0. All other items are
 descendants of this root item. The standard canvas items will always be a
 child of the root item. The tkpath items, described below, are by default
 a child of the root item, but can be configured to be a child of any group
 item using the -parent option.
-
 
 
  o Syntax: The canvas is created using:
@@ -42,12 +40,10 @@ item using the -parent option.
  o Additional commands
 
     pathName ancestors tagOrId
-
         Returns a list of item id's of the first item matching tagOrId
 	starting with the root item with id 0.
 
     pathName children tagOrId
-
         Lists all children of the first item matching tagOrId.
 
     pathName depth tagOrId
@@ -56,51 +52,41 @@ item using the -parent option.
 	of the root has depth 1 and so on.
 
     pathName distance tagOrId x y
-
         Returns the closest distance between the point (x, y) and the first
 	item matching tagOrId.
 
     pathName firstchild tagOrId
-
         Returns the first child item of the first item matching tagOrId.
         Applies only for groups.
 
     pathName gradient command ?options?
-
         See tkp::gradient for the commands. The gradients created with this
 	command are local to the canvas instance. Only gradients defined
 	this way can be used.
 
     pathName lastchild tagOrId
-
         Returns the last child item of the first item matching tagOrId.
         Applies only for groups.
 
     pathName nextsibling tagOrId
-
         Returns the next sibling item of the first item matching tagOrId.
 	If tagOrId is the last child we return empty.
 
     pathName parent tagOrId
-
         Returns the parent item of the first item matching tagOrId. This
 	command works for all items, also for the standard ones. It is
 	therefore better to use this than 'cget id -parent' which is only
 	supported for the new tkpath items.
 
     pathName prevsibling tagOrId
-
         Returns the previous sibling item of the first item matching tagOrId.
 	If tagOrId is the first child we return empty.
-
     pathName style cmd ?options?
-
          See tkp::style for the commands. The styles created with this
 	command are local to the canvas instance. Only styles defined
 	this way can be used.
         
     pathName types
-
         List all item types defined in canvas.
 
  o Additional options
@@ -109,24 +95,44 @@ item using the -parent option.
 
  o Commands affected by changes
 
-    lower/raise: movement is constrained to siblings. If reference tagOrId
-    not given it defaults to first/last item of the root items children.
-    Items which are not siblings to the reference tagOrId are silently
-    ignored. Good or bad?
+    lower/raise: 
+	movement is constrained to siblings. If reference tagOrId
+    	not given it defaults to first/last item of the root items children.
+    	Items which are not siblings to the reference tagOrId are silently
+    	ignored. Good or bad?
 
-    find above/below: is constrained to siblings. Good or bad?
+    find above/below: 
+	is constrained to siblings. Good or bad?
 
+   scale/move:
+	if you apply scale or move on a group item it will apply this to all its 
+	descendants, also to child group items in a recursive way.
 
-There are various differences compared to SVG. As a canvas item, it also
-behaves a bit differently than an ordinary item.
+   tag "all":
+	Note that this presently also includes the root item which can result in some
+	unexpected behavior.
 
-SVG: It implements the complete syntax of the path elements d attribute with
-one major difference: all separators must be whitespace, no commas, no
-implicit assumptions; all instructions and numbers must form a tcl list.
-The display attribute names are adapted to tcl conventions, see below.
-Also, SVG is web oriented and therefore tolerates parameter errors to some
-degree, while tk is a programming tool and typically generates errors
-if paramters are wrong.
+ o New items
+
+	There are various differences compared to SVG. 
+	The display attribute names are adapted to tcl conventions, see below.
+	Also, SVG is web oriented and therefore tolerates parameter errors to some
+	degree, while tk is a programming tool and typically generates errors
+	if parameters are wrong. Some syntax changes have also been made. One such is
+	the -matrix option where we have delegated specific transforms to our support
+	functions in tkpath.tcl. Where the SVG tag names coincide with the ordinary
+	canvas item names we have added a "p" in from of its name instead.
+
+	New items:
+		circle
+		ellipse
+		path
+		pimage
+		pline
+		polyline
+		ppolygon
+		prect
+		ptext
 
  o The options
 
@@ -161,7 +167,9 @@ if paramters are wrong.
 
     The styleToken is a style created with 'pathName style create'. 
     It's options take precedence over any other options set directly. 
-    This is how SVG works (bad?).
+    This is how SVG works (bad?). Currently all a style's options ever set
+    are recorded in a cumulative way using a mask. Even if an option is set
+    to its default it takes precedence over an items option.
 
  o The group item
 
@@ -172,9 +180,9 @@ if paramters are wrong.
    difference. The root item is a special group item with id 0 and tags
    equal to "root". The root group can be configured like other items, but
    its -tags and -parent options are read only.
+   Currently no option inheritance is implemented. TODO.
 
    .c create group ?fillOptions strokeOptions genericOptions?
-
 
  o The path item
 
@@ -185,6 +193,9 @@ if paramters are wrong.
     wrong:  .c create path M 10 10 h 10 v 10 h -10 z -fill blue    ;# Error
 
     Furthermore, coordinates are pixel coordinates and nothing else.
+    SVG: It implements the complete syntax of the path elements d attribute with
+    one major difference: all separators must be whitespace, no commas, no
+    implicit assumptions; all instructions and numbers must form a tcl list.
 
     .c create path pathSpec ?fillOptions strokeOptions genericOptions?
 
@@ -197,7 +208,8 @@ if paramters are wrong.
 
       M x y   Put the pen on the paper at specified coordinate.
               Must be the first atom but can appear any time later.
-      L x y   Draw a line to the given coordinate.
+              The pen doesn't draw anything when moved to this point.
+      L x y   Draw a straight line to the given coordinate.
       H x     Draw a horizontal line to the given x coordinate.
       V y     Draw a vertical line to the given y coordinate.
       A rx ry phi largeArc sweep x y
@@ -215,7 +227,7 @@ if paramters are wrong.
               using control point (x1, y1).
       T x y   Draw a qadratic Bezier curve from the current point to (x, y)
               The control point will be the reflection of the previous Q atoms
-              control point.
+              control point. This makes smooth paths.
       C x1 y1 x2 y2 x y
               Draw a cubic Bezier curve from the current point to (x, y)
               using control points (x1, y1) and (x2, y2).
@@ -223,7 +235,7 @@ if paramters are wrong.
               Draw a cubic Bezier curve from the current point to (x, y), using
               (x2, y2) as the control point for this new endpoint. The first
               control point will be the reflection of the previous C atoms
-              ending control point.
+              ending control point. This makes smooth paths.
       Z       Close path by drawing from the current point to the preceeding M 
               point.
 
@@ -286,9 +298,9 @@ if paramters are wrong.
  o The ptext item
 
    Displays text as expected. Note that the x coordinate marks the baseline
-   of the text. Gradient fills unsupported so far. Not implemented in the
-   Tk and GDI backends. Especially the font handling and settings will likely
-   be developed further. Editing not implemented.
+   of the text. Gradient fills unsupported so far. Especially the font 
+   handling and settings will likely be developed further. 
+   Editing not implemented.
    
    .c create ptext x y ?-text string -textanchor start|middle|end?
        ?-fontfamily fontname -fontsize float?
@@ -312,7 +324,6 @@ if paramters are wrong.
  o With the boolean variable ::tkp::depixelize equal to 1 we try to adjust
    coordinates for objects with integer line widths so that lines ...
 
-
  o Styles are created and configured using:
 
     tkp::style cmd ?options?
@@ -323,7 +334,7 @@ if paramters are wrong.
         tkp::style configure token ?option? ?value option value...?
             Configures the object in the usual tcl way.
 
-        tkp::style create ?-key value ...?
+        tkp::style create ?fillOptions strokeOptions?
             Creates a style object and returns its token.
 
         tkp::style delete token
@@ -379,13 +390,12 @@ if paramters are wrong.
             If -units is 'bbox' coordinates run from 0 to 1 and are relative
             the items bounding box. If -units is 'userspace' then they are
             defined in absolute coordinates but in the space of the items
-            coordinate system. It defaults to {0 0 1 0}.
+            coordinate system. It defaults to {0 0 1 0}, left to right.
         -matrix {{a b} {c d} {tx ty}}
             sets a specific transformation for the gradient pattern only.
 	    NB: not sure about the order transforms, see -units.
         -units bbox|userspace sets the units of the transition coordinates.
-            See above. Defaults to bbox. Not implemented in the Tk and GDI 
-            backends. 
+            See above. Defaults to bbox.
 
     The options for radial gradients are the same as for linear gradients
     except that the -lineartransition is replaced by a -radialtransition:
@@ -426,9 +436,9 @@ if paramters are wrong.
 
     $token create type coords ?options?
 
-    draws the item of type to the surface. All item types and the corresponding
-    options as described above are supported, except the canvas specific -tags
-    and -state.
+    draws the item of type to the surface. All item types except the group 
+    and the corresponding options as described above are supported, 
+    except the canvas specific -tags and -state.
 
     $token destroy
 
@@ -442,6 +452,12 @@ if paramters are wrong.
     $token width
 
     returns height and width respectively.
+
+    Note that the surface behaves different from the canvas widget. When you have put
+    an item there there is no way to configure it or to remove it. If you have done
+    a mistake then you have to erase the complete surface and start all over.
+    Better to experiment on the canvas and then reproduce your drawing to a surface
+    when you are satisfied with it.
 
     NB: gdi+ seems unable to produce antialiasing effects here but there seems
         to be no gdi+ specific way of drawing in memory bitmaps but had to call
@@ -463,25 +479,9 @@ if paramters are wrong.
         tkp::transform translate x y
 
 
- o Binaries and libraries:
- 
-   On some systems (CoreGraphics and cairo) lines that are not placed at the
-   pixel centers, that is 8.0 12.4 etc., get an even number line width
-   if not using antialiasing. For instance, a -strokewidth 1 results in
-   a 2 pixel wide line. This is by design. If you want to be sure to get
-   the exact width when not using antialiasing always pick pixel center
-   coordinates using something like: [expr int($x) + 0.5]. If you fill and
-   not stroke you may need to have integer coordinates to avoid antialiasing
-   effects.
-
-   WinXP: GDI+. On pre XP systems it should be possible to get the gdiplus.dll
-   to make it work. Maybe there is also an issue with the MSCRT.LIB.
-
-
  o Known issues:
 
-   - Avoid using the canvas scale command on paths containing arc instructions
-     since an arc cannot generally be scaled and still be an arc.
+   - See the TODO file and comments marked "@@@" in the C sources.
      
 
  o Further documentation:

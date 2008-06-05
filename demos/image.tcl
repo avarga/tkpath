@@ -6,8 +6,8 @@ set w $t.c
 pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
 set dir [file dirname [info script]]
-set f [file join $dir trees.gif]
-set name [image create photo -file $f]
+set imageFile [file join $dir trees.gif]
+set name [image create photo -file $imageFile]
 set x 20
 set y 20
 $w create pimage $x $y -image $name

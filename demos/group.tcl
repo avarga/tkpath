@@ -1,6 +1,5 @@
 package require tkpath 0.3.0
 
-
 set t .c_group
 destroy $t
 toplevel $t
@@ -33,5 +32,7 @@ $w move g1 10 10
 $w move g2 200 10
 $w move g3 10 200
 $w move g4 200 200
+
+unset -nocomplain s f stroke fill
 
 

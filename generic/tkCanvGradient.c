@@ -137,3 +137,26 @@ CanvasGradientObjCmd(Tcl_Interp* interp, TkPathCanvas *canvasPtr,
     }
     return result;
 }
+
+/* 
+ * CanvasGradientsFree --
+ *	
+ *	Used by canvas Destroy handler to clean up all gradients.
+ *	Note that items clean up all their gradient instances themeselves.
+ */
+void
+CanvasGradientsFree(TkPathCanvas *canvasPtr)
+{
+    Tcl_HashEntry   *hPtr;
+    Tcl_HashSearch  search;
+    TkPathGradientMaster *gradientPtr = NULL;
+
+    hPtr = Tcl_FirstHashEntry(&canvasPtr->gradientTable, &search);
+    while (hPtr != NULL) {
+	gradientPtr = Tcl_GetHashValue(hPtr);
+	Tcl_DeleteHashEntry(hPtr);
+	PathGradientMasterFree(gradientPtr); 
+	hPtr = Tcl_NextHashEntry(&search);
+    }
+}
+

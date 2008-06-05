@@ -456,12 +456,12 @@ StyleGradientProc(ClientData clientData, int flags)
 }
 
 static void
-PathStyleFree(Tk_PathStyle *stylePtr)
+PathStyleFree(Tk_PathStyle *stylePtr, Tk_Window tkwin)
 {
     if (stylePtr->fill != NULL) {
 	TkPathFreePathColor(stylePtr->fill);
     }
-    Tk_FreeConfigOptions((char *) stylePtr, stylePtr->optionTable, NULL);
+    Tk_FreeConfigOptions((char *) stylePtr, stylePtr->optionTable, tkwin);
     ckfree((char *) stylePtr);
 }
 
@@ -628,7 +628,7 @@ PathStyleCreate(Tcl_Interp *interp, Tk_Window tkwin, int objc, Tcl_Obj * CONST o
 }
 
 int
-PathStyleDelete(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr)
+PathStyleDelete(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr, Tk_Window tkwin)
 {
     Tk_PathStyle    *stylePtr = NULL;
 
@@ -637,7 +637,7 @@ PathStyleDelete(Tcl_Interp *interp, Tcl_Obj *obj, Tcl_HashTable *tablePtr)
     }
     TkPathStyleChanged(stylePtr, PATH_STYLE_FLAG_DELETE);
     Tcl_DeleteHashEntry(Tcl_FindHashEntry(tablePtr, Tcl_GetString(obj)));
-    PathStyleFree(stylePtr);
+    PathStyleFree(stylePtr, tkwin);
     return TCL_OK;
 }
 
@@ -794,7 +794,7 @@ StyleObjCmd(
 		Tcl_WrongNumArgs(interp, 2, objv, "name");
 		return TCL_ERROR;
 	    }
-	    result = PathStyleDelete(interp, objv[2], gStyleHashPtr);
+	    result = PathStyleDelete(interp, objv[2], gStyleHashPtr, tkwin);
 	    break;
         }
 
@@ -820,7 +820,7 @@ StyleObjCmd(
 }
 
 void
-TkPathDeleteStyles(Tk_Window tkwin, Tcl_HashTable *hashTablePtr)
+PathStylesFree(Tk_Window tkwin, Tcl_HashTable *hashTablePtr)
 {
     Tcl_HashEntry 	*hPtr;
     Tcl_HashSearch	search;
@@ -830,7 +830,7 @@ TkPathDeleteStyles(Tk_Window tkwin, Tcl_HashTable *hashTablePtr)
     while (hPtr != NULL) {
 	recordPtr = Tcl_GetHashValue(hPtr);
 	Tcl_DeleteHashEntry(hPtr);
-	PathStyleFree((Tk_PathStyle *)recordPtr);
+	PathStyleFree((Tk_PathStyle *)recordPtr, tkwin);
 	hPtr = Tcl_NextHashEntry(&search);
     }
 }

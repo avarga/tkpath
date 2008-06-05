@@ -281,6 +281,7 @@ typedef struct TkPathCanvas {
  *				it should simply return immediately.
  * BBOX_NOT_EMPTY -		1 means that the bounding box of the area that
  *				should be redrawn is not empty.
+ * CANVAS_DELETED -
  */
 
 #define REDRAW_PENDING		(1 << 0)
@@ -292,6 +293,7 @@ typedef struct TkPathCanvas {
 #define LEFT_GRABBED_ITEM	(1 << 6)
 #define REPICK_IN_PROGRESS	(1 << 7)
 #define BBOX_NOT_EMPTY		(1 << 8)
+#define CANVAS_DELETED		(1 << 9)
 
 /*
  * Flag bits for canvas items (redraw_flags):
@@ -368,6 +370,8 @@ MODULE_SCOPE int	    ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas,
 				    Tk_PathItemEx *itemExPtr, int mask);
 MODULE_SCOPE void	    PathGradientChangedProc(ClientData clientData, int flags);
 MODULE_SCOPE void	    PathStyleChangedProc(ClientData clientData, int flags);
+
+MODULE_SCOPE void	    CanvasGradientsFree(TkPathCanvas *canvasPtr);
 
 /*
  * Standard item types provided by Tk:
