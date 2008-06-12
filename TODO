@@ -56,3 +56,10 @@ TODO and undecided for tkpath
    to their defaults and clears the mask.
 
  o Write all test code.
+
+ o Add clipping. Use an extra item option '-clipto idOrTags' where the joint
+   set of all idOrTags form the clipping region. It should be possible to use
+   items not on the display, and perhaps the -state option can be used to hide items.
+
+
+
