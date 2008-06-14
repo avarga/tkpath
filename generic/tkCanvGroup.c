@@ -129,7 +129,7 @@ CreateGroup(Tcl_Interp *interp,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&itemExPtr->style);
+    TkPathInitStyle(&itemExPtr->style);
     itemExPtr->canvas = canvas;
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
@@ -208,15 +208,18 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
+	stylePtr->mask = mask;
     }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
     
     /*
      * @@@ TODO: When the style inheritance has been implemented we must
-     *           notify all children to update theirself.
+     *           notify all children to update themself.
      */
-    
+    if (!error) {
+	EventuallyRedrawGroupItem(canvas, itemPtr);
+    }
 #if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
@@ -303,7 +306,7 @@ ScaleGroup(Tk_PathCanvas canvas,
 	Tk_PathItem *itemPtr, double originX, double originY,
 	double scaleX, double scaleY)
 {
-    TkPathCanvasScaleGroup(canvas, itemPtr, originX, originY, scaleX, scaleY);
+    CanvasScaleGroup(canvas, itemPtr, originX, originY, scaleX, scaleY);
     /* @@@ TODO: we could handle bbox ourselves? */
 }
 
@@ -311,7 +314,7 @@ static void
 TranslateGroup(Tk_PathCanvas canvas,
 	Tk_PathItem *itemPtr, double deltaX, double deltaY)
 {
-    TkPathCanvasTranslateGroup(canvas, itemPtr, deltaX, deltaY);
+    CanvasTranslateGroup(canvas, itemPtr, deltaX, deltaY);
     /* @@@ TODO: we could handle bbox ourselves? */
 }
 
@@ -352,4 +355,5 @@ TkPathCanvasUpdateGroupBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
 	groupPtr->flags &= ~GROUP_FLAG_DIRTY_BBOX;
     }
 }
+
 

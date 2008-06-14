@@ -346,14 +346,12 @@ MODULE_SCOPE Tk_PathTags *  TkPathAllocTagsFromObj(Tcl_Interp *interp, Tcl_Obj *
 MODULE_SCOPE int	    TkPathCanvasFindGroup(Tcl_Interp *interp, Tk_PathCanvas canvas, 
 				Tcl_Obj *parentObj, Tk_PathItem **parentPtrPtr);
 MODULE_SCOPE void	    TkPathCanvasSetParent(Tk_PathItem *parentPtr, Tk_PathItem *itemPtr);
+MODULE_SCOPE int	    TkPathCanvasGetDepth(Tk_PathItem *itemPtr);
+MODULE_SCOPE Tk_PathStyle   TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags);
 MODULE_SCOPE Tcl_HashTable *TkPathCanvasGradientTable(Tk_PathCanvas canvas);
 MODULE_SCOPE Tcl_HashTable *TkPathCanvasStyleTable(Tk_PathCanvas canvas);
 MODULE_SCOPE Tk_PathState   TkPathCanvasState(Tk_PathCanvas canvas);
 MODULE_SCOPE Tk_PathItem *  TkPathCanvasCurrentItem(Tk_PathCanvas canvas);
-MODULE_SCOPE void	    TkPathCanvasTranslateGroup(Tk_PathCanvas canvas, 
-				Tk_PathItem *itemPtr, double deltaX, double deltaY);
-MODULE_SCOPE void	    TkPathCanvasScaleGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
-				double originX, double originY, double scaleX, double scaleY);
 MODULE_SCOPE void	    TkPathCanvasGroupBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 				int *x1Ptr, int *y1Ptr, int *x2Ptr, int *y2Ptr);
 MODULE_SCOPE void	    TkPathCanvasUpdateGroupBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr);
@@ -361,6 +359,11 @@ MODULE_SCOPE void	    TkPathCanvasSetGroupDirtyBbox(Tk_PathItem *itemPtr);
 MODULE_SCOPE Tk_PathItem *  TkPathCanvasItemIteratorNext(Tk_PathItem *itemPtr);
 MODULE_SCOPE Tk_PathItem *  TkPathCanvasItemIteratorPrev(Tk_PathItem *itemPtr);
 	
+MODULE_SCOPE void	    EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr);
+MODULE_SCOPE void	    CanvasTranslateGroup(Tk_PathCanvas canvas, 
+				Tk_PathItem *itemPtr, double deltaX, double deltaY);
+MODULE_SCOPE void	    CanvasScaleGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+				double originX, double originY, double scaleX, double scaleY);
 MODULE_SCOPE int	    CanvasGradientObjCmd(Tcl_Interp* interp, TkPathCanvas *canvasPtr, 
 				int objc, Tcl_Obj* CONST objv[]);
 MODULE_SCOPE int	    CanvasStyleObjCmd(Tcl_Interp* interp, TkPathCanvas *canvasPtr, 

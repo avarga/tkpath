@@ -155,7 +155,7 @@ CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&itemExPtr->style);
+    TkPathInitStyle(&itemExPtr->style);
     itemExPtr->canvas = canvas;
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
@@ -276,6 +276,7 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
+	stylePtr->mask = mask;
     }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
@@ -339,14 +340,11 @@ DisplayPrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
     PathAtom *atomPtr;            
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
     
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     atomPtr = MakePathAtoms(prectPtr);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, 
 	    &style, &m, &prectPtr->rect);

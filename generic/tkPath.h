@@ -312,7 +312,7 @@ void	TkPathRestoreState(TkPathContext ctx);
  * Utilities for creating and deleting Tk_PathStyles.
  */
  
-void 	TkPathCreateStyle(Tk_PathStyle *style);
+void 	TkPathInitStyle(Tk_PathStyle *style);
 void 	TkPathDeleteStyle(Tk_PathStyle *style);
 int	TkPathConfigStyle(Tcl_Interp* interp, Tk_PathStyle *stylePtr, int objc, Tcl_Obj* CONST objv[]);
 

@@ -201,7 +201,7 @@ CreatePath(
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&itemExPtr->style);
+    TkPathInitStyle(&itemExPtr->style);
     itemExPtr->canvas = canvas;
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
@@ -370,6 +370,7 @@ ConfigurePath(
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
+	stylePtr->mask = mask;
     }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
@@ -526,14 +527,11 @@ DisplayPath(
     int width, int height)  /* must be redisplayed (not used). */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &pathPtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
     
     if (pathPtr->pathLen > 2) {
-        if (itemExPtr->styleInst != NULL) {
-            TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-        }    
+        style = TkPathCanvasInheritStyle(itemPtr, 0);
         TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, pathPtr->atomPtr, 
                 &style, &m, &pathPtr->bbox);
     }

@@ -207,7 +207,7 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&itemExPtr->style);
+    TkPathInitStyle(&itemExPtr->style);
     itemExPtr->canvas = canvas;
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
@@ -338,6 +338,7 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
+	stylePtr->mask = mask;
     }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
@@ -390,16 +391,11 @@ DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Dra
         int x, int y, int width, int height)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
     PathRect bbox;
     PathAtom *atomPtr;
     EllipseAtom ellAtom;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }    
+    Tk_PathStyle style;    
     
     /* 
      * We create the atom on the fly to save some memory.
@@ -413,6 +409,7 @@ DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Dra
     ellAtom.ry = ellPtr->ry;
     
     bbox = GetBareBbox(ellPtr);
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &bbox);
 }
 

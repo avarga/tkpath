@@ -277,9 +277,7 @@ CreateText(
      */
 
     textPtr->textInfoPtr = Tk_PathCanvasGetTextInfo(canvas);
-
     textPtr->insertPos	= 0;
-
     textPtr->anchor	= TK_ANCHOR_CENTER;
     textPtr->tsoffsetPtr = NULL;
     textPtr->color	= NULL;

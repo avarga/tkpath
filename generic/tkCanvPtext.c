@@ -180,7 +180,7 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&itemExPtr->style);
+    TkPathInitStyle(&itemExPtr->style);
     itemExPtr->canvas = canvas;
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
@@ -359,6 +359,7 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
+	stylePtr->mask = mask;
     }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
@@ -414,17 +415,14 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
     TMatrix m = GetCanvasTMatrix(canvas);
     TkPathContext ctx;
     
     if (ptextPtr->utf8Obj == NULL) {
         return;
     }
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
     TkPathPushTMatrix(ctx, &m);
     if (style.matrixPtr != NULL) {

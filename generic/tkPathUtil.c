@@ -728,6 +728,52 @@ PathInverseTMatrix(TMatrix *m, TMatrix *mi)
     mi->ty = (m->b * m->tx - m->a * m->ty)/det;
 }
 
+void
+MMulTMatrix(TMatrix *m, TMatrix *mx)
+{
+    if (m == NULL) {
+        return;
+    }
+    if (mx == NULL) {
+        // WRONG!!!
+        mx = (TMatrix *) ckalloc(sizeof(TMatrix));
+    } else {
+        TMatrix tmp = *mx;
+        TMatrix *p = mx;
+        
+        p->a  = m->a*tmp.a  + m->b*tmp.c;
+        p->b  = m->a*tmp.b  + m->b*tmp.d;
+        p->c  = m->c*tmp.a  + m->d*tmp.c;
+        p->d  = m->c*tmp.b  + m->d*tmp.d;
+        p->tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
+        p->ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
+    }
+}
+#if 0
+void
+TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+
+    if (m == NULL) {
+        return;
+    }
+    if (context->m == NULL) {
+        context->m = (TMatrix *) ckalloc(sizeof(TMatrix));
+        *(context->m) = *m;
+    } else {
+        TMatrix tmp = *(context->m);
+        TMatrix *p = context->m;
+        
+        p->a  = m->a*tmp.a  + m->b*tmp.c;
+        p->b  = m->a*tmp.b  + m->b*tmp.d;
+        p->c  = m->c*tmp.a  + m->d*tmp.c;
+        p->d  = m->c*tmp.b  + m->d*tmp.d;
+        p->tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
+        p->ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
+    }
+}
+#endif
 /*
  *----------------------------------------------------------------------
  *

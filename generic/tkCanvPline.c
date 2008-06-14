@@ -130,7 +130,7 @@ CreatePline(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPt
      * allow proper cleanup after errors during the the remainder of
      * this procedure.
      */
-    TkPathCreateStyle(&itemExPtr->style);
+    TkPathInitStyle(&itemExPtr->style);
     itemExPtr->canvas = canvas;
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
@@ -251,6 +251,7 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
     Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
+    Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
     //Tk_PathState state;
     Tk_SavedOptions savedOptions;
@@ -280,6 +281,7 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
+	stylePtr->mask = mask;
     }
     
 #if 0	    // From old code. Needed?
@@ -330,22 +332,18 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
     TMatrix m = GetCanvasTMatrix(canvas);
     PathRect r;
     PathAtom *atomPtr;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
     
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
     r.x1 = MIN(plinePtr->coords.x1, plinePtr->coords.x2);
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
 
     atomPtr = MakePathAtoms(plinePtr);
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &r);
     TkPathFreeAtoms(atomPtr);
 }

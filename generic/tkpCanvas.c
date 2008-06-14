@@ -308,7 +308,6 @@ static int		ItemCreate(Tcl_Interp *interp, TkPathCanvas *canvasPtr,
 				int objc, Tcl_Obj *CONST objv[]);
 static int		ItemGetNumTags(Tk_PathItem *itemPtr);
 static void		SetAncestorsDirtyBbox(Tk_PathItem *itemPtr);
-static int		GetDepth(Tk_PathItem *itemPtr);
 			    
 static void		DebugGetItemInfo(Tk_PathItem *itemPtr, char *s);
 
@@ -1239,7 +1238,7 @@ CanvasWidgetCmd(
 	}    
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
  	if (itemPtr != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(GetDepth(itemPtr)));
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(TkPathCanvasGetDepth(itemPtr)));
 	} else {
 	    Tcl_AppendResult(interp, "tag \"", Tcl_GetString(objv[2]),
 		    "\" doesn't match any items", NULL);
@@ -3048,41 +3047,24 @@ TkPathCanvasFindGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     return result;
 }
 
-/* TkPathCanvasGradientTable: this is just an accessor function to hide
-   the internals of the TkPathCanvas */
-   
-Tcl_HashTable *
-TkPathCanvasGradientTable(Tk_PathCanvas canvas)
+void
+EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
 {
-    return &((TkPathCanvas *)canvas)->gradientTable;
-}
-
-Tcl_HashTable *
-TkPathCanvasStyleTable(Tk_PathCanvas canvas)
-{
-    return &((TkPathCanvas *)canvas)->styleTable;
-}
-
-Tk_PathState
-TkPathCanvasState(Tk_PathCanvas canvas)
-{
-    return ((TkPathCanvas *)canvas)->canvas_state;
-}
-
-Tk_PathItem *
-TkPathCanvasCurrentItem(Tk_PathCanvas canvas)
-{
-    return ((TkPathCanvas *)canvas)->currentItemPtr;
-}
-
-Tk_PathItem *
-TkPathCanvasParentItem(Tk_PathItem *itemPtr)
-{
-    return itemPtr->parentPtr;
+    Tk_PathItem *walkPtr;
+    
+    for (walkPtr = itemPtr->firstChildPtr; walkPtr != NULL; walkPtr = walkPtr->nextPtr) {
+	EventuallyRedrawItem(canvas, walkPtr);
+	if (walkPtr->typePtr == &tkGroupType) {
+	    /*
+	     * Call ourself recursively for each group.
+	     */
+	    EventuallyRedrawGroupItem(canvas, itemPtr);
+	}
+    }
 }
 
 void	    
-TkPathCanvasTranslateGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+CanvasTranslateGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	double deltaX, double deltaY)
 {
     TkPathCanvas *canvasPtr = (TkPathCanvas *) canvas;
@@ -3101,7 +3083,7 @@ TkPathCanvasTranslateGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 }
 
 void	    
-TkPathCanvasScaleGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+CanvasScaleGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	double originX, double originY, double scaleX, double scaleY)
 {
     TkPathCanvas *canvasPtr = (TkPathCanvas *) canvas;
@@ -3573,19 +3555,6 @@ ItemDelete(TkPathCanvas *canvasPtr, Tk_PathItem *itemPtr)
 	canvasPtr->hotPtr = NULL;
     }
     ckfree((char *) itemPtr);
-}
-
-static int
-GetDepth(Tk_PathItem *itemPtr)
-{
-    int depth = 0;
-    Tk_PathItem *walkPtr = itemPtr;
-
-    while (walkPtr->parentPtr != NULL) {
-	depth++;
-	walkPtr = walkPtr->parentPtr;
-    }
-    return depth;
 }
 
 static void

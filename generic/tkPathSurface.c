@@ -539,7 +539,7 @@ SurfaceCreateEllipse(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int 
 
     ellipse.styleObj = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(style);
+    TkPathInitStyle(style);
     if (GetPointCoords(interp, center, i-3, objv+3) != TCL_OK) {
         goto bail;
     }
@@ -615,7 +615,7 @@ SurfaceCreatePath(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj
     int			result = TCL_OK;
     
     item.styleObj = NULL;
-    TkPathCreateStyle(&item.style);
+    TkPathInitStyle(&item.style);
     if (TkPathParseToAtoms(interp, objv[3], &atomPtr, &len) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -689,7 +689,7 @@ SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
 
     item.imageName = NULL;
     item.matrixPtr = NULL;
-    TkPathCreateStyle(&style);
+    TkPathInitStyle(&style);
     i = GetFirstOptionIndex(objc, objv);
     if (GetPointCoords(interp, point, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
@@ -743,7 +743,7 @@ SurfaceCreatePline(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     
     item.styleObj = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(&item.style);
+    TkPathInitStyle(&item.style);
     if (GetTwoPointsCoords(interp, points, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -803,7 +803,7 @@ SurfaceCreatePpoly(Tcl_Interp* interp, PathSurface *surfacePtr, int type, int ob
 
     item.styleObj = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(style);
+    TkPathInitStyle(style);
     if (MakePolyAtoms(interp, (type == kPathSurfaceItemPolyline) ? 0 : 1, 
             i-3, objv+3, &atomPtr) != TCL_OK) {
         return TCL_ERROR;
@@ -876,7 +876,7 @@ SurfaceCreatePrect(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
 
     prect.styleObj = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(style);
+    TkPathInitStyle(style);
     if (GetTwoPointsCoords(interp, points, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -967,7 +967,7 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     item.utf8 = NULL;
     item.textStyle.fontFamily = NULL;
     i = GetFirstOptionIndex(objc, objv);
-    TkPathCreateStyle(&item.style);
+    TkPathInitStyle(&item.style);
     if (GetPointCoords(interp, point, i-3, objv+3) != TCL_OK) {
         return TCL_ERROR;
     }

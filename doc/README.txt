@@ -126,6 +126,7 @@ item using the -parent option.
 	New items:
 		circle
 		ellipse
+		group
 		path
 		pimage
 		pline
@@ -180,7 +181,9 @@ item using the -parent option.
    difference. The root item is a special group item with id 0 and tags
    equal to "root". The root group can be configured like other items, but
    its -tags and -parent options are read only.
-   Currently no option inheritance is implemented. TODO.
+   Options set in a group are inherited by its children but they never override
+   options explicitly set in children. This also applies to group items configured
+   with a -style.
 
    .c create group ?fillOptions strokeOptions genericOptions?
 

@@ -584,7 +584,7 @@ PathStyleCreate(Tcl_Interp *interp, Tk_Window tkwin, int objc, Tcl_Obj * CONST o
     memset(stylePtr, '\0', sizeof(Tk_PathStyle));
 
     /* Fill in defaults. */
-    TkPathCreateStyle(stylePtr);
+    TkPathInitStyle(stylePtr);
     
     /*
      * Create the option table for this class.  If it has already
@@ -1052,7 +1052,7 @@ TkPathStyleMergeStyles(
 /*
  *--------------------------------------------------------------
  *
- * TkPathCreateStyle
+ * TkPathInitStyle
  *
  *	This procedure initializes the Tk_PathStyle structure
  *	with default values.
@@ -1067,7 +1067,7 @@ TkPathStyleMergeStyles(
  */
 
 void 
-TkPathCreateStyle(Tk_PathStyle *style)
+TkPathInitStyle(Tk_PathStyle *style)
 {
     memset(style, '\0', sizeof(Tk_PathStyle));
 

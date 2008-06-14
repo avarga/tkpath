@@ -319,7 +319,7 @@ Tk_PathCanvasSetStippleOrigin(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_PathCanvasSetOffset--
+ * Tk_PathCanvasSetOffset --
  *
  *	This function sets the stipple offset in a graphics context so that
  *	stipples drawn with the GC will line up with other stipples with the
@@ -359,7 +359,119 @@ Tk_PathCanvasSetOffset(
 	XSetTSOrigin(canvasPtr->display, gc, x, y);
     }
 }
-
+
+int
+TkPathCanvasGetDepth(Tk_PathItem *itemPtr)
+{
+    int depth = 0;
+    Tk_PathItem *walkPtr = itemPtr;
+
+    while (walkPtr->parentPtr != NULL) {
+	depth++;
+	walkPtr = walkPtr->parentPtr;
+    }
+    return depth;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkPathCanvasInheritStyle --
+ *
+ *	This function returns the style which is inherited from the
+ *      parents of the itemPtr using cascading from the root item.
+ *
+ * Results:
+ *	Tk_PathStyle.
+ *
+ * Side effects:
+ *	?
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tk_PathStyle
+TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
+{
+    int depth, i;
+    Tk_PathItem *walkPtr;
+    Tk_PathItemEx **parents;
+    Tk_PathStyle style;
+    Tk_PathItemEx *itemExPtr;
+    
+    depth = TkPathCanvasGetDepth(itemPtr);
+    parents = (Tk_PathItemEx **) ckalloc(depth*sizeof(Tk_PathItemEx *));
+
+    walkPtr = itemPtr, i = 0;
+    while (walkPtr->parentPtr != NULL) {
+	parents[i] = (Tk_PathItemEx *) walkPtr->parentPtr;
+	walkPtr = walkPtr->parentPtr, i++;
+    }
+    
+    /*
+     * Cascade the style from the root item to the closest parent.
+     */
+    itemExPtr = parents[depth-1];
+    style = itemExPtr->style;
+    
+    for (i = depth-1; i >= 0; i--) {
+	itemExPtr = parents[i];
+	
+	/* The order of these two merges decides which take precedence. */
+	if (i < depth-1) {
+	    TkPathStyleMergeStyles(&itemExPtr->style, &style, 0);
+	}
+	if (itemExPtr->styleInst != NULL) {
+	    TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+	}    
+    }
+    
+    /*
+     * Merge the parents style with the actual items style.
+     * The order of these two merges decides which take precedence.
+     */
+    itemExPtr = (Tk_PathItemEx *) itemPtr;
+    TkPathStyleMergeStyles(&itemExPtr->style, &style, 0);
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+    }    
+    ckfree((char *) parents);
+    return style;
+}
+
+/* TkPathCanvasGradientTable etc.: this is just accessor functions to hide
+   the internals of the TkPathCanvas */
+   
+Tcl_HashTable *
+TkPathCanvasGradientTable(Tk_PathCanvas canvas)
+{
+    return &((TkPathCanvas *)canvas)->gradientTable;
+}
+
+Tcl_HashTable *
+TkPathCanvasStyleTable(Tk_PathCanvas canvas)
+{
+    return &((TkPathCanvas *)canvas)->styleTable;
+}
+
+Tk_PathState
+TkPathCanvasState(Tk_PathCanvas canvas)
+{
+    return ((TkPathCanvas *)canvas)->canvas_state;
+}
+
+Tk_PathItem *
+TkPathCanvasCurrentItem(Tk_PathCanvas canvas)
+{
+    return ((TkPathCanvas *)canvas)->currentItemPtr;
+}
+
+Tk_PathItem *
+TkPathCanvasParentItem(Tk_PathItem *itemPtr)
+{
+    return itemPtr->parentPtr;
+}
+
 /*
  *----------------------------------------------------------------------
  *
