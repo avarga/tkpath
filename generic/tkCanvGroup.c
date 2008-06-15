@@ -214,8 +214,7 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
     
     /*
-     * @@@ TODO: When the style inheritance has been implemented we must
-     *           notify all children to update themself.
+     * We must notify all children to update themself.
      */
     if (!error) {
 	EventuallyRedrawGroupItem(canvas, itemPtr);

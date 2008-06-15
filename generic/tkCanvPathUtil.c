@@ -2636,6 +2636,11 @@ ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItemEx *itemExP
 	    return TCL_ERROR;
 	}
 	TkPathCanvasSetParent(parentPtr, itemPtr);
+    } else if ((itemPtr->id != 0) && (itemPtr->parentPtr == NULL)) {
+	/*
+	 * If item not root and parent not set we must set it to root by default.
+	 */
+	CanvasSetParentToRoot(itemPtr);
     }
     
     /*
@@ -2691,8 +2696,9 @@ ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItemEx *itemExP
 void	
 PathGradientChangedProc(ClientData clientData, int flags)
 {
-    Tk_PathItemEx *itemPtr = (Tk_PathItemEx *)clientData;
-    Tk_PathStyle *stylePtr = &(itemPtr->style);
+    Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *)clientData;
+    Tk_PathItem *itemPtr = (Tk_PathItem *) itemExPtr;
+    Tk_PathStyle *stylePtr = &(itemExPtr->style);
         
     if (flags) {
 	if (flags & PATH_GRADIENT_FLAG_DELETE) {
@@ -2701,27 +2707,36 @@ PathGradientChangedProc(ClientData clientData, int flags)
 	    Tcl_DecrRefCount(stylePtr->fillObj);
 	    stylePtr->fillObj = NULL;
 	}
-	Tk_PathCanvasEventuallyRedraw(itemPtr->canvas,
-		itemPtr->header.x1, itemPtr->header.y1,
-		itemPtr->header.x2, itemPtr->header.y2);
+	if (itemPtr->typePtr == &tkGroupType) {
+	    EventuallyRedrawGroupItem(itemExPtr->canvas, itemPtr);
+	} else {
+	    Tk_PathCanvasEventuallyRedraw(itemExPtr->canvas,
+		    itemExPtr->header.x1, itemExPtr->header.y1,
+		    itemExPtr->header.x2, itemExPtr->header.y2);
+	    }
     }
 }
 
 void	
 PathStyleChangedProc(ClientData clientData, int flags)
 {
-    Tk_PathItemEx *itemPtr = (Tk_PathItemEx *)clientData;
+    Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *)clientData;
+    Tk_PathItem *itemPtr = (Tk_PathItem *) itemExPtr;
         
     if (flags) {
 	if (flags & PATH_STYLE_FLAG_DELETE) {
-	    TkPathFreeStyle(itemPtr->styleInst);	
-	    itemPtr->styleInst = NULL;
-	    Tcl_DecrRefCount(itemPtr->styleObj);
-	    itemPtr->styleObj = NULL;
+	    TkPathFreeStyle(itemExPtr->styleInst);	
+	    itemExPtr->styleInst = NULL;
+	    Tcl_DecrRefCount(itemExPtr->styleObj);
+	    itemExPtr->styleObj = NULL;
 	}
-	Tk_PathCanvasEventuallyRedraw(itemPtr->canvas,
-		itemPtr->header.x1, itemPtr->header.y1,
-		itemPtr->header.x2, itemPtr->header.y2);
+	if (itemPtr->typePtr == &tkGroupType) {
+	    EventuallyRedrawGroupItem(itemExPtr->canvas, itemPtr);
+	} else {
+	    Tk_PathCanvasEventuallyRedraw(itemExPtr->canvas,
+		    itemExPtr->header.x1, itemExPtr->header.y1,
+		    itemExPtr->header.x2, itemExPtr->header.y2);
+	    }
     }
 }
 

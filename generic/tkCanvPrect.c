@@ -219,6 +219,7 @@ void
 ComputePrectBbox(Tk_PathCanvas canvas, PrectItem *prectPtr)
 {
     Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
+    Tk_PathItem *itemPtr = &itemExPtr->header;
     Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     Tk_PathState state = itemExPtr->header.state;
 
@@ -230,10 +231,7 @@ ComputePrectBbox(Tk_PathCanvas canvas, PrectItem *prectPtr)
         itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     prectPtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &prectPtr->rect);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &prectPtr->totalBbox);
 }
@@ -363,10 +361,8 @@ PrectToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
     double width, dist;
     int rectiLinear = 0;
     int filled;
-    
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }
+
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     filled = HaveAnyFillFromPathColor(style.fill);
     width = 0.0;
     if (style.strokeColor != NULL) {
@@ -415,9 +411,7 @@ PrectToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
     int rectiLinear = 0;
     int filled;
 
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     filled = HaveAnyFillFromPathColor(style.fill);
     width = 0.0;
     if (style.strokeColor != NULL) {

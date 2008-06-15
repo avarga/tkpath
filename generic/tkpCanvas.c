@@ -2881,6 +2881,38 @@ EventuallyRedrawItem(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * EventuallyRedrawGroupItem --
+ *
+ *	Schedules all children of a group for redisplay in a recursive way.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A number of items scheduled for redisplay.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
+{
+    Tk_PathItem *walkPtr;
+    
+    for (walkPtr = itemPtr->firstChildPtr; walkPtr != NULL; walkPtr = walkPtr->nextPtr) {
+	EventuallyRedrawItem(canvas, walkPtr);
+	if (walkPtr->typePtr == &tkGroupType) {
+	    /*
+	     * Call ourself recursively for each group.
+	     */
+	    EventuallyRedrawGroupItem(canvas, itemPtr);
+	}
+    }
+}
+
+/*
  *--------------------------------------------------------------
  *
  * Tk_PathCreateItemType --
@@ -2998,6 +3030,15 @@ TkPathCanvasSetParent(Tk_PathItem *parentPtr, Tk_PathItem *itemPtr)
     Tcl_SetIntObj(itemPtr->parentObj, parentPtr->id);
 }
 
+void
+CanvasSetParentToRoot(Tk_PathItem *itemPtr)
+{
+    Tk_PathItemEx *itemExPtr = (Tk_PathItemEx *)itemPtr;
+    Tk_PathCanvas canvas = itemExPtr->canvas;
+    TkPathCanvas *canvasPtr = (TkPathCanvas *) canvas;
+    TkPathCanvasSetParent(canvasPtr->rootItemPtr, itemPtr);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -3045,22 +3086,6 @@ TkPathCanvasFindGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
 	TagSearchDestroy(searchPtr);
     }
     return result;
-}
-
-void
-EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
-{
-    Tk_PathItem *walkPtr;
-    
-    for (walkPtr = itemPtr->firstChildPtr; walkPtr != NULL; walkPtr = walkPtr->nextPtr) {
-	EventuallyRedrawItem(canvas, walkPtr);
-	if (walkPtr->typePtr == &tkGroupType) {
-	    /*
-	     * Call ourself recursively for each group.
-	     */
-	    EventuallyRedrawGroupItem(canvas, itemPtr);
-	}
-    }
 }
 
 void	    

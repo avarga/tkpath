@@ -307,8 +307,7 @@ typedef struct TkPathCanvas {
 #define FORCE_REDRAW		8
 
 /*
- * @@@ TODO:
- * This is an extended item record that could be used for the new
+ * This is an extended item record that is used for the new
  * path based items to allow more generic code to be used for them
  * since all of them (?) anyhow include a Tk_PathStyle record.
  */
@@ -369,6 +368,7 @@ MODULE_SCOPE int	    CanvasGradientObjCmd(Tcl_Interp* interp, TkPathCanvas *canv
 MODULE_SCOPE int	    CanvasStyleObjCmd(Tcl_Interp* interp, TkPathCanvas *canvasPtr, 
 				int objc, Tcl_Obj* CONST objv[]);
 
+MODULE_SCOPE void	    CanvasSetParentToRoot(Tk_PathItem *itemPtr);
 MODULE_SCOPE int	    ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, 
 				    Tk_PathItemEx *itemExPtr, int mask);
 MODULE_SCOPE void	    PathGradientChangedProc(ClientData clientData, int flags);
