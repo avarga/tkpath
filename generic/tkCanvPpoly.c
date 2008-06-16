@@ -332,7 +332,7 @@ ConfigurePpoly(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask = mask;
+	stylePtr->mask |= mask;
     }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     
@@ -390,6 +390,7 @@ DisplayPpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, ppolyPtr->atomPtr, &style,
             &m, &ppolyPtr->bbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static double	

@@ -309,6 +309,22 @@ item using the -parent option.
        ?-fontfamily fontname -fontsize float?
        ?fillOptions strokeOptions genericOptions?
 
+ o The Matrix
+
+    Each tkpath item has a -matrix option which defines the local coordinate
+    system for that item. It is defined as a double list {{a b} {c d} {tx ty}}
+    (better with a flat list {a b c d tx ty} ?) where a simple scaling
+    is {{sx 0} {0 sy} {0 0}}, a translation {{1 0} {0 1} {tx ty}}, and a 
+    rotation around origin with an angle 'a' is {{cos(a) sin(a)} {-sin(a) cos{a}} {0 0}}.
+    The simplest way to interpret this is to design an extra coordinate
+    system according to the matrix, and then draw the item in that system.
+
+    Inheritance works differently for the -matrix option than for the other
+    options which are just overwritten. Instead any set -matrix option
+    starting from the root, via any number of group items, to the actual
+    item being displayed, are nested. That is, any defined matrices from
+    the root down define a sequence of coordinate transformations.
+
  o Antialiasing, if available, is controlled by the variable tkp::antialias.
     Switch on with:
     set tkp::antialias 1

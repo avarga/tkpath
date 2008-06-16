@@ -359,7 +359,7 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask = mask;
+	stylePtr->mask |= mask;
     }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
@@ -436,6 +436,7 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
             Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     TkPathEndPath(ctx);
     TkPathFree(ctx);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static double	

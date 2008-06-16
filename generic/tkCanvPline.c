@@ -281,7 +281,7 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask = mask;
+	stylePtr->mask |= mask;
     }
     
 #if 0	    // From old code. Needed?
@@ -346,6 +346,7 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &r);
     TkPathFreeAtoms(atomPtr);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static double	

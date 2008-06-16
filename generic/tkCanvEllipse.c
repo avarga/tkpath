@@ -2,7 +2,7 @@
  * tkCanvEllipse.c --
  *
  *	This file implements the circle and ellipse canvas items modelled after its
- *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
+ *	SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
  * Copyright (c) 2007-2008  Mats Bengtsson
  *
@@ -236,9 +236,9 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
             break;
         }
     }
-    if (EllipseCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    if (CoordsForPointItems(interp, canvas, ellPtr->center, i, objv) != TCL_OK) {
         goto error;
-    }
+    }    
     if (ConfigureEllipse(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
         ComputeEllipseBbox(canvas, ellPtr);
         return TCL_OK;
@@ -279,7 +279,8 @@ static void
 ComputeEllipseBbox(Tk_PathCanvas canvas, EllipseItem *ellPtr)
 {
     Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathItem *itemPtr = &itemExPtr->header;
+    Tk_PathStyle style;
     Tk_PathState state = itemExPtr->header.state;
     PathRect totalBbox, bbox;
 
@@ -291,13 +292,11 @@ ComputeEllipseBbox(Tk_PathCanvas canvas, EllipseItem *ellPtr)
         itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     bbox = GetBareBbox(ellPtr);
     totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &bbox);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &totalBbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static int		
@@ -338,7 +337,7 @@ ConfigureEllipse(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask = mask;
+	stylePtr->mask |= mask;
     }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
@@ -411,29 +410,28 @@ DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Dra
     bbox = GetBareBbox(ellPtr);
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &bbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static double	
 EllipseToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    TMatrix *mPtr = style.matrixPtr;
+    Tk_PathStyle style;
+    TMatrix *mPtr;
     double bareOval[4];
     double width, dist;
     int rectiLinear = 0;
     int haveDist = 0;
     int filled;
     
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     filled = HaveAnyFillFromPathColor(style.fill);
     width = 0.0;
     if (style.strokeColor != NULL) {
         width = style.strokeWidth;
     }
+    mPtr = style.matrixPtr;
     if (mPtr == NULL) {
         rectiLinear = 1;
         bareOval[0] = ellPtr->center[0] - ellPtr->rx;
@@ -488,6 +486,7 @@ EllipseToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
                     kPathNumSegmentsEllipse+1, pointPtr);
         }
     }
+    TkPathCanvasFreeInheritedStyle(&style);
     return dist;
 }
 
@@ -495,20 +494,18 @@ static int
 EllipseToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     EllipseItem *ellPtr = (EllipseItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ellPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    TMatrix *mPtr = style.matrixPtr;
+    Tk_PathStyle style;
+    TMatrix *mPtr;
     double bareOval[4], halfWidth;
     int rectiLinear = 0;
     int result;
     
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
     halfWidth = 0.0;
     if (style.strokeColor != NULL) {
         halfWidth = style.strokeWidth/2.0;
     }
+    mPtr = style.matrixPtr;
     if (mPtr == NULL) {
         rectiLinear = 1;
         bareOval[0] = ellPtr->center[0] - ellPtr->rx;
@@ -564,7 +561,7 @@ EllipseToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
                     && ((xDelta1 + yDelta2) < 1.0)
                     && ((xDelta2 + yDelta1) < 1.0)
                     && ((xDelta2 + yDelta2) < 1.0)) {
-                return -1;
+                result = -1;
             }
         }
     } else {
@@ -581,9 +578,10 @@ EllipseToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
         ellAtom.cy = ellPtr->center[1];
         ellAtom.rx = ellPtr->rx;
         ellAtom.ry = ellPtr->ry;
-        return GenericPathToArea(canvas, itemPtr, &style, atomPtr, 
+        result = GenericPathToArea(canvas, itemPtr, &style, atomPtr, 
                 kPathNumSegmentsEllipse+1, areaPtr);
     }
+    TkPathCanvasFreeInheritedStyle(&style);
     return result;
 }
 

@@ -1,7 +1,7 @@
 /*
  * tkPathUtil.h --
  *
- *		This file contains support functions for tkpath.
+ *	This file contains support functions for tkpath.
  *
  * Copyright (c) 2005-2008  Mats Bengtsson
  *
@@ -19,13 +19,13 @@
  *
  * TkPathMakePrectAtoms --
  *
- *		Makes the path atoms for a rounded rectangle, prect.
+ *	Makes the path atoms for a rounded rectangle, prect.
  *
  * Results:
- *		None. Path atoms in atomPtrPtr.
+ *	None. Path atoms in atomPtrPtr.
  *
  * Side effects:
- *		Path atom memory allocated.
+ *	Path atom memory allocated.
  *
  *--------------------------------------------------------------
  */
@@ -87,29 +87,29 @@ TkPathMakePrectAtoms(double *pointsPtr, double rx, double ry, PathAtom **atomPtr
  *
  * TkPathDrawPath --
  *
- *		This procedure is invoked to draw a line item in a given
- *		drawable.
+ *	This procedure is invoked to draw a line item in a given
+ *	drawable.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		ItemPtr is drawn in drawable using the transformation
- *		information in canvas.
+ *	ItemPtr is drawn in drawable using the transformation
+ *	information in canvas.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkPathDrawPath(
-    Tk_Window tkwin,		/* Tk window. */
-    Drawable drawable,		/* Pixmap or window in which to draw
+    Tk_Window tkwin,        /* Tk window. */
+    Drawable drawable,      /* Pixmap or window in which to draw
                              * item. */
-    PathAtom *atomPtr,		/* The actual path as a linked list
+    PathAtom *atomPtr,      /* The actual path as a linked list
                              * of PathAtoms. */
-    Tk_PathStyle *stylePtr,	/* The paths style. */
-    TMatrix *mPtr,			/* Typically used for canvas offsets. */
-    PathRect *bboxPtr)		/* The bare (untransformed) bounding box 
+    Tk_PathStyle *stylePtr, /* The paths style. */
+    TMatrix *mPtr,          /* Typically used for canvas offsets. */
+    PathRect *bboxPtr)      /* The bare (untransformed) bounding box 
                              * (assuming zero stroke width) */
 {
     TkPathContext context;
@@ -139,13 +139,13 @@ TkPathDrawPath(
  *
  * TkPathPaintPath --
  *
- *		This procedure is invoked to paint a path in a given context.
+ *	This procedure is invoked to paint a path in a given context.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		Any path defined in the context is painted.
+ *	Any path defined in the context is painted.
  *
  *--------------------------------------------------------------
  */
@@ -153,9 +153,9 @@ TkPathDrawPath(
 void
 TkPathPaintPath(
     TkPathContext context, 
-    PathAtom *atomPtr,		/* The actual path as a linked list
+    PathAtom *atomPtr,      /* The actual path as a linked list
                              * of PathAtoms. */
-    Tk_PathStyle *stylePtr,	/* The paths style. */
+    Tk_PathStyle *stylePtr, /* The paths style. */
     PathRect *bboxPtr)
 {
     TkPathGradientMaster *gradientPtr = GetGradientMasterFromPathColor(stylePtr->fill);
@@ -229,17 +229,17 @@ TkPathNewPathColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *nameObj)
  *
  * TkPathGetPathColor --
  *
- *		Parses a string in nameObj to either a valid XColor or
+ *	Parses a string in nameObj to either a valid XColor or
  *      looks up a gradient name for the hash table tablePtr.
  *      Makes a new TkPathColor struct from a string value.
  *      Like Tk_GetImage() but for TkPathColor instead of Tk_Image.
  *
  * Results:
- *		Pointer to a TkPathColor struct or returns NULL on error 
+ *	Pointer to a TkPathColor struct or returns NULL on error 
  *      and leaves an error message.
  *
  * Side effects:
- *		TkPathColor malloced if OK.
+ *	TkPathColor malloced if OK.
  *
  *--------------------------------------------------------------
  */
@@ -300,13 +300,13 @@ TkPathFreePathColor(TkPathColor *colorPtr)
  *
  * PathCopyBitsARGB, PathCopyBitsBGRA --
  *
- *		Copies bitmap data from these formats to RGBA.
+ *	Copies bitmap data from these formats to RGBA.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -360,15 +360,15 @@ PathCopyBitsBGRA(unsigned char *from, unsigned char *to,
  *
  * PathCopyBitsPremultipliedAlphaRGBA, PathCopyBitsPremultipliedAlphaARGB --
  *
- *		Copies bitmap data that have alpha premultiplied into a bitmap
- *		with "true" RGB values need for Tk_Photo. The source format is
- *		either RGBA or ARGB, but destination always RGBA used for photos.
+ *	Copies bitmap data that have alpha premultiplied into a bitmap
+ *	with "true" RGB values need for Tk_Photo. The source format is
+ *	either RGBA or ARGB, but destination always RGBA used for photos.
  *
  * Results:
- *		None.
+ *	None.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -491,15 +491,15 @@ CalcVectorAngle(double ux, double uy, double vx, double vy)
  *
  * CentralToEndpointArcParameters
  *
- *		Conversion from center to endpoint parameterization.
- *		All angles in radians!
- *		From: http://www.w3.org/TR/2003/REC-SVG11-20030114
+ *	Conversion from center to endpoint parameterization.
+ *	All angles in radians!
+ *	From: http://www.w3.org/TR/2003/REC-SVG11-20030114
  *
  * Results:
- *		Arc specific return code.
+ *	Arc specific return code.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -542,15 +542,15 @@ CentralToEndpointArcParameters(
  *
  * EndpointToCentralArcParameters
  *
- *		Conversion from endpoint to center parameterization.
- *		All angles in radians!
- *		From: http://www.w3.org/TR/2003/REC-SVG11-20030114
+ *	Conversion from endpoint to center parameterization.
+ *	All angles in radians!
+ *	From: http://www.w3.org/TR/2003/REC-SVG11-20030114
  *
  * Results:
- *		Arc specific return code.
+ *	Arc specific return code.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -661,13 +661,13 @@ EndpointToCentralArcParameters(
  *
  * TableLooup
  *
- *		Look up an index from a statically allocated table of ints.
+ *	Look up an index from a statically allocated table of ints.
  *
  * Results:
- *		integer
+ *	integer
  *
  * Side effects:
- *		None
+ *	None
  *
  *--------------------------------------------------------------
  */
@@ -728,64 +728,56 @@ PathInverseTMatrix(TMatrix *m, TMatrix *mi)
     mi->ty = (m->b * m->tx - m->a * m->ty)/det;
 }
 
-void
-MMulTMatrix(TMatrix *m, TMatrix *mx)
-{
-    if (m == NULL) {
-        return;
-    }
-    if (mx == NULL) {
-        // WRONG!!!
-        mx = (TMatrix *) ckalloc(sizeof(TMatrix));
-    } else {
-        TMatrix tmp = *mx;
-        TMatrix *p = mx;
-        
-        p->a  = m->a*tmp.a  + m->b*tmp.c;
-        p->b  = m->a*tmp.b  + m->b*tmp.d;
-        p->c  = m->c*tmp.a  + m->d*tmp.c;
-        p->d  = m->c*tmp.b  + m->d*tmp.d;
-        p->tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
-        p->ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
-    }
-}
-#if 0
-void
-TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
-{
-    TkPathContext_ *context = (TkPathContext_ *) ctx;
+/*
+ *----------------------------------------------------------------------
+ *
+ * MMulTMatrix --
+ *
+ *	Multiplies (concatenates) two matrices together and puts the
+ *      result in m2.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	TMatrix m2 modified
+ *
+ *----------------------------------------------------------------------
+ */
 
-    if (m == NULL) {
+void
+MMulTMatrix(TMatrix *m1, TMatrix *m2)
+{
+    if (m1 == NULL) {
         return;
     }
-    if (context->m == NULL) {
-        context->m = (TMatrix *) ckalloc(sizeof(TMatrix));
-        *(context->m) = *m;
+    if (m2 == NULL) {
+        /* Panic! */
     } else {
-        TMatrix tmp = *(context->m);
-        TMatrix *p = context->m;
+        TMatrix tmp = *m2;
+        TMatrix *p = m2;
         
-        p->a  = m->a*tmp.a  + m->b*tmp.c;
-        p->b  = m->a*tmp.b  + m->b*tmp.d;
-        p->c  = m->c*tmp.a  + m->d*tmp.c;
-        p->d  = m->c*tmp.b  + m->d*tmp.d;
-        p->tx = m->tx*tmp.a + m->ty*tmp.c + tmp.tx;
-        p->ty = m->tx*tmp.b + m->ty*tmp.d + tmp.ty;
+        p->a  = m1->a*tmp.a  + m1->b*tmp.c;
+        p->b  = m1->a*tmp.b  + m1->b*tmp.d;
+        p->c  = m1->c*tmp.a  + m1->d*tmp.c;
+        p->d  = m1->c*tmp.b  + m1->d*tmp.d;
+        p->tx = m1->tx*tmp.a + m1->ty*tmp.c + tmp.tx;
+        p->ty = m1->tx*tmp.b + m1->ty*tmp.d + tmp.ty;
     }
 }
-#endif
+
 /*
  *----------------------------------------------------------------------
  *
  * PathGetTMatrix --
  *
- *		Parses a Tcl list (in string) into a TMatrix record.  
+ *	Parses a Tcl list (in string) into a TMatrix record.  
  *
  * Results:
- *		Standard Tcl result
+ *	Standard Tcl result
  *
  * Side effects:
- *		None
+ *	None
  *
  *----------------------------------------------------------------------
  */
@@ -793,8 +785,8 @@ TkPathPushTMatrix(TkPathContext ctx, TMatrix *m)
 int
 PathGetTMatrix(
         Tcl_Interp* interp, 
-        CONST char *list, 			/* Object containg the lists for the matrix. */
-        TMatrix *matrixPtr)		/* Where to store TMatrix corresponding
+        CONST char *list, 	/* Object containg the lists for the matrix. */
+        TMatrix *matrixPtr)	/* Where to store TMatrix corresponding
                                  * to list. Must be allocated! */
 {
     CONST char **argv = NULL;
@@ -872,13 +864,13 @@ bail:
  *
  * PathGetTclObjFromTMatrix --
  *
- *		Parses a TMatrix record into a list object.
+ *	Parses a TMatrix record into a list object.
  *
  * Results:
- *		Standard Tcl result
+ *	Standard Tcl result
  *
  * Side effects:
- *		None
+ *	None
  *
  *----------------------------------------------------------------------
  */
@@ -919,13 +911,13 @@ PathGetTclObjFromTMatrix(
  *
  * TkPathGenericCmdDispatcher --
  *
- *		Supposed to be a generic command dispatcher.  
+ *	Supposed to be a generic command dispatcher.  
  *
  * Results:
- *		Standard Tcl result
+ *	Standard Tcl result
  *
  * Side effects:
- *		None
+ *	None
  *
  *----------------------------------------------------------------------
  */
@@ -1114,16 +1106,16 @@ TkPathGenericCmdDispatcher(
  *
  * ObjectIsEmpty --
  *
- *		This procedure tests whether the string value of an object is
- *		empty.
+ *	This procedure tests whether the string value of an object is
+ *	empty.
  *
  * Results:
- *		The return value is 1 if the string value of objPtr has length
- *		zero, and 0 otherwise.
+ *	The return value is 1 if the string value of objPtr has length
+ *	zero, and 0 otherwise.
  *
  * Side effects:
- *		May cause object shimmering, since this function can force a
- *		conversion to a string object.
+ *	May cause object shimmering, since this function can force a
+ *	conversion to a string object.
  *
  *----------------------------------------------------------------------
  */

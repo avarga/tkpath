@@ -17,12 +17,6 @@
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
-/* Values for the PathItem's flag. */
-
-enum {
-    kPrectItemNoNewPathAtoms      	= (1L << 0)	/* Inhibit any 'MakePathAtoms' call. */
-};
-
 /*
  * The structure below defines the record for each path item.
  */
@@ -38,8 +32,6 @@ typedef struct PrectItem  {
                              * Untransformed coordinates. */
     int maxNumSegments;	    /* Max number of straight segments (for subpath)
                              * needed for Area and Point functions. */
-    long flags;		    /* Various flags, see enum. */
-    char *null;		    /* Just a placeholder for not yet implemented stuff. */ 
 } PrectItem;
 
 /*
@@ -162,7 +154,6 @@ CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     prectPtr->rect = NewEmptyPathRect();
     prectPtr->totalBbox = NewEmptyPathRect();
     prectPtr->maxNumSegments = 100;		/* Crude overestimate. */
-    prectPtr->flags = 0L;
     
     if (optionTable == NULL) {
 	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -179,17 +170,10 @@ CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
             break;
         }
     }
-
-    /*
-     * Since both PrectCoords and ConfigurePrect computes new path atoms
-     * we skip this and do it ourself below.
-     */
-    prectPtr->flags |= kPrectItemNoNewPathAtoms;
-    if (PrectCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    if (CoordsForRectangularItems(interp, canvas, &prectPtr->rect, i, objv) != TCL_OK) {
         goto error;
     }
     if (ConfigurePrect(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
-        prectPtr->flags &= ~kPrectItemNoNewPathAtoms;
         ComputePrectBbox(canvas, prectPtr);
         return TCL_OK;
     }
@@ -208,9 +192,7 @@ PrectCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 
     result = CoordsForRectangularItems(interp, canvas, &prectPtr->rect, objc, objv);
     if ((result == TCL_OK) && ((objc == 1) || (objc == 4))) {
-        if (!(prectPtr->flags & kPrectItemNoNewPathAtoms)) {
-            ComputePrectBbox(canvas, prectPtr);
-        }
+	ComputePrectBbox(canvas, prectPtr);
     }
     return result;
 }
@@ -220,7 +202,7 @@ ComputePrectBbox(Tk_PathCanvas canvas, PrectItem *prectPtr)
 {
     Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
     Tk_PathItem *itemPtr = &itemExPtr->header;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
     Tk_PathState state = itemExPtr->header.state;
 
     if(state == TK_PATHSTATE_NULL) {
@@ -234,6 +216,7 @@ ComputePrectBbox(Tk_PathCanvas canvas, PrectItem *prectPtr)
     style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     prectPtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &prectPtr->rect);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &prectPtr->totalBbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static int		
@@ -249,8 +232,6 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     Tcl_Obj *errorResult = NULL;
     int error, mask;
      
-    // @@@ Maybe this error loop should also be made in a function since it
-    //     is repeated in several items?
     tkwin = Tk_PathCanvasTkwin(canvas);
     for (error = 0; error <= 1; error++) {
 	if (!error) {
@@ -274,7 +255,7 @@ ConfigurePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask = mask;
+	stylePtr->mask |= mask;
     }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
@@ -347,15 +328,15 @@ DisplayPrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, 
 	    &style, &m, &prectPtr->rect);
     TkPathFreeAtoms(atomPtr);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static double	
 PrectToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PrectItem *prectPtr = (PrectItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    TMatrix *mPtr = style.matrixPtr;
+    Tk_PathStyle style;
+    TMatrix *mPtr;
     PathRect *rectPtr = &prectPtr->rect;
     double bareRect[4];
     double width, dist;
@@ -368,6 +349,7 @@ PrectToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
     if (style.strokeColor != NULL) {
         width = style.strokeWidth;
     }
+    mPtr = style.matrixPtr;
     
     /* Try to be economical about this for pure rectangles. */
     if ((prectPtr->rx <= 1.0) && (prectPtr->ry <= 1.0)) {
@@ -395,6 +377,7 @@ PrectToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
             prectPtr->maxNumSegments, pointPtr);
 	TkPathFreeAtoms(atomPtr);
     }
+    TkPathCanvasFreeInheritedStyle(&style);
     return dist;
 }
 
@@ -404,12 +387,12 @@ PrectToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
     PrectItem *prectPtr = (PrectItem *) itemPtr;
     Tk_PathItemEx *itemExPtr = &prectPtr->headerEx;
     Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    TMatrix *mPtr = style.matrixPtr;
+    TMatrix *mPtr;
     PathRect *rectPtr = &(prectPtr->rect);
     double bareRect[4];
     double width;
     int rectiLinear = 0;
-    int filled;
+    int filled, area;
 
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     filled = HaveAnyFillFromPathColor(style.fill);
@@ -417,6 +400,7 @@ PrectToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
     if (style.strokeColor != NULL) {
         width = style.strokeWidth;
     }
+    mPtr = style.matrixPtr;
 
     /* Try to be economical about this for pure rectangles. */
     if ((prectPtr->rx <= 1.0) && (prectPtr->ry <= 1.0)) {
@@ -437,15 +421,15 @@ PrectToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
         }
     }
     if (rectiLinear) {
-        return PathRectToArea(bareRect, width, filled, areaPtr);
+        area = PathRectToArea(bareRect, width, filled, areaPtr);
     } else {
-	int area;
 	PathAtom *atomPtr = MakePathAtoms(prectPtr);
         area = GenericPathToArea(canvas, itemPtr, &style, 
                 atomPtr, prectPtr->maxNumSegments, areaPtr);
 	TkPathFreeAtoms(atomPtr);
-	return area;
     }
+    TkPathCanvasFreeInheritedStyle(&style);
+    return area;
 }
 
 static int		

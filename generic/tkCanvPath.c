@@ -370,7 +370,7 @@ ConfigurePath(
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask = mask;
+	stylePtr->mask |= mask;
     }
     
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
@@ -534,6 +534,7 @@ DisplayPath(
         style = TkPathCanvasInheritStyle(itemPtr, 0);
         TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, pathPtr->atomPtr, 
                 &style, &m, &pathPtr->bbox);
+        TkPathCanvasFreeInheritedStyle(&style);
     }
 }
 

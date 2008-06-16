@@ -347,6 +347,7 @@ MODULE_SCOPE int	    TkPathCanvasFindGroup(Tcl_Interp *interp, Tk_PathCanvas can
 MODULE_SCOPE void	    TkPathCanvasSetParent(Tk_PathItem *parentPtr, Tk_PathItem *itemPtr);
 MODULE_SCOPE int	    TkPathCanvasGetDepth(Tk_PathItem *itemPtr);
 MODULE_SCOPE Tk_PathStyle   TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags);
+MODULE_SCOPE void	    TkPathCanvasFreeInheritedStyle(Tk_PathStyle *stylePtr);
 MODULE_SCOPE Tcl_HashTable *TkPathCanvasGradientTable(Tk_PathCanvas canvas);
 MODULE_SCOPE Tcl_HashTable *TkPathCanvasStyleTable(Tk_PathCanvas canvas);
 MODULE_SCOPE Tk_PathState   TkPathCanvasState(Tk_PathCanvas canvas);

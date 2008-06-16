@@ -320,6 +320,7 @@ void		PathParseDashToArray(Tk_Dash *dash, double width, int *len, float **arrayP
 void 		PathApplyTMatrix(TMatrix *m, double *x, double *y);
 void 		PathApplyTMatrixToPoint(TMatrix *m, double in[2], double out[2]);
 void		PathInverseTMatrix(TMatrix *m, TMatrix *mi);
+void		MMulTMatrix(TMatrix *m1, TMatrix *m2);
 void		PathCopyBitsARGB(unsigned char *from, unsigned char *to, 
                     int width, int height, int bytesPerRow);
 void		PathCopyBitsBGRA(unsigned char *from, unsigned char *to, 

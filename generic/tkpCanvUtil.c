@@ -380,12 +380,13 @@ TkPathCanvasGetDepth(Tk_PathItem *itemPtr)
  *
  *	This function returns the style which is inherited from the
  *      parents of the itemPtr using cascading from the root item.
+ *	Must use TkPathCanvasFreeInheritedStyle when done.
  *
  * Results:
  *	Tk_PathStyle.
  *
  * Side effects:
- *	?
+ *	May allocate memory for matrix.
  *
  *----------------------------------------------------------------------
  */
@@ -393,11 +394,12 @@ TkPathCanvasGetDepth(Tk_PathItem *itemPtr)
 Tk_PathStyle
 TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
 {
-    int depth, i;
+    int depth, i, anyMatrix = 0;
     Tk_PathItem *walkPtr;
     Tk_PathItemEx **parents;
     Tk_PathStyle style;
     Tk_PathItemEx *itemExPtr;
+    TMatrix matrix = kPathUnitTMatrix;
     
     depth = TkPathCanvasGetDepth(itemPtr);
     parents = (Tk_PathItemEx **) ckalloc(depth*sizeof(Tk_PathItemEx *));
@@ -410,6 +412,7 @@ TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
     
     /*
      * Cascade the style from the root item to the closest parent.
+     * Start by just making a copy of the root's style.
      */
     itemExPtr = parents[depth-1];
     style = itemExPtr->style;
@@ -423,7 +426,15 @@ TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
 	}
 	if (itemExPtr->styleInst != NULL) {
 	    TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-	}    
+	}
+	if (style.matrixPtr != NULL) {
+	    anyMatrix = 1;
+	    MMulTMatrix(style.matrixPtr, &matrix);
+	}
+	/*
+	 * We set matrix to NULL to detect if set in group.
+	 */
+	style.matrixPtr = NULL;
     }
     
     /*
@@ -435,8 +446,24 @@ TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
     if (itemExPtr->styleInst != NULL) {
 	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
     }    
+    if (style.matrixPtr != NULL) {
+	anyMatrix = 1;
+	MMulTMatrix(style.matrixPtr, &matrix);
+    }
+    if (anyMatrix) {
+        style.matrixPtr = (TMatrix *) ckalloc(sizeof(TMatrix));
+	memcpy(style.matrixPtr, &matrix, sizeof(TMatrix));
+    }
     ckfree((char *) parents);
     return style;
+}
+
+void
+TkPathCanvasFreeInheritedStyle(Tk_PathStyle *stylePtr)
+{
+    if (stylePtr->matrixPtr != NULL) {
+	ckfree((char *) stylePtr->matrixPtr);
+    }
 }
 
 /* TkPathCanvasGradientTable etc.: this is just accessor functions to hide

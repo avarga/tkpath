@@ -208,7 +208,7 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     }
     if (!error) {
 	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask = mask;
+	stylePtr->mask |= mask;
     }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
