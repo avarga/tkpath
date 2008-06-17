@@ -56,14 +56,17 @@ static int	ConfigurePath(Tcl_Interp *interp, Tk_PathCanvas canvas,
 static int	CreatePath(Tcl_Interp *interp,
                         Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
+static int	ProcessPath(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+                        int objc, Tcl_Obj *CONST objv[]);
+static int	PathCoords(Tcl_Interp *interp,
+                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+                        int objc, Tcl_Obj *CONST objv[]);
 static void	DeletePath(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, Display *display);
 static void	DisplayPath(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, Display *display, Drawable dst,
                         int x, int y, int width, int height);
-static int	PathCoords(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
-                        int objc, Tcl_Obj *CONST objv[]);
 static int	PathToArea(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double *areaPtr);
 static double	PathToPoint(Tk_PathCanvas canvas,
@@ -230,7 +233,7 @@ CreatePath(
      * The first argument must be the path definition list.
      */
 
-    if (PathCoords(interp, canvas, itemPtr, 1, objv) != TCL_OK) {
+    if (ProcessPath(interp, canvas, itemPtr, 1, objv) != TCL_OK) {
         goto error;
     }
     if (ConfigurePath(interp, canvas, itemPtr, objc-1, objv+1, 0) == TCL_OK) {
@@ -245,11 +248,12 @@ CreatePath(
 /*
  *--------------------------------------------------------------
  *
- * PathCoords --
+ * ProcessPath --
  *
- *	This procedure is invoked to process the "coords" widget
- *	command on lines.  See the user documentation for details
- *	on what it does.
+ *	Does the main job of processing the drawing path in 'PathCoords'
+ *      but doesn't do the bbox calculation since this cannot be done
+ *      before we have callaed 'ConfigurePath' because we need
+ *      the inherited style.
  *
  * Results:
  *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
@@ -261,7 +265,7 @@ CreatePath(
  */
 
 static int
-PathCoords(
+ProcessPath(
     Tcl_Interp *interp,     /* Used for error reporting. */
     Tk_PathCanvas canvas,   /* Canvas containing item. */
     Tk_PathItem *itemPtr,   /* Item whose coordinates are to be
@@ -299,15 +303,108 @@ PathCoords(
             pathPtr->atomPtr = atomPtr;
             pathPtr->pathLen = len;
             pathPtr->pathObjPtr = objv[0];
-            Tcl_IncrRefCount(pathPtr->pathObjPtr);
-            ComputePathBbox(canvas, pathPtr);
             pathPtr->maxNumSegments = GetSubpathMaxNumSegments(atomPtr);
+            Tcl_IncrRefCount(pathPtr->pathObjPtr);
         }
         return result;
     } else {
         Tcl_WrongNumArgs(interp, 0, objv, "pathName coords id ?pathSpec?");
         return TCL_ERROR;
     }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * PathCoords --
+ *
+ *	This procedure is invoked to process the "coords" widget
+ *	command on lines.  See the user documentation for details
+ *	on what it does.
+ *
+ * Results:
+ *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
+ *
+ * Side effects:
+ *	The coordinates for the given item may be changed.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+PathCoords(
+    Tcl_Interp *interp,     /* Used for error reporting. */
+    Tk_PathCanvas canvas,   /* Canvas containing item. */
+    Tk_PathItem *itemPtr,   /* Item whose coordinates are to be
+                             * read or modified. */
+    int objc,               /*  */
+    Tcl_Obj *CONST objv[])  /*  */
+{
+    PathItem *pathPtr = (PathItem *) itemPtr;
+    int result;
+    
+    result = ProcessPath(interp, canvas, itemPtr, objc, objv);
+    if ((result == TCL_OK) && (objc == 1)) {
+        ComputePathBbox(canvas, pathPtr);
+    }
+    return result;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ComputePathBbox --
+ *
+ *	This procedure is invoked to compute the bounding box of
+ *	all the pixels that may be drawn as part of a path.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The fields x1, y1, x2, and y2 are updated in the header
+ *	for itemPtr.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+ComputePathBbox(
+    Tk_PathCanvas canvas,   /* Canvas that contains item. */
+    PathItem *pathPtr)      /* Item whose bbox is to be
+                             * recomputed. */
+{
+    Tk_PathItemEx *itemExPtr = &pathPtr->headerEx;
+    Tk_PathItem *itemPtr = &itemExPtr->header;
+    //Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
+    Tk_PathState state = itemExPtr->header.state;
+
+    if(state == TK_PATHSTATE_NULL) {
+        state = TkPathCanvasState(canvas);
+    }
+    if (pathPtr->pathObjPtr == NULL || (pathPtr->pathLen < 4) || (state == TK_PATHSTATE_HIDDEN)) {
+        itemExPtr->header.x1 = itemExPtr->header.x2 =
+        itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
+        return;
+    }
+    /*
+    if (itemExPtr->styleInst != NULL) {
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
+                kPathMergeStyleNotFill);
+    }   */ 
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
+    
+    /*
+     * Get an approximation of the path's bounding box
+     * assuming zero stroke width.
+     */
+    pathPtr->bbox = GetGenericBarePathBbox(pathPtr->atomPtr);
+
+    pathPtr->totalBbox = GetGenericPathTotalBboxFromBare(pathPtr->atomPtr,
+            &style, &pathPtr->bbox);
+    SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &pathPtr->totalBbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 /*
@@ -449,58 +546,6 @@ DeletePath(
 /*
  *--------------------------------------------------------------
  *
- * ComputePathBbox --
- *
- *	This procedure is invoked to compute the bounding box of
- *	all the pixels that may be drawn as part of a path.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The fields x1, y1, x2, and y2 are updated in the header
- *	for itemPtr.
- *
- *--------------------------------------------------------------
- */
-
-static void
-ComputePathBbox(
-    Tk_PathCanvas canvas,   /* Canvas that contains item. */
-    PathItem *pathPtr)      /* Item whose bbox is to be
-                             * recomputed. */
-{
-    Tk_PathItemEx *itemExPtr = &pathPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    Tk_PathState state = itemExPtr->header.state;
-
-    if(state == TK_PATHSTATE_NULL) {
-        state = TkPathCanvasState(canvas);
-    }
-    if (pathPtr->pathObjPtr == NULL || (pathPtr->pathLen < 4) || (state == TK_PATHSTATE_HIDDEN)) {
-        itemExPtr->header.x1 = itemExPtr->header.x2 =
-        itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
-        return;
-    }
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-                kPathMergeStyleNotFill);
-    }    
-    
-    /*
-     * Get an approximation of the path's bounding box
-     * assuming zero stroke width.
-     */
-    pathPtr->bbox = GetGenericBarePathBbox(pathPtr->atomPtr);
-
-    pathPtr->totalBbox = GetGenericPathTotalBboxFromBare(pathPtr->atomPtr,
-            &style, &pathPtr->bbox);
-    SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &pathPtr->totalBbox);
-}
-
-/*
- *--------------------------------------------------------------
- *
  * DisplayPath --
  *
  *	This procedure is invoked to draw a line item in a given
@@ -566,14 +611,14 @@ PathToPoint(
 {
     PathItem        *pathPtr = (PathItem *) itemPtr;
     PathAtom        *atomPtr = pathPtr->atomPtr;
-    Tk_PathItemEx *itemExPtr = &pathPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
+    int dist;
 
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }
-    return GenericPathToPoint(canvas, itemPtr, &style, atomPtr, 
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
+    dist = GenericPathToPoint(canvas, itemPtr, &style, atomPtr, 
             pathPtr->maxNumSegments, pointPtr);
+    TkPathCanvasFreeInheritedStyle(&style);
+    return dist;
 }
 
 /**********************************/
@@ -781,14 +826,14 @@ PathToArea(
                              * area.  */
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &pathPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
+    int area;
    
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }
-    return GenericPathToArea(canvas, itemPtr, &style, 
+    style = TkPathCanvasInheritStyle(itemPtr, 0);
+    area = GenericPathToArea(canvas, itemPtr, &style, 
             pathPtr->atomPtr, pathPtr->maxNumSegments, areaPtr);
+    TkPathCanvasFreeInheritedStyle(&style);            
+    return area;
 }
 
 /*

@@ -137,43 +137,45 @@ typedef struct Tk_PathItem {
  * lines, circles, etc.) that can form part of a canvas widget.
  */
 
-typedef int	Tk_PathItemCreateProc _ANSI_ARGS_((Tcl_Interp *interp,
+typedef int	Tk_PathItemCreateProc(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int argc,
-		    Tcl_Obj *const objv[]));
-typedef int	Tk_PathItemConfigureProc _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tcl_Obj *const objv[]);
+typedef int	Tk_PathItemConfigureProc(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int argc,
-		    Tcl_Obj *const objv[], int flags));
-typedef int	Tk_PathItemCoordProc _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tcl_Obj *const objv[], int flags);
+typedef int	Tk_PathItemCoordProc(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int argc,
-		    Tcl_Obj *const argv[]));
-typedef void	Tk_PathItemDeleteProc _ANSI_ARGS_((Tk_PathCanvas canvas,
-		    Tk_PathItem *itemPtr, Display *display));
-typedef void	Tk_PathItemDisplayProc _ANSI_ARGS_((Tk_PathCanvas canvas,
+		    Tcl_Obj *const argv[]);
+typedef void	Tk_PathItemDeleteProc(Tk_PathCanvas canvas,
+		    Tk_PathItem *itemPtr, Display *display);
+typedef void	Tk_PathItemDisplayProc(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, Display *display, Drawable dst,
-		    int x, int y, int width, int height));
-typedef double	Tk_PathItemPointProc _ANSI_ARGS_((Tk_PathCanvas canvas,
-		    Tk_PathItem *itemPtr, double *pointPtr));
-typedef int	Tk_PathItemAreaProc _ANSI_ARGS_((Tk_PathCanvas canvas,
-		    Tk_PathItem *itemPtr, double *rectPtr));
-typedef int	Tk_PathItemPostscriptProc _ANSI_ARGS_((Tcl_Interp *interp,
-		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass));
-typedef void	Tk_PathItemScaleProc _ANSI_ARGS_((Tk_PathCanvas canvas,
+		    int x, int y, int width, int height);
+typedef void	TkPathItemBboxProc(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+		    int flags);
+typedef double	Tk_PathItemPointProc(Tk_PathCanvas canvas,
+		    Tk_PathItem *itemPtr, double *pointPtr);
+typedef int	Tk_PathItemAreaProc(Tk_PathCanvas canvas,
+		    Tk_PathItem *itemPtr, double *rectPtr);
+typedef int	Tk_PathItemPostscriptProc(Tcl_Interp *interp,
+		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
+typedef void	Tk_PathItemScaleProc(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, double originX, double originY,
-		    double scaleX, double scaleY));
-typedef void	Tk_PathItemTranslateProc _ANSI_ARGS_((Tk_PathCanvas canvas,
-		    Tk_PathItem *itemPtr, double deltaX, double deltaY));
-typedef int	Tk_PathItemIndexProc _ANSI_ARGS_((Tcl_Interp *interp,
+		    double scaleX, double scaleY);
+typedef void	Tk_PathItemTranslateProc(Tk_PathCanvas canvas,
+		    Tk_PathItem *itemPtr, double deltaX, double deltaY);
+typedef int	Tk_PathItemIndexProc(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, char *indexString,
-		    int *indexPtr));
-typedef void	Tk_PathItemCursorProc _ANSI_ARGS_((Tk_PathCanvas canvas,
-		    Tk_PathItem *itemPtr, int index));
-typedef int	Tk_PathItemSelectionProc _ANSI_ARGS_((Tk_PathCanvas canvas,
+		    int *indexPtr);
+typedef void	Tk_PathItemCursorProc(Tk_PathCanvas canvas,
+		    Tk_PathItem *itemPtr, int index);
+typedef int	Tk_PathItemSelectionProc(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, int offset, char *buffer,
-		    int maxBytes));
-typedef void	Tk_PathItemInsertProc _ANSI_ARGS_((Tk_PathCanvas canvas,
-		    Tk_PathItem *itemPtr, int beforeThis, char *string));
-typedef void	Tk_PathItemDCharsProc _ANSI_ARGS_((Tk_PathCanvas canvas,
-		    Tk_PathItem *itemPtr, int first, int last));
+		    int maxBytes);
+typedef void	Tk_PathItemInsertProc(Tk_PathCanvas canvas,
+		    Tk_PathItem *itemPtr, int beforeThis, char *string);
+typedef void	Tk_PathItemDCharsProc(Tk_PathCanvas canvas,
+		    Tk_PathItem *itemPtr, int first, int last);
 
 #ifndef __NO_OLD_CONFIG
 
@@ -185,9 +187,11 @@ typedef struct Tk_PathItemType {
     Tk_PathItemCreateProc *createProc;
 				/* Procedure to create a new item of this
 				 * type. */
+#if 1
     Tk_OptionSpec *optionSpecs;	/* Pointer to array of option specs for    OBSOLETE!!!!!!!!!! ??????????
 				 * this type. Used for returning option
 				 * info. */
+#endif
     Tk_PathItemConfigureProc *configProc;
 				/* Procedure to call to change configuration
 				 * options. */
