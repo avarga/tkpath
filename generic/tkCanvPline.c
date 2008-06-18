@@ -17,12 +17,6 @@
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
-/* Values for the PathItem's flag. */
-
-enum {
-    kPlineItemNoBboxCalculation      	= (1L << 0)		/* Inhibit any 'ComputePlineBbox' call. */
-};
-
 /*
  * The structure below defines the record for each path item.
  */
@@ -33,7 +27,6 @@ typedef struct PlineItem  {
     PathRect coords;		/* Coordinates (unorders bare bbox). */
     PathRect totalBbox;		/* Bounding box including stroke.
 				 * Untransformed coordinates. */
-    long flags;			/* Various flags, see enum. */
 } PlineItem;
 
 
@@ -43,30 +36,32 @@ typedef struct PlineItem  {
 
 static void	ComputePlineBbox(Tk_PathCanvas canvas, PlineItem *plinePtr);
 static int	ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, 
-                        Tk_PathItem *itemPtr, int objc,
-                        Tcl_Obj *CONST objv[], int flags);
+		    Tk_PathItem *itemPtr, int objc,
+                    Tcl_Obj *CONST objv[], int flags);
 static int	CreatePline(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
-                        int objc, Tcl_Obj *CONST objv[]);
+                    Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
+		    int objc, Tcl_Obj *CONST objv[]);
 static void	DeletePline(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, Display *display);
+		    Tk_PathItem *itemPtr, Display *display);
 static void	DisplayPline(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, Display *display, Drawable drawable,
-                        int x, int y, int width, int height);
+		    Tk_PathItem *itemPtr, Display *display, Drawable drawable,
+		    int x, int y, int width, int height);
+static int	ProcessCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, 
+		    Tk_PathItem *itemPtr, int objc, Tcl_Obj *CONST objv[]);
 static int	PlineCoords(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
-                        int objc, Tcl_Obj *CONST objv[]);
+		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+		    int objc, Tcl_Obj *CONST objv[]);
 static int	PlineToArea(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double *rectPtr);
+		    Tk_PathItem *itemPtr, double *rectPtr);
 static double	PlineToPoint(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double *coordPtr);
+		    Tk_PathItem *itemPtr, double *coordPtr);
 static int	PlineToPostscript(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
+		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
 static void	ScalePline(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double originX, double originY,
-                        double scaleX, double scaleY);
+		    Tk_PathItem *itemPtr, double originX, double originY,
+		    double scaleX, double scaleY);
 static void	TranslatePline(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double deltaX, double deltaY);
+		    Tk_PathItem *itemPtr, double deltaX, double deltaY);
 static PathAtom * MakePathAtoms(PlineItem *plinePtr);
 
 PATH_STYLE_CUSTOM_OPTION_MATRIX
@@ -135,7 +130,6 @@ CreatePline(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPt
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
     plinePtr->totalBbox = NewEmptyPathRect();
-    plinePtr->flags = 0L;
     
     if (optionTable == NULL) {
 	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -152,18 +146,10 @@ CreatePline(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPt
             break;
         }
     }
-    
-    /*
-     * Since both PlineCoords and ConfigurePline computes new bbox'es
-     * we skip this and do it ourself below.
-     */
-    plinePtr->flags |= kPlineItemNoBboxCalculation;
-    if (PlineCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    if (ProcessCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
         goto error;
     }
     if (ConfigurePline(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
-        plinePtr->flags &= ~kPlineItemNoBboxCalculation;
-        ComputePlineBbox(canvas, plinePtr);
         return TCL_OK;
     }
 
@@ -172,8 +158,8 @@ CreatePline(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPt
     return TCL_ERROR;
 }
 
-static int		
-PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
+static int
+ProcessCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
         int objc, Tcl_Obj *CONST objv[])
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
@@ -206,10 +192,6 @@ PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
             || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[3], &p->y2) != TCL_OK)) {
             return TCL_ERROR;
         }
-        MakePathAtoms(plinePtr);
-        if (!(plinePtr->flags & kPlineItemNoBboxCalculation)) {
-            ComputePlineBbox(canvas, plinePtr);
-        }
     } else {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 0 or 4", -1));
         return TCL_ERROR;
@@ -217,11 +199,26 @@ PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     return TCL_OK;
 }
 
+static int		
+PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
+        int objc, Tcl_Obj *CONST objv[])
+{
+    PlineItem *plinePtr = (PlineItem *) itemPtr;
+    int result;
+    
+    result = ProcessCoords(interp, canvas, itemPtr, objc, objv);
+    if ((result == TCL_OK) && (objc == 1)) {
+	ComputePlineBbox(canvas, plinePtr);
+    }
+    return result;
+}
+
 static void
 ComputePlineBbox(Tk_PathCanvas canvas, PlineItem *plinePtr)
 {
     Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathItem *itemPtr = &itemExPtr->header;
+    Tk_PathStyle style;
     Tk_PathState state = itemExPtr->header.state;
     PathRect r;
 
@@ -233,16 +230,14 @@ ComputePlineBbox(Tk_PathCanvas canvas, PlineItem *plinePtr)
         itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     r.x1 = MIN(plinePtr->coords.x1, plinePtr->coords.x2);
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
     plinePtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &r);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &plinePtr->totalBbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static int		
@@ -298,9 +293,7 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	Tcl_DecrRefCount(errorResult);
 	return TCL_ERROR;
     } else {
-	if (!(plinePtr->flags & kPlineItemNoBboxCalculation)) {
-	    ComputePlineBbox(canvas, plinePtr);
-	}
+	ComputePlineBbox(canvas, plinePtr);
 	return TCL_OK;
     }
 }
@@ -343,7 +336,7 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
 
     atomPtr = MakePathAtoms(plinePtr);
-    style = TkPathCanvasInheritStyle(itemPtr, 0);
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &r);
     TkPathFreeAtoms(atomPtr);
     TkPathCanvasFreeInheritedStyle(&style);
@@ -353,21 +346,18 @@ static double
 PlineToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
     PathAtom *atomPtr;
     double point;
     
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
 
     /* @@@ Perhaps we should do a simplified treatment here instead of the generic. */
     atomPtr = MakePathAtoms(plinePtr);
     point = GenericPathToPoint(canvas, itemPtr, &style, 
             atomPtr, 2, pointPtr);
     TkPathFreeAtoms(atomPtr);
+    TkPathCanvasFreeInheritedStyle(&style);
     return point;
 }
 
@@ -375,21 +365,18 @@ static int
 PlineToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PlineItem *plinePtr = (PlineItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathStyle style;
     PathAtom *atomPtr;
     int area;
     
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
 
     /* @@@ Perhaps we should do a simplified treatment here instead of the generic. */
     atomPtr = MakePathAtoms(plinePtr);
     area = GenericPathToArea(canvas, itemPtr, &style, 
             atomPtr, 2, areaPtr);
     TkPathFreeAtoms(atomPtr);
+    TkPathCanvasFreeInheritedStyle(&style);
     return area;
 }
 

@@ -422,10 +422,10 @@ TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
 	
 	/* The order of these two merges decides which take precedence. */
 	if (i < depth-1) {
-	    TkPathStyleMergeStyles(&itemExPtr->style, &style, 0);
+	    TkPathStyleMergeStyles(&itemExPtr->style, &style, flags);
 	}
 	if (itemExPtr->styleInst != NULL) {
-	    TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+	    TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, flags);
 	}
 	if (style.matrixPtr != NULL) {
 	    anyMatrix = 1;
@@ -442,9 +442,9 @@ TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
      * The order of these two merges decides which take precedence.
      */
     itemExPtr = (Tk_PathItemEx *) itemPtr;
-    TkPathStyleMergeStyles(&itemExPtr->style, &style, 0);
+    TkPathStyleMergeStyles(&itemExPtr->style, &style, flags);
     if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
+	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, flags);
     }    
     if (style.matrixPtr != NULL) {
 	anyMatrix = 1;

@@ -376,7 +376,6 @@ ComputePathBbox(
 {
     Tk_PathItemEx *itemExPtr = &pathPtr->headerEx;
     Tk_PathItem *itemPtr = &itemExPtr->header;
-    //Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
     Tk_PathStyle style;
     Tk_PathState state = itemExPtr->header.state;
 
@@ -388,11 +387,6 @@ ComputePathBbox(
         itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
-    /*
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-                kPathMergeStyleNotFill);
-    }   */ 
     style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     
     /*
@@ -400,7 +394,6 @@ ComputePathBbox(
      * assuming zero stroke width.
      */
     pathPtr->bbox = GetGenericBarePathBbox(pathPtr->atomPtr);
-
     pathPtr->totalBbox = GetGenericPathTotalBboxFromBare(pathPtr->atomPtr,
             &style, &pathPtr->bbox);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &pathPtr->totalBbox);

@@ -240,7 +240,6 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
         goto error;
     }    
     if (ConfigureEllipse(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
-        ComputeEllipseBbox(canvas, ellPtr);
         return TCL_OK;
     }
 

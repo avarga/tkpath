@@ -17,12 +17,6 @@
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
-/* Values for the PpolyItem's flag. */
-
-enum {
-    kPpolyItemNoBboxCalculation     	= (1L << 0)		/* Inhibit any 'ComputePpolyBbox' call. */
-};
-
 /*
  * The structure below defines the record for each path item.
  */
@@ -38,7 +32,6 @@ typedef struct PpolyItem  {
 			     * Untransformed coordinates. */
     int maxNumSegments;	    /* Max number of straight segments (for subpath)
 			     * needed for Area and Point functions. */
-    long flags;		    /* Various flags, see enum. */
 } PpolyItem;
 
 enum {
@@ -185,7 +178,7 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
     Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
     Tk_OptionTable optionTable;
-    int	i;
+    int	i, len;
 
     if (objc == 0) {
         Tcl_Panic("canvas did not pass any coords\n");
@@ -205,7 +198,6 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
     ppolyPtr->bbox = NewEmptyPathRect();
     ppolyPtr->totalBbox = NewEmptyPathRect();
     ppolyPtr->maxNumSegments = 0;
-    ppolyPtr->flags = 0L;
     
     if (ppolyPtr->type == kPpolyTypePolyline) {
 	if (optionTablePolyline == NULL) {
@@ -230,7 +222,7 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
             break;
         }
     }
-    
+#if 0    
     /*
      * Since both PpolyCoords and ConfigurePpoly computes new bbox'es
      * we skip this and do it ourself below.
@@ -239,9 +231,15 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
     if (PpolyCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
         goto error;
     }
+#endif
+     if (CoordsForPolygonline(interp, canvas, 
+	    (ppolyPtr->type == kPpolyTypePolyline) ? 0 : 1, 
+	    i, objv, &(ppolyPtr->atomPtr), &len) != TCL_OK) {
+        goto error;
+    }
+    ppolyPtr->maxNumSegments = len;
+   
     if (ConfigurePpoly(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
-        ppolyPtr->flags &= ~kPpolyItemNoBboxCalculation;
-        ComputePpolyBbox(canvas, ppolyPtr);
         return TCL_OK;
     }
 
@@ -263,9 +261,7 @@ PpolyCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         return TCL_ERROR;
     }
     ppolyPtr->maxNumSegments = len;
-    if (!(ppolyPtr->flags & kPpolyItemNoBboxCalculation)) {
-        ComputePpolyBbox(canvas, ppolyPtr);
-    }
+    ComputePpolyBbox(canvas, ppolyPtr);
     return TCL_OK;
 }	
 
@@ -273,7 +269,8 @@ void
 ComputePpolyBbox(Tk_PathCanvas canvas, PpolyItem *ppolyPtr)
 {
     Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathItem *itemPtr = &itemExPtr->header;
+    Tk_PathStyle style;
     Tk_PathState state = itemExPtr->header.state;
 
     if (state == TK_PATHSTATE_NULL) {
@@ -284,14 +281,12 @@ ComputePpolyBbox(Tk_PathCanvas canvas, PpolyItem *ppolyPtr)
         itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     ppolyPtr->bbox = GetGenericBarePathBbox(ppolyPtr->atomPtr);
     ppolyPtr->totalBbox = GetGenericPathTotalBboxFromBare(ppolyPtr->atomPtr,
             &style, &ppolyPtr->bbox);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &ppolyPtr->totalBbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static int		
@@ -350,9 +345,7 @@ ConfigurePpoly(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	Tcl_DecrRefCount(errorResult);
 	return TCL_ERROR;
     } else {
-	if (!(ppolyPtr->flags & kPpolyItemNoBboxCalculation)) {
-	    ComputePpolyBbox(canvas, ppolyPtr);
-	}
+	ComputePpolyBbox(canvas, ppolyPtr);
 	return TCL_OK;
     }
 }
@@ -397,26 +390,32 @@ static double
 PpolyToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    PathAtom *atomPtr = ppolyPtr->atomPtr;
+    Tk_PathStyle style;
+    int dist;
+    long flags;
 
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 0);
-    }
-    return GenericPathToPoint(canvas, itemPtr, &style, atomPtr, 
+    flags = (ppolyPtr->type == kPpolyTypePolyline) ? kPathMergeStyleNotFill : 0;
+    style = TkPathCanvasInheritStyle(itemPtr, flags);
+    dist = GenericPathToPoint(canvas, itemPtr, &style, ppolyPtr->atomPtr, 
             ppolyPtr->maxNumSegments, pointPtr);
+    TkPathCanvasFreeInheritedStyle(&style);
+    return dist;
 }
 
 static int		
 PpolyToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ppolyPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    
-    return GenericPathToArea(canvas, itemPtr, &style, 
+    Tk_PathStyle style;
+    int area;
+    long flags;
+
+    flags = (ppolyPtr->type == kPpolyTypePolyline) ? kPathMergeStyleNotFill : 0;
+    style = TkPathCanvasInheritStyle(itemPtr, flags);    
+    area = GenericPathToArea(canvas, itemPtr, &style, 
             ppolyPtr->atomPtr, ppolyPtr->maxNumSegments, areaPtr);
+    TkPathCanvasFreeInheritedStyle(&style);            
+    return area;
 }
 
 static int		
