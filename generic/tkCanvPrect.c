@@ -174,7 +174,6 @@ CreatePrect(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         goto error;
     }
     if (ConfigurePrect(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
-        ComputePrectBbox(canvas, prectPtr);
         return TCL_OK;
     }
 

@@ -17,10 +17,6 @@
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
-enum {
-    kPtextItemNoBboxCalculation      	= (1L << 0)		/* Inhibit any 'ComputePtextBbox' call. */
-};
-
 /*
  * The structure below defines the record for each path item.
  */
@@ -37,7 +33,6 @@ typedef struct PtextItem  {
     Tcl_Obj *utf8Obj;		/* The actual text to display; UTF-8 */
     int numChars;		/* Length of text in characters. */
     int numBytes;		/* Length of text in bytes. */
-    long flags;			/* Various flags, see enum. */
     void *custom;		/* Place holder for platform dependent stuff. */
 } PtextItem;
 
@@ -48,33 +43,35 @@ typedef struct PtextItem  {
 
 static void	ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr);
 static int	ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, 
-                        Tk_PathItem *itemPtr, int objc,
-                        Tcl_Obj *CONST objv[], int flags);
+		    Tk_PathItem *itemPtr, int objc,
+		    Tcl_Obj *CONST objv[], int flags);
 static int	CreatePtext(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
-                        int objc, Tcl_Obj *CONST objv[]);
+		    Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
+		    int objc, Tcl_Obj *CONST objv[]);
 static void	DeletePtext(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, Display *display);
+		    Tk_PathItem *itemPtr, Display *display);
 static void	DisplayPtext(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, Display *display, Drawable drawable,
-                        int x, int y, int width, int height);
+		    Tk_PathItem *itemPtr, Display *display, Drawable drawable,
+		    int x, int y, int width, int height);
 static int	PtextCoords(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
-                        int objc, Tcl_Obj *CONST objv[]);
+		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+		    int objc, Tcl_Obj *CONST objv[]);
+static int	ProcessCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, 
+			Tk_PathItem *itemPtr, int objc, Tcl_Obj *CONST objv[]);
 static int	PtextToArea(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double *rectPtr);
+		    Tk_PathItem *itemPtr, double *rectPtr);
 static double	PtextToPoint(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double *coordPtr);
+		    Tk_PathItem *itemPtr, double *coordPtr);
 static int	PtextToPostscript(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
+		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
 static void	ScalePtext(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double originX, double originY,
-                        double scaleX, double scaleY);
+		    Tk_PathItem *itemPtr, double originX, double originY,
+		    double scaleX, double scaleY);
 static void	TranslatePtext(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double deltaX, double deltaY);
+		    Tk_PathItem *itemPtr, double deltaX, double deltaY);
 #if 0
 static void	PtextDeleteChars(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
-                        int first, int last);
+		    int first, int last);
 #endif
 
 enum {
@@ -191,7 +188,6 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
     ptextPtr->textAnchor = kPathTextAnchorStart;
     ptextPtr->textStyle.fontFamily = NULL;
     ptextPtr->textStyle.fontSize = 0.0;
-    ptextPtr->flags = 0L;
     ptextPtr->custom = NULL;
     
     if (optionTable == NULL) {
@@ -209,13 +205,10 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
             break;
         }
     }
-    ptextPtr->flags |= kPtextItemNoBboxCalculation;
-    if (PtextCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    if (ProcessCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
         goto error;
     }
     if (ConfigurePtext(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
-        ptextPtr->flags &= ~kPtextItemNoBboxCalculation;
-        ComputePtextBbox(canvas, ptextPtr);
         return TCL_OK;
     }
 
@@ -224,8 +217,8 @@ error:
     return TCL_ERROR;
 }
 
-static int		
-PtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
+static int
+ProcessCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
         int objc, Tcl_Obj *CONST objv[])
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
@@ -243,7 +236,8 @@ PtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
                     (Tcl_Obj ***) &objv) != TCL_OK) {
                 return TCL_ERROR;
             } else if (objc != 2) {
-                Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
+                Tcl_SetObjResult(interp, 
+			Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
                 return TCL_ERROR;
             }
         }
@@ -251,21 +245,35 @@ PtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
             || (Tk_PathCanvasGetCoordFromObj(interp, canvas, objv[1], &ptextPtr->y) != TCL_OK)) {
             return TCL_ERROR;
         }
-        if (!(ptextPtr->flags & kPtextItemNoBboxCalculation)) {
-            ComputePtextBbox(canvas, ptextPtr);
-        }
     } else {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
+        Tcl_SetObjResult(interp, 
+		Tcl_NewStringObj("wrong # coordinates: expected 0 or 2", -1));
         return TCL_ERROR;
     }
     return TCL_OK;
+}
+
+
+static int		
+PtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
+        int objc, Tcl_Obj *CONST objv[])
+{
+    PtextItem *ptextPtr = (PtextItem *) itemPtr;
+    int result;
+
+    result = ProcessCoords(interp, canvas, itemPtr, objc, objv);
+    if ((result == TCL_OK) && (objc > 0) && (objc < 3)) {
+	ComputePtextBbox(canvas, ptextPtr);
+    }
+    return result;
 }
 
 void
 ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
 {
     Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
+    Tk_PathItem *itemPtr = &itemExPtr->header;
+    Tk_PathStyle style;
     Tk_PathState state = itemExPtr->header.state;
     double width;
     PathRect bbox, r;
@@ -278,10 +286,7 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
         itemExPtr->header.y1 = itemExPtr->header.y2 = -1;
         return;
     }
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill);
-    }    
+    style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     r = TkPathTextMeasureBbox(&ptextPtr->textStyle, 
 	    Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     width = r.x2 - r.x1;
@@ -316,6 +321,7 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
     }
     ptextPtr->bbox = bbox;
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &bbox);
+    TkPathCanvasFreeInheritedStyle(&style);
 }
 
 static int		
@@ -343,13 +349,16 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
 	}	
+	// @@@ TODO: the mask isn't set for the defaults -fill which differ
 	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
 	    continue;
 	}
 	// @@@ TkPathTextConfig needs to be reworked!
-	if (TkPathTextConfig(interp, &(ptextPtr->textStyle), 
-		Tcl_GetString(ptextPtr->utf8Obj), &ptextPtr->custom) != TCL_OK) {
-	    continue;
+	if (ptextPtr->utf8Obj != NULL) {
+	    if (TkPathTextConfig(interp, &(ptextPtr->textStyle), 
+		    Tcl_GetString(ptextPtr->utf8Obj), &ptextPtr->custom) != TCL_OK) {
+		continue;
+	    }
 	}
 
 	/*
@@ -385,9 +394,7 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	Tcl_DecrRefCount(errorResult);
 	return TCL_ERROR;
     } else {
-	if (!(ptextPtr->flags & kPtextItemNoBboxCalculation)) {
-            ComputePtextBbox(canvas, ptextPtr);
-        }
+	ComputePtextBbox(canvas, ptextPtr);
 	return TCL_OK;
     }
 }
@@ -415,6 +422,7 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
         int x, int y, int width, int height)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
+    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
     Tk_PathStyle style;
     TMatrix m = GetCanvasTMatrix(canvas);
     TkPathContext ctx;
@@ -422,7 +430,17 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     if (ptextPtr->utf8Obj == NULL) {
         return;
     }
+    
+    /*
+     * The defaults for -fill and -stroke differ for the ptext item.
+     */
     style = TkPathCanvasInheritStyle(itemPtr, 0);
+    if (!(style.mask & PATH_STYLE_OPTION_FILL)) {
+	style.fill = itemExPtr->style.fill;
+    }
+    if (!(style.mask & PATH_STYLE_OPTION_STROKE)) {
+	style.strokeColor = itemExPtr->style.strokeColor;
+    }
     ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
     TkPathPushTMatrix(ctx, &m);
     if (style.matrixPtr != NULL) {
@@ -443,26 +461,28 @@ static double
 PtextToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill | kPathMergeStyleNotStroke);
-    }    
-    return PathRectToPointWithMatrix(ptextPtr->bbox, style.matrixPtr, pointPtr);    
+    Tk_PathStyle style;
+    double dist;
+
+    style = TkPathCanvasInheritStyle(itemPtr, 
+	    kPathMergeStyleNotFill | kPathMergeStyleNotStroke);
+    dist = PathRectToPointWithMatrix(ptextPtr->bbox, style.matrixPtr, pointPtr);    
+    TkPathCanvasFreeInheritedStyle(&style);
+    return dist;
 }
 
 static int		
 PtextToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
-    Tk_PathItemEx *itemExPtr = &ptextPtr->headerEx;
-    Tk_PathStyle style = itemExPtr->style;  /* NB: We *copy* the style for temp usage. */
-    if (itemExPtr->styleInst != NULL) {
-	TkPathStyleMergeStyles(itemExPtr->styleInst->masterPtr, &style, 
-		kPathMergeStyleNotFill | kPathMergeStyleNotStroke);
-    }    
-    return PathRectToAreaWithMatrix(ptextPtr->bbox, style.matrixPtr, areaPtr);
+    Tk_PathStyle style;
+    int area;
+    
+    style = TkPathCanvasInheritStyle(itemPtr, 
+	    kPathMergeStyleNotFill | kPathMergeStyleNotStroke);
+    area = PathRectToAreaWithMatrix(ptextPtr->bbox, style.matrixPtr, areaPtr);
+    TkPathCanvasFreeInheritedStyle(&style);
+    return area;
 }
 
 static int		

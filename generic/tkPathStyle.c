@@ -1047,6 +1047,7 @@ TkPathStyleMergeStyles(
             dstStyle->strokeWidth = srcStyle->strokeWidth;
         }
     }
+    dstStyle->mask |= mask;
 }
 
 /*
