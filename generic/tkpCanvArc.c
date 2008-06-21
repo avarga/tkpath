@@ -269,6 +269,7 @@ Tk_PathItemType tkArcType = {
     DeleteArc,			/* deleteProc */
     DisplayArc,			/* displayProc */
     0,				/* flags */
+    NULL,			/* bboxProc */
     ArcToPoint,			/* pointProc */
     ArcToArea,			/* areaProc */
     ArcToPostscript,		/* postscriptProc */

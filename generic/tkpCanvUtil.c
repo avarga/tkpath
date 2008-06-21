@@ -488,7 +488,7 @@ TkPathCanvasFreeInheritedStyle(Tk_PathStyle *stylePtr)
 TMatrix
 TkPathCanvasInheritTMatrix(Tk_PathItem *itemPtr)
 {
-    int depth, i, anyMatrix = 0;
+    int depth, i;
     Tk_PathItem *walkPtr;
     Tk_PathItemEx *itemExPtr;
     Tk_PathItemEx **parents;
@@ -516,7 +516,6 @@ TkPathCanvasInheritTMatrix(Tk_PathItem *itemPtr)
 	    }
 	}
 	if (matrixPtr != NULL) {
-	    anyMatrix = 1;
 	    MMulTMatrix(matrixPtr, &matrix);
 	}	
     }

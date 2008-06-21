@@ -53,6 +53,7 @@ static void	DeletePtext(Tk_PathCanvas canvas,
 static void	DisplayPtext(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, Display *display, Drawable drawable,
 		    int x, int y, int width, int height);
+static void	PtextBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask);
 static int	PtextCoords(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 		    int objc, Tcl_Obj *CONST objv[]);
@@ -145,6 +146,7 @@ Tk_PathItemType tkPtextType = {
     DeletePtext,			/* deleteProc */
     DisplayPtext,			/* displayProc */
     0,					/* flags */
+    PtextBbox,				/* bboxProc */
     PtextToPoint,			/* pointProc */
     PtextToArea,			/* areaProc */
     PtextToPostscript,			/* postscriptProc */
@@ -459,6 +461,12 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     TkPathEndPath(ctx);
     TkPathFree(ctx);
     TkPathCanvasFreeInheritedStyle(&style);
+}
+
+static void	
+PtextBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
+{
+
 }
 
 static double	

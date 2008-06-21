@@ -152,7 +152,7 @@ typedef void	Tk_PathItemDisplayProc(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, Display *display, Drawable dst,
 		    int x, int y, int width, int height);
 typedef void	TkPathItemBboxProc(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
-		    int flags);
+		    int mask);
 typedef double	Tk_PathItemPointProc(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, double *pointPtr);
 typedef int	Tk_PathItemAreaProc(Tk_PathCanvas canvas,
@@ -187,11 +187,9 @@ typedef struct Tk_PathItemType {
     Tk_PathItemCreateProc *createProc;
 				/* Procedure to create a new item of this
 				 * type. */
-#if 1
-    Tk_OptionSpec *optionSpecs;	/* Pointer to array of option specs for    OBSOLETE!!!!!!!!!! ??????????
+    Tk_OptionSpec *optionSpecs;	/* Pointer to array of option specs for
 				 * this type. Used for returning option
 				 * info. */
-#endif
     Tk_PathItemConfigureProc *configProc;
 				/* Procedure to call to change configuration
 				 * options. */
@@ -205,6 +203,10 @@ typedef struct Tk_PathItemType {
     int alwaysRedraw;		/* Non-zero means displayProc should be called
 				 * even when the item has been moved
 				 * off-screen. */
+    TkPathItemBboxProc *bboxProc;
+				/* Procedure that is invoked by group items
+				 * on its children when it has reconfigured in
+				 * any way that affect the childrens bbox display. */
     Tk_PathItemPointProc *pointProc;
 				/* Computes distance from item to a given
 				 * point. */
@@ -356,7 +358,7 @@ typedef struct Tk_PathOutline {
 /* From tkpCanvUtil.c */
 
 EXTERN Tk_Window	Tk_PathCanvasTkwin(Tk_PathCanvas canvas);
-EXTERN void		Tk_PathCreateItemType(Tk_PathItemType *typePtr);
+EXTERN void		Tk_CreatePathItemType(Tk_PathItemType *typePtr);
 EXTERN int		Tk_PathCanvasObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int argc, Tcl_Obj *CONST argv[]);
 EXTERN void		Tk_PathCreateSmoothMethod(Tcl_Interp * interp, 

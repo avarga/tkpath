@@ -214,6 +214,7 @@ Tk_PathItemType tkRectangleType = {
     DeleteRectOval,		/* deleteProc */
     DisplayRectOval,		/* displayProc */
     0,				/* flags */
+    NULL,			/* bboxProc */
     RectToPoint,		/* pointProc */
     RectToArea,			/* areaProc */
     RectOvalToPostscript,	/* postscriptProc */
@@ -237,6 +238,7 @@ Tk_PathItemType tkOvalType = {
     DeleteRectOval,		/* deleteProc */
     DisplayRectOval,		/* displayProc */
     0,				/* flags */
+    NULL,			/* bboxProc */
     OvalToPoint,		/* pointProc */
     OvalToArea,			/* areaProc */
     RectOvalToPostscript,	/* postscriptProc */

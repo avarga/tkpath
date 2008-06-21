@@ -54,6 +54,7 @@ static void	DeleteGroup(Tk_PathCanvas canvas,
 static void	DisplayGroup(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, Display *display, Drawable drawable,
 		    int x, int y, int width, int height);
+static void	GroupBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int flags);
 static int	GroupCoords(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 		    int objc, Tcl_Obj *CONST objv[]);
@@ -102,6 +103,7 @@ Tk_PathItemType tkGroupType = {
     DeleteGroup,			/* deleteProc */
     DisplayGroup,			/* displayProc */
     0,					/* flags */
+    GroupBbox,				/* bboxProc */
     GroupToPoint,			/* pointProc */
     GroupToArea,			/* areaProc */
     GroupToPostscript,			/* postscriptProc */
@@ -214,9 +216,12 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     stylePtr->fillOpacity   = MAX(0.0, MIN(1.0, stylePtr->fillOpacity));
     
     /*
-     * We must notify all children to update themself.
+     * We must notify all children to update themself
+     * since they may inherit features.
+     * Before this we need to notify them to recompute their bbox'es.
      */
     if (!error) {
+	NotifyChildrenBboxChange(canvas, itemPtr, mask);
 	EventuallyRedrawGroupItem(canvas, itemPtr);
     }
 #if 0	    // From old code. Needed?
@@ -233,7 +238,6 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
 	Tcl_DecrRefCount(errorResult);
 	return TCL_ERROR;
     } else {
-	//ComputePrectBbox(canvas, prectPtr);
 	return TCL_OK;
     }
 }
@@ -261,6 +265,12 @@ DisplayGroup(Tk_PathCanvas canvas,
     int x, int y, int width, int height)
 {
     /* Empty. */
+}
+
+static void	
+GroupBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int flags)
+{
+
 }
 
 static int	

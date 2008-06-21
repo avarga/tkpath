@@ -142,6 +142,7 @@ Tk_PathItemType tkWindowType = {
     DeleteWinItem,		/* deleteProc */
     DisplayWinItem,		/* displayProc */
     1,				/* flags */
+    NULL,			/* bboxProc */
     WinItemToPoint,		/* pointProc */
     WinItemToArea,		/* areaProc */
     WinItemToPostscript,	/* postscriptProc */

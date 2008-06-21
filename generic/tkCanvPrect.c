@@ -50,6 +50,7 @@ static void	DeletePrect(Tk_PathCanvas canvas,
 static void	DisplayPrect(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, Display *display, Drawable drawable,
                         int x, int y, int width, int height);
+static void	PrectBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask);
 static int	PrectCoords(Tcl_Interp *interp,
                         Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
@@ -116,6 +117,7 @@ Tk_PathItemType tkPrectType = {
     DeletePrect,			/* deleteProc */
     DisplayPrect,			/* displayProc */
     0,					/* flags */
+    PrectBbox,				/* bboxProc */
     PrectToPoint,			/* pointProc */
     PrectToArea,			/* areaProc */
     PrectToPostscript,			/* postscriptProc */
@@ -328,6 +330,13 @@ DisplayPrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
 	    &style, &m, &prectPtr->rect);
     TkPathFreeAtoms(atomPtr);
     TkPathCanvasFreeInheritedStyle(&style);
+}
+
+static void	
+PrectBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
+{
+    PrectItem *prectPtr = (PrectItem *) itemPtr;
+    ComputePrectBbox(canvas, prectPtr);
 }
 
 static double	

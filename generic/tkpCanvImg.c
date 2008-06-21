@@ -139,6 +139,7 @@ Tk_PathItemType tkImageType = {
     DeleteImage,		/* deleteProc */
     DisplayImage,		/* displayProc */
     0,				/* flags */
+    NULL,			/* bboxProc */
     ImageToPoint,		/* pointProc */
     ImageToArea,		/* areaProc */
     ImageToPostscript,		/* postscriptProc */

@@ -275,26 +275,27 @@ static Tk_OptionTable optionTable = NULL;
  */
 
 Tk_PathItemType tkLineType = {
-    "line",				/* name */
-    sizeof(LineItem),			/* itemSize */
-    CreateLine,				/* createProc */
-    optionSpecs,			/* optionSpecs */
-    ConfigureLine,			/* configureProc */
-    LineCoords,				/* coordProc */
-    DeleteLine,				/* deleteProc */
-    DisplayLine,			/* displayProc */
-    0,					/* flags */
-    LineToPoint,			/* pointProc */
-    LineToArea,				/* areaProc */
-    LineToPostscript,			/* postscriptProc */
-    ScaleLine,				/* scaleProc */
-    TranslateLine,			/* translateProc */
+    "line",			/* name */
+    sizeof(LineItem),		/* itemSize */
+    CreateLine,			/* createProc */
+    optionSpecs,		/* optionSpecs */
+    ConfigureLine,		/* configureProc */
+    LineCoords,			/* coordProc */
+    DeleteLine,			/* deleteProc */
+    DisplayLine,		/* displayProc */
+    0,				/* flags */
+    NULL,			/* bboxProc */
+    LineToPoint,		/* pointProc */
+    LineToArea,			/* areaProc */
+    LineToPostscript,		/* postscriptProc */
+    ScaleLine,			/* scaleProc */
+    TranslateLine,		/* translateProc */
     (Tk_PathItemIndexProc *) GetLineIndex,/* indexProc */
-    NULL,				/* icursorProc */
-    NULL,				/* selectionProc */
+    NULL,			/* icursorProc */
+    NULL,			/* selectionProc */
     (Tk_PathItemInsertProc *) LineInsert,/* insertProc */
-    LineDeleteCoords,			/* dTextProc */
-    NULL,				/* nextPtr */
+    LineDeleteCoords,		/* dTextProc */
+    NULL,			/* nextPtr */
 };
 
 /*

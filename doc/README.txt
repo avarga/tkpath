@@ -110,7 +110,10 @@ item using the -parent option.
 
    tag "all":
 	Note that this presently also includes the root item which can result in some
-	unexpected behavior.
+	unexpected behavior. In many case you can operate on the root item (0) instead.
+	As an example, if you want to move all items in canvas,	then do:
+	  	pathName move 0 x y
+	and similar for scale etc.
 
  o New items
 

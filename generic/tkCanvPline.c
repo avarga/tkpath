@@ -46,6 +46,7 @@ static void	DeletePline(Tk_PathCanvas canvas,
 static void	DisplayPline(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, Display *display, Drawable drawable,
 		    int x, int y, int width, int height);
+static void	PlineBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask);
 static int	ProcessCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, 
 		    Tk_PathItem *itemPtr, int objc, Tcl_Obj *CONST objv[]);
 static int	PlineCoords(Tcl_Interp *interp,
@@ -95,6 +96,7 @@ Tk_PathItemType tkPlineType = {
     DeletePline,			/* deleteProc */
     DisplayPline,			/* displayProc */
     0,					/* flags */
+    PlineBbox,				/* bboxProc */
     PlineToPoint,			/* pointProc */
     PlineToArea,			/* areaProc */
     PlineToPostscript,			/* postscriptProc */
@@ -340,6 +342,12 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &r);
     TkPathFreeAtoms(atomPtr);
     TkPathCanvasFreeInheritedStyle(&style);
+}
+
+static void	
+PlineBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
+{
+
 }
 
 static double	

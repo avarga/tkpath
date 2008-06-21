@@ -63,6 +63,7 @@ static void	DeletePimage(Tk_PathCanvas canvas,
 static void	DisplayPimage(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, Display *display, Drawable drawable,
 		    int x, int y, int width, int height);
+static void	PimageBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask);
 static int	PimageCoords(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 		    int objc, Tcl_Obj *CONST objv[]);
@@ -149,6 +150,7 @@ Tk_PathItemType tkPimageType = {
     DeletePimage,			/* deleteProc */
     DisplayPimage,			/* displayProc */
     0,					/* flags */
+    PimageBbox,				/* bboxProc */
     PimageToPoint,			/* pointProc */
     PimageToArea,			/* areaProc */
     PimageToPostscript,			/* postscriptProc */
@@ -447,6 +449,12 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
 	    pimagePtr->coord[0], pimagePtr->coord[1], 
             pimagePtr->width, pimagePtr->height);
     TkPathFree(ctx);
+}
+
+static void	
+PimageBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
+{
+
 }
 
 static double	

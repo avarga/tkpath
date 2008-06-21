@@ -63,6 +63,7 @@ static void	DeletePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *dis
 static void	DisplayPpoly(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, Display *display, Drawable drawable,
                         int x, int y, int width, int height);
+static void	PpolyBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask);
 static int	PpolyCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
                         int objc, Tcl_Obj *CONST objv[]);
 static int	PpolyToArea(Tk_PathCanvas canvas,
@@ -120,6 +121,7 @@ Tk_PathItemType tkPolylineType = {
     DeletePpoly,			/* deleteProc */
     DisplayPpoly,			/* displayProc */
     0,					/* flags */
+    PpolyBbox,				/* bboxProc */
     PpolyToPoint,			/* pointProc */
     PpolyToArea,			/* areaProc */
     PpolyToPostscript,			/* postscriptProc */
@@ -143,6 +145,7 @@ Tk_PathItemType tkPpolygonType = {
     DeletePpoly,			/* deleteProc */
     DisplayPpoly,			/* displayProc */
     0,					/* flags */
+    PpolyBbox,				/* bboxProc */
     PpolyToPoint,			/* pointProc */
     PpolyToArea,			/* areaProc */
     PpolyToPostscript,			/* postscriptProc */
@@ -384,6 +387,12 @@ DisplayPpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, ppolyPtr->atomPtr, &style,
             &m, &ppolyPtr->bbox);
     TkPathCanvasFreeInheritedStyle(&style);
+}
+
+static void	
+PpolyBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
+{
+
 }
 
 static double	

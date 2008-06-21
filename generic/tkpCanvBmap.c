@@ -152,6 +152,7 @@ Tk_PathItemType tkBitmapType = {
     DeleteBitmap,		/* deleteProc */
     DisplayBitmap,		/* displayProc */
     0,				/* flags */
+    NULL,			/* bboxProc */
     BitmapToPoint,		/* pointProc */
     BitmapToArea,		/* areaProc */
     BitmapToPostscript,		/* postscriptProc */

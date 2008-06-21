@@ -254,6 +254,7 @@ Tk_PathItemType tkPolygonType = {
     DeletePolygon,			/* deleteProc */
     DisplayPolygon,			/* displayProc */
     0,					/* flags */
+    NULL,				/* bboxProc */
     PolygonToPoint,			/* pointProc */
     PolygonToArea,			/* areaProc */
     PolygonToPostscript,		/* postscriptProc */

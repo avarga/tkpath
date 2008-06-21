@@ -361,6 +361,7 @@ MODULE_SCOPE Tk_PathItem *  TkPathCanvasItemIteratorNext(Tk_PathItem *itemPtr);
 MODULE_SCOPE Tk_PathItem *  TkPathCanvasItemIteratorPrev(Tk_PathItem *itemPtr);
 	
 MODULE_SCOPE void	    EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr);
+MODULE_SCOPE void	    NotifyChildrenBboxChange(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask);
 MODULE_SCOPE void	    CanvasTranslateGroup(Tk_PathCanvas canvas, 
 				Tk_PathItem *itemPtr, double deltaX, double deltaY);
 MODULE_SCOPE void	    CanvasScaleGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,

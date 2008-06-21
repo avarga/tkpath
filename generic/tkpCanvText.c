@@ -224,6 +224,7 @@ Tk_PathItemType tkTextType = {
     DeleteText,			/* deleteProc */
     DisplayCanvText,		/* displayProc */
     0,				/* flags */
+    NULL,			/* bboxProc */
     TextToPoint,		/* pointProc */
     TextToArea,			/* areaProc */
     TextToPostscript,		/* postscriptProc */

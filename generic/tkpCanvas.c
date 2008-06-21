@@ -2907,7 +2907,25 @@ EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
 	    /*
 	     * Call ourself recursively for each group.
 	     */
-	    EventuallyRedrawGroupItem(canvas, itemPtr);
+	    EventuallyRedrawGroupItem(canvas, walkPtr);
+	}
+    }
+}
+
+void
+NotifyChildrenBboxChange(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
+{
+    Tk_PathItem *walkPtr;
+    
+    for (walkPtr = itemPtr->firstChildPtr; walkPtr != NULL; walkPtr = walkPtr->nextPtr) {
+	if (walkPtr->typePtr->bboxProc != NULL) {
+	    (*walkPtr->typePtr->bboxProc)(canvas, walkPtr, mask);
+	}
+	if (walkPtr->typePtr == &tkGroupType) {
+	    /*
+	     * Call ourself recursively for each group.
+	     */
+	    NotifyChildrenBboxChange(canvas, walkPtr, mask);
 	}
     }
 }
@@ -2915,7 +2933,7 @@ EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
 /*
  *--------------------------------------------------------------
  *
- * Tk_PathCreateItemType --
+ * Tk_CreatePathItemType --
  *
  *	This function may be invoked to add a new kind of canvas element to
  *	the core item types supported by Tk.
@@ -2933,7 +2951,7 @@ EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
  */
 
 void
-Tk_PathCreateItemType(
+Tk_CreatePathItemType(
     Tk_PathItemType *typePtr)	/* Information about item type; storage must
 				 * be statically allocated (must live
 				 * forever). */

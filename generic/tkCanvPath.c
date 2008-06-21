@@ -67,6 +67,8 @@ static void	DeletePath(Tk_PathCanvas canvas,
 static void	DisplayPath(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, Display *display, Drawable dst,
                         int x, int y, int width, int height);
+static void	PathBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+		    int mask);
 static int	PathToArea(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double *areaPtr);
 static double	PathToPoint(Tk_PathCanvas canvas,
@@ -116,6 +118,7 @@ Tk_PathItemType tkPathType = {
     DeletePath,			/* deleteProc */
     DisplayPath,		/* displayProc */
     0,                          /* flags */
+    PathBbox,                   /* bboxProc */
     PathToPoint,		/* pointProc */
     PathToArea,			/* areaProc */
     PathToPostscript,		/* postscriptProc */
@@ -574,6 +577,12 @@ DisplayPath(
                 &style, &m, &pathPtr->bbox);
         TkPathCanvasFreeInheritedStyle(&style);
     }
+}
+
+static void	
+PathBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
+{
+
 }
 
 /*
