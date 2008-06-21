@@ -2,7 +2,7 @@
  * tkCanvPimage.c --
  *
  *	This file implements an image canvas item modelled after its
- *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
+ *	SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
  * Copyright (c) 2007-2008  Mats Bengtsson
  *
@@ -53,33 +53,33 @@ typedef struct PimageItem  {
 
 static void	ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr);
 static int	ConfigurePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, 
-                        Tk_PathItem *itemPtr, int objc,
-                        Tcl_Obj *CONST objv[], int flags);
+		    Tk_PathItem *itemPtr, int objc,
+		    Tcl_Obj *CONST objv[], int flags);
 static int	CreatePimage(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
-                        int objc, Tcl_Obj *CONST objv[]);
+		    Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
+		    int objc, Tcl_Obj *CONST objv[]);
 static void	DeletePimage(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, Display *display);
+		    Tk_PathItem *itemPtr, Display *display);
 static void	DisplayPimage(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, Display *display, Drawable drawable,
-                        int x, int y, int width, int height);
+		    Tk_PathItem *itemPtr, Display *display, Drawable drawable,
+		    int x, int y, int width, int height);
 static int	PimageCoords(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
-                        int objc, Tcl_Obj *CONST objv[]);
+		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
+		    int objc, Tcl_Obj *CONST objv[]);
 static int	PimageToArea(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double *rectPtr);
+		    Tk_PathItem *itemPtr, double *rectPtr);
 static double	PimageToPoint(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double *coordPtr);
+		    Tk_PathItem *itemPtr, double *coordPtr);
 static int	PimageToPostscript(Tcl_Interp *interp,
-                        Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
+		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int prepass);
 static void	ScalePimage(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double originX, double originY,
-                        double scaleX, double scaleY);
+		    Tk_PathItem *itemPtr, double originX, double originY,
+		    double scaleX, double scaleY);
 static void	TranslatePimage(Tk_PathCanvas canvas,
-                        Tk_PathItem *itemPtr, double deltaX, double deltaY);
+		    Tk_PathItem *itemPtr, double deltaX, double deltaY);
 static void	ImageChangedProc _ANSI_ARGS_((ClientData clientData,
-                        int x, int y, int width, int height, int imgWidth,
-                        int imgHeight));
+		    int x, int y, int width, int height, int imgWidth,
+		    int imgHeight));
 void		PimageStyleChangedProc(ClientData clientData, int flags);
 
 
@@ -207,7 +207,7 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
             break;
         }
     }    
-    if (PimageCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    if (CoordsForPointItems(interp, canvas, pimagePtr->coord, i, objv) != TCL_OK) {
         goto error;
     }
     if (ConfigurePimage(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
@@ -236,20 +236,32 @@ PimageCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 /*
  * This is just a convenience function to obtain any style matrix.
  */
-static TMatrix *
+
+static TMatrix
 GetTMatrix(PimageItem *pimagePtr)
 {
-    TMatrix *matrixPtr = pimagePtr->matrixPtr;
+    TMatrix *matrixPtr;
+    Tk_PathStyle *stylePtr;
+    TMatrix matrix = TkPathCanvasInheritTMatrix((Tk_PathItem *) pimagePtr);
+    
+    matrixPtr = pimagePtr->matrixPtr;
     if (pimagePtr->styleInst != NULL) {
-	matrixPtr = pimagePtr->styleInst->masterPtr->matrixPtr;
+	stylePtr = pimagePtr->styleInst->masterPtr;
+	if (stylePtr->mask & PATH_STYLE_OPTION_MATRIX) {
+	    matrixPtr = stylePtr->matrixPtr;
+	}
+    }
+    if (matrixPtr != NULL) {
+	MMulTMatrix(matrixPtr, &matrix);
     }	
-    return matrixPtr;
+    return matrix;
 }
 
 void
 ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
 {
     Tk_PathState state = pimagePtr->header.state;
+    TMatrix matrix;
     int width = 0, height = 0;
     PathRect bbox;
 
@@ -273,7 +285,8 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
     bbox.x2 = bbox.x1 + width;
     bbox.y2 = bbox.y1 + height;
     pimagePtr->bbox = bbox;
-    SetGenericPathHeaderBbox(&pimagePtr->header, GetTMatrix(pimagePtr), &bbox);
+    matrix = GetTMatrix(pimagePtr);
+    SetGenericPathHeaderBbox(&pimagePtr->header, &matrix, &bbox);
 }
 
 static int		
@@ -310,6 +323,11 @@ ConfigurePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 		continue;
 	    }
 	    TkPathCanvasSetParent(parentPtr, itemPtr);
+	} else if ((itemPtr->id != 0) && (itemPtr->parentPtr == NULL)) {
+	    /*
+	     * If item not root and parent not set we must set it to root by default.
+	     */
+	    CanvasSetParentToRoot(itemPtr);
 	}
 	
 	/*
@@ -416,15 +434,14 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
         int x, int y, int width, int height)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    TMatrix m = GetCanvasTMatrix(canvas);
-    TMatrix *matrixPtr = GetTMatrix(pimagePtr);
+    TMatrix m;
     TkPathContext ctx;
 
     ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
+    m = GetCanvasTMatrix(canvas);
     TkPathPushTMatrix(ctx, &m);
-    if (matrixPtr != NULL) {
-        TkPathPushTMatrix(ctx, matrixPtr);
-    }
+    m = GetTMatrix(pimagePtr);
+    TkPathPushTMatrix(ctx, &m);
     /* @@@ Maybe we should taking care of x, y etc.? */
     TkPathImage(ctx, pimagePtr->image, pimagePtr->photo, 
 	    pimagePtr->coord[0], pimagePtr->coord[1], 
@@ -436,14 +453,16 @@ static double
 PimageToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    return PathRectToPointWithMatrix(pimagePtr->bbox, GetTMatrix(pimagePtr), pointPtr);
+    TMatrix m = GetTMatrix(pimagePtr);
+    return PathRectToPointWithMatrix(pimagePtr->bbox, &m, pointPtr);
 }
 
 static int		
 PimageToArea(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *areaPtr)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
-    return PathRectToAreaWithMatrix(pimagePtr->bbox, GetTMatrix(pimagePtr), areaPtr);
+    TMatrix m = GetTMatrix(pimagePtr);
+    return PathRectToAreaWithMatrix(pimagePtr->bbox, &m, areaPtr);
 }
 
 static int		

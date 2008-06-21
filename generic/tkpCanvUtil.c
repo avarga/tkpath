@@ -396,9 +396,9 @@ TkPathCanvasInheritStyle(Tk_PathItem *itemPtr, long flags)
 {
     int depth, i, anyMatrix = 0;
     Tk_PathItem *walkPtr;
+    Tk_PathItemEx *itemExPtr;
     Tk_PathItemEx **parents;
     Tk_PathStyle style;
-    Tk_PathItemEx *itemExPtr;
     TMatrix matrix = kPathUnitTMatrix;
     
     depth = TkPathCanvasGetDepth(itemPtr);
@@ -464,6 +464,64 @@ TkPathCanvasFreeInheritedStyle(Tk_PathStyle *stylePtr)
     if (stylePtr->matrixPtr != NULL) {
 	ckfree((char *) stylePtr->matrixPtr);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkPathCanvasInheritTMatrix --
+ *
+ *	Does the same job as TkPathCanvasInheritStyle but for the
+ *	TMatrix only. No memory allocated.
+ *	Note that we don't do the last step of concatenating the items
+ *	own TMatrix since that depends on its specific storage.
+ *
+ * Results:
+ *	TMatrix.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TMatrix
+TkPathCanvasInheritTMatrix(Tk_PathItem *itemPtr)
+{
+    int depth, i, anyMatrix = 0;
+    Tk_PathItem *walkPtr;
+    Tk_PathItemEx *itemExPtr;
+    Tk_PathItemEx **parents;
+    Tk_PathStyle *stylePtr;
+    TMatrix matrix = kPathUnitTMatrix, *matrixPtr = NULL;
+
+    depth = TkPathCanvasGetDepth(itemPtr);
+    parents = (Tk_PathItemEx **) ckalloc(depth*sizeof(Tk_PathItemEx *));
+
+    walkPtr = itemPtr, i = 0;
+    while (walkPtr->parentPtr != NULL) {
+	parents[i] = (Tk_PathItemEx *) walkPtr->parentPtr;
+	walkPtr = walkPtr->parentPtr, i++;
+    }
+
+    for (i = depth-1; i >= 0; i--) {
+	itemExPtr = parents[i];
+	
+	/* The order of these two merges decides which take precedence. */
+	matrixPtr = itemExPtr->style.matrixPtr;
+	if (itemExPtr->styleInst != NULL) {
+	    stylePtr = itemExPtr->styleInst->masterPtr;
+	    if (stylePtr->mask & PATH_STYLE_OPTION_MATRIX) {
+		matrixPtr = stylePtr->matrixPtr;
+	    }
+	}
+	if (matrixPtr != NULL) {
+	    anyMatrix = 1;
+	    MMulTMatrix(matrixPtr, &matrix);
+	}	
+    }
+    ckfree((char *) parents);
+    return matrix;
 }
 
 /* TkPathCanvasGradientTable etc.: this is just accessor functions to hide

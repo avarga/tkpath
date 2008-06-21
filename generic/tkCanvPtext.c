@@ -56,7 +56,7 @@ static void	DisplayPtext(Tk_PathCanvas canvas,
 static int	PtextCoords(Tcl_Interp *interp,
 		    Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 		    int objc, Tcl_Obj *CONST objv[]);
-static int	ProcessCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, 
+static int	ProcessPtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, 
 			Tk_PathItem *itemPtr, int objc, Tcl_Obj *CONST objv[]);
 static int	PtextToArea(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, double *rectPtr);
@@ -205,7 +205,7 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
             break;
         }
     }
-    if (ProcessCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    if (ProcessPtextCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
         goto error;
     }
     if (ConfigurePtext(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
@@ -218,7 +218,7 @@ error:
 }
 
 static int
-ProcessCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
+ProcessPtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
         int objc, Tcl_Obj *CONST objv[])
 {
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
@@ -261,7 +261,7 @@ PtextCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     PtextItem *ptextPtr = (PtextItem *) itemPtr;
     int result;
 
-    result = ProcessCoords(interp, canvas, itemPtr, objc, objv);
+    result = ProcessPtextCoords(interp, canvas, itemPtr, objc, objv);
     if ((result == TCL_OK) && (objc > 0) && (objc < 3)) {
 	ComputePtextBbox(canvas, ptextPtr);
     }
@@ -349,8 +349,12 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
 	}	
-	// @@@ TODO: the mask isn't set for the defaults -fill which differ
-	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	
+	/*
+	 * Since we have -fill default equal to black we need to force
+	 * setting the fill member of the style.
+	 */
+	if (ItemExConfigure(interp, canvas, itemExPtr, mask | PATH_STYLE_OPTION_FILL) != TCL_OK) {
 	    continue;
 	}
 	// @@@ TkPathTextConfig needs to be reworked!
