@@ -454,7 +454,8 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
 static void	
 PimageBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
 {
-
+    PimageItem *pimagePtr = (PimageItem *) itemPtr;
+    ComputePimageBbox(canvas, pimagePtr);
 }
 
 static double	

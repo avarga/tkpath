@@ -582,7 +582,17 @@ DisplayPath(
 static void	
 PathBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
 {
-
+    PathItem *pathPtr = (PathItem *) itemPtr;
+    /*
+     * Try to be economical here.
+     */
+    if ((mask & PATH_STYLE_OPTION_MATRIX) || 
+            (mask & PATH_STYLE_OPTION_STROKE) ||
+            (mask & PATH_STYLE_OPTION_STROKE_WIDTH) ||
+            (mask & PATH_CORE_OPTION_PARENT) ||
+            (mask & PATH_CORE_OPTION_STYLENAME)) {
+        ComputePathBbox(canvas, pathPtr);
+    }
 }
 
 /*

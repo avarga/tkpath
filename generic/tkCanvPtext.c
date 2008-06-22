@@ -466,7 +466,8 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
 static void	
 PtextBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
 {
-
+    PtextItem *ptextPtr = (PtextItem *) itemPtr;
+    ComputePtextBbox(canvas, ptextPtr);
 }
 
 static double	

@@ -218,11 +218,9 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
     /*
      * We must notify all children to update themself
      * since they may inherit features.
-     * Before this we need to notify them to recompute their bbox'es.
      */
     if (!error) {
-	NotifyChildrenBboxChange(canvas, itemPtr, mask);
-	EventuallyRedrawGroupItem(canvas, itemPtr);
+	GroupItemConfigured(canvas, itemPtr, mask);
     }
 #if 0	    // From old code. Needed?
     state = itemPtr->state;
@@ -270,7 +268,7 @@ DisplayGroup(Tk_PathCanvas canvas,
 static void	
 GroupBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int flags)
 {
-
+    /* Empty. */
 }
 
 static int	

@@ -2708,7 +2708,8 @@ PathGradientChangedProc(ClientData clientData, int flags)
 	    stylePtr->fillObj = NULL;
 	}
 	if (itemPtr->typePtr == &tkGroupType) {
-	    EventuallyRedrawGroupItem(itemExPtr->canvas, itemPtr);
+	    GroupItemConfigured(itemExPtr->canvas, itemPtr, 
+		    PATH_STYLE_OPTION_FILL);
 	} else {
 	    Tk_PathCanvasEventuallyRedraw(itemExPtr->canvas,
 		    itemExPtr->header.x1, itemExPtr->header.y1,
@@ -2731,7 +2732,8 @@ PathStyleChangedProc(ClientData clientData, int flags)
 	    itemExPtr->styleObj = NULL;
 	}
 	if (itemPtr->typePtr == &tkGroupType) {
-	    EventuallyRedrawGroupItem(itemExPtr->canvas, itemPtr);
+	    GroupItemConfigured(itemExPtr->canvas, itemPtr, 
+		    PATH_CORE_OPTION_STYLENAME); // Not completely correct...
 	} else {
 	    Tk_PathCanvasEventuallyRedraw(itemExPtr->canvas,
 		    itemExPtr->header.x1, itemExPtr->header.y1,

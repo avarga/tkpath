@@ -419,7 +419,8 @@ DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Dra
 static void	
 EllipseBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
 {
-
+    EllipseItem *ellPtr = (EllipseItem *) itemPtr;
+    ComputeEllipseBbox(canvas, ellPtr);
 }
 
 static double	

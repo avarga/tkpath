@@ -392,7 +392,8 @@ DisplayPpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
 static void	
 PpolyBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
 {
-
+    PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
+    ComputePpolyBbox(canvas, ppolyPtr);
 }
 
 static double	

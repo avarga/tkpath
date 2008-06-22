@@ -347,7 +347,8 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
 static void	
 PlineBbox(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
 {
-
+    PlineItem *plinePtr = (PlineItem *) itemPtr;
+    ComputePlineBbox(canvas, plinePtr);
 }
 
 static double	

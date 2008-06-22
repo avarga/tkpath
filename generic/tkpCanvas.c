@@ -2883,7 +2883,7 @@ EventuallyRedrawItem(
 /*
  *----------------------------------------------------------------------
  *
- * EventuallyRedrawGroupItem --
+ * GroupItemConfigured --
  *
  *	Schedules all children of a group for redisplay in a recursive way.
  *
@@ -2897,35 +2897,26 @@ EventuallyRedrawItem(
  */
 
 void
-EventuallyRedrawGroupItem(Tk_PathCanvas canvas, Tk_PathItem *itemPtr)
+GroupItemConfigured(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
 {
     Tk_PathItem *walkPtr;
     
     for (walkPtr = itemPtr->firstChildPtr; walkPtr != NULL; walkPtr = walkPtr->nextPtr) {
 	EventuallyRedrawItem(canvas, walkPtr);
-	if (walkPtr->typePtr == &tkGroupType) {
-	    /*
-	     * Call ourself recursively for each group.
-	     */
-	    EventuallyRedrawGroupItem(canvas, walkPtr);
-	}
-    }
-}
-
-void
-NotifyChildrenBboxChange(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask)
-{
-    Tk_PathItem *walkPtr;
-    
-    for (walkPtr = itemPtr->firstChildPtr; walkPtr != NULL; walkPtr = walkPtr->nextPtr) {
 	if (walkPtr->typePtr->bboxProc != NULL) {
 	    (*walkPtr->typePtr->bboxProc)(canvas, walkPtr, mask);
+	    /*
+	     * Only if the item responds to the bboxProc we need to redraw it.
+	     */
+	    EventuallyRedrawItem(canvas, walkPtr);
 	}
 	if (walkPtr->typePtr == &tkGroupType) {
 	    /*
 	     * Call ourself recursively for each group.
+	     * @@@ An alternative would be to have this call in the group's
+	     *     own bbox proc.
 	     */
-	    NotifyChildrenBboxChange(canvas, walkPtr, mask);
+	    GroupItemConfigured(canvas, walkPtr, mask);
 	}
     }
 }
