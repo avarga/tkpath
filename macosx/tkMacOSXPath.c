@@ -46,7 +46,7 @@ typedef struct TkPathContext_ {
     int             widthCode;  /* Used to depixelize the strokes:
                                  * 0: not integer width
                                  * 1: odd integer width
-                                 * 2: even intege width */
+                                 * 2: even integer width */
 } TkPathContext_;
 
 typedef struct PathATSUIRecord {

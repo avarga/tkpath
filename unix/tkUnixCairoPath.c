@@ -26,6 +26,7 @@
 
 extern int gAntiAlias;
 extern int gSurfaceCopyPremultiplyAlpha;
+extern int gDepixelize;
 extern Tcl_Interp *gInterp;
 
 int kPathSmallEndian = 1;	/* Hardcoded. */
@@ -49,6 +50,10 @@ typedef struct TkPathContext_ {
     cairo_surface_t* 		surface;
     PathSurfaceCairoRecord*	record;		/* NULL except for memory surfaces. 
                                          * Skip when cairo 1.2 widely spread. */
+    int             widthCode;  /* Used to depixelize the strokes:
+                                 * 0: not integer width
+                                 * 1: odd integer width
+                                 * 2: even integer width */
 } TkPathContext_;
 
 
@@ -74,6 +79,7 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     context->c = c;
     context->surface = surface;
     context->record = NULL;
+    context->widthCode = 0;
     return (TkPathContext) context;
 }
 
@@ -133,18 +139,35 @@ void TkPathRestoreState(TkPathContext ctx)
 void TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    int nint;
+    double width;
     cairo_new_path(context->c);
+    if (style->strokeColor == NULL) {
+        context->widthCode = 0;
+    } else {
+        width = style->strokeWidth;
+        nint = (int) (width + 0.5);
+        context->widthCode = fabs(width - nint) > 0.01 ? 0 : 2 - nint % 2;
+    }
 }
 
 void TkPathMoveTo(TkPathContext ctx, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     cairo_move_to(context->c, x, y);
 }
 
 void TkPathLineTo(TkPathContext ctx, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     cairo_line_to(context->c, x, y);
 }
 
@@ -154,6 +177,10 @@ void TkPathQuadBezier(TkPathContext ctx, double ctrlX, double ctrlY, double x, d
     double cx, cy;
     double x31, y31, x32, y32;
     
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     cairo_get_current_point(context->c, &cx, &cy);
 
     // conversion of quadratic bezier curve to cubic bezier curve: (mozilla/svg)
@@ -170,6 +197,10 @@ void TkPathCurveTo(TkPathContext ctx, double x1, double y1,
         double x2, double y2, double x, double y)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     cairo_curve_to(context->c, x1, y1, x2, y2, x, y);
 }
 
@@ -178,6 +209,11 @@ void TkPathArcTo(TkPathContext ctx,
         double phiDegrees, 	/* The rotation angle in degrees! */
         char largeArcFlag, char sweepFlag, double x, double y)
 {
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     TkPathArcToUsingBezier(ctx, rx, ry, phiDegrees, largeArcFlag, sweepFlag, x, y);
 }
 
@@ -185,6 +221,10 @@ void
 TkPathRect(TkPathContext ctx, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    if (gDepixelize) {
+        x = PATH_DEPIXELIZE(context->widthCode, x);
+        y = PATH_DEPIXELIZE(context->widthCode, y);
+    }
     cairo_rectangle(context->c, x, y, width, height);
 }
 

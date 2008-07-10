@@ -73,7 +73,6 @@
 		49FA53400D3CF5DC00DE2BD2 /* tkpRectOval.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkpRectOval.c; path = ../generic/tkpRectOval.c; sourceTree = SOURCE_ROOT; tabWidth = 8; usesTabs = 1; };
 		9A017ED6079FCCE100A80065 /* tkPath.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkPath.c; path = ../generic/tkPath.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
 		9A49B81F07A7AA2F00A80065 /* tkUnixCairoPath.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkUnixCairoPath.c; path = ../unix/tkUnixCairoPath.c; sourceTree = SOURCE_ROOT; tabWidth = 4; usesTabs = 0; };
-		9A49B82107A7AAD000A80065 /* tkUnixLibartPath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkUnixLibartPath.c; path = ../unix/tkUnixLibartPath.c; sourceTree = SOURCE_ROOT; };
 		9A56FF2807A234510091799F /* path.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = path.c; path = ../generic/path.c; sourceTree = SOURCE_ROOT; };
 		9A578441043C3672009A6529 /* Tcl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tcl.framework; path = /Library/Frameworks/Tcl.framework; sourceTree = "<absolute>"; };
 		9A578465043C369F009A6529 /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = /Library/Frameworks/Tk.framework; sourceTree = "<absolute>"; };
@@ -221,7 +220,6 @@
 			isa = PBXGroup;
 			children = (
 				9A49B81F07A7AA2F00A80065 /* tkUnixCairoPath.c */,
-				9A49B82107A7AAD000A80065 /* tkUnixLibartPath.c */,
 			);
 			name = unix;
 			sourceTree = "<group>";

@@ -518,7 +518,7 @@ ConfigureText(
     }
     textPtr->selTextGC = newSelGC;
 
-    // @@@ Crashes here on linux!!!
+    // @@@ Crashes here on linux!!! Seems OK now.
     selBgColorPtr = Tk_3DBorderColor(textInfoPtr->selBorder);
     if (Tk_3DBorderColor(textInfoPtr->insertBorder)->pixel
 	    == selBgColorPtr->pixel) {

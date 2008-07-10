@@ -88,6 +88,8 @@ PATH_OPTION_STRING_TABLES_FILL
 PATH_OPTION_STRING_TABLES_STROKE
 PATH_OPTION_STRING_TABLES_STATE
 
+#define DEF_PATHCANVTEXT_FONT 		"TkDefaultFont"
+
 /*
  * The enum kPathTextAnchorStart... MUST be kept in sync!
  */
@@ -95,7 +97,7 @@ static char *textAnchorST[] = {
     "start", "middle", "end", NULL
 };
 
-// @@@ TODO: have platform specific default font family.
+// @@@ TODO: have platform specific default font family annd size, see TkDefaultFont.
 #define PATH_OPTION_SPEC_FONTFAMILY		    \
     {TK_OPTION_STRING, "-fontfamily", NULL, NULL,   \
         "Helvetica", -1, Tk_Offset(PtextItem, textStyle.fontFamily),   \
