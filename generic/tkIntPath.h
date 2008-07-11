@@ -77,7 +77,7 @@ extern "C" {
  */
 #define TMATRIX_IS_RECTILINEAR(mPtr)   	(fabs(mPtr->b) == 0.0) && (fabs(mPtr->c) == 0.0)
 
-#define TMATRIX_DETERMINANT(mPtr)		(mPtr->a * mPtr->d - mPtr->c * mPtr->d)
+#define TMATRIX_DETERMINANT(mPtr)	(mPtr->a * mPtr->d - mPtr->c * mPtr->d)
 
 /*
  * Iff stroke width is an integer, widthCode=1,2, move coordinate
@@ -118,14 +118,14 @@ enum {
 extern int gAntiAlias;
 
 enum {
-    kPathTextAnchorStart =		0L,
+    kPathTextAnchorStart		= 0L,
     kPathTextAnchorMiddle,
     kPathTextAnchorEnd
 };
 
 /* These MUST be kept in sync with methodST and unitsST! */
 enum {
-    kPathGradientMethodPad = 		0L,
+    kPathGradientMethodPad		= 0L,
     kPathGradientMethodRepeat,
     kPathGradientMethodReflect
 };
@@ -171,7 +171,7 @@ typedef struct LookupTable {
  */
 
 typedef struct MoveToAtom {
-    PathAtom pathAtom;			/* Generic stuff that's the same for all
+    PathAtom pathAtom;		/* Generic stuff that's the same for all
                                  * types.  MUST BE FIRST IN STRUCTURE. */
     double x;
     double y;
@@ -297,19 +297,19 @@ TkPathColor *	TkPathGetPathColor(Tcl_Interp *interp, Tk_Window tkwin,
 
 void		TkPathIncludePoint(register Tk_PathItem *itemPtr, double *pointPtr);
 void		TkPathBezierScreenPoints(Tk_PathCanvas canvas, double control[],
-					int numSteps, register XPoint *xPointPtr);
+		    int numSteps, register XPoint *xPointPtr);
 void		TkPathBezierPoints(double control[], int numSteps,
-					register double *coordPtr);
-int			TkPathMakeBezierCurve(Tk_PathCanvas canvas, double *pointPtr,
-					int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]);
-int			TkPathMakeRawCurve(Tk_PathCanvas canvas, double *pointPtr,
-					int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]);
+		    register double *coordPtr);
+int		TkPathMakeBezierCurve(Tk_PathCanvas canvas, double *pointPtr,
+		    int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]);
+int		TkPathMakeRawCurve(Tk_PathCanvas canvas, double *pointPtr,
+		    int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]);
 void		TkPathMakeBezierPostscript(Tcl_Interp *interp, Tk_PathCanvas canvas,
-					double *pointPtr, int numPoints);
+		    double *pointPtr, int numPoints);
 void		TkPathMakeRawCurvePostscript(Tcl_Interp *interp, Tk_PathCanvas canvas,
-					double *pointPtr, int numPoints);
+		    double *pointPtr, int numPoints);
 void		TkPathFillPolygon(Tk_PathCanvas canvas, double *coordPtr, int numPoints,
-					Display *display, Drawable drawable, GC gc, GC outlineGC);
+		    Display *display, Drawable drawable, GC gc, GC outlineGC);
 		
 /* 
  * Various stuff.
@@ -369,9 +369,8 @@ MODULE_SCOPE void   PathGradientPaint(TkPathContext ctx, PathRect *bbox,
 
 MODULE_SCOPE Tk_PathSmoothMethod	tkPathBezierSmoothMethod;
 
-MODULE_SCOPE int	Tk_PathCanvasObjCmd(ClientData clientData,
-							Tcl_Interp *interp, int argc,
-							Tcl_Obj *const objv[]);
+MODULE_SCOPE int    Tk_PathCanvasObjCmd(ClientData clientData,
+			Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 
 /*
  * Gradient support functions.

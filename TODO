@@ -2,7 +2,7 @@
 TODO and undecided for tkpath
 -----------------------------
 
- o Scaling arcs. Much math! Simplified.
+ o Scaling rotated arcs. Much math! Simplified.
 
  o Optimize segmentation computations used for hittesting in the 'Point'
    functions.
@@ -13,7 +13,7 @@ TODO and undecided for tkpath
    to a styleName to save a lot of memory. See TreeCtrl.
 
  o I have paid no attention to if strokes are transformed or not. Sort out!
-   CG: strokes are scaled exactly.
+   CG + cairo: strokes are scaled exactly.
 
  o Perhaps it would be useful to allow multiple objects on a single item
    by supplying many coordinates for pline, prect, circle, and ellipse?
@@ -38,9 +38,8 @@ TODO and undecided for tkpath
  o Maybe there should be a group item also for tkp::surface?
 
  o Would it be useful to be able to set the viewport and coordinate
-   system for the canvas, like SVG does? Note that this will be possible
-   using the root items -matrix option when the inheritance model has
-   been coded, see above.
+   system for the canvas, like SVG does? Note that this is possible
+   using the root items -matrix option.
 
  o gdi+ seems unable to produce antialiasing effects on a surface but 
    there seems to be no gdi+ specific way of drawing in memory bitmaps 

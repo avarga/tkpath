@@ -880,8 +880,7 @@ ScalePath(
     PathAtom *atomPtr = pathPtr->atomPtr;
     PathRect r;
     
-    /* @@@ We shouldn't relly do this since it doesn't work well with affine transforms! 
-           I think it is the arc element that is the problem. */
+    /* @@@ Arc atoms with nonzero rotation angle is incomplete! */
 
     ScalePathAtoms(atomPtr, originX, originY, scaleX, scaleY);
     

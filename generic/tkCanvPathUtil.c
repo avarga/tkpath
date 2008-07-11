@@ -1824,10 +1824,29 @@ ScalePathAtoms(
                 ArcAtom *arc = (ArcAtom *) atomPtr;
                 /* INCOMPLETE !!!!!!!!!!!*/
                 /* WRONG !!!!!!!!!!!!!!!*/
-                arc->radX = scaleX*arc->radX;
-                arc->radY = scaleY*arc->radY;
-                arc->x = originX + scaleX*(arc->x - originX);
-                arc->y = originY + scaleY*(arc->y - originY);
+		if (fabs(fmod(arc->angle, 180.0)) < 0.001) {
+		    arc->radX = scaleX*arc->radX;
+		    arc->radY = scaleY*arc->radY;
+		} else if (fabs(fmod(arc->angle, 90.0)) < 0.001) {
+		    arc->radX = scaleY*arc->radX;
+		    arc->radY = scaleX*arc->radY;
+		} else {
+		    double angle;
+		    double nx, ny;
+		    double scalePerp, scalePara;
+		    
+		    if (scaleX == 0.0) Tcl_Panic("singularity when scaling arc atom");
+		    angle = atan(scaleY/scaleX * tan(arc->angle * DEGREES_TO_RADIANS));
+		    nx = cos(arc->angle * DEGREES_TO_RADIANS);
+		    ny = sin(arc->angle * DEGREES_TO_RADIANS);
+		    scalePara =  nx*scaleX + ny*scaleY;
+		    scalePerp = -ny*scaleX + nx*scaleY;
+		    arc->angle = angle * RADIANS_TO_DEGREES;
+		    arc->radX = fabs(scalePara*arc->radX);
+		    arc->radY = fabs(scalePerp*arc->radY);
+		}
+		arc->x = originX + scaleX*(arc->x - originX);
+		arc->y = originY + scaleY*(arc->y - originY);
                 break;
             }
             case PATH_ATOM_Q: {

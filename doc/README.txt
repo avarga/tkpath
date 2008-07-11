@@ -306,7 +306,7 @@ item using the -parent option.
    Displays text as expected. Note that the x coordinate marks the baseline
    of the text. Gradient fills unsupported so far. Especially the font 
    handling and settings will likely be developed further. 
-   Editing not implemented.
+   Editing not implemented. The default font family and size is platform dependent.
    
    .c create ptext x y ?-text string -textanchor start|middle|end?
        ?-fontfamily fontname -fontsize float?
