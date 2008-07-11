@@ -1,6 +1,7 @@
 package require tkpath 0.3.0
 
 set t .c_opacity
+destroy $t
 toplevel $t
 set w $t.c
 pack [tkp::canvas $w -width 400 -height 400 -bg white]
@@ -20,7 +21,7 @@ namespace eval ::opacity {
 	  -stroke "" -fill $col -fillopacity $opacity -tags $col
     }
     
-    $w move all 200 [expr 200-$r]
+    $w move root 200 [expr 200-$r]
     
     variable time 0
     variable speed 0.06

@@ -2,7 +2,7 @@
  * tkCanvPtext.c --
  *
  *	This file implements a text canvas item modelled after its
- *  SVG counterpart. See http://www.w3.org/TR/SVG11/.
+ *	SVG counterpart. See http://www.w3.org/TR/SVG11/.
  *
  * Copyright (c) 2007-2008  Mats Bengtsson
  *
@@ -88,7 +88,24 @@ PATH_OPTION_STRING_TABLES_FILL
 PATH_OPTION_STRING_TABLES_STROKE
 PATH_OPTION_STRING_TABLES_STATE
 
-#define DEF_PATHCANVTEXT_FONT 		"TkDefaultFont"
+/*
+ * Best would be to extract font information from the named font "TkDefaultFont"
+ * but the option defaults need static strings. Perhaps using NULL
+ * and extracting family and size dynamically?
+ */
+#if defined(__WIN32__) || defined(_WIN32) || \
+    defined(__CYGWIN__) || defined(__MINGW32__)
+#   define DEF_PATHCANVTEXT_FONTFAMILY 		"Tahoma"
+#   define DEF_PATHCANVTEXT_FONTSIZE 		"8"
+#else
+#   if defined(MAC_OSX_TK)
+#	define DEF_PATHCANVTEXT_FONTFAMILY 	"Lucida Grande"
+#	define DEF_PATHCANVTEXT_FONTSIZE 	"13"
+#   else
+#	define DEF_PATHCANVTEXT_FONTFAMILY 	"Helvetica"
+#	define DEF_PATHCANVTEXT_FONTSIZE 	"12"
+#   endif
+#endif
 
 /*
  * The enum kPathTextAnchorStart... MUST be kept in sync!
@@ -97,15 +114,14 @@ static char *textAnchorST[] = {
     "start", "middle", "end", NULL
 };
 
-// @@@ TODO: have platform specific default font family annd size, see TkDefaultFont.
 #define PATH_OPTION_SPEC_FONTFAMILY		    \
     {TK_OPTION_STRING, "-fontfamily", NULL, NULL,   \
-        "Helvetica", -1, Tk_Offset(PtextItem, textStyle.fontFamily),   \
+        DEF_PATHCANVTEXT_FONTFAMILY, -1, Tk_Offset(PtextItem, textStyle.fontFamily),   \
 	0, 0, PRECT_OPTION_INDEX_FONTFAMILY}
 
 #define PATH_OPTION_SPEC_FONTSIZE		    \
     {TK_OPTION_DOUBLE, "-fontsize", NULL, NULL,   \
-        "12.0", -1, Tk_Offset(PtextItem, textStyle.fontSize),   \
+        DEF_PATHCANVTEXT_FONTSIZE, -1, Tk_Offset(PtextItem, textStyle.fontSize),   \
 	0, 0, PRECT_OPTION_INDEX_FONTSIZE}
 
 #define PATH_OPTION_SPEC_TEXT		    \
