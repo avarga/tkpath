@@ -1825,8 +1825,9 @@ ScalePathAtoms(
             }
             case PATH_ATOM_A: {
                 ArcAtom *arc = (ArcAtom *) atomPtr;
-                /* INCOMPLETE !!!!!!!!!!!*/
-                /* WRONG !!!!!!!!!!!!!!!*/
+		/*
+		 * @@@ TODO: This is a very much simplified math which is WRONG!
+		 */
 		if (fabs(fmod(arc->angle, 180.0)) < 0.001) {
 		    arc->radX = scaleX*arc->radX;
 		    arc->radY = scaleY*arc->radY;
@@ -1836,19 +1837,18 @@ ScalePathAtoms(
 		} else {
 		    double angle;
 		    double nx, ny;
-		    double scalePerp, scalePara;
 		    
 		    if (scaleX == 0.0) Tcl_Panic("singularity when scaling arc atom");
 		    angle = atan(scaleY/scaleX * tan(arc->angle * DEGREES_TO_RADIANS));
 		    nx = cos(arc->angle * DEGREES_TO_RADIANS);
 		    ny = sin(arc->angle * DEGREES_TO_RADIANS);
-		    scalePara =  nx*scaleX + ny*scaleY;
-		    scalePerp = -ny*scaleX + nx*scaleY;
+		    
 		    arc->angle = angle * RADIANS_TO_DEGREES;
-		    arc->radX = fabs(scalePara*arc->radX);
-		    arc->radY = fabs(scalePerp*arc->radY);
-		    DebugPrintf(gInterp, 1, "arc->angle=%f, nx=%f, ny=%f, scalePara=%f, scalePerp=%f\n", 
-			    arc->angle, nx, ny, scalePara, scalePerp);
+		    arc->radX = arc->radX * hypot( scaleX*nx, scaleY*ny);
+		    arc->radY = arc->radY * hypot(-scaleX*ny, scaleY*nx);
+		    /* DebugPrintf(gInterp, 1, "arc->angle=%f, nx=%f, ny=%f, arc->radX=%f, arc->radY=%f\n", 
+			    arc->angle, nx, ny, arc->radX, arc->radY); */
+
 		}
 		arc->x = originX + scaleX*(arc->x - originX);
 		arc->y = originY + scaleY*(arc->y - originY);

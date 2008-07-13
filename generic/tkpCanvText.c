@@ -158,7 +158,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-underline", NULL, NULL,
 	"-1", -1, Tk_Offset(TextItem, underline),
 	0, 0, 0},
-    {TK_OPTION_PIXELS, "-width", NULL, NULL, 
+    {TK_OPTION_CUSTOM, "-width", NULL, NULL, 
         "0", -1, Tk_Offset(TextItem, width), 0, &pixelCO, 0},
     {TK_OPTION_END, NULL, NULL, NULL,           
 	NULL, 0, -1, 0, (ClientData) NULL, 0}
@@ -541,9 +541,13 @@ ConfigureText(
      * If the text was changed, move the selection and insertion indices to
      * keep them inside the item.
      */
-
-    textPtr->numBytes = strlen(textPtr->text);
-    textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
+    if (textPtr->text == NULL) {
+	textPtr->numBytes = 0;    
+	textPtr->numChars = 0;
+    } else {
+	textPtr->numBytes = strlen(textPtr->text);
+	textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
+    }
     if (textInfoPtr->selItemPtr == itemPtr) {
 
 	if (textInfoPtr->selectFirst >= textPtr->numChars) {

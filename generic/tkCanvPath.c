@@ -880,7 +880,7 @@ ScalePath(
     PathAtom *atomPtr = pathPtr->atomPtr;
     PathRect r;
     
-    /* @@@ Arc atoms with nonzero rotation angle is incomplete! */
+    /* @@@ TODO: Arc atoms with nonzero rotation angle is WRONG! */
 
     ScalePathAtoms(atomPtr, originX, originY, scaleX, scaleY);
     
