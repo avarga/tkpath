@@ -3,6 +3,15 @@ TODO and undecided for tkpath
 -----------------------------
 
  o Scaling rotated arcs. Much math! Simplified.
+    Test case:
+    pack [tkp::canvas .c -width 600 -height 200]
+    set p "M 100 100 a 100 25 60 1 0 50 -25"
+    set id [.c create path $p]
+    set id [.c create path $p -stroke red -matrix {{2 0} {0 1} {0 0}}]
+    set id [.c create path $p -stroke blue]
+    .c scale $id 0 0 2 1
+
+    
 
  o Optimize segmentation computations used for hittesting in the 'Point'
    functions.

@@ -207,7 +207,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_CUSTOM, "-tags", NULL, NULL,
 	NULL, -1, Tk_Offset(Tk_PathItem, pathTagsPtr),
 	TK_OPTION_NULL_OK, (ClientData) &tagsCO, 0},
-    {TK_OPTION_PIXELS, "-width", NULL, NULL, 
+    {TK_OPTION_CUSTOM, "-width", NULL, NULL, 
         "1.0", -1, Tk_Offset(ArcItem, outline.width), 0, &pixelCO, 0},
     {TK_OPTION_END, NULL, NULL, NULL,           
 	NULL, 0, -1, 0, (ClientData) NULL, 0}

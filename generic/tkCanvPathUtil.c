@@ -13,6 +13,9 @@
 #include "tkpCanvas.h"
 #include "tkCanvPathUtil.h"
 
+/* For debugging. */
+extern Tcl_Interp *gInterp;
+
 /*
  * For wider strokes we must make a more detailed analysis
  * when doing hit tests and area tests.
@@ -1844,6 +1847,8 @@ ScalePathAtoms(
 		    arc->angle = angle * RADIANS_TO_DEGREES;
 		    arc->radX = fabs(scalePara*arc->radX);
 		    arc->radY = fabs(scalePerp*arc->radY);
+		    DebugPrintf(gInterp, 1, "arc->angle=%f, nx=%f, ny=%f, scalePara=%f, scalePerp=%f\n", 
+			    arc->angle, nx, ny, scalePara, scalePerp);
 		}
 		arc->x = originX + scaleX*(arc->x - originX);
 		arc->y = originY + scaleY*(arc->y - originY);
