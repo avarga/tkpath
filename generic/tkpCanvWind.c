@@ -43,15 +43,6 @@ static char *stateStrings[] = {
     "active", "disabled", "normal", "hidden", NULL
 };
 
-static Tk_ObjCustomOption pixelCO = {
-    "pixel",			
-    Tk_PathPixelOptionSetProc,
-    Tk_PathPixelOptionGetProc,
-    Tk_PathPixelOptionRestoreProc,
-    NULL,	
-    (ClientData) NULL			
-};
-
 static Tk_ObjCustomOption tagsCO = {
     "tags",			
     Tk_PathCanvasTagsOptionSetProc,
@@ -64,16 +55,16 @@ static Tk_ObjCustomOption tagsCO = {
 static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL,
 	"center", -1, Tk_Offset(WindowItem, anchor), 0, 0, 0},
-    {TK_OPTION_CUSTOM, "-height", NULL, NULL, 
-        "0", -1, Tk_Offset(WindowItem, height), 0, &pixelCO, 0},
+    {TK_OPTION_PIXELS, "-height", NULL, NULL, 
+        "0", -1, Tk_Offset(WindowItem, height), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
         PATH_DEF_STATE, -1, Tk_Offset(Tk_PathItem, state),
         0, (ClientData) stateStrings, 0},		
     {TK_OPTION_CUSTOM, "-tags", NULL, NULL,
 	NULL, -1, Tk_Offset(Tk_PathItem, pathTagsPtr),
 	TK_OPTION_NULL_OK, (ClientData) &tagsCO, 0},
-    {TK_OPTION_CUSTOM, "-width", NULL, NULL, 
-        "0", -1, Tk_Offset(WindowItem, width), 0, &pixelCO, 0},
+    {TK_OPTION_PIXELS, "-width", NULL, NULL, 
+        "0", -1, Tk_Offset(WindowItem, width), 0, 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
 	NULL, -1, Tk_Offset(WindowItem, tkwin),
 	TK_OPTION_NULL_OK, 0, 0},

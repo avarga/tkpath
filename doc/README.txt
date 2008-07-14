@@ -12,6 +12,9 @@ child of the root item. The tkpath items, described below, are by default
 a child of the root item, but can be configured to be a child of any group
 item using the -parent option.
 
+There can be subtle differences compared to the original canvas. 
+One such situation is where an option value has switched from an integer 
+to float (double).
 
  o Syntax: The canvas is created using:
 

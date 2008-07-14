@@ -98,15 +98,6 @@ static Tk_ObjCustomOption offsetCO = {
     (ClientData) (TK_OFFSET_RELATIVE|TK_OFFSET_INDEX)			
 };
 
-static Tk_ObjCustomOption pixelCO = {
-    "pixel",			
-    Tk_PathPixelOptionSetProc,
-    Tk_PathPixelOptionGetProc,
-    Tk_PathPixelOptionRestoreProc,
-    NULL,	
-    (ClientData) NULL			
-};
-
 static Tk_ObjCustomOption tagsCO = {
     "tags",			
     Tk_PathCanvasTagsOptionSetProc,
@@ -154,12 +145,14 @@ static Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, (ClientData) &tagsCO, 0},
     {TK_OPTION_STRING, "-text", NULL, NULL,
 	"", -1, Tk_Offset(TextItem, text),
-	TK_OPTION_NULL_OK, 0, 0},
+	0, 0, 0},				/* Do not use TK_OPTION_NULL_OK
+						 * here since the text layout
+						 * goes crazy! */
     {TK_OPTION_INT, "-underline", NULL, NULL,
 	"-1", -1, Tk_Offset(TextItem, underline),
 	0, 0, 0},
-    {TK_OPTION_CUSTOM, "-width", NULL, NULL, 
-        "0", -1, Tk_Offset(TextItem, width), 0, &pixelCO, 0},
+    {TK_OPTION_PIXELS, "-width", NULL, NULL, 
+        "0", -1, Tk_Offset(TextItem, width), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,           
 	NULL, 0, -1, 0, (ClientData) NULL, 0}
 };
@@ -292,7 +285,7 @@ CreateText(
     textPtr->text	= NULL;
     textPtr->width	= 0;
     textPtr->underline	= -1;
-
+ 
     textPtr->numChars	= 0;
     textPtr->numBytes	= 0;
     textPtr->textLayout = NULL;
@@ -518,7 +511,6 @@ ConfigureText(
     }
     textPtr->selTextGC = newSelGC;
 
-    // @@@ Crashes here on linux!!! Seems OK now.
     selBgColorPtr = Tk_3DBorderColor(textInfoPtr->selBorder);
     if (Tk_3DBorderColor(textInfoPtr->insertBorder)->pixel
 	    == selBgColorPtr->pixel) {
@@ -541,13 +533,8 @@ ConfigureText(
      * If the text was changed, move the selection and insertion indices to
      * keep them inside the item.
      */
-    if (textPtr->text == NULL) {
-	textPtr->numBytes = 0;    
-	textPtr->numChars = 0;
-    } else {
-	textPtr->numBytes = strlen(textPtr->text);
-	textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
-    }
+    textPtr->numBytes = strlen(textPtr->text);
+    textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
 
 	if (textInfoPtr->selectFirst >= textPtr->numChars) {
