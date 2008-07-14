@@ -225,17 +225,7 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
             break;
         }
     }
-#if 0    
-    /*
-     * Since both PpolyCoords and ConfigurePpoly computes new bbox'es
-     * we skip this and do it ourself below.
-     */
-    ppolyPtr->flags |= kPpolyItemNoBboxCalculation;
-    if (PpolyCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
-        goto error;
-    }
-#endif
-     if (CoordsForPolygonline(interp, canvas, 
+    if (CoordsForPolygonline(interp, canvas, 
 	    (ppolyPtr->type == kPpolyTypePolyline) ? 0 : 1, 
 	    i, objv, &(ppolyPtr->atomPtr), &len) != TCL_OK) {
         goto error;

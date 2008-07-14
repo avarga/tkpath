@@ -501,7 +501,8 @@ ConfigureArc(
      */
 
     if (arcPtr->outline.activeWidth > arcPtr->outline.width ||
-	    arcPtr->outline.activeDash.number != 0 ||
+	    (arcPtr->outline.activeDashPtr != NULL 
+		    && arcPtr->outline.activeDashPtr->number != 0) ||
 	    arcPtr->outline.activeColor != NULL ||
 	    arcPtr->outline.activeStipple != None ||
 	    arcPtr->activeFillColor != NULL ||
@@ -835,14 +836,19 @@ DisplayArc(
     if (lineWidth < 1.0) {
 	lineWidth = 1.0;
     }
-    dashnumber = arcPtr->outline.dash.number;
+    if (arcPtr->outline.dashPtr != NULL) {
+	dashnumber = arcPtr->outline.dashPtr->number;    
+    } else {
+	dashnumber = 0;
+    }
     stipple = arcPtr->fillStipple;
     if (((TkPathCanvas *)canvas)->currentItemPtr == itemPtr) {
 	if (arcPtr->outline.activeWidth>lineWidth) {
 	    lineWidth = arcPtr->outline.activeWidth;
 	}
-	if (arcPtr->outline.activeDash.number != 0) {
-	    dashnumber = arcPtr->outline.activeDash.number;
+	if ((arcPtr->outline.activeDashPtr != NULL) &&
+		(arcPtr->outline.activeDashPtr->number != 0)) {
+	    dashnumber = arcPtr->outline.activeDashPtr->number;
 	}
 	if (arcPtr->activeFillStipple != None) {
 	    stipple = arcPtr->activeFillStipple;
@@ -851,8 +857,9 @@ DisplayArc(
 	if (arcPtr->outline.disabledWidth > 0) {
 	    lineWidth = arcPtr->outline.disabledWidth;
 	}
-	if (arcPtr->outline.disabledDash.number != 0) {
-	    dashnumber = arcPtr->outline.disabledDash.number;
+	if ((arcPtr->outline.disabledDashPtr != NULL) &&
+		(arcPtr->outline.disabledDashPtr->number != 0)) {
+	    dashnumber = arcPtr->outline.disabledDashPtr->number;
 	}
 	if (arcPtr->disabledFillStipple != None) {
 	    stipple = arcPtr->disabledFillStipple;
@@ -922,7 +929,7 @@ DisplayArc(
 	}
     }
     if (arcPtr->outline.gc != None) {
-	Tk_PathChangeOutlineGC(canvas, itemPtr, &(arcPtr->outline));
+	Tk_PathChangeOutlineGC(canvas, itemPtr, &arcPtr->outline);
 
 	if (extent != 0) {
 	    XDrawArc(display, drawable, arcPtr->outline.gc, x1, y1,

@@ -296,14 +296,6 @@ typedef struct Tk_PathDash {
     float *array;
 } Tk_PathDash;
 
-#if 0
-typedef struct Tk_TSOffset {
-    int flags;			/* Flags; see below for possible values */
-    int xoffset;		/* x offset */
-    int yoffset;		/* y offset */
-} Tk_TSOffset;
-#endif
-
 /*
  * Bit fields in Tk_Offset->flags:
  */
@@ -327,11 +319,6 @@ typedef struct Tk_PathOutline {
     double activeWidth;		/* Width of outline. */
     double disabledWidth;	/* Width of outline. */
     int offset;			/* Dash offset. */
-#if 1
-    Tk_Dash dash;		/* Dash pattern. */
-    Tk_Dash activeDash;		/* Dash pattern if state is active. */
-    Tk_Dash disabledDash;	/* Dash pattern if state is disabled. */
-#endif
     Tk_Dash *dashPtr;		/* Dash pattern. */
     Tk_Dash *activeDashPtr;	/* Dash pattern if state is active. */
     Tk_Dash *disabledDashPtr;	/* Dash pattern if state is disabled. */

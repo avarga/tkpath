@@ -493,7 +493,8 @@ ConfigureRectOval(
      */
 
     if (rectOvalPtr->outline.activeWidth > rectOvalPtr->outline.width ||
-	    rectOvalPtr->outline.activeDash.number != 0 ||
+	    (rectOvalPtr->outline.activeDashPtr != NULL &&
+		    rectOvalPtr->outline.activeDashPtr->number != 0) ||
 	    rectOvalPtr->outline.activeColor != NULL ||
 	    rectOvalPtr->outline.activeStipple != None ||
 	    rectOvalPtr->activeFillColor != NULL ||

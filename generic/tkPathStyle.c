@@ -374,12 +374,6 @@ PATH_OPTION_STRING_TABLES_STROKE
 //     Else I get problems with Tk_Offset and records.
 
 static Tk_OptionSpec styleOptionSpecs[] = {
-#if 0
-    {TK_OPTION_CUSTOM, "-fill", NULL, NULL,
-	"", -1, Tk_Offset(Tk_PathStyle, fill),
-	TK_OPTION_NULL_OK, (ClientData) &pathColorCO, 
-	PATH_STYLE_OPTION_FILL},
-#endif
     {TK_OPTION_STRING, "-fill", NULL, NULL,
 	"", Tk_Offset(Tk_PathStyle, fillObj), -1,
 	TK_OPTION_NULL_OK, 0, PATH_STYLE_OPTION_FILL},

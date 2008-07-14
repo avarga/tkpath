@@ -1313,9 +1313,6 @@ Tk_PathCreateOutline(
     outline->activeWidth = 0.0;
     outline->disabledWidth = 0.0;
     outline->offset = 0;
-    outline->dash.number = 0;
-    outline->activeDash.number = 0;
-    outline->disabledDash.number = 0;
     outline->dashPtr = NULL;
     outline->activeDashPtr = NULL;
     outline->disabledDashPtr = NULL;
@@ -1355,18 +1352,6 @@ Tk_PathDeleteOutline(
     if (outline->gc != None) {
 	Tk_FreeGC(display, outline->gc);
     }
-#if 0
-    if (ABS(outline->dash.number) > sizeof(char *)) {
-	ckfree((char *) outline->dash.pattern.pt);
-    }
-    if (ABS(outline->activeDash.number) > sizeof(char *)) {
-	ckfree((char *) outline->activeDash.pattern.pt);
-    }
-    if (ABS(outline->disabledDash.number) > sizeof(char *)) {
-	ckfree((char *) outline->disabledDash.pattern.pt);
-    }
-#endif
-
     if (outline->color != NULL) {
 	Tk_FreeColor(outline->color);
     }
@@ -1416,7 +1401,6 @@ Tk_PathConfigOutlineGC(
 {
     int mask = 0;
     double width;
-    Tk_Dash *dash;
     Tk_Dash *dashPtr;
     XColor *color;
     Pixmap stipple;
@@ -1439,7 +1423,6 @@ Tk_PathConfigOutlineGC(
     if (width < 1.0) {
 	width = 1.0;
     }
-    dash = &(outline->dash);
     dashPtr = outline->dashPtr;
     color = outline->color;
     stipple = outline->stipple;
@@ -1450,11 +1433,6 @@ Tk_PathConfigOutlineGC(
 	if (outline->activeWidth>width) {
 	    width = outline->activeWidth;
 	}
-#if 0
-	if (outline->activeDash.number != 0) {
-	    dash = &(outline->activeDash);
-	}
-#endif
 	if (outline->activeDashPtr != NULL) {
 	    dashPtr = outline->activeDashPtr;
 	}
@@ -1468,11 +1446,6 @@ Tk_PathConfigOutlineGC(
 	if (outline->disabledWidth>0) {
 	    width = outline->disabledWidth;
 	}
-#if 0
-	if (outline->disabledDash.number != 0) {
-	    dash = &(outline->disabledDash);
-	}
-#endif
 	if (outline->disabledDashPtr != NULL) {
 	    dashPtr = outline->disabledDashPtr;
 	}
@@ -1498,20 +1471,6 @@ Tk_PathConfigOutlineGC(
 	    mask |= GCStipple|GCFillStyle;
 	}
     }
-#if 0
-    if (mask && (dash->number != 0)) {
-	gcValues->line_style = LineOnOffDash;
-	gcValues->dash_offset = outline->offset;
-	if (dash->number >= 2) {
-	    gcValues->dashes = 4;
-	} else if (dash->number > 0) {
-	    gcValues->dashes = dash->pattern.array[0];
-	} else {
-	    gcValues->dashes = (char) (4 * width);
-	}
-	mask |= GCLineStyle|GCDashList|GCDashOffset;
-    }
-#endif
     if (mask && (dashPtr != NULL)) {
 	gcValues->line_style = LineOnOffDash;
 	gcValues->dash_offset = outline->offset;
@@ -1553,7 +1512,6 @@ Tk_PathChangeOutlineGC(
 {
     CONST char *p;
     double width;
-    Tk_Dash *dash;
     Tk_Dash *dashPtr;
     XColor *color;
     Pixmap stipple;
@@ -1563,7 +1521,6 @@ Tk_PathChangeOutlineGC(
     if (width < 1.0) {
 	width = 1.0;
     }
-    dash = &(outline->dash);
     dashPtr = outline->dashPtr;
     color = outline->color;
     stipple = outline->stipple;
@@ -1574,11 +1531,6 @@ Tk_PathChangeOutlineGC(
 	if (outline->activeWidth > width) {
 	    width = outline->activeWidth;
 	}
-#if 0
-	if (outline->activeDash.number != 0) {
-	    dash = &(outline->activeDash);
-	}
-#endif
 	if (outline->activeDashPtr != NULL) {
 	    dashPtr = outline->activeDashPtr;
 	}
@@ -1592,11 +1544,6 @@ Tk_PathChangeOutlineGC(
 	if (outline->disabledWidth > width) {
 	    width = outline->disabledWidth;
 	}
-#if 0
-	if (outline->disabledDash.number != 0) {
-	    dash = &(outline->disabledDash);
-	}
-#endif
 	if (outline->disabledDashPtr != NULL) {
 	    dashPtr = outline->disabledDashPtr;
 	}
@@ -1610,26 +1557,6 @@ Tk_PathChangeOutlineGC(
     if (color == NULL) {
 	return 0;
     }
-#if 0
-    if ((dash->number<-1) ||
-	    ((dash->number == -1) && (dash->pattern.array[1] != ','))) {
-	char *q;
-	int i = -dash->number;
-
-	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-	q = (char *) ckalloc(2*(unsigned int)i);
-	i = DashConvert(q, p, i, width);
-	XSetDashes(((TkPathCanvas *)canvas)->display, outline->gc,
-		outline->offset, q, i);
-	ckfree(q);
-    } else if (dash->number>2 || (dash->number==2 &&
-	    (dash->pattern.array[0]!=dash->pattern.array[1]))) {
-	p = (dash->number > (int)sizeof(char *))
-		? dash->pattern.pt : dash->pattern.array;
-	XSetDashes(((TkPathCanvas *)canvas)->display, outline->gc,
-		outline->offset, p, dash->number);
-    }
-#endif
     if (dashPtr != NULL) {
 	if ((dashPtr->number <- 1) ||
 		((dashPtr->number == -1) && (dashPtr->pattern.array[1] != ','))) {
@@ -1705,7 +1632,6 @@ Tk_PathResetOutlineGC(
 {
     char dashList;
     double width;
-    Tk_Dash *dash;
     Tk_Dash *dashPtr;
     XColor *color;
     Pixmap stipple;
@@ -1715,7 +1641,6 @@ Tk_PathResetOutlineGC(
     if (width < 1.0) {
 	width = 1.0;
     }
-    dash = &(outline->dash);
     dashPtr = outline->dashPtr;
     color = outline->color;
     stipple = outline->stipple;
@@ -1726,11 +1651,6 @@ Tk_PathResetOutlineGC(
 	if (outline->activeWidth > width) {
 	    width = outline->activeWidth;
 	}
-#if 0
-	if (outline->activeDash.number != 0) {
-	    dash = &(outline->activeDash);
-	}
-#endif
 	if (outline->activeDashPtr != NULL) {
 	    dashPtr = outline->activeDashPtr;
 	}
@@ -1744,11 +1664,6 @@ Tk_PathResetOutlineGC(
 	if (outline->disabledWidth > width) {
 	    width = outline->disabledWidth;
 	}
-#if 0
-	if (outline->disabledDash.number != 0) {
-	    dash = &(outline->disabledDash);
-	}
-#endif
 	if (outline->disabledDashPtr != NULL) {
 	    dashPtr = outline->disabledDashPtr;
 	}
@@ -1763,21 +1678,6 @@ Tk_PathResetOutlineGC(
 	return 0;
     }
 
-#if 0
-    if ((dash->number > 2) || (dash->number < -1) || (dash->number == 2 &&
-	    (dash->pattern.array[0] != dash->pattern.array[1])) ||
-	    ((dash->number == -1) && (dash->pattern.array[1] != ','))) {
-	if (dash->number < 0) {
-	    dashList = (int) (4 * width + 0.5);
-	} else if (dash->number<3) {
-	    dashList = dash->pattern.array[0];
-	} else {
-	    dashList = 4;
-	}
-	XSetDashes(((TkPathCanvas *)canvas)->display, outline->gc,
-		outline->offset, &dashList , 1);
-    }
-#endif
     if (dashPtr != NULL) {
 	if ((dashPtr->number > 2) || (dashPtr->number < -1) || (dashPtr->number == 2 &&
 		(dashPtr->pattern.array[0] != dashPtr->pattern.array[1])) ||
@@ -1832,14 +1732,12 @@ Tk_PathCanvasPsOutline(
     char *lptr = pattern;
     Tcl_Interp *interp = ((TkPathCanvas *)canvas)->interp;
     double width;
-    Tk_Dash *dash;
     Tk_Dash *dashPtr;
     XColor *color;
     Pixmap stipple;
     Tk_PathState state = item->state;
 
     width = outline->width;
-    dash = &(outline->dash);
     dashPtr = outline->dashPtr;
     color = outline->color;
     stipple = outline->stipple;
@@ -1851,11 +1749,6 @@ Tk_PathCanvasPsOutline(
 	if (outline->activeWidth > width) {
 	    width = outline->activeWidth;
 	}
-#if 0
-	if (outline->activeDash.number != 0) {
-	    dash = &(outline->activeDash);
-	}
-#endif
 	if (outline->activeDashPtr != NULL) {
 	    dashPtr = outline->activeDashPtr;
 	}
@@ -1869,11 +1762,6 @@ Tk_PathCanvasPsOutline(
 	if (outline->disabledWidth > 0) {
 	    width = outline->disabledWidth;
 	}
-#if 0
-	if (outline->disabledDash.number != 0) {
-	    dash = &(outline->disabledDash);
-	}
-#endif
 	if (outline->disabledDashPtr != NULL) {
 	    dashPtr = outline->disabledDashPtr;
 	}
@@ -1887,49 +1775,6 @@ Tk_PathCanvasPsOutline(
     sprintf(string, "%.15g setlinewidth\n", width);
     Tcl_AppendResult(interp, string, NULL);
 
-#if 0
-    if (dash->number > 10) {
-	str = (char *)ckalloc((unsigned int) (1 + 4*dash->number));
-    } else if (dash->number < -5) {
-	str = (char *)ckalloc((unsigned int) (1 - 8*dash->number));
-	lptr = (char *)ckalloc((unsigned int) (1 - 2*dash->number));
-    }
-    ptr = (ABS(dash->number) > sizeof(char *)) ?
-	    dash->pattern.pt : dash->pattern.array;
-    if (dash->number > 0) {
-	char *ptr0 = ptr;
-
-	sprintf(str, "[%d", *ptr++ & 0xff);
-	i = dash->number-1;
-	while (i--) {
-	    sprintf(str+strlen(str), " %d", *ptr++ & 0xff);
-	}
-	Tcl_AppendResult(interp, str, NULL);
-	if (dash->number&1) {
-	    Tcl_AppendResult(interp, " ", str+1, NULL);
-	}
-	sprintf(str, "] %d setdash\n", outline->offset);
-	Tcl_AppendResult(interp, str, NULL);
-	ptr = ptr0;
-    } else if (dash->number < 0) {
-	if ((i = DashConvert(lptr, ptr, -dash->number, width)) != 0) {
-	    char *lptr0 = lptr;
-
-	    sprintf(str, "[%d", *lptr++ & 0xff);
-	    while (--i) {
-		sprintf(str+strlen(str), " %d", *lptr++ & 0xff);
-	    }
-	    Tcl_AppendResult(interp, str, NULL);
-	    sprintf(str, "] %d setdash\n", outline->offset);
-	    Tcl_AppendResult(interp, str, NULL);
-	    lptr = lptr0;
-	} else {
-	    Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
-	}
-    } else {
-	Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
-    }
-#endif
     if (dashPtr != NULL) {
 	if (dashPtr->number > 10) {
 	    str = (char *)ckalloc((unsigned int) (1 + 4*dashPtr->number));

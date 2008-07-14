@@ -119,7 +119,7 @@ static Tk_ObjCustomOption tagsCO = {
 
 static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_CUSTOM, "-activedash", NULL, NULL,
-	NULL, -1, Tk_Offset(PolygonItem, outline.activeDash),
+	NULL, -1, Tk_Offset(PolygonItem, outline.activeDashPtr),
 	TK_OPTION_NULL_OK, &dashCO, 0},
     {TK_OPTION_COLOR, "-activefill", NULL, NULL,
 	NULL, -1, Tk_Offset(PolygonItem, activeFillColor), 
@@ -137,13 +137,13 @@ static Tk_OptionSpec optionSpecs[] = {
 	"0.0", -1, Tk_Offset(PolygonItem, outline.activeWidth),
 	0, &pixelCO, 0},
     {TK_OPTION_CUSTOM, "-dash", NULL, NULL,
-	NULL, -1, Tk_Offset(PolygonItem, outline.dash),
+	NULL, -1, Tk_Offset(PolygonItem, outline.dashPtr),
 	TK_OPTION_NULL_OK, &dashCO, 0},
     {TK_OPTION_CUSTOM, "-dashoffset", NULL, NULL,
 	"0.0", -1, Tk_Offset(PolygonItem, outline.offset),
 	0, &pixelCO, 0},
     {TK_OPTION_CUSTOM, "-disableddash", NULL, NULL,
-	NULL, -1, Tk_Offset(PolygonItem, outline.disabledDash),
+	NULL, -1, Tk_Offset(PolygonItem, outline.disabledDashPtr),
 	TK_OPTION_NULL_OK, &dashCO, 0},
     {TK_OPTION_COLOR, "-disabledfill", NULL, NULL,
 	NULL, -1, Tk_Offset(PolygonItem, disabledFillColor), 
@@ -316,7 +316,7 @@ CreatePolygon(
      * errors during the the remainder of this function.
      */
 
-    Tk_PathCreateOutline(&(polyPtr->outline));
+    Tk_PathCreateOutline(&polyPtr->outline);
     polyPtr->numPoints = 0;
     polyPtr->pointsAllocated = 0;
     polyPtr->coordPtr = NULL;
@@ -517,7 +517,8 @@ ConfigurePolygon(
     state = itemPtr->state;
 
     if (polyPtr->outline.activeWidth > polyPtr->outline.width ||
-	    polyPtr->outline.activeDash.number != 0 ||
+	    (polyPtr->outline.activeDashPtr != NULL &&
+		    polyPtr->outline.activeDashPtr->number != 0) ||
 	    polyPtr->outline.activeColor != NULL ||
 	    polyPtr->outline.activeStipple != None ||
 	    polyPtr->activeFillColor != NULL ||
