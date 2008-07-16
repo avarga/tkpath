@@ -1871,7 +1871,7 @@ DashConvert(
     int size, intWidth;
 
     if (n<0) {
-	n = strlen(p);
+	n = (int) strlen(p);
     }
     intWidth = (int) (width + 0.5);
     if (intWidth < 1) {

@@ -12,7 +12,7 @@
 #include "tkIntPath.h"
 #include "tkCanvPathUtil.h"
 
-#define DOUBLE_EQUALS(x,y)      (abs((x) - (y)) < DBL_EPSILON)
+#define DOUBLE_EQUALS(x,y)      (fabs((x) - (y)) < DBL_EPSILON)
 
 /*
  *--------------------------------------------------------------
@@ -1154,7 +1154,7 @@ DashConvertToFloats (
             case ' ':
                 if (result) {
                     if (d) {
-                        d[-1] += (float) (width) + 1.0;
+                        d[-1] += (float) (width + 1.0);
                     }
                     continue;
                 } else {

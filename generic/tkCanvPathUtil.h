@@ -54,7 +54,7 @@ double	PathPolygonToPointEx(double *polyPtr, int numPoints, double *pointPtr,
 double	PathRectToPoint(double rectPtr[], double width, int filled, double pointPtr[]);
 int	PathRectToArea(double rectPtr[], double width, int filled, double *areaPtr);
 int	PathRectToAreaWithMatrix(PathRect bbox, TMatrix *mPtr, double *areaPtr);
-int	PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
+double PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr);
 
 
 /*

@@ -150,38 +150,4 @@ int Tkpath_SafeInit(Tcl_Interp *interp)	    { return Tkpath_Init(interp); }
 int Tkpath_Unload(Tcl_Interp *interp)	    { return TCL_ERROR; }
 int Tkpath_SafeUnload(Tcl_Interp *interp)   { return Tkpath_Unload( interp ); }
 
-/*
- * On Windows we've got two different libs for GDI and GDI+ named differently.
- * @@@ TODO: skip these!
- */
-#ifdef _WIN32
-    __declspec(dllexport)
-
-int Tkpathgdi_Init(Tcl_Interp *interp)
-{
-    return Tkpath_Init(interp);
-}
-
-    __declspec(dllexport)
-
-int Tkpathgdi_SafeInit(Tcl_Interp *interp)
-{
-    return Tkpath_SafeInit(interp);
-}
-
-    __declspec(dllexport)
-
-int Tkpathgdiplus_SafeInit(Tcl_Interp *interp)
-{
-    return Tkpath_SafeInit(interp);
-}
-
-    __declspec(dllexport)
-
-int Tkpathgdiplus_Init(Tcl_Interp *interp)
-{
-    return Tkpath_Init(interp);
-}
-#endif
-
 /*--------------------------------------------------------------------------------*/

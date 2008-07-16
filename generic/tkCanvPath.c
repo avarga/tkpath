@@ -624,7 +624,7 @@ PathToPoint(
     PathItem        *pathPtr = (PathItem *) itemPtr;
     PathAtom        *atomPtr = pathPtr->atomPtr;
     Tk_PathStyle style;
-    int dist;
+    double dist;
 
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     dist = GenericPathToPoint(canvas, itemPtr, &style, atomPtr, 

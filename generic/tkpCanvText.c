@@ -533,7 +533,7 @@ ConfigureText(
      * If the text was changed, move the selection and insertion indices to
      * keep them inside the item.
      */
-    textPtr->numBytes = strlen(textPtr->text);
+    textPtr->numBytes = (int) strlen(textPtr->text);
     textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
 
@@ -932,7 +932,7 @@ TextInsert(
 	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
-    byteCount = strlen(string);
+    byteCount = (int) strlen(string);
     if (byteCount == 0) {
 	return;
     }

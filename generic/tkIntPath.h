@@ -459,7 +459,6 @@ MODULE_SCOPE int	TkPathPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
 MODULE_SCOPE void	PathStylesFree(Tk_Window tkwin, Tcl_HashTable *hashTablePtr);
-MODULE_SCOPE Tk_TSOffset TkPathGetOffsetFromBbox(Tk_TSOffset *offsetPtr, double bbox[4]);
 MODULE_SCOPE TkPathColor *  TkPathGetPathColorStatic(Tcl_Interp *interp, 
 			    Tk_Window tkwin, Tcl_Obj *nameObj);
 

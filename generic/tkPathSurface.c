@@ -144,7 +144,7 @@ NewSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* C
 
     sprintf(str, "%s%d", kSurfaceNameBase, uid++);
     surfacePtr = (PathSurface *) ckalloc( sizeof(PathSurface) );
-    surfacePtr->token = ckalloc( strlen(str) + 1 );
+    surfacePtr->token = ckalloc( (unsigned int)strlen(str) + 1 );
     strcpy(surfacePtr->token, str);
     surfacePtr->ctx = ctx;
     surfacePtr->width = width;

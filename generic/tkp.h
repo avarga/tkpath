@@ -344,63 +344,61 @@ typedef struct Tk_PathOutline {
  
 /* From tkpCanvUtil.c */
 
-EXTERN Tk_Window	Tk_PathCanvasTkwin(Tk_PathCanvas canvas);
-EXTERN void		Tk_CreatePathItemType(Tk_PathItemType *typePtr);
-EXTERN int		Tk_PathCanvasObjCmd(ClientData clientData, Tcl_Interp *interp,
-			    int argc, Tcl_Obj *CONST argv[]);
-EXTERN void		Tk_PathCreateSmoothMethod(Tcl_Interp * interp, 
+Tk_Window	Tk_PathCanvasTkwin(Tk_PathCanvas canvas);
+void		Tk_CreatePathItemType(Tk_PathItemType *typePtr);
+void		Tk_PathCreateSmoothMethod(Tcl_Interp * interp, 
 			    Tk_PathSmoothMethod * method);   
-EXTERN int		Tk_PathConfigOutlineGC(XGCValues *gcValues, Tk_PathCanvas canvas,
+int		Tk_PathConfigOutlineGC(XGCValues *gcValues, Tk_PathCanvas canvas,
 			    Tk_PathItem *item, Tk_PathOutline *outline);
-EXTERN int		Tk_PathChangeOutlineGC(Tk_PathCanvas canvas, Tk_PathItem *item,
+int		Tk_PathChangeOutlineGC(Tk_PathCanvas canvas, Tk_PathItem *item,
 			    Tk_PathOutline *outline);
-EXTERN int		Tk_PathResetOutlineGC(Tk_PathCanvas canvas, Tk_PathItem *item,
+int		Tk_PathResetOutlineGC(Tk_PathCanvas canvas, Tk_PathItem *item,
 			    Tk_PathOutline *outline);
-EXTERN int		Tk_PathCanvasPsOutline(Tk_PathCanvas canvas, Tk_PathItem *item,
+int		Tk_PathCanvasPsOutline(Tk_PathCanvas canvas, Tk_PathItem *item,
 			    Tk_PathOutline *outline);
-EXTERN void		Tk_PathCanvasDrawableCoords(Tk_PathCanvas canvas,
+void		Tk_PathCanvasDrawableCoords(Tk_PathCanvas canvas,
 			    double x, double y, short *drawableXPtr, short *drawableYPtr);
-EXTERN void		Tk_PathCanvasWindowCoords(Tk_PathCanvas canvas,
+void		Tk_PathCanvasWindowCoords(Tk_PathCanvas canvas,
 			    double x, double y, short *screenXPtr, short *screenYPtr);
-EXTERN int		Tk_PathCanvasGetCoord(Tcl_Interp *interp, Tk_PathCanvas canvas,
+int		Tk_PathCanvasGetCoord(Tcl_Interp *interp, Tk_PathCanvas canvas,
 			    CONST char *string, double *doublePtr);
-EXTERN int		Tk_PathCanvasGetCoordFromObj(Tcl_Interp *interp, Tk_PathCanvas canvas,
+int		Tk_PathCanvasGetCoordFromObj(Tcl_Interp *interp, Tk_PathCanvas canvas,
 			    Tcl_Obj *obj, double *doublePtr);
-EXTERN void		Tk_PathCanvasSetStippleOrigin(Tk_PathCanvas canvas, GC gc);
-EXTERN void		Tk_PathCanvasSetOffset(Tk_PathCanvas canvas, GC gc, Tk_TSOffset *offset);
-EXTERN Tk_PathCanvasTextInfo *	Tk_PathCanvasGetTextInfo(Tk_PathCanvas canvas);
-EXTERN int		Tk_PathCanvasTagsParseProc( ClientData clientData, Tcl_Interp *interp,
+void		Tk_PathCanvasSetStippleOrigin(Tk_PathCanvas canvas, GC gc);
+void		Tk_PathCanvasSetOffset(Tk_PathCanvas canvas, GC gc, Tk_TSOffset *offset);
+Tk_PathCanvasTextInfo *	Tk_PathCanvasGetTextInfo(Tk_PathCanvas canvas);
+int		Tk_PathCanvasTagsParseProc( ClientData clientData, Tcl_Interp *interp,
 			    Tk_Window tkwin, CONST char *value, char *widgRec, int offset);
-EXTERN char *		Tk_PathCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+char *		Tk_PathCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
 			    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
-EXTERN void		Tk_PathCreateSmoothMethod(Tcl_Interp *interp, Tk_PathSmoothMethod *smooth);
-EXTERN void		Tk_PathCreateOutline(Tk_PathOutline *outline);
-EXTERN void		Tk_PathDeleteOutline(Display *display, Tk_PathOutline *outline);
+void		Tk_PathCreateSmoothMethod(Tcl_Interp *interp, Tk_PathSmoothMethod *smooth);
+void		Tk_PathCreateOutline(Tk_PathOutline *outline);
+void		Tk_PathDeleteOutline(Display *display, Tk_PathOutline *outline);
     
-EXTERN int		Tk_PathCanvasTagsOptionSetProc(ClientData clientData, Tcl_Interp *interp,
+int		Tk_PathCanvasTagsOptionSetProc(ClientData clientData, Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj **value, char *recordPtr,
 			    int internalOffset, char *oldInternalPtr, int flags);
-EXTERN Tcl_Obj *	Tk_PathCanvasTagsOptionGetProc(ClientData clientData, Tk_Window tkwin,
+Tcl_Obj *	Tk_PathCanvasTagsOptionGetProc(ClientData clientData, Tk_Window tkwin,
 			    char *recordPtr, int internalOffset);
-EXTERN void		Tk_PathCanvasTagsOptionRestoreProc(ClientData clientData,
+void		Tk_PathCanvasTagsOptionRestoreProc(ClientData clientData,
 			    Tk_Window tkwin, char *internalPtr, char *oldInternalPtr);
-EXTERN void		Tk_PathCanvasTagsOptionFreeProc(ClientData clientData,
+void		Tk_PathCanvasTagsOptionFreeProc(ClientData clientData,
 			    Tk_Window tkwin, char *internalPtr);
     
 /* From tkpCanvas.c */
 
-EXTERN void		Tk_PathCanvasEventuallyRedraw(Tk_PathCanvas canvas,
+void		Tk_PathCanvasEventuallyRedraw(Tk_PathCanvas canvas,
 			    int x1, int y1, int x2, int y2);
-EXTERN int		Tk_PathCanvasPsColor(Tcl_Interp *interp, Tk_PathCanvas canvas,
+int		Tk_PathCanvasPsColor(Tcl_Interp *interp, Tk_PathCanvas canvas,
 			    XColor *colorPtr);
-EXTERN int		Tk_PathCanvasPsFont(Tcl_Interp *interp, Tk_PathCanvas canvas,
+int		Tk_PathCanvasPsFont(Tcl_Interp *interp, Tk_PathCanvas canvas,
 			    Tk_Font tkfont);
-EXTERN int		Tk_PathCanvasPsBitmap(Tcl_Interp *interp, Tk_PathCanvas canvas,
+int		Tk_PathCanvasPsBitmap(Tcl_Interp *interp, Tk_PathCanvas canvas,
 			    Pixmap bitmap, int startX, int startY, int width, int height);
-EXTERN int		Tk_PathCanvasPsStipple(Tcl_Interp *interp, Tk_PathCanvas canvas,
+int		Tk_PathCanvasPsStipple(Tcl_Interp *interp, Tk_PathCanvas canvas,
 			    Pixmap bitmap);
-EXTERN double		Tk_PathCanvasPsY(Tk_PathCanvas canvas, double y);
-EXTERN void		Tk_PathCanvasPsPath(Tcl_Interp *interp, Tk_PathCanvas canvas,
+double		Tk_PathCanvasPsY(Tk_PathCanvas canvas, double y);
+void		Tk_PathCanvasPsPath(Tcl_Interp *interp, Tk_PathCanvas canvas,
 			    double *coordPtr, int numPoints);
 
 

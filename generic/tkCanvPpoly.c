@@ -391,7 +391,7 @@ PpolyToPoint(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double *pointPtr)
 {
     PpolyItem *ppolyPtr = (PpolyItem *) itemPtr;
     Tk_PathStyle style;
-    int dist;
+    double dist;
     long flags;
 
     flags = (ppolyPtr->type == kPpolyTypePolyline) ? kPathMergeStyleNotFill : 0;

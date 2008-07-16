@@ -3989,7 +3989,7 @@ TagSearchScan(
      * How long is the tagOrId?
      */
 
-    searchPtr->stringLength = strlen(tag);
+    searchPtr->stringLength = (int) strlen(tag);
 
     /*
      * Make sure there is enough buffer to hold rewritten tags.

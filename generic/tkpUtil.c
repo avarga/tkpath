@@ -29,53 +29,6 @@ Tcl_ObjType tkStateKeyObjType = {
     NULL			/* setFromAnyProc */
 };
 
-/*
- *--------------------------------------------------------------
- *
- * TkPathGetOffsetFromBbox --
- *
- *	Return a valid Tk_TSOffset struct using the flags
- *	of the offsetPtr scaling it to the bbox.
- *
- * Results:
- *	Tk_TSOffset.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
-
-Tk_TSOffset
-TkPathGetOffsetFromBbox(Tk_TSOffset *offsetPtr, double bbox[4])
-{
-    Tk_TSOffset tsoffset;
-    int flags;
-    
-    if (offsetPtr == NULL) {
-	tsoffset.flags = 0;
-	tsoffset.xoffset = 0;
-	tsoffset.yoffset = 0;
-    } else {
-	flags = tsoffset.flags;
-	if (flags & TK_OFFSET_LEFT) {
-	    tsoffset.xoffset = (int) (bbox[0] + 0.5);
-	} else if (flags & TK_OFFSET_CENTER) {
-	    tsoffset.xoffset = (int) ((bbox[0] + bbox[2] + 1)/2);
-	} else if (flags & TK_OFFSET_RIGHT) {
-	    tsoffset.xoffset = (int) (bbox[2] + 0.5);
-	}
-	if (flags & TK_OFFSET_TOP) {
-	    tsoffset.yoffset = (int) (bbox[1] + 0.5);
-	} else if (flags & TK_OFFSET_MIDDLE) {
-	    tsoffset.yoffset = (int) ((bbox[1] + bbox[3] + 1)/2);
-	} else if (flags & TK_OFFSET_BOTTOM) {
-	    tsoffset.yoffset = (int) (bbox[3] + 0.5);
-	}
-    }
-    return tsoffset;
-}
-
 static int
 GetOffset(Tcl_Interp *interp, ClientData clientData,
     Tcl_Obj *offsetObj, Tk_Window tkwin, Tk_TSOffset *offsetPtr)

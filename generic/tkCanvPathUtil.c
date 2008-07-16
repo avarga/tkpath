@@ -1980,10 +1980,10 @@ ScaleItemHeader(Tk_PathItem *itemPtr, double originX, double originY,
 	    (itemPtr->y1 != -1) || (itemPtr->y2 != -1)) {
 	int min, max;
 	
-	itemPtr->x1 = originX + scaleX*(itemPtr->x1 - originX);
-	itemPtr->x2 = originX + scaleX*(itemPtr->x2 - originX);
-	itemPtr->y1 = originY + scaleY*(itemPtr->y1 - originY);
-	itemPtr->y2 = originY + scaleY*(itemPtr->y2 - originY);
+	itemPtr->x1 = (int) (originX + scaleX*(itemPtr->x1 - originX));
+	itemPtr->x2 = (int) (originX + scaleX*(itemPtr->x2 - originX));
+	itemPtr->y1 = (int) (originY + scaleY*(itemPtr->y1 - originY));
+	itemPtr->y2 = (int) (originY + scaleY*(itemPtr->y2 - originY));
 	
 	min = MIN(itemPtr->x1, itemPtr->x2);
 	max = MAX(itemPtr->x1, itemPtr->x2);
@@ -2582,7 +2582,7 @@ PathRectToAreaWithMatrix(PathRect bbox, TMatrix *mPtr, double *areaPtr)
     }
 }
 
-int
+double
 PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr) 
 {
     int rectiLinear = 0;
