@@ -127,7 +127,7 @@ to float (double).
 	if parameters are wrong. Some syntax changes have also been made. One such is
 	the -matrix option where we have delegated specific transforms to our support
 	functions in tkpath.tcl. Where the SVG tag names coincide with the ordinary
-	canvas item names we have added a "p" in from of its name instead.
+	canvas item names we have added a "p" in front of its name instead.
 
 	New items:
 		circle
