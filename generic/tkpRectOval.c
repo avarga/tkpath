@@ -166,7 +166,7 @@ static Tk_OptionSpec optionSpecs[] = {
 	"0.0", -1, Tk_Offset(RectOvalItem, outline.disabledWidth),
 	0, &pixelCO, 0},
     {TK_OPTION_COLOR, "-fill", NULL, NULL,
-	"black", -1, Tk_Offset(RectOvalItem, fillColor), 
+	"", -1, Tk_Offset(RectOvalItem, fillColor), 
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CUSTOM, "-offset", NULL, NULL,
 	"0,0", -1, Tk_Offset(RectOvalItem, tsoffsetPtr),
