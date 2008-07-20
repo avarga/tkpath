@@ -860,6 +860,10 @@ TkDashNew(Tcl_Interp *interp, Tcl_Obj *dashObj)
     Tk_Dash *dashPtr;
     
     dashPtr = (Tk_Dash *) ckalloc(sizeof(Tk_Dash));
+    /*
+     * NB: Tk_GetDash tries to free any existing pattern unless we zero this.
+     */
+    dashPtr->number = 0;
     if (Tk_GetDash(interp, Tcl_GetString(dashObj), dashPtr) != TCL_OK) {
 	goto error;
     }

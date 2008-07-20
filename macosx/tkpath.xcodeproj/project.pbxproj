@@ -58,7 +58,7 @@
 		496824A30DD5E65D000D7DA7 /* tkCanvGradient.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkCanvGradient.c; path = ../generic/tkCanvGradient.c; sourceTree = SOURCE_ROOT; };
 		496D9D740DE2B9BB002618BA /* tkCanvStyle.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tkCanvStyle.c; path = ../generic/tkCanvStyle.c; sourceTree = SOURCE_ROOT; };
 		49ECBBA30D3FA7C900A1FB4F /* tkp.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.h; name = tkp.h; path = ../generic/tkp.h; sourceTree = SOURCE_ROOT; tabWidth = 8; usesTabs = 1; };
-		49FA532A0D3CF52D00DE2BD2 /* tkpath0.3.0.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = tkpath0.3.0.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		49FA532A0D3CF52D00DE2BD2 /* tkpath0.3.1.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = tkpath0.3.1.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		49FA53350D3CF5DC00DE2BD2 /* tkpCanvArc.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkpCanvArc.c; path = ../generic/tkpCanvArc.c; sourceTree = SOURCE_ROOT; tabWidth = 8; usesTabs = 1; };
 		49FA53360D3CF5DC00DE2BD2 /* tkpCanvas.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.c; name = tkpCanvas.c; path = ../generic/tkpCanvas.c; sourceTree = SOURCE_ROOT; tabWidth = 8; usesTabs = 1; };
 		49FA53370D3CF5DC00DE2BD2 /* tkpCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.h; name = tkpCanvas.h; path = ../generic/tkpCanvas.h; sourceTree = SOURCE_ROOT; tabWidth = 8; usesTabs = 1; };
@@ -118,7 +118,7 @@
 		034768DDFF38A45A11DB9C8B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				49FA532A0D3CF52D00DE2BD2 /* tkpath0.3.0.dylib */,
+				49FA532A0D3CF52D00DE2BD2 /* tkpath0.3.1.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -269,7 +269,7 @@
 			name = "tkp canvas dylib";
 			productInstallPath = "/Library/Tcl/tkpath${DYLIB_COMPATIBILITY_VERSION}";
 			productName = "MovableAlerts dylib";
-			productReference = 49FA532A0D3CF52D00DE2BD2 /* tkpath0.3.0.dylib */;
+			productReference = 49FA532A0D3CF52D00DE2BD2 /* tkpath0.3.1.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -379,8 +379,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DYLIB_COMPATIBILITY_VERSION = 0.3.0;
-				DYLIB_CURRENT_VERSION = 0.3.0;
+				DYLIB_COMPATIBILITY_VERSION = 0.3.1;
+				DYLIB_CURRENT_VERSION = 0.3.1;
 				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -442,8 +442,8 @@
 					ppc,
 				);
 				COPY_PHASE_STRIP = YES;
-				DYLIB_COMPATIBILITY_VERSION = 0.3.0;
-				DYLIB_CURRENT_VERSION = 0.3.0;
+				DYLIB_COMPATIBILITY_VERSION = 0.3.1;
+				DYLIB_CURRENT_VERSION = 0.3.1;
 				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;

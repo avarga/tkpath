@@ -18,7 +18,7 @@
 
 /* Keep patch level release numbers odd and set even only on release. */
 #define TKPATH_VERSION    "0.3"
-#define TKPATH_PATCHLEVEL "0.3.0"
+#define TKPATH_PATCHLEVEL "0.3.1"
 #define TKPATH_REQUIRE    "8.5"
 
 int gAntiAlias = 1;
@@ -34,8 +34,8 @@ extern int	SurfaceInit(Tcl_Interp *interp);
 #ifdef _WIN32
     BOOL APIENTRY
     DllMain( hInst, reason, reserved )
-        HINSTANCE   hInst;		/* Library instance handle. */
-        DWORD       reason;		/* Reason this function is being called. */
+        HINSTANCE   hInst;	/* Library instance handle. */
+        DWORD       reason;	/* Reason this function is being called. */
         LPVOID      reserved;	/* Not used. */
     {
         return TRUE;
