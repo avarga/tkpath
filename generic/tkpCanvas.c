@@ -753,10 +753,10 @@ CanvasWidgetCmd(
 	if (gotAny) {
 	    Tcl_Obj *listObj = Tcl_NewListObj(0, NULL);
 
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(x1));
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(y1));
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(x2));
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(y2));
+	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x1));
+	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(y1));
+	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x2));
+	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(y2));
 	    Tcl_SetObjResult(interp, listObj);
 	}
 	break;
