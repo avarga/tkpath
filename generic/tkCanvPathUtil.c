@@ -2632,7 +2632,7 @@ PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr)
 /*
  *--------------------------------------------------------------
  *
- * ItemExConfigure --
+ * TkPathCanvasItemExConfigure --
  *
  *      Takes care of the custom item configuration of the Tk_PathItemEx
  *	part of any item with style.
@@ -2647,7 +2647,7 @@ PathRectToPointWithMatrix(PathRect bbox, TMatrix *mPtr, double *pointPtr)
  */
 
 int
-ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItemEx *itemExPtr, int mask)
+TkPathCanvasItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItemEx *itemExPtr, int mask)
 {
     Tk_Window tkwin;
     Tk_PathItem *parentPtr;

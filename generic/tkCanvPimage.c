@@ -217,6 +217,11 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
     }
 
     error:
+    /*
+     * NB: We must unlink the item here since the ConfigurePimage()
+     *     link it to the root by default.
+     */
+    TkPathCanvasItemDetach(itemPtr);
     DeletePimage(canvas, itemPtr, Tk_Display(Tk_PathCanvasTkwin(canvas)));
     return TCL_ERROR;
 }

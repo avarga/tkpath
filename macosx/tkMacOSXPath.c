@@ -55,6 +55,22 @@ typedef struct PathATSUIRecord {
     UniChar         *buffer;	/* @@@ Not sure this needs to be cached! */
 } PathATSUIRecord;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetClipRgn --
+ *
+ *	Get the clipping region needed to restrict drawing to the given
+ *	drawable.
+ *
+ * Results:
+ *	Clipping region. If non-NULL, CFRelease it when done.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 HIShapeRef
 TkMacOSXGetClipRgn(

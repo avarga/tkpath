@@ -300,7 +300,6 @@ static void		EventuallyRedrawItem(Tk_PathCanvas canvas,
 
 static Tcl_Obj *	UnshareObj(Tcl_Obj *objPtr);
 static Tk_PathItem *	ItemIteratorSubNext(Tk_PathItem *itemPtr, Tk_PathItem *groupPtr);
-static void		ItemDetach(Tk_PathItem *itemPtr);
 static void		ItemAddToParent(Tk_PathItem *parentPtr, Tk_PathItem *itemPtr);
 static void		ItemDelete(TkPathCanvas *canvasPtr, Tk_PathItem *itemPtr);
 static int		ItemCreate(Tcl_Interp *interp, TkPathCanvas *canvasPtr, 
@@ -3028,7 +3027,7 @@ TkPathCanvasSetParent(Tk_PathItem *parentPtr, Tk_PathItem *itemPtr)
      * Unlink any present parent, then link in again.
      */
     if (itemPtr->parentPtr != NULL) {
-	ItemDetach(itemPtr);
+	TkPathCanvasItemDetach(itemPtr);
     }
     ItemAddToParent(parentPtr, itemPtr);
     
@@ -3326,6 +3325,8 @@ ItemCreate(Tcl_Interp *interp, TkPathCanvas *canvasPtr,
 
     /*
      * If item's createProc didn't put it in the display list we do.
+     * Typically done only for the tk::canvas items which don't have
+     * a -parent option.
      */
     if (!isRoot && (itemPtr->parentPtr == NULL)) {
 	ItemAddToParent(canvasPtr->rootItemPtr, itemPtr);
@@ -3447,7 +3448,7 @@ ItemGetNumTags(Tk_PathItem *itemPtr)
 /*
  *--------------------------------------------------------------
  *
- * ItemDetach --
+ * TkPathCanvasItemDetach --
  *
  *	Splice out (unlink) an item from the display list.
  *
@@ -3460,8 +3461,8 @@ ItemGetNumTags(Tk_PathItem *itemPtr)
  *--------------------------------------------------------------
  */
 
-static void		
-ItemDetach(Tk_PathItem *itemPtr)
+void		
+TkPathCanvasItemDetach(Tk_PathItem *itemPtr)
 {
     Tk_PathItem *parentPtr;
     
@@ -3478,7 +3479,7 @@ ItemDetach(Tk_PathItem *itemPtr)
 	    parentPtr->lastChildPtr = NULL;
 	}
     }
-    if (parentPtr->lastChildPtr == itemPtr) {
+    if ((parentPtr != NULL) && (parentPtr->lastChildPtr == itemPtr)) {
 	parentPtr->lastChildPtr = itemPtr->prevPtr;
     }
     
@@ -3545,7 +3546,7 @@ ItemDelete(TkPathCanvas *canvasPtr, Tk_PathItem *itemPtr)
      * Remove any children by recursively calling us.
      * NB: This is very tricky code! Children updates
      *     the itemPtr->firstChildPtr here via calls
-     *     to ItemDetach.
+     *     to TkPathCanvasItemDetach.
      */
     while (itemPtr->firstChildPtr != NULL) {
 	ItemDelete(canvasPtr, itemPtr->firstChildPtr);
@@ -3568,7 +3569,7 @@ ItemDelete(TkPathCanvas *canvasPtr, Tk_PathItem *itemPtr)
     entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
 				 (char *) INT2PTR(itemPtr->id));
     Tcl_DeleteHashEntry(entryPtr);
-    ItemDetach(itemPtr);
+    TkPathCanvasItemDetach(itemPtr);
     
     if (itemPtr == canvasPtr->currentItemPtr) {
 	canvasPtr->currentItemPtr = NULL;

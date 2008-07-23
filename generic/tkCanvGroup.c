@@ -153,6 +153,11 @@ CreateGroup(Tcl_Interp *interp,
     }
 
 error:
+    /*
+     * NB: We must unlink the item here since the TkPathCanvasItemExConfigure()
+     *     link it to the root by default.
+     */
+    TkPathCanvasItemDetach(itemPtr);
     DeleteGroup(canvas, itemPtr, Tk_Display(Tk_PathCanvasTkwin(canvas)));
     return TCL_ERROR;
 }
@@ -183,7 +188,7 @@ ConfigureGroup(Tcl_Interp *interp, Tk_PathCanvas canvas,
 	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
 	}	
-	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	if (TkPathCanvasItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
 	    continue;
 	}
 

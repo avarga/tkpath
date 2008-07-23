@@ -244,6 +244,11 @@ CreatePath(
     }
 
     error:
+    /*
+     * NB: We must unlink the item here since the TkPathCanvasItemExConfigure()
+     *     link it to the root by default.
+     */
+    TkPathCanvasItemDetach(itemPtr);
     DeletePath(canvas, itemPtr, Tk_Display(Tk_PathCanvasTkwin(canvas)));
     return TCL_ERROR;
 }
@@ -452,7 +457,7 @@ ConfigurePath(
 	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
 	}	
-	if (ItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+	if (TkPathCanvasItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
 	    continue;
 	}
 

@@ -233,6 +233,11 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
     }
 
 error:
+    /*
+     * NB: We must unlink the item here since the TkPathCanvasItemExConfigure()
+     *     link it to the root by default.
+     */
+    TkPathCanvasItemDetach(itemPtr);
     DeletePtext(canvas, itemPtr, Tk_Display(Tk_PathCanvasTkwin(canvas)));
     return TCL_ERROR;
 }
@@ -374,7 +379,7 @@ ConfigurePtext(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	 * Since we have -fill default equal to black we need to force
 	 * setting the fill member of the style.
 	 */
-	if (ItemExConfigure(interp, canvas, itemExPtr, mask | PATH_STYLE_OPTION_FILL) != TCL_OK) {
+	if (TkPathCanvasItemExConfigure(interp, canvas, itemExPtr, mask | PATH_STYLE_OPTION_FILL) != TCL_OK) {
 	    continue;
 	}
 	// @@@ TkPathTextConfig needs to be reworked!

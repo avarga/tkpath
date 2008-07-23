@@ -359,6 +359,9 @@ MODULE_SCOPE void	    TkPathCanvasUpdateGroupBbox(Tk_PathCanvas canvas, Tk_PathI
 MODULE_SCOPE void	    TkPathCanvasSetGroupDirtyBbox(Tk_PathItem *itemPtr);
 MODULE_SCOPE Tk_PathItem *  TkPathCanvasItemIteratorNext(Tk_PathItem *itemPtr);
 MODULE_SCOPE Tk_PathItem *  TkPathCanvasItemIteratorPrev(Tk_PathItem *itemPtr);
+MODULE_SCOPE int	    TkPathCanvasItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, 
+				    Tk_PathItemEx *itemExPtr, int mask);
+MODULE_SCOPE void	    TkPathCanvasItemDetach(Tk_PathItem *itemPtr);
 	
 MODULE_SCOPE void	    GroupItemConfigured(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, int mask);
 MODULE_SCOPE void	    CanvasTranslateGroup(Tk_PathCanvas canvas, 
@@ -371,8 +374,6 @@ MODULE_SCOPE int	    CanvasStyleObjCmd(Tcl_Interp* interp, TkPathCanvas *canvasP
 				int objc, Tcl_Obj* CONST objv[]);
 
 MODULE_SCOPE void	    CanvasSetParentToRoot(Tk_PathItem *itemPtr);
-MODULE_SCOPE int	    ItemExConfigure(Tcl_Interp *interp, Tk_PathCanvas canvas, 
-				    Tk_PathItemEx *itemExPtr, int mask);
 MODULE_SCOPE void	    PathGradientChangedProc(ClientData clientData, int flags);
 MODULE_SCOPE void	    PathStyleChangedProc(ClientData clientData, int flags);
 
