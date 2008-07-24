@@ -32,6 +32,9 @@
 #endif
 #endif /* TK_PATH_NO_DOUBLE_BUFFERING */
 
+/* For debugging. */
+extern Tcl_Interp *gInterp;
+
 /*
  * See tkpCanvas.h for key data structures used to implement canvases.
  */
@@ -1203,7 +1206,7 @@ CanvasWidgetCmd(
 	    }
 	    info[0] = '\0';
 	    DebugGetItemInfo(walkPtr, info);
-	    sprintf(tmp, "%*d%s\t%s\n", 4*depth+3, walkPtr->id, s, info);
+	    sprintf(tmp, "%*d%s\t%s (itemPtr=%p)\n", 4*depth+3, walkPtr->id, s, info, walkPtr);
 	    Tcl_WriteChars(Tcl_GetChannel(interp, "stdout", NULL), tmp, -1);
 	}
 	break;
@@ -2070,16 +2073,23 @@ DestroyCanvas(
     char *memPtr)		/* Info about canvas widget. */
 {
     TkPathCanvas *canvasPtr = (TkPathCanvas *) memPtr;
-    Tk_PathItem *itemPtr;
+    Tk_PathItem *itemPtr, *lastPtr;
 #ifndef USE_OLD_TAG_SEARCH
     TagSearchExpr *expr, *next;
 #endif
 
     /*
      * Free up all of the items in the canvas.
+     * NB: We need to traverse the tree from the last item
+     *     until reached the root item.
      */
+
     for (itemPtr = canvasPtr->rootItemPtr; itemPtr != NULL;
 	    itemPtr = TkPathCanvasItemIteratorNext(itemPtr)) {
+	lastPtr = itemPtr;
+    }
+    for (itemPtr = lastPtr; itemPtr != NULL;
+	    itemPtr = TkPathCanvasItemIteratorPrev(itemPtr)) {
 	(*itemPtr->typePtr->deleteProc)((Tk_PathCanvas) canvasPtr, itemPtr,
 		canvasPtr->display);
 	ckfree((char *) itemPtr);
