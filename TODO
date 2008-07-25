@@ -1,6 +1,9 @@
 
-TODO and undecided for tkpath
------------------------------
+TODO + BUGS and undecided for tkpath
+------------------------------------
+
+ o The 'delete itemOrTag' may match items of any combination and therefore
+   deleteing a group may delete items already in the list which may crash.
 
  o Scaling rotated arcs. Much math! Simplified.
     Test case:
