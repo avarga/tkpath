@@ -944,6 +944,9 @@ TkPathStyleMergeStyleStatic(Tcl_Interp* interp, Tcl_Obj *styleObj, Tk_PathStyle 
     Tcl_HashEntry *hPtr;
     Tk_PathStyle *srcStyle;
 
+    if (styleObj == NULL) {
+	return TCL_OK;
+    }
     hPtr = Tcl_FindHashEntry(gStyleHashPtr, Tcl_GetString(styleObj));
     if (hPtr == NULL) {
 	Tcl_AppendStringsToObj(Tcl_GetObjResult(interp), 
@@ -1105,9 +1108,6 @@ TkPathDeleteStyle(Tk_PathStyle *style)
 {
     if (style->fill != NULL) {
 	TkPathFreePathColor(style->fill);
-    }
-    if (style->matrixPtr != NULL) {
-        ckfree((char *) style->matrixPtr);
     }
 }
 

@@ -952,15 +952,15 @@ static Tk_OptionSpec ptextOptionSpecs[] = {
 static int
 SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
 {
-    TkPathContext 	context = surfacePtr->ctx;
-    int 		i;
-    double 		point[2];
-    SurfPtextItem 	item;
-    Tk_PathStyle	*style = &item.style;
-    Tk_PathStyle	mergedStyle;
-    PathRect		r;
-    void 		*custom = NULL;
-    int			result = TCL_OK;
+    TkPathContext   context = surfacePtr->ctx;
+    int		    i;
+    double	    point[2];
+    SurfPtextItem   item;
+    Tk_PathStyle    *style = &item.style;
+    Tk_PathStyle    mergedStyle;
+    PathRect	    r;
+    void	    *custom = NULL;
+    int		    result = TCL_OK;
         
     item.styleObj = NULL;
     item.textAnchor = kPathTextAnchorStart;
