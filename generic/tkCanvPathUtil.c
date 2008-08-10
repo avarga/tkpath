@@ -974,14 +974,14 @@ GenericPathToArea(
                              * inside the area;  -1 means everything
                              * was outside the area.  0 means overlap
                              * has been found. */ 
-    int				numPoints = 0;
-    int				numStrokes = 0;
-    int				isclosed = 0;
-    double 			*polyPtr;
-    double			currentT[2];
-    Tk_PathState 		state = itemPtr->state;
-    TMatrix 		*matrixPtr = stylePtr->matrixPtr;
-    MoveToAtom		*move;
+    int		    numPoints = 0;
+    int		    numStrokes = 0;
+    int		    isclosed = 0;
+    double	    *polyPtr;
+    double	    currentT[2];
+    Tk_PathState    state = itemPtr->state;
+    TMatrix	    *matrixPtr = stylePtr->matrixPtr;
+    MoveToAtom	    *move;
 
 #if 0
     if(state == TK_PATHSTATE_NULL) {
@@ -1651,20 +1651,20 @@ done:
 static int
 SubPathToArea(
     Tk_PathStyle *stylePtr,
-    double 		*polyPtr, 
-    int 		numPoints, 		/* Total number of points. First one
+    double 	*polyPtr, 
+    int 	numPoints, 	/* Total number of points. First one
                                  * is duplicated in the last. */
-    int			numStrokes,		/* The number of strokes which is one less
+    int		numStrokes,	/* The number of strokes which is one less
                                  * than numPoints if path not closed. */
-    double 		*rectPtr, 
-    int 		inside)			/* This is the current inside status. */
+    double 	*rectPtr, 
+    int 	inside)		/* This is the current inside status. */
 {
     double width;
     
-    /* @@@ 	There is an open question how a closed unfilled polygon
-     *		completely enclosing the area rect should be counted.
-     *		While the tk canvas polygon item counts it as intersecting (0),
-     *		the line item counts it as outside (-1).
+    /* @@@ There is an open question how a closed unfilled polygon
+     *	completely enclosing the area rect should be counted.
+     *	While the tk canvas polygon item counts it as intersecting (0),
+     *	the line item counts it as outside (-1).
      */
     
     if (HaveAnyFillFromPathColor(stylePtr->fill)) {
@@ -1682,13 +1682,13 @@ SubPathToArea(
             width = 1.0;
         }
         if (stylePtr->strokeWidth > kPathStrokeThicknessLimit) {
-            if (TkThickPolyLineToArea(polyPtr, numStrokes, 
+            if (TkThickPolyLineToArea(polyPtr, numPoints, 
                     width, stylePtr->capStyle, 
                     stylePtr->joinStyle, rectPtr) != inside) {
                 return 0;
             }
         } else {
-			if (PathPolyLineToArea(polyPtr, numStrokes, rectPtr) != inside) {
+	    if (PathPolyLineToArea(polyPtr, numPoints, rectPtr) != inside) {
                 return 0;
             }
         }
@@ -2058,17 +2058,17 @@ PathPolyLineToArea(
  *
  * PathThickPolygonToPoint --
  *
- *		Computes the distance from a given point to a given
- *		thick polyline (open or closed), in canvas units.
+ *	Computes the distance from a given point to a given
+ *	thick polyline (open or closed), in canvas units.
  *
  * Results:
- *		The return value is 0 if the point whose x and y coordinates
- *		are pointPtr[0] and pointPtr[1] is inside the line.  If the
- *		point isn't inside the line then the return value is the
- *		distance from the point to the line.
+ *	The return value is 0 if the point whose x and y coordinates
+ *	are pointPtr[0] and pointPtr[1] is inside the line.  If the
+ *	point isn't inside the line then the return value is the
+ *	distance from the point to the line.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -2081,7 +2081,7 @@ PathThickPolygonToPoint(
     double *polyPtr,	/* Points to an array coordinates for
                          * the polygon:  x0, y0, x1, y1, ...
                          * The polygon may be self-intersecting. */
-    int numPoints,		/* Total number of points at *polyPtr. */
+    int numPoints,	/* Total number of points at *polyPtr. */
     double *pointPtr)	/* Points to coords for point. */
 {
     int count;
@@ -2090,7 +2090,7 @@ PathThickPolygonToPoint(
     int changedMiterToBevel;	/* Non-zero means that a mitered corner
                                  * had to be treated as beveled after all
                                  * because the angle was < 11 degrees. */
-    double bestDist;			/* Closest distance between point and
+    double bestDist;		/* Closest distance between point and
                                  * any edge in polygon. */
     double dist, radius;
     double *coordPtr;
@@ -2137,10 +2137,10 @@ PathThickPolygonToPoint(
         }
     
         /*
-        * Compute the polygonal shape corresponding to this edge,
-        * consisting of two points for the first point of the edge
-        * and two points for the last point of the edge.
-        */
+         * Compute the polygonal shape corresponding to this edge,
+         * consisting of two points for the first point of the edge
+         * and two points for the last point of the edge.
+         */
     
         if (count == numPoints) {
             TkGetButtPoints(coordPtr+2, coordPtr, (double) width,
@@ -2224,21 +2224,21 @@ donepoint:
  *
  * PathPolygonToPointEx --
  *
- *		Compute the distance from a point to a polygon. This is
- *		essentially identical to TkPolygonToPoint with two exceptions:
- *		1) 	It returns the closest distance to the *stroke*,
- *			any fill unrecognized.
- *		2)	It returns both number of total intersections, and
- *			the number of directed crossings, nonzerorule.
+ *	Compute the distance from a point to a polygon. This is
+ *	essentially identical to TkPolygonToPoint with two exceptions:
+ *	1) 	It returns the closest distance to the *stroke*,
+ *		any fill unrecognized.
+ *	2)	It returns both number of total intersections, and
+ *		the number of directed crossings, nonzerorule.
  *
  * Results:
- *		The return value is 0.0 if the point referred to by
- *		pointPtr is within the polygon referred to by polyPtr
- *		and numPoints.  Otherwise the return value is the
- *		distance of the point from the polygon.
+ *	The return value is 0.0 if the point referred to by
+ *	pointPtr is within the polygon referred to by polyPtr
+ *	and numPoints.  Otherwise the return value is the
+ *	distance of the point from the polygon.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -2250,20 +2250,20 @@ PathPolygonToPointEx(
                          * The polygon may be self-intersecting.
                          * If a fillRule is used the last point
                          * must duplicate the first one. */
-    int numPoints,		/* Total number of points at *polyPtr. */
+    int numPoints,	/* Total number of points at *polyPtr. */
     double *pointPtr,	/* Points to coords for point. */
-    int *intersectionsPtr,	/* (out) The number of intersections. */
-    int *nonzerorulePtr)	/* (out) The number of intersections
-                             * considering crossing direction. */
+    int *intersectionsPtr,/* (out) The number of intersections. */
+    int *nonzerorulePtr)/* (out) The number of intersections
+			 * considering crossing direction. */
 {
-    double bestDist;		/* Closest distance between point and
-                             * any edge in polygon. */
-    int intersections;		/* Number of edges in the polygon that
-                             * intersect a ray extending vertically
-                             * upwards from the point to infinity. */
-    int nonzerorule;		/* As 'intersections' except that it adds
-                             * one if crossing right to left, and
-                             * subtracts one if crossing left to right. */
+    double bestDist;	/* Closest distance between point and
+                         * any edge in polygon. */
+    int intersections;	/* Number of edges in the polygon that
+                         * intersect a ray extending vertically
+                         * upwards from the point to infinity. */
+    int nonzerorule;	/* As 'intersections' except that it adds
+                         * one if crossing right to left, and
+                         * subtracts one if crossing left to right. */
     int count;
     register double *pPtr;
 
@@ -2331,7 +2331,7 @@ PathPolygonToPointEx(
             }
         } else {
             double m1, b1, m2, b2;
-            int lower;			/* Non-zero means point below line. */
+            int lower;		/* Non-zero means point below line. */
     
             /*
              * The edge is neither horizontal nor vertical.  Convert the
@@ -2396,30 +2396,30 @@ PathPolygonToPointEx(
  *
  * PathRectToPoint --
  *
- *		Computes the distance from a given point to a given
- *		rectangle, in canvas units.
+ *	Computes the distance from a given point to a given
+ *	rectangle, in canvas units.
  *
  * Results:
- *		The return value is 0 if the point whose x and y coordinates
- *		are pointPtr[0] and pointPtr[1] is inside the rectangle.  If the
- *		point isn't inside the rectangle then the return value is the
- *		distance from the point to the rectangle.  If item is filled,
- *		then anywhere in the interior is considered "inside"; if
- *		item isn't filled, then "inside" means only the area
- *		occupied by the outline.
+ *	The return value is 0 if the point whose x and y coordinates
+ *	are pointPtr[0] and pointPtr[1] is inside the rectangle.  If the
+ *	point isn't inside the rectangle then the return value is the
+ *	distance from the point to the rectangle.  If item is filled,
+ *	then anywhere in the interior is considered "inside"; if
+ *	item isn't filled, then "inside" means only the area
+ *	occupied by the outline.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 double
 PathRectToPoint(
-    double rectPtr[], 		/* Bare rectangle. */
-    double width, 			/* Width of stroke, or 0. */
-    int filled, 			/* Is rectangle filled. */
-    double pointPtr[])		/* Pointer to x and y coordinates. */
+    double rectPtr[], 	/* Bare rectangle. */
+    double width, 	/* Width of stroke, or 0. */
+    int filled, 	/* Is rectangle filled. */
+    double pointPtr[])	/* Pointer to x and y coordinates. */
 {
     double xDiff, yDiff, x1, y1, x2, y2, inc, tmp;
 
@@ -2495,29 +2495,29 @@ PathRectToPoint(
  *
  * PathRectToArea --
  *
- *		This procedure is called to determine whether an rectangle
- *		lies entirely inside, entirely outside, or overlapping
- *		another given rectangle.
+ *	This procedure is called to determine whether an rectangle
+ *	lies entirely inside, entirely outside, or overlapping
+ *	another given rectangle.
  *
  * Results:
- *		-1 is returned if the rectangle is entirely outside the area
- *		given by rectPtr, 0 if it overlaps, and 1 if it is entirely
- *		inside the given area.
+ *	-1 is returned if the rectangle is entirely outside the area
+ *	given by rectPtr, 0 if it overlaps, and 1 if it is entirely
+ *	inside the given area.
  *
  * Side effects:
- *		None.
+ *	None.
  *
  *--------------------------------------------------------------
  */
 
 int
 PathRectToArea(    
-    double rectPtr[], 		/* Bare rectangle. */
-    double width, 			/* Width of stroke, or 0. */
-    int filled, 			/* Is rectangle filled. */
-    double *areaPtr)		/* Pointer to array of four coordinates
-                             * (x1, y1, x2, y2) describing rectangular
-                             * area.  */
+    double rectPtr[], 	/* Bare rectangle. */
+    double width, 	/* Width of stroke, or 0. */
+    int filled, 	/* Is rectangle filled. */
+    double *areaPtr)	/* Pointer to array of four coordinates
+                         * (x1, y1, x2, y2) describing rectangular
+                         * area.  */
 {
     double halfWidth = width/2.0;
 

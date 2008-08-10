@@ -1213,7 +1213,12 @@ CanvasWidgetCmd(
     }
     case CANV_DELETE: {
 	int i;
-
+	
+	/*
+	 * Since deletinga group item implicitly deletes all its children
+	 * we may unintentionally try to delete an item more than once.
+	 * We therefore flatten (parent = root) all items first.
+	 */
 	for (i = 2; i < objc; i++) {
 	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, goto done) {
 		if (itemPtr->id == 0) {
@@ -1222,7 +1227,6 @@ CanvasWidgetCmd(
 		    result = TCL_ERROR;
 		    goto done;
 		}
-	    
 		/*
 		 * This will also delete all its descendants by 
 		 * recursive calls.
