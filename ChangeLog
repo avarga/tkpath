@@ -1,3 +1,7 @@
+2009-04-01  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* Makefile.in (VPATH): add macosx subdir to VPATH
+
 2009-03-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* Makefile.in, tclconfig/config.m4: updated to TEA 3.7 and improved
