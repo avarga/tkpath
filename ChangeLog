@@ -1,0 +1,4 @@
+2009-03-31  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tkPathStyle.c (Tk_PathDashOptionSetProc): initialize newPtr
+

@@ -208,8 +208,8 @@ int Tk_PathDashOptionSetProc(
                              * internal representation of value should
                              * be stored, or NULL. */
     Tcl_Obj *valuePtr;
-    Tk_PathDash *newPtr;
-    
+    Tk_PathDash *newPtr = NULL;
+
     valuePtr = *value;
     if (internalOffset >= 0) {
         internalPtr = recordPtr + internalOffset;
@@ -218,7 +218,6 @@ int Tk_PathDashOptionSetProc(
     }
     if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
 	valuePtr = NULL;
-	newPtr = NULL;
     }
     if (internalPtr != NULL) {
 	if (valuePtr != NULL) {
