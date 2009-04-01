@@ -26,7 +26,7 @@ AC_INIT([tkpath], [0.3.1])
 # as well as PKG_LIB_FILE and PKG_STUB_LIB_FILE.
 #--------------------------------------------------------------------
 
-TEA_INIT([3.5])
+TEA_INIT([3.7])
 
 AC_CONFIG_AUX_DIR(tclconfig)
 
@@ -123,6 +123,7 @@ if test "${TEA_PLATFORM}" = "windows" ; then
     AC_DEFINE(BUILD_tkpath, 1, [Build windows export dll])
     CLEANFILES="pkgIndex.tcl *.lib *.dll *.exp *.ilk *.pdb vc*.pch"
     TEA_ADD_SOURCES([win/tkWinGDIPlusPath.cpp])
+    TEA_ADD_LIBS([gdiplus.lib gdi32.lib])
     #TEA_ADD_INCLUDES([-I\"$(${CYGPATH} ${srcdir}/win)\"])
 else
     CLEANFILES="pkgIndex.tcl"
@@ -150,7 +151,7 @@ AC_SUBST(CLEANFILES)
 TEA_PUBLIC_TCL_HEADERS
 #TEA_PRIVATE_TCL_HEADERS
 
-TEA_PUBLIC_TK_HEADERS
+#TEA_PUBLIC_TK_HEADERS
 TEA_PRIVATE_TK_HEADERS
 #TEA_PATH_X
 
@@ -209,7 +210,7 @@ TEA_MAKE_LIB
 #--------------------------------------------------------------------
 
 TEA_PROG_TCLSH
-#TEA_PROG_WISH
+TEA_PROG_WISH
 
 #--------------------------------------------------------------------
 # Finally, substitute all of the various values into the Makefile.

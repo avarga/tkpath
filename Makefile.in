@@ -63,7 +63,7 @@ PKG_LIB_FILE	= @PKG_LIB_FILE@
 PKG_STUB_LIB_FILE = @PKG_STUB_LIB_FILE@
 
 lib_BINARIES	= $(PKG_LIB_FILE)
-BINARIES	= $(lib_BINARIES)
+BINARIES	= $(lib_BINARIES) pkgIndex.tcl
 
 SHELL		= @SHELL@
 
@@ -131,19 +131,17 @@ EXTRA_PATH	= $(top_builddir):$(TCL_BIN_DIR)
 #EXTRA_PATH	= $(top_builddir):$(TCL_BIN_DIR):$(TK_BIN_DIR)
 TCLLIBPATH	= $(top_builddir)
 TCLSH_ENV	= TCL_LIBRARY=`@CYGPATH@ $(TCL_SRC_DIR)/library` \
+		  TK_LIBRARY=`@CYGPATH@ $(TK_SRC_DIR)/library` \
 		  @LD_LIBRARY_PATH_VAR@="$(EXTRA_PATH):$(@LD_LIBRARY_PATH_VAR@)" \
 		  PATH="$(EXTRA_PATH):$(PATH)" \
-		  TCLLIBPATH="$(TCLLIBPATH)"
-#		  TK_LIBRARY=`@CYGPATH@ $(TK_SRC_DIR)/library`
+		  TCLLIBPATH="$(TCLLIBPATH)" \
+		  TKPATH_LIBRARY="`@CYGPATH@ $(srcdir)/library`"
 
 TCLSH_PROG	= @TCLSH_PROG@
 TCLSH   	= $(TCLSH_ENV) $(TCLSH_PROG)
 
-#WISH_PROG	= @WISH_PROG@
-#WISH   	= $(TCLSH_ENV) $(WISH_PROG)
-
-
-SHARED_BUILD	= @SHARED_BUILD@
+WISH_PROG	= @WISH_PROG@
+WISH   	= $(TCLSH_ENV) $(WISH_PROG)
 
 INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ @TK_INCLUDES@
 #INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ @TK_INCLUDES@ @TK_XINCLUDES@
@@ -235,14 +233,19 @@ install-doc: doc
 	    $(INSTALL_DATA) $$i $(DESTDIR)$(mandir)/mann ; \
 	done
 
+# Piping to cat is necessary on Windows to see the output, and
+# harmless on Unix
 test: binaries libraries
-	$(TCLSH) `@CYGPATH@ $(srcdir)/tests/all.tcl` $(TESTFLAGS)
+	$(WISH) `@CYGPATH@ $(srcdir)/tests/all.tcl` $(TESTFLAGS) | cat
+
+demo: binaries libraries
+	$(WISH) `@CYGPATH@ $(srcdir)/demos/all.tcl` $(TESTFLAGS) | cat
 
 shell: binaries libraries
-	@$(TCLSH) $(SCRIPT)
+	@$(WISH) $(SCRIPT)
 
 gdb:
-	$(TCLSH_ENV) gdb $(TCLSH_PROG) $(SCRIPT)
+	$(TCLSH_ENV) gdb $(WISH_PROG) $(SCRIPT)
 
 depend:
 
@@ -283,8 +286,22 @@ $(PKG_STUB_LIB_FILE): $(PKG_STUB_OBJECTS)
 
 VPATH = $(srcdir):$(srcdir)/generic:$(srcdir)/unix:$(srcdir)/win
 
-.c.@OBJEXT@:
+.cpp.@OBJEXT@ .c.@OBJEXT@:
 	$(COMPILE) -c `@CYGPATH@ $<` -o $@
+
+#========================================================================
+# Create the pkgIndex.tcl file.
+# It is usually easiest to let Tcl do this for you with pkg_mkIndex, but
+# you may find that you need to customize the package.  If so, either
+# modify the -hand version, or create a pkgIndex.tcl.in file and have
+# the configure script output the pkgIndex.tcl by editing configure.in.
+#========================================================================
+
+#pkgIndex.tcl:
+#	( echo pkg_mkIndex . $(PKG_LIB_FILE) \; exit; ) | $(TCLSH)
+pkgIndex.tcl: $(srcdir)/pkgIndex.tcl.in
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 #========================================================================
 # Distribution creation
@@ -365,14 +382,8 @@ install-lib-binaries: binaries
 	  if test -f $$p; then \
 	    echo " $(INSTALL_PROGRAM) $$p $(DESTDIR)$(pkglibdir)/$$p"; \
 	    $(INSTALL_PROGRAM) $$p $(DESTDIR)$(pkglibdir)/$$p; \
-	    stub=`echo $$p|sed -e "s/.*\(stub\).*/\1/"`; \
-	    if test "x$$stub" = "xstub"; then \
-		echo " $(RANLIB_STUB) $(DESTDIR)$(pkglibdir)/$$p"; \
-		$(RANLIB_STUB) $(DESTDIR)$(pkglibdir)/$$p; \
-	    else \
-		echo " $(RANLIB) $(DESTDIR)$(pkglibdir)/$$p"; \
-		$(RANLIB) $(DESTDIR)$(pkglibdir)/$$p; \
-	    fi; \
+	    echo " $(RANLIB) $(DESTDIR)$(pkglibdir)/$$p"; \
+	    $(RANLIB) $(DESTDIR)$(pkglibdir)/$$p; \
 	    ext=`echo $$p|sed -e "s/.*\.//"`; \
 	    if test "x$$ext" = "xdll"; then \
 		lib=`basename $$p|sed -e 's/.[^.]*$$//'`.lib; \
@@ -390,10 +401,8 @@ install-lib-binaries: binaries
 	    $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(pkglibdir)/$$destp; \
 	  fi; \
 	done
-	@if test "x$(SHARED_BUILD)" = "x1"; then \
-	    echo " Install pkgIndex.tcl $(DESTDIR)$(pkglibdir)"; \
-	    $(INSTALL_DATA) pkgIndex.tcl $(DESTDIR)$(pkglibdir); \
-	fi
+	@echo "Installing pkgIndex.tcl in $(DESTDIR)$(pkglibdir)";
+	@$(INSTALL_DATA) pkgIndex.tcl $(DESTDIR)$(pkglibdir);
 
 #========================================================================
 # Install binary executables (e.g. .exe files and dependent .dll files)
