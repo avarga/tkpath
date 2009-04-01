@@ -120,7 +120,7 @@ typedef struct TkPathContext_ {
 	PathC *		c;
     HDC			memHdc;
     PathSurfaceGDIpRecord *	surface;	/* NULL unless surface. */
-};
+} TkPathContext_;
 
 void InitGDIplus(void)
 {

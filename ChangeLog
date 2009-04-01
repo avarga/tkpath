@@ -1,5 +1,8 @@
 2009-03-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinGDIPlusPath.cpp: clarify TkPathContext_ typedef
+
 	* pkgIndex.tcl.in: use a more flexible pkgIndex.tcl.in starter
-	* tkPathStyle.c (Tk_PathDashOptionSetProc): initialize newPtr
+
+	* generic/tkPathStyle.c (Tk_PathDashOptionSetProc): initialize newPtr
 
