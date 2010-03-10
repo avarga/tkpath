@@ -1355,24 +1355,31 @@ Tk_PathDeleteOutline(
 {
     if (outline->gc != None) {
 	Tk_FreeGC(display, outline->gc);
+        outline->gc = None;
     }
     if (outline->color != NULL) {
 	Tk_FreeColor(outline->color);
+        outline->color = NULL;
     }
     if (outline->activeColor != NULL) {
 	Tk_FreeColor(outline->activeColor);
+        outline->activeColor = NULL;
     }
     if (outline->disabledColor != NULL) {
 	Tk_FreeColor(outline->disabledColor);
+        outline->disabledColor = NULL;
     }
     if (outline->stipple != None) {
 	Tk_FreeBitmap(display, outline->stipple);
+        outline->stipple = None;
     }
     if (outline->activeStipple != None) {
 	Tk_FreeBitmap(display, outline->activeStipple);
+        outline->activeStipple = None;
     }
     if (outline->disabledStipple != None) {
 	Tk_FreeBitmap(display, outline->disabledStipple);
+        outline->disabledStipple = None;
     }
 }
 

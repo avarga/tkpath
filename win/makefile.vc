@@ -161,24 +161,40 @@ Please `cd` to its location first.
 PROJECT = tkpath
 !include "rules.vc"
 
-DOTVERSION      = 0.2.2
+DOTVERSION      = 0.3.1
 VERSION         = $(DOTVERSION:.=)
 STUBPREFIX      = $(PROJECT)stub
 
 DLLOBJS = \
 	$(TMP_DIR)\path.obj \
-	$(TMP_DIR)\tkCanvEllipse.obj \
-	$(TMP_DIR)\tkCanvPath.obj \
+	$(TMP_DIR)\tkPath.obj \
+        $(TMP_DIR)\tkpCanvas.obj \
+	$(TMP_DIR)\tkpCanvArc.obj \
+	$(TMP_DIR)\tkpCanvBmap.obj \
+	$(TMP_DIR)\tkpCanvImg.obj \
+	$(TMP_DIR)\tkpCanvLine.obj \
+	$(TMP_DIR)\tkpCanvPoly.obj \
+	$(TMP_DIR)\tkpCanvPs.obj \
+	$(TMP_DIR)\tkpCanvText.obj \
+	$(TMP_DIR)\tkpCanvUtil.obj \
+	$(TMP_DIR)\tkpCanvWind.obj \
+	$(TMP_DIR)\tkpRectOval.obj \
+	$(TMP_DIR)\tkpTrig.obj \
+	$(TMP_DIR)\tkpUtil.obj \
 	$(TMP_DIR)\tkCanvPathUtil.obj \
+	$(TMP_DIR)\tkCanvEllipse.obj \
+	$(TMP_DIR)\tkCanvGroup.obj \
+	$(TMP_DIR)\tkCanvPath.obj \
 	$(TMP_DIR)\tkCanvPimage.obj \
 	$(TMP_DIR)\tkCanvPline.obj \
 	$(TMP_DIR)\tkCanvPpoly.obj \
 	$(TMP_DIR)\tkCanvPrect.obj \
 	$(TMP_DIR)\tkCanvPtext.obj \
-	$(TMP_DIR)\tkPath.obj \
-	$(TMP_DIR)\tkPathCopyTk.obj \
-	$(TMP_DIR)\tkPathGradients.obj \
+	$(TMP_DIR)\tkCanvGradient.obj \
+	$(TMP_DIR)\tkPathGradient.obj \
+	$(TMP_DIR)\tkCanvStyle.obj \
 	$(TMP_DIR)\tkPathStyle.obj \
+	$(TMP_DIR)\tkPathSurface.obj \
 	$(TMP_DIR)\tkPathUtil.obj \
 	$(TMP_DIR)\tkWinGDIPlusPath.obj
 
@@ -231,10 +247,10 @@ cdebug	= -Z7 -WX $(DEBUGFLAGS)
 !endif
 
 ### Declarations common to all compiler options
-cflags = -nologo -c $(COMPILERFLAGS) -Fp$(TMP_DIR)^\
+cflags = -nologo -c $(COMPILERFLAGS) -D_CRT_SECURE_NO_WARNINGS -Fp$(TMP_DIR)^\
 
 !if $(VCVER) > 7
-cflags  =$(cflags) -D_CRT_SECURE_NO_DEPRECATE
+cflags  =$(cflags) -D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS
 !endif
 
 !if $(MSVCRT)
@@ -251,7 +267,9 @@ crt = -MT
 !endif
 !endif
 
-INCLUDES	= $(TCL_INCLUDES) $(TK_INCLUDES) -I"$(WINDIR)" -I"$(GENERICDIR)"
+INCLUDES	= $(TCL_INCLUDES) $(TK_INCLUDES) \
+                  -I"$(TK_SRC_DIR)\generic" -I"$(TK_SRC_DIR)\win" \
+                  -I"$(WINDIR)" -I"$(GENERICDIR)"
 BASE_CFLAGS	= $(cflags) $(cdebug) $(crt) $(INCLUDES)
 CON_CFLAGS	= $(cflags) $(cdebug) $(crt) -DCONSOLE
 TCL_CFLAGS	= -DUSE_TCL_STUBS -DUSE_TK_STUBS -DPACKAGE_VERSION="\"$(DOTVERSION)\"" \
@@ -262,7 +280,7 @@ TCL_CFLAGS	= -DUSE_TCL_STUBS -DUSE_TK_STUBS -DPACKAGE_VERSION="\"$(DOTVERSION)\"
 #---------------------------------------------------------------------
 
 !if $(DEBUG)
-ldebug	= -debug:full -debugtype:cv
+ldebug	= -debug -debugtype:cv
 !if $(MSVCRT)
 ldebug = $(ldebug) -nodefaultlib:msvcrt
 !endif
@@ -435,7 +453,22 @@ install-libraries:
         @echo Installing package index in '$(SCRIPT_INSTALL_DIR)'
         @type << >"$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
 # Hand-crafted pkgIndex.tcl
-package ifneeded Tclsha1 $(DOTVERSION) [list load [file join $$dir $(PROJECT)$(VERSION).$(EXT)] Sample]
+#
+namespace eval ::tkpath {
+    proc load_package {dir} {
+	load [file join $$dir $(PROJECT)$(VERSION)$(SUFX).$(EXT)]
+	# Allow optional redirect of library components.
+	# Only necessary for testing, but could be used elsewhere.
+	if {[info exists ::env(TKPATH_LIBRARY)]} {
+	    set dir $$::env(TKPATH_LIBRARY)
+	}
+	source $$dir/tkpath.tcl
+    };# load_package
+}
+
+package ifneeded tkpath $(DOTVERSION) [list ::tkpath::load_package $$dir]
+
+#*EOF*
 <<
 
 install-docs:

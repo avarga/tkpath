@@ -739,8 +739,10 @@ TkPathContext TkPathInitSurface(int width, int height)
     bmInfo->bmiHeader.biBitCount           = 32;
     bmInfo->bmiHeader.biCompression        = BI_RGB;
     bmInfo->bmiHeader.biSizeImage          = 0;
-    bmInfo->bmiHeader.biXPelsPerMeter      = 72. / 0.0254; /* unused here */
-    bmInfo->bmiHeader.biYPelsPerMeter      = 72. / 0.0254; /* unused here */
+    bmInfo->bmiHeader.biXPelsPerMeter      =
+                            static_cast<LONG>(72. / 0.0254); /* unused here */
+    bmInfo->bmiHeader.biYPelsPerMeter      =
+                            static_cast<LONG>(72. / 0.0254); /* unused here */
     bmInfo->bmiHeader.biClrUsed            = 0;
     bmInfo->bmiHeader.biClrImportant       = 0;
 

@@ -636,9 +636,11 @@ DeletePolygon(
     Tk_PathDeleteOutline(display,&(polyPtr->outline));
     if (polyPtr->coordPtr != NULL) {
 	ckfree((char *) polyPtr->coordPtr);
+        polyPtr->coordPtr = NULL;
     }
     if (polyPtr->fillGC != None) {
 	Tk_FreeGC(display, polyPtr->fillGC);
+        polyPtr->fillGC = None;
     }
     Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }

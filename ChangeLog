@@ -1,3 +1,28 @@
+2010-03-10  George Petasis  <petasis@iit.demokritos.gr>
+
+        * generic/tkpCanvPoly.c: fixes in DeletePolygon() to avoid double
+        releases of polyPtr->coordPtr & polyPtr->fillGC by
+        Tk_FreeConfigOptions().
+
+        * generic/tkpCanvUtil.c: fixes in Tk_PathDeleteOutline(), to set the
+        default empty values in the various Tk_PathOutline members, to stop
+        double releases done by Tk_FreeConfigOptions() (i.e. by
+        DeletePolygon() in tkpCanvPoly.c).
+
+        * generic/tkpCanvas.c: fix in DestroyCanvas(), so as
+        TkPathCanvasItemIteratorPrev() accepts a pointer that has not been
+        just freed.
+
+        * generic/tkpUtil.c: added a CONST before tkStateKeyObjType, to get
+        the code to compile with Tk 8.6.
+
+        * win/tkWinGDIPlusPath.cpp: changed the file from Mac OS X format to
+        windows, as the MS C++ 10.0 compiler stopped with an error.
+
+        * win/makefile.vc: I updated the windows makefile, to compile tkpath
+        with VC++ 10.0 compiler. May need further tweaking to work with
+        earlier versions.
+
 2009-04-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* Makefile.in (VPATH): add macosx subdir to VPATH
