@@ -2077,7 +2077,7 @@ DestroyCanvas(
     char *memPtr)		/* Info about canvas widget. */
 {
     TkPathCanvas *canvasPtr = (TkPathCanvas *) memPtr;
-    Tk_PathItem *itemPtr, *lastPtr;
+    Tk_PathItem *itemPtr, *prevItemPtr, *lastPtr = NULL;
 #ifndef USE_OLD_TAG_SEARCH
     TagSearchExpr *expr, *next;
 #endif
@@ -2092,11 +2092,12 @@ DestroyCanvas(
 	    itemPtr = TkPathCanvasItemIteratorNext(itemPtr)) {
 	lastPtr = itemPtr;
     }
-    for (itemPtr = lastPtr; itemPtr != NULL;
-	    itemPtr = TkPathCanvasItemIteratorPrev(itemPtr)) {
+    for (itemPtr = lastPtr; itemPtr != NULL; ) {
+        prevItemPtr = TkPathCanvasItemIteratorPrev(itemPtr);
 	(*itemPtr->typePtr->deleteProc)((Tk_PathCanvas) canvasPtr, itemPtr,
 		canvasPtr->display);
 	ckfree((char *) itemPtr);
+        itemPtr = prevItemPtr;
     }
 
     /*
@@ -3404,7 +3405,7 @@ TkPathCanvasItemIteratorPrev(Tk_PathItem *itemPtr)
 	walkPtr = itemPtr->parentPtr;
 	if (itemPtr->prevPtr != NULL) {
 	    walkPtr = itemPtr->prevPtr;
-	    while (walkPtr->lastChildPtr != NULL) {
+	    while (walkPtr != NULL && walkPtr->lastChildPtr != NULL) {
 		walkPtr = walkPtr->lastChildPtr;
 	    }
 	}
