@@ -54,4 +54,21 @@ $w create ptext -20 [expr {$a2+30}] \
 
 $w move acircle 400 220
 
+# Make an elllipse around origo and put it in place using a transation matrix
+namespace import ::tcl::mathop::*
+proc ellipsepath {x y rx ry} {
+    list \
+            M $x [- $y $ry] \
+            a $rx $ry 0 1 1 0 [*  2 $ry] \
+            a $rx $ry 0 1 1 0 [* -2 $ry] \
+            Z
+}
+set Phi [expr {45 / 180.0 * 3.1415926535}]
+set cosPhi [expr {cos($Phi)*4}]
+set sinPhi [expr {sin($Phi)*4}]
+set msinPhi [- $sinPhi]
+set matrix \
+        [list [list $cosPhi $msinPhi] [list $sinPhi $cosPhi] \
+        [list 200 200]]
+$w create path [ellipsepath 0 0 20 10] -stroke purple -matrix $matrix
 

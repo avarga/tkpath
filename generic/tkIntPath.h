@@ -84,7 +84,7 @@ extern "C" {
  * to pixel boundary if even stroke width, widthCode=2,
  * or to pixel center if odd stroke width, widthCode=1.
  */
-#define PATH_DEPIXELIZE(widthCode,x)     (!(widthCode) ? (x) : ((int) ((x) + 0.001) + (((widthCode) == 1) ? 0.5 : 0)));
+#define PATH_DEPIXELIZE(widthCode,x)     (!(widthCode) ? (x) : ((int) (floor((x) + 0.001)) + (((widthCode) == 1) ? 0.5 : 0)));
 
 #define GetColorFromPathColor(pcol) 		(((pcol != NULL) && (pcol->color != NULL)) ? pcol->color : NULL )
 #define GetGradientMasterFromPathColor(pcol)	(((pcol != NULL) && (pcol->gradientInstPtr != NULL)) ? pcol->gradientInstPtr->masterPtr : NULL )
