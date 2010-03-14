@@ -74,7 +74,16 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     cairo_t *c;
     cairo_surface_t *surface;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
-    surface = cairo_xlib_surface_create(Tk_Display(tkwin), d, Tk_Visual(tkwin), Tk_Width(tkwin), Tk_ReqHeight(tkwin));
+    Window dummy;
+    int x, y;
+    unsigned int width, height, borderWidth, depth;
+
+    /* Find size of Drawable */
+    XGetGeometry(Tk_Display(tkwin), d,
+	    &dummy, &x, &y, &width, &height, &borderWidth, &depth);
+
+    surface = cairo_xlib_surface_create(Tk_Display(tkwin), d, Tk_Visual(tkwin),
+	    width, height);
     c = cairo_create(surface);
     context->c = c;
     context->surface = surface;
