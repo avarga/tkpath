@@ -1,4 +1,10 @@
-2010-03-10  Peter Spjuth  <peter.spjuth@gmail.com>
+2010-03-15  Peter Spjuth  <peter.spjuth@gmail.com>
+
+        * generic/tkIntPath.h: Updated PATH_DEPIXELIZE to avoid an offset
+	error with negative coordinates.
+	* demos/arcs.tcl: Added an arc where the offset error was visible.
+
+2010-03-15  Peter Spjuth  <peter.spjuth@gmail.com>
 
         * unix/tkUnixCairoPath.c (TkPathInit): Get correct size of Drawable.
 	This fixes an intermittent strange clipping bug.
