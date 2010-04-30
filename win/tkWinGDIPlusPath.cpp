@@ -691,6 +691,12 @@ void PathExit(ClientData clientData)
     }
 }
 
+/* === EB - 23-apr-2010: added function to register coordinate offsets; unneeded here (?) */
+void TkPathSetCoordOffsets(double dx, double dy)
+{
+}
+/* === */
+
 /*
  * Standard tkpath interface.
  * More or less a wrapper for the class PathC.

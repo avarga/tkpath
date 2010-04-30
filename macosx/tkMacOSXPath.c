@@ -350,6 +350,12 @@ CreateLayoutForString(UniChar *buffer, CFIndex length, ATSUStyle atsuStyle, ATSU
     return err;
 }
 
+/* === EB - 23-apr-2010: added function to register coordinate offsets; unneeded here (?) */
+void TkPathSetCoordOffsets(double dx, double dy)
+{
+}
+/* === */
+
 TkPathContext	
 TkPathInit(Tk_Window tkwin, Drawable d)
 {

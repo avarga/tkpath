@@ -404,6 +404,10 @@ DisplayEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Dra
     EllipseAtom ellAtom;
     Tk_PathStyle style;    
     
+    /* === EB - 23-apr-2010: register coordinate offsets */
+    TkPathSetCoordOffsets(m.tx, m.ty);
+    /* === */
+    
     /* 
      * We create the atom on the fly to save some memory.
      */    

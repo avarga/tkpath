@@ -60,14 +60,27 @@ typedef struct TkPathContext_ {
 void CairoSetFill(TkPathContext ctx, Tk_PathStyle *style)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
+    /* === EB - 28-apr-2010: Applied patch from Tim Edwards to handle color correctly on 64 bits architecture */
     cairo_set_source_rgba(context->c,
-            RedDoubleFromXColorPtr(GetColorFromPathColor(style->fill)),
-            GreenDoubleFromXColorPtr(GetColorFromPathColor(style->fill)),
-            BlueDoubleFromXColorPtr(GetColorFromPathColor(style->fill)),
+            (double)(GetColorFromPathColor(style->fill)->red) / 0xFFFF,
+            (double)(GetColorFromPathColor(style->fill)->green) / 0xFFFF,
+            (double)(GetColorFromPathColor(style->fill)->blue) / 0xFFFF,
             style->fillOpacity);
+    /* === */
     cairo_set_fill_rule(context->c, 
             (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
 }
+
+/* === EB - 23-apr-2010: added function to register coordinate offsets */
+static int g_x_coord_offset = 0;
+static int g_y_coord_offset = 0;
+
+void TkPathSetCoordOffsets(double dx, double dy)
+{
+  g_x_coord_offset = (dx > 0) ? (int)(dx + 0.5) : 0;
+  g_y_coord_offset = (dy > 0) ? (int)(dy + 0.5) : 0;
+}
+/* === */
 
 TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
@@ -527,11 +540,13 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     Tk_PathDash *dashPtr;
 
+    /* === EB - 28-apr-2010: Applied patch from Tim Edwards to handle color correctly on 64 bits architecture */
     cairo_set_source_rgba(context->c,             
-            RedDoubleFromXColorPtr(style->strokeColor),
-            GreenDoubleFromXColorPtr(style->strokeColor),
-            BlueDoubleFromXColorPtr(style->strokeColor), 
+            (double)(style->strokeColor->red) / 0xFFFF,
+            (double)(style->strokeColor->green) / 0xFFFF,
+            (double)(style->strokeColor->blue) / 0xFFFF, 
             style->strokeOpacity);
+    /* === */
     cairo_set_line_width(context->c, style->strokeWidth);
 
     switch (style->capStyle) {

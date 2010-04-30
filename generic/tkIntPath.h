@@ -246,7 +246,11 @@ enum {
 /*
  * The actual path drawing commands which are all platform specific.
  */
- 
+
+/* === EB - 23-apr-2010: added function to register coordinate offsets */
+/* Should be called before TkPathInit for correct sizing of drawing region*/
+void TkPathSetCoordOffsets(double dx, double dy);
+/* === */
 TkPathContext	TkPathInit(Tk_Window tkwin, Drawable d);
 TkPathContext	TkPathInitSurface(int width, int height);
 void		TkPathBeginPath(TkPathContext ctx, Tk_PathStyle *stylePtr);

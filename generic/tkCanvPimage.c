@@ -443,9 +443,13 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     TMatrix m;
     TkPathContext ctx;
-
-    ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
+    
+    /* === EB - 23-apr-2010: register coordinate offsets */
     m = GetCanvasTMatrix(canvas);
+    TkPathSetCoordOffsets(m.tx, m.ty);
+    ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
+    /* === */
+    
     TkPathPushTMatrix(ctx, &m);
     m = GetTMatrix(pimagePtr);
     TkPathPushTMatrix(ctx, &m);

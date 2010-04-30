@@ -378,6 +378,10 @@ DisplayPpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     TMatrix m = GetCanvasTMatrix(canvas);
     Tk_PathStyle style;
     
+    /* === EB - 23-apr-2010: register coordinate offsets */
+    TkPathSetCoordOffsets(m.tx, m.ty);
+    /* === */
+    
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, ppolyPtr->atomPtr, &style,
             &m, &ppolyPtr->bbox);

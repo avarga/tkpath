@@ -576,6 +576,10 @@ DisplayPath(
     TMatrix m = GetCanvasTMatrix(canvas);
     Tk_PathStyle style;
     
+    /* === EB - 23-apr-2010: register coordinate offsets */
+    TkPathSetCoordOffsets(m.tx, m.ty);
+    /* === */
+    
     if (pathPtr->pathLen > 2) {
         style = TkPathCanvasInheritStyle(itemPtr, 0);
         TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, pathPtr->atomPtr, 
@@ -931,7 +935,7 @@ TranslatePath(
 {
     PathItem *pathPtr = (PathItem *) itemPtr;
     PathAtom *atomPtr = pathPtr->atomPtr;
-
+    
     TranslatePathAtoms(atomPtr, deltaX, deltaY);
     
     /* 

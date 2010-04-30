@@ -329,6 +329,10 @@ DisplayPrect(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     PathAtom *atomPtr;            
     Tk_PathStyle style;
     
+    /* === EB - 23-apr-2010: register coordinate offsets */
+    TkPathSetCoordOffsets(m.tx, m.ty);
+    /* === */
+    
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     atomPtr = MakePathAtoms(prectPtr);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, 

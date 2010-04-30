@@ -337,6 +337,10 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     PathAtom *atomPtr;
     Tk_PathStyle style;
     
+    /* === EB - 23-apr-2010: register coordinate offsets */
+    TkPathSetCoordOffsets(m.tx, m.ty);
+    /* === */
+    
     r.x1 = MIN(plinePtr->coords.x1, plinePtr->coords.x2);
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);

@@ -456,6 +456,10 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     TMatrix m = GetCanvasTMatrix(canvas);
     TkPathContext ctx;
     
+    /* === EB - 23-apr-2010: register coordinate offsets */
+    TkPathSetCoordOffsets(m.tx, m.ty);
+    /* === */
+    
     if (ptextPtr->utf8Obj == NULL) {
         return;
     }
@@ -470,7 +474,9 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     if (!(style.mask & PATH_STYLE_OPTION_STROKE)) {
 	style.strokeColor = itemExPtr->style.strokeColor;
     }
+    
     ctx = TkPathInit(Tk_PathCanvasTkwin(canvas), drawable);
+    
     TkPathPushTMatrix(ctx, &m);
     if (style.matrixPtr != NULL) {
         TkPathPushTMatrix(ctx, style.matrixPtr);
