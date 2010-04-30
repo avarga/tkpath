@@ -21,13 +21,15 @@
  * object, used for quickly finding a mapping in a TkStateMap.
  */
 
-CONST Tcl_ObjType tkStateKeyObjType = {
+/* === EB - 30-apr-2010: commented out the CONST that made build fail with tcl/tk 8.5 */
+/* CONST */ Tcl_ObjType tkStateKeyObjType = {
     "statekey",			/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL			/* setFromAnyProc */
 };
+/* === */
 
 static int
 GetOffset(Tcl_Interp *interp, ClientData clientData,
