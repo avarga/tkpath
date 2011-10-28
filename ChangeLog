@@ -1,5 +1,11 @@
 2011-10-28  Peter Spjuth  <peter.spjuth@gmail.com>
 
+        * win/makefile.vc
+	* generic/path.c:
+	* configure, configure.in: Bumped revision to 0.3.2
+
+2011-10-28  Peter Spjuth  <peter.spjuth@gmail.com>
+
 	* generic/tkCanvPath.c (PathCoords):
 	Fixed memory leak when using coords command with path item.
 
