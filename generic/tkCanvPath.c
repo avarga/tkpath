@@ -310,6 +310,9 @@ ProcessPath(
             }
             pathPtr->atomPtr = atomPtr;
             pathPtr->pathLen = len;
+            if (pathPtr->pathObjPtr != NULL) {
+		Tcl_DecrRefCount(pathPtr->pathObjPtr);
+	    }
             pathPtr->pathObjPtr = objv[0];
             pathPtr->maxNumSegments = GetSubpathMaxNumSegments(atomPtr);
             Tcl_IncrRefCount(pathPtr->pathObjPtr);
