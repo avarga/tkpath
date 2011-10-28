@@ -1,3 +1,8 @@
+2011-10-28  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* generic/tkCanvPath.c (PathCoords):
+	Fixed memory leak when using coords command with path item.
+
 2010-03-15  Peter Spjuth  <peter.spjuth@gmail.com>
 
         * generic/tkIntPath.h: Updated PATH_DEPIXELIZE to avoid an offset
