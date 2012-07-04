@@ -22,7 +22,11 @@
  */
 
 /* === EB - 30-apr-2010: commented out the CONST that made build fail with tcl/tk 8.5 */
-/* CONST */ Tcl_ObjType tkStateKeyObjType = {
+/* === George Petasis - 7 July 2012: The missing CONST fails with Tk 8.6... */
+#if (TK_MAJOR_VERSION >= 8) &&  (TK_MINOR_VERSION >= 6)
+CONST
+#endif
+Tcl_ObjType tkStateKeyObjType = {
     "statekey",			/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */

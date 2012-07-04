@@ -1,3 +1,8 @@
+2012-07-04  George Petasis  <petasis@iit.demokritos.gr>
+
+        * generic/tkpUtil.c: Fix in the tkStateKeyObjType definistion, in
+	order to compile with Tk 8.6.
+
 2011-10-28  Peter Spjuth  <peter.spjuth@gmail.com>
 
         * win/makefile.vc
