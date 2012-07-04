@@ -2,6 +2,9 @@
 
         * generic/tkpUtil.c: Fix in the tkStateKeyObjType definistion, in
 	order to compile with Tk 8.6.
+	* tclconfig/install-sh:
+	* tclconfig/tcl.m4:
+	* configure, configure.in: Updated to TEA 3.9.
 
 2011-10-28  Peter Spjuth  <peter.spjuth@gmail.com>
 
