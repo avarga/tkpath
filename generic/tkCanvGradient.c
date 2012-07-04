@@ -153,7 +153,7 @@ CanvasGradientsFree(TkPathCanvas *canvasPtr)
 
     hPtr = Tcl_FirstHashEntry(&canvasPtr->gradientTable, &search);
     while (hPtr != NULL) {
-	gradientPtr = Tcl_GetHashValue(hPtr);
+	gradientPtr = (TkPathGradientMaster*) Tcl_GetHashValue(hPtr);
 	Tcl_DeleteHashEntry(hPtr);
 	PathGradientMasterFree(gradientPtr); 
 	hPtr = Tcl_NextHashEntry(&search);

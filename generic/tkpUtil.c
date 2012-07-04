@@ -336,13 +336,13 @@ TkPathOffsetOptionFreeProc(
  */
 
 static int
-GetDoublePixels(interp, tkwin, string, doublePtr)
-    Tcl_Interp *interp;		/* Use this for error reporting. */
-    Tk_Window tkwin;		/* Window whose screen determines conversion
+GetDoublePixels(
+    Tcl_Interp *interp,		/* Use this for error reporting. */
+    Tk_Window tkwin,		/* Window whose screen determines conversion
 				 * from centimeters and other absolute
 				 * units. */
-    CONST char *string;		/* String describing a number of pixels. */
-    double *doublePtr;		/* Place to store converted result. */
+    CONST char *string,		/* String describing a number of pixels. */
+    double *doublePtr)		/* Place to store converted result. */
 {
     char *end;
     double d;

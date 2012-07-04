@@ -34,9 +34,9 @@ static int 	GradientObjCmd(ClientData clientData, Tcl_Interp* interp,
  */
 
 static char *
-ComputeSlotAddress(recordPtr, offset)
-    char *recordPtr;	/* Pointer to the start of a record. */
-    int offset;		/* Offset of a slot within that record; may be < 0. */
+ComputeSlotAddress(
+    char *recordPtr,	/* Pointer to the start of a record. */
+    int offset)		/* Offset of a slot within that record; may be < 0. */
 {
     if (offset >= 0) {
         return recordPtr + offset;
@@ -66,7 +66,7 @@ static int LinTransitionSet(
     int objEmpty = 0;
     Tcl_Obj *valuePtr;
     double z[4] = {0.0, 0.0, 1.0, 0.0};		/* Defaults according to SVG. */
-    PathRect *new = NULL;
+    PathRect *newrc = NULL;
     
     valuePtr = *value;
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
@@ -96,15 +96,15 @@ static int LinTransitionSet(
                 return TCL_ERROR;
             }
         }
-        new = (PathRect *) ckalloc(sizeof(PathRect));
-        new->x1 = z[0];
-        new->y1 = z[1];
-        new->x2 = z[2];
-        new->y2 = z[3];
+        newrc = (PathRect *) ckalloc(sizeof(PathRect));
+        newrc->x1 = z[0];
+        newrc->y1 = z[1];
+        newrc->x2 = z[2];
+        newrc->y2 = z[3];
     }
     if (internalPtr != NULL) {
         *((PathRect **) oldInternalPtr) = *((PathRect **) internalPtr);
-        *((PathRect **) internalPtr) = new;
+        *((PathRect **) internalPtr) = newrc;
     }
     return TCL_OK;
 }
@@ -158,7 +158,7 @@ static int RadTransitionSet(
     int objEmpty = 0;
     Tcl_Obj *valuePtr;
     double z[5] = {0.5, 0.5, 0.5, 0.5, 0.5};
-    RadialTransition *new = NULL;
+    RadialTransition *newrc = NULL;
 
     valuePtr = *value;
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
@@ -183,16 +183,16 @@ static int RadTransitionSet(
                 return TCL_ERROR;
             }
         }
-        new = (RadialTransition *) ckalloc(sizeof(RadialTransition));
-        new->centerX = z[0];
-        new->centerY = z[1];
-        new->radius = z[2];
-        new->focalX = z[3];
-        new->focalY = z[4];
+        newrc = (RadialTransition *) ckalloc(sizeof(RadialTransition));
+        newrc->centerX = z[0];
+        newrc->centerY = z[1];
+        newrc->radius = z[2];
+        newrc->focalX = z[3];
+        newrc->focalY = z[4];
     }
     if (internalPtr != NULL) {
         *((RadialTransition **) oldInternalPtr) = *((RadialTransition **) internalPtr);
-        *((RadialTransition **) internalPtr) = new;
+        *((RadialTransition **) internalPtr) = newrc;
     }
     return TCL_OK;
 }
@@ -306,7 +306,7 @@ static int StopsSet(
     Tcl_Obj *stopObj;
     Tcl_Obj *obj;
     XColor *color;
-    GradientStopArray *new = NULL;
+    GradientStopArray *newrc = NULL;
     
     valuePtr = *value;
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
@@ -320,7 +320,7 @@ static int StopsSet(
         if (Tcl_ListObjGetElements(interp, valuePtr, &nstops, &objv) != TCL_OK) {
             return TCL_ERROR;
         }
-        new = NewGradientStopArray(nstops);
+        newrc = NewGradientStopArray(nstops);
         lastOffset = 0.0;
         
         for (i = 0; i < nstops; i++) {
@@ -361,7 +361,7 @@ static int StopsSet(
                 }
                 
                 /* Make new stop. */
-                new->stops[i] = NewGradientStop(offset, color, opacity);
+                newrc->stops[i] = NewGradientStop(offset, color, opacity);
                 lastOffset = offset;
             } else {
                 Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -372,13 +372,13 @@ static int StopsSet(
     }
     if (internalPtr != NULL) {
         *((GradientStopArray **) oldInternalPtr) = *((GradientStopArray **) internalPtr);
-        *((GradientStopArray **) internalPtr) = new;
+        *((GradientStopArray **) internalPtr) = newrc;
     }
     return TCL_OK;
     
 error:
-    if (new != NULL) {
-        FreeStopArray(new);
+    if (newrc != NULL) {
+        FreeStopArray(newrc);
     }
     return TCL_ERROR;
 }
@@ -557,7 +557,7 @@ FindGradientMaster(Tcl_Interp *interp, Tcl_Obj *nameObj, Tcl_HashTable *tablePtr
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_ERROR;
     }
-    *g = Tcl_GetHashValue(hPtr);
+    *g = (TkPathGradientMaster *) Tcl_GetHashValue(hPtr);
     return TCL_OK;
 }
 
@@ -747,7 +747,7 @@ PathGradientNames(Tcl_Interp *interp, Tcl_HashTable *tablePtr)
     listObj = Tcl_NewListObj(0, NULL);
     hPtr = Tcl_FirstHashEntry(tablePtr, &search);
     while (hPtr != NULL) {
-	name = Tcl_GetHashKey(tablePtr, hPtr);
+	name = (char *) Tcl_GetHashKey(tablePtr, hPtr);
 	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(name, -1));
 	hPtr = Tcl_NextHashEntry(&search);
     }

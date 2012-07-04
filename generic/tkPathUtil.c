@@ -982,7 +982,7 @@ TkPathGenericCmdDispatcher(
                         "object \"", name, "\" doesn't exist", NULL);
                 return TCL_ERROR;
             }
-            recordPtr = Tcl_GetHashValue(hPtr);
+            recordPtr = (char *) Tcl_GetHashValue(hPtr);
 			resultObjPtr = Tk_GetOptionValue(interp, recordPtr, optionTable, objv[3], tkwin);
 			if (resultObjPtr == NULL) {
 				result = TCL_ERROR;
@@ -1006,7 +1006,7 @@ TkPathGenericCmdDispatcher(
                         "object \"", name, "\" doesn't exist", NULL);
                 return TCL_ERROR;
             }
-            recordPtr = Tcl_GetHashValue(hPtr);
+            recordPtr = (char *) Tcl_GetHashValue(hPtr);
 			if (objc <= 4) {
 				resultObjPtr = Tk_GetOptionInfo(interp, recordPtr,
                         optionTable,
@@ -1074,7 +1074,7 @@ TkPathGenericCmdDispatcher(
 			}
             name = Tcl_GetString(objv[2]);
             hPtr = Tcl_FindHashEntry(hashTablePtr, name);
-            recordPtr = Tcl_GetHashValue(hPtr);
+            recordPtr = (char *) Tcl_GetHashValue(hPtr);
 			if (hPtr != NULL) {
                 Tcl_DeleteHashEntry(hPtr);
 			}
@@ -1090,7 +1090,7 @@ TkPathGenericCmdDispatcher(
 			listObj = Tcl_NewListObj(0, NULL);
 			hPtr = Tcl_FirstHashEntry(hashTablePtr, &search);
 			while (hPtr != NULL) {
-                name = Tcl_GetHashKey(hashTablePtr, hPtr);
+                name = (char *) Tcl_GetHashKey(hashTablePtr, hPtr);
 				Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(name, -1));
 				hPtr = Tcl_NextHashEntry(&search);
 			}

@@ -5,6 +5,7 @@
 	* tclconfig/install-sh:
 	* tclconfig/tcl.m4:
 	* configure, configure.in: Updated to TEA 3.9.
+	* generic/*.c: Various fixes for mingw32/mingw64.
 
 2011-10-28  Peter Spjuth  <peter.spjuth@gmail.com>
 

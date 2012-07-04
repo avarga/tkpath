@@ -807,7 +807,12 @@ TkPathPostscriptImage(
     cdata.colors = (XColor *) ckalloc(sizeof(XColor) * ncolors);
     cdata.ncolors = ncolors;
 
+#if defined(__cplusplus) || defined(c_plusplus)
+    if (visual->c_class == DirectColor || visual->c_class == TrueColor) {
+#else
+	int class;		/* class of screen (monochrome, etc.) */
     if (visual->class == DirectColor || visual->class == TrueColor) {
+#endif
 	cdata.separated = 1;
 	cdata.red_mask = visual->red_mask;
 	cdata.green_mask = visual->green_mask;
@@ -839,7 +844,11 @@ TkPathPostscriptImage(
 	}
     }
 
+#if defined(__cplusplus) || defined(c_plusplus)
+    if (visual->c_class == StaticGray || visual->c_class == GrayScale) {
+#else
     if (visual->class == StaticGray || visual->class == GrayScale) {
+#endif
 	cdata.color = 0;
     } else {
 	cdata.color = 1;

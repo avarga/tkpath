@@ -120,6 +120,9 @@ TEA_ADD_TCL_SOURCES([library/tkpath.tcl])
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
+    AC_PROG_CXX
+    CC=$CXX
+
     AC_DEFINE(BUILD_tkpath, 1, [Build windows export dll])
     CLEANFILES="pkgIndex.tcl *.lib *.dll *.exp *.ilk *.pdb vc*.pch"
     TEA_ADD_SOURCES([win/tkWinGDIPlusPath.cpp])

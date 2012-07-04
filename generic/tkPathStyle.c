@@ -472,7 +472,7 @@ FindPathStyle(Tcl_Interp *interp, Tcl_Obj *nameObj, Tcl_HashTable *tablePtr, Tk_
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_ERROR;
     }
-    *s = Tcl_GetHashValue(hPtr);
+    *s = (Tk_PathStyle *) Tcl_GetHashValue(hPtr);
     return TCL_OK;
 }
 
@@ -657,7 +657,7 @@ PathStyleNames(Tcl_Interp *interp, Tcl_HashTable *tablePtr)
     listObj = Tcl_NewListObj(0, NULL);
     hPtr = Tcl_FirstHashEntry(tablePtr, &search);
     while (hPtr != NULL) {
-	name = Tcl_GetHashKey(tablePtr, hPtr);
+	name = (char *) Tcl_GetHashKey(tablePtr, hPtr);
 	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(name, -1));
 	hPtr = Tcl_NextHashEntry(&search);
     }
@@ -821,7 +821,7 @@ PathStylesFree(Tk_Window tkwin, Tcl_HashTable *hashTablePtr)
 
     hPtr = Tcl_FirstHashEntry(hashTablePtr, &search);
     while (hPtr != NULL) {
-	recordPtr = Tcl_GetHashValue(hPtr);
+	recordPtr = (char *) Tcl_GetHashValue(hPtr);
 	Tcl_DeleteHashEntry(hPtr);
 	PathStyleFree((Tk_PathStyle *)recordPtr, tkwin);
 	hPtr = Tcl_NextHashEntry(&search);

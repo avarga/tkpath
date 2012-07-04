@@ -106,7 +106,7 @@ NamesSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj*
     listObj = Tcl_NewListObj(0, NULL);
     hPtr = Tcl_FirstHashEntry(surfaceHashPtr, &search);
     while (hPtr != NULL) {
-        name = Tcl_GetHashKey(surfaceHashPtr, hPtr);
+        name = (char *) Tcl_GetHashKey(surfaceHashPtr, hPtr);
         Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(name, -1));
         hPtr = Tcl_NextHashEntry(&search);
     }
@@ -144,7 +144,7 @@ NewSurfaceObjCmd(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj* C
 
     sprintf(str, "%s%d", kSurfaceNameBase, uid++);
     surfacePtr = (PathSurface *) ckalloc( sizeof(PathSurface) );
-    surfacePtr->token = ckalloc( (unsigned int)strlen(str) + 1 );
+    surfacePtr->token = (char *) ckalloc( (unsigned int)strlen(str) + 1 );
     strcpy(surfacePtr->token, str);
     surfacePtr->ctx = ctx;
     surfacePtr->width = width;

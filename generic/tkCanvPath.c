@@ -648,10 +648,10 @@ PathToPoint(
 /**********************************/
 
 double
-TkLineToPoint2(end1Ptr, end2Ptr, pointPtr)
-    double end1Ptr[2];		/* Coordinates of first end-point of line. */
-    double end2Ptr[2];		/* Coordinates of second end-point of line. */
-    double pointPtr[2];		/* Points to coords for point. */
+TkLineToPoint2(
+    double end1Ptr[2],		/* Coordinates of first end-point of line. */
+    double end2Ptr[2],		/* Coordinates of second end-point of line. */
+    double pointPtr[2])		/* Points to coords for point. */
 {
     double dx, dy, a2, b2, c2;
 
@@ -975,13 +975,13 @@ TranslatePath(
  */
 
 static int
-PathToPostscript(interp, canvas, itemPtr, prepass)
-    Tcl_Interp *interp;     /* Leave Postscript or error message
+PathToPostscript(
+    Tcl_Interp *interp,     /* Leave Postscript or error message
                              * here. */
-    Tk_PathCanvas canvas;   /* Information about overall canvas. */
-    Tk_PathItem *itemPtr;   /* Item for which Postscript is
+    Tk_PathCanvas canvas,   /* Information about overall canvas. */
+    Tk_PathItem *itemPtr,   /* Item for which Postscript is
                              * wanted. */
-    int prepass;            /* 1 means this is a prepass to
+    int prepass)            /* 1 means this is a prepass to
                              * collect font information;  0 means
                              * final Postscript is being created. */
 {

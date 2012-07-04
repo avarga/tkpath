@@ -4008,7 +4008,8 @@ TagSearchScan(
 	 */
 
 	searchPtr->rewritebufferAllocated = 100;
-	searchPtr->rewritebuffer = ckalloc(searchPtr->rewritebufferAllocated);
+	searchPtr->rewritebuffer =
+                          (char *) ckalloc(searchPtr->rewritebufferAllocated);
     }
     TagSearchExprInit(&(searchPtr->expr));
 
@@ -4025,7 +4026,7 @@ TagSearchScan(
     if ((unsigned int)searchPtr->stringLength >=
 	    searchPtr->rewritebufferAllocated) {
 	searchPtr->rewritebufferAllocated = searchPtr->stringLength + 100;
-	searchPtr->rewritebuffer =
+	searchPtr->rewritebuffer = (char *)
 		ckrealloc(searchPtr->rewritebuffer,
 		searchPtr->rewritebufferAllocated);
     }

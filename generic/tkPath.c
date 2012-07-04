@@ -118,16 +118,16 @@ static int
 GetPathBoolean(Tcl_Interp *interp, Tcl_Obj *CONST objv[], int len, int *indexPtr, char *boolPtr) 
 {
     int result;
-    int bool;
+    int boolean;
 
     if (*indexPtr > len - 1) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(kPathSyntaxError, -1));
         result = TCL_ERROR;
     } else {
-        result = Tcl_GetBooleanFromObj(interp, objv[*indexPtr], &bool);
+        result = Tcl_GetBooleanFromObj(interp, objv[*indexPtr], &boolean);
         if (result == TCL_OK) {
             (*indexPtr)++;
-            *boolPtr = bool;
+            *boolPtr = boolean;
         }
     }
     return result;

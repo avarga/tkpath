@@ -33,10 +33,9 @@ extern int	SurfaceInit(Tcl_Interp *interp);
 
 #ifdef _WIN32
     BOOL APIENTRY
-    DllMain( hInst, reason, reserved )
-        HINSTANCE   hInst;	/* Library instance handle. */
-        DWORD       reason;	/* Reason this function is being called. */
-        LPVOID      reserved;	/* Not used. */
+    DllMain( HINSTANCE hInst,   /* Library instance handle. */
+             DWORD     reason,  /* Reason this function is being called. */
+             LPVOID    reserved /* Not used. */ )
     {
         return TRUE;
     }
