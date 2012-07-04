@@ -101,7 +101,6 @@ AC_CHECK_TYPE([uintptr_t], [
     fi
 ])
 
-
 #-----------------------------------------------------------------------
 # Specify the C source files to compile in TEA_ADD_SOURCES,
 # public headers that need to be installed in TEA_ADD_HEADERS,
