@@ -57,7 +57,10 @@ extern int	SurfaceInit(Tcl_Interp *interp);
  *
  *----------------------------------------------------------------------
  */
-#ifdef _WIN32
+#ifdef __cplusplus
+extern "C" {
+#endif
+#if defined(_WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
     __declspec(dllexport)
 #endif
 
@@ -141,12 +144,14 @@ int Tkpath_Init(Tcl_Interp *interp)		/* Tcl interpreter. */
  *
  *----------------------------------------------------------------------
  */
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
     __declspec(dllexport)
 #endif
 
 int Tkpath_SafeInit(Tcl_Interp *interp)	    { return Tkpath_Init(interp); }
 int Tkpath_Unload(Tcl_Interp *interp)	    { return TCL_ERROR; }
 int Tkpath_SafeUnload(Tcl_Interp *interp)   { return Tkpath_Unload( interp ); }
-
+#ifdef __cplusplus
+}
+#endif
 /*--------------------------------------------------------------------------------*/
