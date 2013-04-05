@@ -1074,8 +1074,8 @@ CanvasWidgetCmd(
 	char *arg;
 	int length;
 
-	if (objc < 2) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "type ?arg arg ...?");
+	if (objc < 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
