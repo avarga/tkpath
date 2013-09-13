@@ -52,13 +52,6 @@ typedef struct PathPoint {
     double y;
 } PathPoint;
 
-typedef struct PathRect {
-    double x1;
-    double y1;
-    double x2;
-    double y2;
-} PathRect;
-
 /*
  * The transformation matrix:
  *		| a  b  0 |
