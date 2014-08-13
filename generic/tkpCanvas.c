@@ -1221,12 +1221,12 @@ CanvasWidgetCmd(
 	 */
 	for (i = 2; i < objc; i++) {
 	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, goto done) {
-		if (itemPtr->id == 0) {
-		    Tcl_SetObjResult(interp, 
-			    Tcl_NewStringObj("the root item cannot be deleted", -1));
-		    result = TCL_ERROR;
-		    goto done;
-		}
+	    
+	    /*
+	     * Silently ignoring the root item.
+	    */
+		if (itemPtr->id == 0) continue;
+		
 		/*
 		 * This will also delete all its descendants by 
 		 * recursive calls.
