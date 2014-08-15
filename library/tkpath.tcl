@@ -67,15 +67,15 @@ proc ::tkp::transform {cmd args} {
 	    if {$len != 1} {
 		return -code error "usage: transform skewx angle"
 	    }
-	    set sinPhi [expr {sin([lindex $args 0])}]
-	    set matrix [list {1 0} [list $sinPhi 1] {0 0}]
+	    set tanPhi [expr {tan([lindex $args 0])}]
+	    set matrix [list {1 0} [list $tanPhi 1] {0 0}]
 	}
 	skewy {
 	    if {$len != 1} {
 		return -code error "usage: transform skewy angle"
 	    }
-	    set sinPhi [expr {sin([lindex $args 0])}]
-	    set matrix [list [list 1 $sinPhi] {0 1} {0 0}]
+	    set tanPhi [expr {tan([lindex $args 0])}]
+	    set matrix [list [list 1 $tanPhi] {0 1} {0 0}]
 	}
 	translate {
 	    if {$len != 2} {
