@@ -366,10 +366,20 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     surface = cairo_image_surface_create_for_data(
             ptr,
             format, 
-            (int) width, (int) height, 
+            (int) iwidth, (int) iheight,
             pitch);		/* stride */
-    cairo_set_source_surface(context->c, surface, x, y);
-    cairo_paint(context->c);
+
+    if (width == (double)iwidth && height == (double)iheight) {
+        cairo_set_source_surface(context->c, surface, x, y);
+        cairo_paint(context->c);
+    } else {
+        cairo_save(context->c);
+        cairo_translate(context->c, x, y);
+        cairo_scale(context->c, width/iwidth, height/iheight);
+        cairo_set_source_surface(context->c, surface, 0, 0);
+        cairo_paint(context->c);
+        cairo_restore(context->c);
+    }
     cairo_surface_destroy(surface);
     if (data) {
         ckfree((char *)data);
