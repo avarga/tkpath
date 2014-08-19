@@ -23,6 +23,7 @@ $w create pimage 100 100 -image $name -matrix $m
 set m [::tkp::transform scale 2 0.8]
 $w create pimage 10 300 -image $name -matrix $m
 
+$w create pimage 50 150 -image $name -width 320 -heigh 120 -fillopacity 0.3
 
 
 
