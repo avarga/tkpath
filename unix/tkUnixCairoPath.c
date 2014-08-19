@@ -400,6 +400,27 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
     return TCL_OK;
 }
 
+cairo_font_slant_t
+convertTkFontSlant2CairoFontSlant(enum FontSlant slant)
+{
+    switch(slant) {
+        case PATH_TEXT_SLANT_NORMAL: return CAIRO_FONT_SLANT_NORMAL;
+        case PATH_TEXT_SLANT_ITALIC: return CAIRO_FONT_SLANT_ITALIC;
+        case PATH_TEXT_SLANT_OBLIQUE: return CAIRO_FONT_SLANT_OBLIQUE;
+        default: return CAIRO_FONT_SLANT_NORMAL;
+    }
+}
+
+cairo_font_weight_t
+convertTkFontWeight2CairoFontWeight(enum FontSlant weight)
+{
+    switch(weight) {
+        case PATH_TEXT_WEIGHT_NORMAL: return CAIRO_FONT_WEIGHT_NORMAL;
+        case PATH_TEXT_WEIGHT_BOLD: return CAIRO_FONT_WEIGHT_BOLD;
+        default: return CAIRO_FONT_WEIGHT_NORMAL;
+    }
+}
+
 void
 TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
         double x, double y, char *utf8, void *custom)
@@ -407,7 +428,7 @@ TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textSty
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     
     cairo_select_font_face(context->c, textStylePtr->fontFamily, 
-            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+            convertTkFontSlant2CairoFontSlant(textStylePtr->fontSlant), convertTkFontWeight2CairoFontWeight(textStylePtr->fontWeight));
     cairo_set_font_size(context->c, textStylePtr->fontSize);
     cairo_move_to(context->c, x, y);
     if ((GetColorFromPathColor(style->fill) != NULL) && (style->strokeColor != NULL)) {
@@ -444,7 +465,7 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
     c = cairo_create(surface);
     cairo_select_font_face(c, textStylePtr->fontFamily, 
-            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+            convertTkFontSlant2CairoFontSlant(textStylePtr->fontSlant), convertTkFontWeight2CairoFontWeight(textStylePtr->fontWeight));
     cairo_set_font_size(c, textStylePtr->fontSize);
 
     cairo_text_extents(c, utf8, &extents);

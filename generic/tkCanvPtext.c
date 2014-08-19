@@ -78,6 +78,8 @@ enum {
     PRECT_OPTION_INDEX_FONTSIZE		    = (1L << (PATH_STYLE_OPTION_INDEX_END + 1)),
     PRECT_OPTION_INDEX_TEXT		    = (1L << (PATH_STYLE_OPTION_INDEX_END + 2)),
     PRECT_OPTION_INDEX_TEXTANCHOR	    = (1L << (PATH_STYLE_OPTION_INDEX_END + 3)),
+    PRECT_OPTION_INDEX_FONTWEIGHT       = (1L << (PATH_STYLE_OPTION_INDEX_END + 4)),
+    PRECT_OPTION_INDEX_FONTSLANT        = (1L << (PATH_STYLE_OPTION_INDEX_END + 5)),
 };
  
 PATH_STYLE_CUSTOM_OPTION_RECORDS
@@ -104,12 +106,22 @@ PATH_OPTION_STRING_TABLES_STATE
 #	define DEF_PATHCANVTEXT_FONTSIZE 	"12"
 #   endif
 #endif
+#define DEF_PATHCANVTEXT_FONTWEIGHT "normal"
+#define DEF_PATHCANVTEXT_FONTSLANT  "normal"
 
 /*
  * The enum kPathTextAnchorStart... MUST be kept in sync!
  */
 static char *textAnchorST[] = {
     "start", "middle", "end", NULL
+};
+
+static char *fontWeightST[] = {
+    "normal", "bold", NULL
+};
+
+static char *fontSlantST[] = {
+    "normal", "italic", "oblique", NULL
 };
 
 #define PATH_OPTION_SPEC_FONTFAMILY		    \
@@ -132,6 +144,17 @@ static char *textAnchorST[] = {
         "start", -1, Tk_Offset(PtextItem, textAnchor),	\
         0, (ClientData) textAnchorST, 0}
 
+#define PATH_OPTION_SPEC_FONTWEIGHT           \
+    {TK_OPTION_STRING_TABLE, "-fontweight", NULL, NULL,   \
+        DEF_PATHCANVTEXT_FONTWEIGHT, -1, Tk_Offset(PtextItem, textStyle.fontWeight),   \
+    0, (ClientData) fontWeightST, PRECT_OPTION_INDEX_FONTWEIGHT}
+
+#define PATH_OPTION_SPEC_FONTSLANT           \
+    {TK_OPTION_STRING_TABLE, "-fontslant", NULL, NULL,   \
+        DEF_PATHCANVTEXT_FONTSLANT, -1, Tk_Offset(PtextItem, textStyle.fontSlant),   \
+    0, (ClientData) fontSlantST, PRECT_OPTION_INDEX_FONTSLANT}
+
+
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
@@ -140,6 +163,8 @@ static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, ""),
     PATH_OPTION_SPEC_FONTFAMILY,
     PATH_OPTION_SPEC_FONTSIZE,
+    PATH_OPTION_SPEC_FONTSLANT,
+    PATH_OPTION_SPEC_FONTWEIGHT,
     PATH_OPTION_SPEC_TEXT,
     PATH_OPTION_SPEC_TEXTANCHOR,
     PATH_OPTION_SPEC_END

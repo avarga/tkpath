@@ -336,6 +336,23 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     }
 }
 
+inline int canvasTextStyle2GdiPlusTextStyle(Tk_PathTextStyle *textStylePtr)
+{
+    int fontStyle = 0;
+    switch(textStylePtr->fontSlant) {
+        case PATH_TEXT_SLANT_NORMAL: break;
+        case PATH_TEXT_SLANT_ITALIC: fontStyle |= FontStyleItalic; break;
+        case PATH_TEXT_SLANT_OBLIQUE: fontStyle |= FontStyleItalic; break; /* no FontStyleOblique in GDI+ */
+        default: break;
+    }
+    switch (textStylePtr->fontWeight) {
+        case PATH_TEXT_WEIGHT_NORMAL: break;
+        case PATH_TEXT_WEIGHT_BOLD: fontStyle |= FontStyleBold; break;
+        default: break;
+    }
+    return fontStyle;
+}
+
 inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr,
         float x, float y, char *utf8)
 {
@@ -347,7 +364,8 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
     if (fontFamily.GetLastStatus() != Ok) {
         fontFamily.GenericSansSerif();
     }
-    Gdiplus::Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+    int fontStyle = canvasTextStyle2GdiPlusTextStyle(textStylePtr);
+    Gdiplus::Font font(&fontFamily, (float) textStylePtr->fontSize, fontStyle, UnitPixel);
     if (font.GetLastStatus() != Ok) {
         // TODO
     }
@@ -361,7 +379,7 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
      * design units and pixels.
      */
     float ascentPixels = font.GetSize() *
-            fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
+            fontFamily.GetCellAscent(fontStyle) / fontFamily.GetEmHeight(fontStyle);
     PointF point(x, y - ascentPixels);
     if (gAntiAlias) {
         mGraphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
@@ -374,7 +392,7 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
     if (style->strokeColor != NULL) {
         Pen    *pen = PathCreatePen(style);
         mPath->AddString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr),
-                &fontFamily, FontStyleRegular, (float) textStylePtr->fontSize, point, NULL);
+                &fontFamily, fontStyle, (float) textStylePtr->fontSize, point, NULL);
         mGraphics->DrawPath(pen, mPath);
         delete pen;
     }
@@ -927,7 +945,8 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     if (fontFamily.GetLastStatus() != Ok) {
         fontFamily.GenericSansSerif();
     }
-    Gdiplus::Font font(&fontFamily, (float) textStylePtr->fontSize, FontStyleRegular, UnitPixel);
+    int fontStyle = canvasTextStyle2GdiPlusTextStyle(textStylePtr);
+    Gdiplus::Font font(&fontFamily, (float) textStylePtr->fontSize, fontStyle, UnitPixel);
     if (font.GetLastStatus() != Ok) {
         // TODO
     }
@@ -937,7 +956,7 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     graphics->MeasureString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr), &font, origin, &bounds);
     Tcl_DStringFree(&ds);
     ascent = font.GetSize() *
-           fontFamily.GetCellAscent(FontStyleRegular) / fontFamily.GetEmHeight(FontStyleRegular);
+           fontFamily.GetCellAscent(fontStyle) / fontFamily.GetEmHeight(fontStyle);
     r.x1 = 0.0;
     r.y1 = -ascent;
     r.x2 = bounds.Width;

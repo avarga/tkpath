@@ -251,9 +251,22 @@ typedef struct TkPathStyleInst {
 
 // @@@ TODO: Much more to be added here! */
 
+enum FontWeight {
+    PATH_TEXT_WEIGHT_NORMAL,
+    PATH_TEXT_WEIGHT_BOLD
+};
+
+enum FontSlant {
+    PATH_TEXT_SLANT_NORMAL,
+    PATH_TEXT_SLANT_ITALIC,
+    PATH_TEXT_SLANT_OBLIQUE
+};
+
 typedef struct Tk_PathTextStyle {
     char *fontFamily;
     double fontSize;
+    enum FontWeight fontWeight;
+    enum FontSlant fontSlant;
 } Tk_PathTextStyle;
 
 /*
