@@ -23,7 +23,7 @@ $w create text 220 140 -anchor w -text "-stops {{0 lightgreen} {1 green}}"
 
 set g3 [$w gradient create linear -stops {{0 "#f60"} {1 "#ff6"}} \
   -lineartransition {0 0 0 1}]
-$w create path "M 40 200 q 60 -200 120 0 z" -fill $g3
+$w create path "M 40 200 q 60 -200 120 0 z" -fill $g3 -fillopacity 0.8
 
 set g4 [$w gradient create linear -stops $rainbow]
 $w create prect 10 210 210 260 -fill $g4
