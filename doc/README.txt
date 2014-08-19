@@ -503,6 +503,8 @@ to float (double).
 
         tkp::transform translate x y
 
+	tkp::transform mult transform1 transform2
+
 
  o Known issues:
 
