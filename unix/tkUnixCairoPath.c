@@ -56,6 +56,8 @@ typedef struct TkPathContext_ {
                                  * 2: even integer width */
 } TkPathContext_;
 
+static int GetCairoExtend(int method);
+
 
 void CairoSetFill(TkPathContext ctx, Tk_PathStyle *style)
 {
@@ -402,23 +404,102 @@ void
 TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
         double x, double y, char *utf8, void *custom)
 {
+    printf("TkPathTextDraw:start\n");
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     
     cairo_select_font_face(context->c, textStylePtr->fontFamily, 
             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(context->c, textStylePtr->fontSize);
     cairo_move_to(context->c, x, y);
+
+
+
+
+    TkPathGradientMaster *gradientPtr = GetGradientMasterFromPathColor(style->fill);
+
+    if (gradientPtr != NULL) {
+        printf("TkPathTextDraw:0\n");
+        cairo_pattern_t *pattern = NULL;
+        if (!ObjectIsEmpty(gradientPtr->stopsObj)) {
+            if (gradientPtr->type == kPathGradientTypeLinear) {
+                int i;
+                int                 nstops;
+                GradientStop        *stop;
+                GradientStopArray   *stopArrPtr;
+
+                stopArrPtr = gradientPtr->linearFill.stopArrPtr;
+                nstops = stopArrPtr->nstops;
+
+                pattern = cairo_pattern_create_linear(0, 15, 0, 90 * 0.8);
+                cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+                for (i = 0; i < nstops; i++) {
+                    stop = stopArrPtr->stops[i];
+                    cairo_pattern_add_color_stop_rgba(pattern, stop->offset,
+                            RedDoubleFromXColorPtr(stop->color),
+                            GreenDoubleFromXColorPtr(stop->color),
+                            BlueDoubleFromXColorPtr(stop->color),
+                            stop->opacity * style->fillOpacity);
+                }
+            } else {
+                int                 i;
+                int                 nstops;
+                GradientStop        *stop;
+                GradientStopArray   *stopArrPtr;
+                RadialTransition    *tPtr;
+
+                stopArrPtr = gradientPtr->radialFill.stopArrPtr;
+                nstops = stopArrPtr->nstops;
+                tPtr = gradientPtr->radialFill.radialPtr;
+
+                pattern = cairo_pattern_create_radial(
+                        tPtr->focalX, tPtr->focalY, 0.0,
+                        tPtr->centerX, tPtr->centerY, tPtr->radius);
+
+//                if (gradientPtr->radialFill.units == kPathGradientUnitsBoundingBox) {
+//                    cairo_translate(context->c, bbox->x1, bbox->y1);
+//                    cairo_scale(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
+//                }
+//                if (mPtr) {
+//                    cairo_matrix_t matrix;
+//                    cairo_matrix_init(&matrix, mPtr->a, mPtr->b, mPtr->c, mPtr->d, mPtr->tx, mPtr->ty);
+//                    cairo_pattern_set_matrix(pattern, &matrix);
+//                }
+
+                cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+                for (i = 0; i < nstops; i++) {
+                    stop = stopArrPtr->stops[i];
+                    cairo_pattern_add_color_stop_rgba(pattern, stop->offset,
+                            RedDoubleFromXColorPtr(stop->color),
+                            GreenDoubleFromXColorPtr(stop->color),
+                            BlueDoubleFromXColorPtr(stop->color),
+                            stop->opacity);
+                }
+//                cairo_set_fill_rule(context->c,
+//                        (style->fillRule == WindingRule) ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
+            }
+            cairo_text_path(context->c, utf8);
+            cairo_set_source(context->c, pattern);
+            cairo_fill(context->c);
+        }
+        //cairo_text_path(context->c, utf8);
+//        cairo_show_text(context->c, utf8);
+    }
+
     if ((GetColorFromPathColor(style->fill) != NULL) && (style->strokeColor != NULL)) {
+        printf("TkPathTextDraw:1\n");
         cairo_text_path(context->c, utf8);
         TkPathFillAndStroke(ctx, style);
     } else if (GetColorFromPathColor(style->fill) != NULL) {
-    
+        printf("TkPathTextDraw:2\n");
         /* This is the normal way to draw text which is likely faster. */
         CairoSetFill(ctx, style);
         cairo_show_text(context->c, utf8);
     } else if (style->strokeColor != NULL) {
+        printf("TkPathTextDraw:3\n");
         cairo_text_path(context->c, utf8);
         TkPathStroke(ctx, style);
+    } else {
+        printf("TkPathTextDraw:4\n");
     }
 }
 
