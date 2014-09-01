@@ -592,7 +592,7 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
         double *dashes = (double *) ckalloc(dashPtr->number * sizeof(double));
         
         for (i = 0; i < dashPtr->number; i++) {
-            dashes[i] = dashPtr->array[i];
+            dashes[i] = dashPtr->array[i] * style->strokeWidth;
         }
         cairo_set_dash(context->c, dashes, dashPtr->number, style->offset);
     }
