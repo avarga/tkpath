@@ -2392,6 +2392,7 @@ TkpClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
+/*
     MacDrawable *macDraw = (MacDrawable *) d;
 
     if (width < 0 && height < 0) {
@@ -2401,6 +2402,7 @@ TkpClipDrawableToRect(
 	macDraw->drawRect = CGRectMake(x, y, width, height);
 	macDraw->flags |= TK_CLIPPED_DRAW;
     }
+ */
 }
 
 #endif

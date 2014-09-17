@@ -17,6 +17,15 @@
 #include "tkMacOSXInt.h"
 #include "tkIntPath.h"
 
+#if !__OBJC__
+#error Objective-C compiler required
+#endif
+
+#import <Cocoa/Cocoa.h>
+
+
+
+
 /* Seems to work for both Endians. */
 #define BlueFloatFromXColorPtr(xc)   (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
 #define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
@@ -33,8 +42,8 @@ extern int gDepixelize;
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
-const float kValidDomain[2] = {0, 1};
-const float kValidRange[8] = {0, 1, 0, 1, 0, 1, 0, 1};
+const CGFloat kValidDomain[2] = {0, 1};
+const CGFloat kValidRange[8] = {0, 1, 0, 1, 0, 1, 0, 1};
 
 /*
  * This is used as a place holder for platform dependent stuff between each call.
@@ -47,6 +56,12 @@ typedef struct TkPathContext_ {
                                  * 0: not integer width
                                  * 1: odd integer width
                                  * 2: even integer width */
+
+    /* fields from TK TkMacOSXDrawingContext: */
+    NSView *view;
+    HIShapeRef clipRgn;
+    CGRect portBounds;
+    int focusLocked;
 } TkPathContext_;
 
 typedef struct PathATSUIRecord {
@@ -78,7 +93,6 @@ TkMacOSXGetClipRgn(
 {
     MacDrawable *macDraw = (MacDrawable *) drawable;
     HIShapeRef clipRgn = NULL;
-    CGRect r;
 
     if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macDraw->winPtr);
@@ -88,90 +102,164 @@ TkMacOSXGetClipRgn(
 #endif /* TK_MAC_DEBUG_DRAWING */
     }
 
-    if (macDraw->flags & TK_CLIPPED_DRAW) {
-	r = CGRectOffset(macDraw->drawRect, macDraw->xOff, macDraw->yOff);
+    if (macDraw->drawRgn) {
+        clipRgn = HIShapeCreateCopy(macDraw->drawRgn);
+    } else if (macDraw->visRgn) {
+        clipRgn = HIShapeCreateCopy(macDraw->visRgn);
     }
-    if (macDraw->visRgn) {
-	if (macDraw->flags & TK_CLIPPED_DRAW) {
-	    HIShapeRef rgn = HIShapeCreateWithRect(&r);
-
-	    clipRgn = HIShapeCreateIntersection(macDraw->visRgn, rgn);
-	    CFRelease(rgn);
-	} else {
-	    clipRgn = HIShapeCreateCopy(macDraw->visRgn);
-	}
-    } else if (macDraw->flags & TK_CLIPPED_DRAW) {
-	clipRgn = HIShapeCreateWithRect(&r);
-    }
-#ifdef TK_MAC_DEBUG_DRAWING
-    TkMacOSXDbgMsg("%s clipRgn ", macDraw->winPtr->pathName);
-    TkMacOSXDebugFlashRegion(drawable, clipRgn);
-#endif /* TK_MAC_DEBUG_DRAWING */
 
     return clipRgn;
 }
 
-void
-PathSetUpCGContext(    
-        Drawable d,
-        CGContextRef *contextPtr)
+
+/* copied from tk8.5.16/macosx/tkMacOSXSubwindows.c */
+NSView*
+TkpMacOSXDrawableView(
+                     MacDrawable *macWin)
 {
-    CGContextRef context;
+    NSView *result = nil;
+
+    if (!macWin) {
+	result = nil;
+    } else if (!macWin->toplevel) {
+	result = macWin->view;
+    } else if (!(macWin->toplevel->flags & TK_EMBEDDED)) {
+	result = macWin->toplevel->view;
+    } else {
+	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
+	if (contWinPtr) {
+	    result = TkpMacOSXDrawableView(contWinPtr->privatePtr);
+	}
+    }
+    return result;
+}
+
+void
+PathSetUpCGContext(
+        Drawable d,
+        TkPathContext_ *dcPtr)
+{
     CGrafPtr port;
     Rect bounds;
     MacDrawable *macDraw = (MacDrawable *) d;
+    int dontDraw = 0;
+
+    printf("\nPathSetUpCGContext()...\n");
+
+    dcPtr->c = NULL;
+    dcPtr->view = NULL;
+    dcPtr->clipRgn = NULL;
+    dcPtr->focusLocked = 0;
 
     port = TkMacOSXGetDrawablePort(d);
+
 #ifdef TKPATH_AQUA_USE_CACHED_CONTEXT
     // Seems that the CG context is cached in MacDrawable but don't know how it works!
     context = macDraw->context;
 #else
-    OSStatus err;
-    err = QDBeginCGContext(port, &context);
-    if (err != noErr) {
-        Tcl_Panic("QDBeginCGContext(): context failed !");
+    dcPtr->focusLocked = 0;
+
+    dcPtr->clipRgn = TkMacOSXGetClipRgn(d);
+    if (!dontDraw) {
+        dontDraw = dcPtr->clipRgn ? HIShapeIsEmpty(dcPtr->clipRgn) : 0;
     }
-    *contextPtr = context;
-    
-    /* http://developer.apple.com/qa/qa2001/qa1010.html */
-    SyncCGContextOriginWithPort(context, port);
+    if (dontDraw) {
+        goto end;
+    }
+
+    NSView *view = TkpMacOSXDrawableView(macDraw);
+    if (view) {
+        NSView *fView = [NSView focusView];
+        if (view != fView) {
+            printf("  view != [NSView focusView]\n");
+            dcPtr->focusLocked = [view lockFocusIfCanDraw];
+            dontDraw = !dcPtr->focusLocked;
+        } else {
+            dontDraw = ![view canDraw];
+        }
+        printf("  focusLocked:%i view:%p, focusView:%p\n", dcPtr->focusLocked, view, fView);
+        if (dontDraw) {
+            goto end;
+        }
+        [[view window] disableFlushWindow];
+        dcPtr->view = view;
+        dcPtr->portBounds = NSRectToCGRect([view bounds]);
+        NSGraphicsContext *currentGraphicsContext = [NSGraphicsContext currentContext];
+        dcPtr->c = (CGContextRef)[currentGraphicsContext graphicsPort];
+        if (dcPtr->clipRgn) {
+        }
+    } else {
+        Tcl_Panic("PathSetUpCGContext(): "
+                  "no NSView to draw into !");
+    }
+
+    printf("  context:	%p\n", dcPtr->c);
 #endif
-    
-    HIShapeRef clipRgn;
-    clipRgn = TkMacOSXGetClipRgn(d);
-    
+
     /*
      * Core Graphics defines the origin to be the bottom left 
      * corner of the CGContext and the positive y-axis points up.
      * Move the origin and flip the y-axis for all subsequent 
      * Core Graphics drawing operations.
      */
-    CGContextSaveGState(context);    
-    GetPortBounds(port, &bounds);
-    CGContextConcatCTM(context, CGAffineTransformMake(1.0, 0.0, 0.0,
-            -1.0, 0.0, bounds.bottom - bounds.top));
-  
-    HIShapeReplacePathInCGContext(clipRgn, context);
-    CGContextEOClip(context);
-    CFRelease(clipRgn);
+    CGContextSaveGState(dcPtr->c);
+    CGRect cgbounds = CGContextGetClipBoundingBox(dcPtr->c);
+    dcPtr->portBounds = NSRectToCGRect([view bounds]);
+    printf("  cgbounds: x=%f,y=%f,w=%f,h=%f\n",cgbounds.origin.x,cgbounds.origin.y,cgbounds.size.width,cgbounds.size.height);
+    dcPtr->portBounds.origin.x += macDraw->xOff;
+    dcPtr->portBounds.origin.y += macDraw->yOff;
+    bounds.left = cgbounds.origin.x;
+    bounds.top = cgbounds.origin.y;
+    bounds.right = cgbounds.origin.x + cgbounds.size.width;
+    bounds.bottom = cgbounds.origin.y + cgbounds.size.height;
+    printf("  macDraw Offs:%f,%f\n",(float)macDraw->xOff,(float)macDraw->yOff);
+    printf("  bounds:l=%f,r=%f,t=%f,b=%f\n",(float)bounds.left,(float)bounds.right,(float)bounds.top,(float)bounds.bottom);
+    if (!dcPtr->focusLocked) {
+        CGContextSaveGState(dcPtr->c);
+    }
 
-    CGContextTranslateCTM(context, macDraw->xOff, macDraw->yOff);
+    CGAffineTransform t = { .a=1.0, .b=0.0, .c=0.0, .d=-1.0, .tx=0.0, .ty=dcPtr->portBounds.size.height};
+    CGContextConcatCTM(dcPtr->c, t);
+  
+    HIShapeReplacePathInCGContext(dcPtr->clipRgn, dcPtr->c);
+    CGContextEOClip(dcPtr->c);
+
+    CGContextTranslateCTM(dcPtr->c, macDraw->xOff, macDraw->yOff);
    
-    CGContextSetShouldAntialias(context, gAntiAlias);
-    CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
+    CGContextSetShouldAntialias(dcPtr->c, gAntiAlias);
+    CGContextSetInterpolationQuality(dcPtr->c, kCGInterpolationHigh);
+
+end:
+    if (dontDraw)
+        printf("DON'T DRAW!!!\n");
+    if (dontDraw && dcPtr->clipRgn) {
+        CFRelease(dcPtr->clipRgn);
+        dcPtr->clipRgn = NULL;
+    }
+    printf("	...PathSetUpCGContext()\n");
 }
 
 void
 PathReleaseCGContext(
-        CGrafPtr destPort, 
-        CGContextRef context)
+                     TkPathContext_ *dcPtr)
 {
-    CGContextRestoreGState(context);
-#ifndef TKPATH_AQUA_USE_CACHED_CONTEXT
-    if (destPort) {
-        QDEndCGContext(destPort, &context);
+    printf("\nPathReleaseCGContext()...\n");
+    if (dcPtr->c) {
+        CGContextSynchronize(dcPtr->c);
+        [[dcPtr->view window] setViewsNeedDisplay:YES];
+        [[dcPtr->view window] enableFlushWindow];
+        if (dcPtr->focusLocked)
+        {
+	      [dcPtr->view unlockFocus];
+        } else {
+            CGContextRestoreGState(dcPtr->c);
+        }
     }
-#endif
+    if (dcPtr->clipRgn) {
+        CFRelease(dcPtr->clipRgn);
+        dcPtr->clipRgn = NULL;
+    }
+    printf("...PathReleaseCGContext()\n");
 }
 
 CGColorSpaceRef GetTheColorSpaceRef(void)
@@ -237,7 +325,12 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     /* Set the line dash patttern in the current graphics state. */
     dashPtr = style->dashPtr;
     if ((dashPtr != NULL) && (dashPtr->number != 0)) {
-        CGContextSetLineDash(c, 0.0, dashPtr->array, dashPtr->number);
+        CGFloat *dashes = (CGFloat *)ckalloc(dashPtr->number * sizeof(CGFloat));
+        int i;
+	        for (i=0; i<dashPtr->number; i++)
+            dashes[i] = dashPtr->array[i];
+        //FIXME alloc CGFLOAT dashes[dashPtr->number]
+        CGContextSetLineDash(c, 0.0, dashes, dashPtr->number);
     }
     
     /* Set the current fill colorspace in the context `c' to `DeviceRGB' and
@@ -307,8 +400,8 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     
         str[0] = strlen(fontFamily);
         strcpy(str+1, fontFamily);
-        iFontFamily = FMGetFontFamilyFromName(str);
-        err = FMGetFontFromFontFamilyInstance(iFontFamily, 0, &atsuFont, &fbStyle);
+// XXX        iFontFamily = FMGetFontFamilyFromName(str);
+//        err = FMGetFontFromFontFamilyInstance(iFontFamily, 0, &atsuFont, &fbStyle);
     }
 #if 0 // fonts come out with bold/italic?
     {
@@ -359,11 +452,10 @@ void TkPathSetCoordOffsets(double dx, double dy)
 TkPathContext	
 TkPathInit(Tk_Window tkwin, Drawable d)
 {
-    CGContextRef cgContext;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc(sizeof(TkPathContext_));
+    bzero(context, sizeof(TkPathContext_));
     
-    PathSetUpCGContext(d, &cgContext);
-    context->c = cgContext;
+    PathSetUpCGContext(d, context);
     context->port = TkMacOSXGetDrawablePort(d);
     context->data = NULL;
     context->widthCode = 0;
@@ -378,8 +470,10 @@ TkPathInitSurface(int width, int height)
     size_t bytesPerRow;
     char *data;
 
+    printf("\nTkPathInitSurface()...\n");
     // Move up into own function
-    
+
+    bzero(context, sizeof(TkPathContext_));
     bytesPerRow = 4*width;
     /* Round up to nearest multiple of 16 */
     bytesPerRow = (bytesPerRow + (16-1)) & ~(16-1);
@@ -398,6 +492,8 @@ TkPathInitSurface(int width, int height)
     context->c = cgContext; 
     context->port = NULL;
     context->data = data;
+    context->clipRgn = NULL;
+    printf("...TkPathInitSurface()\n");
     return (TkPathContext) context;
 }
 
@@ -732,7 +828,7 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 #else
     Rect rect;
 
-    ATSUMeasureTextImage(recordPtr->atsuLayout, 
+    ATSUMeasureTextImage(recordPtr->atsuLayout,
             kATSUFromTextBeginning, kATSUToTextEnd, 0, 0, &rect);
     r.x1 = rect.left;
     r.y1 = rect.top;
@@ -851,7 +947,7 @@ TkPathFree(TkPathContext ctx)
 #ifdef TKPATH_AQUA_USE_DRAWABLE_CONTEXT
 
 #else
-    PathReleaseCGContext(context->port, context->c);
+    PathReleaseCGContext(context);
 #endif
     if (context->data) {
         ckfree(context->data);
@@ -908,7 +1004,7 @@ TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
  */
 
 static void
-ShadeEvaluate(void *info, const float *in, float *out)
+ShadeEvaluate(void *info, const CGFloat *in, CGFloat *out)
 {
     GradientStopArray 	*stopArrPtr = (GradientStopArray *) info;
     GradientStop        **stopPtrPtr = stopArrPtr->stops;
