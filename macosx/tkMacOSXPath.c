@@ -144,7 +144,7 @@ PathSetUpCGContext(
     MacDrawable *macDraw = (MacDrawable *) d;
     int dontDraw = 0;
 
-    printf("\nPathSetUpCGContext()...\n");
+    // printf("\nPathSetUpCGContext()...\n");
 
     dcPtr->c = NULL;
     dcPtr->view = NULL;
@@ -171,13 +171,13 @@ PathSetUpCGContext(
     if (view) {
         NSView *fView = [NSView focusView];
         if (view != fView) {
-            printf("  view != [NSView focusView]\n");
+            // printf("  view != [NSView focusView]\n");
             dcPtr->focusLocked = [view lockFocusIfCanDraw];
             dontDraw = !dcPtr->focusLocked;
         } else {
             dontDraw = ![view canDraw];
         }
-        printf("  focusLocked:%i view:%p, focusView:%p\n", dcPtr->focusLocked, view, fView);
+        // printf("  focusLocked:%i view:%p, focusView:%p\n", dcPtr->focusLocked, view, fView);
         if (dontDraw) {
             goto end;
         }
@@ -193,7 +193,7 @@ PathSetUpCGContext(
                   "no NSView to draw into !");
     }
 
-    printf("  context:	%p\n", dcPtr->c);
+    // printf("  context:	%p\n", dcPtr->c);
 #endif
 
     /*
@@ -205,15 +205,15 @@ PathSetUpCGContext(
     CGContextSaveGState(dcPtr->c);
     CGRect cgbounds = CGContextGetClipBoundingBox(dcPtr->c);
     dcPtr->portBounds = NSRectToCGRect([view bounds]);
-    printf("  cgbounds: x=%f,y=%f,w=%f,h=%f\n",cgbounds.origin.x,cgbounds.origin.y,cgbounds.size.width,cgbounds.size.height);
+    // printf("  cgbounds: x=%f,y=%f,w=%f,h=%f\n",cgbounds.origin.x,cgbounds.origin.y,cgbounds.size.width,cgbounds.size.height);
     dcPtr->portBounds.origin.x += macDraw->xOff;
     dcPtr->portBounds.origin.y += macDraw->yOff;
     bounds.left = cgbounds.origin.x;
     bounds.top = cgbounds.origin.y;
     bounds.right = cgbounds.origin.x + cgbounds.size.width;
     bounds.bottom = cgbounds.origin.y + cgbounds.size.height;
-    printf("  macDraw Offs:%f,%f\n",(float)macDraw->xOff,(float)macDraw->yOff);
-    printf("  bounds:l=%f,r=%f,t=%f,b=%f\n",(float)bounds.left,(float)bounds.right,(float)bounds.top,(float)bounds.bottom);
+    // printf("  macDraw Offs:%f,%f\n",(float)macDraw->xOff,(float)macDraw->yOff);
+    // printf("  bounds:l=%f,r=%f,t=%f,b=%f\n",(float)bounds.left,(float)bounds.right,(float)bounds.top,(float)bounds.bottom);
     if (!dcPtr->focusLocked) {
         CGContextSaveGState(dcPtr->c);
     }
@@ -230,20 +230,19 @@ PathSetUpCGContext(
     CGContextSetInterpolationQuality(dcPtr->c, kCGInterpolationHigh);
 
 end:
-    if (dontDraw)
-        printf("DON'T DRAW!!!\n");
+    // printf(dontDraw ? "DON'T DRAW!!!\n" : "");
     if (dontDraw && dcPtr->clipRgn) {
         CFRelease(dcPtr->clipRgn);
         dcPtr->clipRgn = NULL;
     }
-    printf("	...PathSetUpCGContext()\n");
+    // printf("	...PathSetUpCGContext()\n");
 }
 
 void
 PathReleaseCGContext(
                      TkPathContext_ *dcPtr)
 {
-    printf("\nPathReleaseCGContext()...\n");
+    // printf("\nPathReleaseCGContext()...\n");
     if (dcPtr->c) {
         CGContextSynchronize(dcPtr->c);
         [[dcPtr->view window] setViewsNeedDisplay:YES];
@@ -259,7 +258,7 @@ PathReleaseCGContext(
         CFRelease(dcPtr->clipRgn);
         dcPtr->clipRgn = NULL;
     }
-    printf("...PathReleaseCGContext()\n");
+    // printf("...PathReleaseCGContext()\n");
 }
 
 CGColorSpaceRef GetTheColorSpaceRef(void)
@@ -470,7 +469,7 @@ TkPathInitSurface(int width, int height)
     size_t bytesPerRow;
     char *data;
 
-    printf("\nTkPathInitSurface()...\n");
+    // printf("\nTkPathInitSurface()...\n");
     // Move up into own function
 
     bzero(context, sizeof(TkPathContext_));
@@ -493,7 +492,7 @@ TkPathInitSurface(int width, int height)
     context->port = NULL;
     context->data = data;
     context->clipRgn = NULL;
-    printf("...TkPathInitSurface()\n");
+    // printf("...TkPathInitSurface()\n");
     return (TkPathContext) context;
 }
 
