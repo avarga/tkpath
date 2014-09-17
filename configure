@@ -5586,6 +5586,7 @@ done
 	#TEA_BUGGY_STRTOD
     fi
 
+
 #--------------------------------------------------------------------
 # The code makes use of PTR2INT, ensure the correct definition is
 # picked from Tcl/Tk internal headers...
@@ -5699,7 +5700,6 @@ _ACEOF
     fi
 
 fi
-
 
 
 #-----------------------------------------------------------------------
@@ -6257,6 +6257,43 @@ else
 	fi
 	PKG_LIBS="$PKG_LIBS $i"
     done
+
+
+
+    vars="-framework CoreFoundation"
+    for i in $vars; do
+	if test "${TEA_PLATFORM}" = "windows" -a "$GCC" = "yes" ; then
+	    # Convert foo.lib to -lfoo for GCC.  No-op if not *.lib
+	    i=`echo "$i" | sed -e 's/^\([^-].*\)\.lib$/-l\1/i'`
+	fi
+	PKG_LIBS="$PKG_LIBS $i"
+    done
+
+
+
+    vars="-framework Cocoa"
+    for i in $vars; do
+	if test "${TEA_PLATFORM}" = "windows" -a "$GCC" = "yes" ; then
+	    # Convert foo.lib to -lfoo for GCC.  No-op if not *.lib
+	    i=`echo "$i" | sed -e 's/^\([^-].*\)\.lib$/-l\1/i'`
+	fi
+	PKG_LIBS="$PKG_LIBS $i"
+    done
+
+
+
+    vars="-framework IOKit"
+    for i in $vars; do
+	if test "${TEA_PLATFORM}" = "windows" -a "$GCC" = "yes" ; then
+	    # Convert foo.lib to -lfoo for GCC.  No-op if not *.lib
+	    i=`echo "$i" | sed -e 's/^\([^-].*\)\.lib$/-l\1/i'`
+	fi
+	PKG_LIBS="$PKG_LIBS $i"
+    done
+
+
+
+    PKG_CFLAGS="$PKG_CFLAGS -x objective-c"
 
 
     else
