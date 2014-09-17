@@ -391,6 +391,7 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     style = NULL;
     atsuFont = 0;
     atsuSize = FloatToFixed(fontSize);
+#if 0 // fonts come out with bold/italic?
     {
         /* This is old QuickDraw code. */
         FMFontFamily iFontFamily;
@@ -399,15 +400,14 @@ CreateATSUIStyle(const char *fontFamily, float fontSize, ATSUStyle *atsuStylePtr
     
         str[0] = strlen(fontFamily);
         strcpy(str+1, fontFamily);
-// XXX        iFontFamily = FMGetFontFamilyFromName(str);
-//        err = FMGetFontFromFontFamilyInstance(iFontFamily, 0, &atsuFont, &fbStyle);
-    }
-#if 0 // fonts come out with bold/italic?
-    {
-        err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontFamilyName, 
-                kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
+        iFontFamily = FMGetFontFamilyFromName(str);
+        err = FMGetFontFromFontFamilyInstance(iFontFamily, 0, &atsuFont, &fbStyle);
     }
 #endif
+    {
+        err = ATSUFindFontFromName((Ptr) fontFamily, strlen(fontFamily), kFontFamilyName,
+                kFontNoPlatformCode, kFontNoScriptCode, kFontNoLanguageCode, &atsuFont);
+    }
     if (err != noErr) {
         return err;
     }
