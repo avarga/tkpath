@@ -630,26 +630,9 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
 
-#if 0	// 10.4
-    if (&CGContextAddEllipseInRect != NULL) {
-        CGRect r;
-        r = CGRectMake(cx-rx, cy-ry, 2*rx, 2*ry);
-        CGContextAddEllipseInRect(context->c, r);
-    } else {
-#endif
-    if (rx == ry) {
-        CGContextMoveToPoint(context->c, cx+rx, cy);
-        CGContextAddArc(context->c, cx, cy, rx, 0.0, 2*M_PI, 1);
-        CGContextClosePath(context->c);
-    } else {
-        CGContextSaveGState(context->c);
-        CGContextTranslateCTM(context->c, cx, cy);
-        CGContextScaleCTM(context->c, rx, ry);
-        CGContextMoveToPoint(context->c, 1, 0);
-        CGContextAddArc(context->c, 0.0, 0.0, 1.0, 0.0, 2*M_PI, 1);
-        CGContextRestoreGState(context->c);
-        CGContextClosePath(context->c);
-    }
+    CGRect r;
+    r = CGRectMake(cx-rx, cy-ry, 2*rx, 2*ry);
+    CGContextAddEllipseInRect(context->c, r);
 }
 
 void
