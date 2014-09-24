@@ -833,6 +833,7 @@ PathGetTMatrix(
         }
     }
         
+#if 0
     /* Check that the matrix is not close to being singular. */
     if (fabs(tmp[0][0]*tmp[1][1] - tmp[0][1]*tmp[1][0]) < 1e-6) {
         Tcl_AppendResult(interp, "matrix \"", list, "\" is close to singular",
@@ -840,6 +841,7 @@ PathGetTMatrix(
             result = TCL_ERROR;
             goto bail;
     }
+#endif
         
     /* Matrix. */
     matrixPtr->a  = tmp[0][0];
