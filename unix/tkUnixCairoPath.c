@@ -317,7 +317,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
      *   alpha is used. (That is, 50% transparent red is 0x80800000,
      *   not 0x80ff0000.)
      */
-    if (block.pixelSize*8 == 32) {
+    if (block.pixelSize == 4) {
         format = CAIRO_FORMAT_ARGB32;
         
         /* The offset array contains the offsets from the address of a 
@@ -357,7 +357,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
                 }
             }
         }
-    } else if (block.pixelSize*8 == 24) {
+    } else if (block.pixelSize == 3) {
         /* Could do something about this? */
         return;
     } else {
