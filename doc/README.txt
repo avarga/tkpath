@@ -168,6 +168,7 @@ to float (double).
         -style styleToken
         -tags tagList
 
+
     A matrix is specified by a double list as {{a b} {c d} {tx ty}}.
     There are utility functions to create a matrix using simpler transformations,
     such as rotation, translation etc.
@@ -299,10 +300,19 @@ to float (double).
 
  o The pimage item
 
-   This displays an image in the canvas anchored nw. If -width or -height is
-   nonzero then the image is scaled to this size prior to any affine transform.
+    This displays an image in the canvas anchored nw. If -width or -height is
+    nonzero then the image is scaled to this size prior to any affine transform.
 
-   .c create pimage x y ?-image -width -height genericOptions?
+    pimage extra options:
+        -anchor n|w|s|e|nw|ne|sw|se|c   default value is nw
+        -tintcolor color                tinting color, default value is "", disable tint
+        -tintamount 0.0-1.0             amount for tinting
+        -interpolation none|fast|best
+        -srcregion {x1 y1 x2 y2}        shows only specified region of image.
+                                        if x2 or y2 larger than image, then shows tiled image.
+        These options not implemented on surface items.
+
+    .c create pimage x y ?-image -width -height genericOptions?
 
  o The ptext item
 
