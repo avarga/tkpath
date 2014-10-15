@@ -359,8 +359,10 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         }
     } else if (block.pixelSize == 3) {
         /* Could do something about this? */
+        fprintf(stderr, "TkPathImage: unaccepted pixel format: 1 pixel is 3 bytes\n");
         return;
     } else {
+        fprintf(stderr, "TkPathImage: unaccepted pixel format: 1 pixel is %d bytes\n", block.pixelSize);
         return;
     }
     surface = cairo_image_surface_create_for_data(
