@@ -353,60 +353,73 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         if (kPathSmallEndian) {
             dstR = 3-dstR, dstG = 3-dstG, dstB = 3-dstB, dstA = 3-dstA;
         }
-        if ((srcR == dstR) && (srcG == dstG) && (srcB == dstB) && (srcA == dstA) && (tintAmount <= 0.0 || tintColor == NULL)) {
-            ptr = (unsigned char *) block.pixelPtr;
-        } else {
-            data = (unsigned char *) ckalloc(pitch*iheight);
-            ptr = data;
 
-            if (tintColor && tintAmount > 0.0) {
-                if (tintAmount > 1.0)
-                    tintAmount = 1.0;
-                tintR = RedDoubleFromXColorPtr(tintColor);
-                tintG = GreenDoubleFromXColorPtr(tintColor);
-                tintB = BlueDoubleFromXColorPtr(tintColor);
-                /* printf("tint:%g,%g,%g,%g amount=%g\n", tintR, tintG, tintB, tintAmount); */
-                for (i = 0; i < iheight; i++) {
-                    srcPtr = block.pixelPtr + i*pitch;
-                    dstPtr = ptr + i*pitch;
-                    for (j = 0; j < iwidth; j++) {
-                        // extract
-                        int r = *(srcPtr+srcR);
-                        int g = *(srcPtr+srcG);
-                        int b = *(srcPtr+srcB);
+        data = (unsigned char *) ckalloc(pitch*iheight);
+        ptr = data;
 
-                        // transform
-                        int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
-                        r = (int)((1.0-tintAmount)*r + tintAmount*lum*tintR);
-                        g = (int)((1.0-tintAmount)*g + tintAmount*lum*tintG);
-                        b = (int)((1.0-tintAmount)*b + tintAmount*lum*tintB);
+        if (tintColor && tintAmount > 0.0) {
+            if (tintAmount > 1.0)
+                tintAmount = 1.0;
+            tintR = RedDoubleFromXColorPtr(tintColor);
+            tintG = GreenDoubleFromXColorPtr(tintColor);
+            tintB = BlueDoubleFromXColorPtr(tintColor);
 
-                        // fix range
-                        r = r<0 ? 0 : r>255 ? 255 : r;
-                        g = g<0 ? 0 : g>255 ? 255 : g;
-                        b = b<0 ? 0 : b>255 ? 255 : b;
+            for (i = 0; i < iheight; i++) {
+                srcPtr = block.pixelPtr + i*pitch;
+                dstPtr = ptr + i*pitch;
+                for (j = 0; j < iwidth; j++) {
+                    // extract
+                    int r = *(srcPtr+srcR);
+                    int g = *(srcPtr+srcG);
+                    int b = *(srcPtr+srcB);
+                    int a = *(srcPtr+srcA);
 
-                        // and put back
-                        *(dstPtr+dstR) = r;
-                        *(dstPtr+dstG) = g;
-                        *(dstPtr+dstB) = b;
-                        *(dstPtr+dstA) = *(srcPtr+srcA);
-                        srcPtr += 4;
-                        dstPtr += 4;
+                    // transform
+                    int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
+                    r = (int)((1.0-tintAmount)*r + tintAmount*lum*tintR);
+                    g = (int)((1.0-tintAmount)*g + tintAmount*lum*tintG);
+                    b = (int)((1.0-tintAmount)*b + tintAmount*lum*tintB);
+
+                    if (a != 255) {
+                        /* Cairo expects RGB premultiplied by alpha */
+                        r = r * a / 255;
+                        g = g * a / 255;
+                        b = b * a / 255;
                     }
+
+                    // fix range
+                    r = r<0 ? 0 : r>255 ? 255 : r;
+                    g = g<0 ? 0 : g>255 ? 255 : g;
+                    b = b<0 ? 0 : b>255 ? 255 : b;
+
+                    // and put back
+                    *(dstPtr+dstR) = r;
+                    *(dstPtr+dstG) = g;
+                    *(dstPtr+dstB) = b;
+                    *(dstPtr+dstA) = a;
+                    srcPtr += 4;
+                    dstPtr += 4;
                 }
-            } else {
-                for (i = 0; i < iheight; i++) {
-                    srcPtr = block.pixelPtr + i*pitch;
-                    dstPtr = ptr + i*pitch;
-                    for (j = 0; j < iwidth; j++) {
+            }
+        } else {
+            for (i = 0; i < iheight; i++) {
+                srcPtr = block.pixelPtr + i*pitch;
+                dstPtr = ptr + i*pitch;
+                for (j = 0; j < iwidth; j++) {
+                    unsigned int alpha = *(srcPtr+srcA);
+                    *(dstPtr+dstA) = alpha;
+                    if (alpha == 255) {
                         *(dstPtr+dstR) = *(srcPtr+srcR);
                         *(dstPtr+dstG) = *(srcPtr+srcG);
                         *(dstPtr+dstB) = *(srcPtr+srcB);
-                        *(dstPtr+dstA) = *(srcPtr+srcA);
-                        srcPtr += 4;
-                        dstPtr += 4;
+                    } else {
+                        /* Cairo expects RGB premultiplied by alpha */
+                        *(dstPtr+dstR) = alpha * *(srcPtr+srcR) / 255;
+                        *(dstPtr+dstG) = alpha * *(srcPtr+srcG) / 255;
+                        *(dstPtr+dstB) = alpha * *(srcPtr+srcB) / 255;
                     }
+                    srcPtr += 4;
+                    dstPtr += 4;
                 }
             }
         }
