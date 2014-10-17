@@ -168,6 +168,19 @@ to float (double).
         -style styleToken
         -tags tagList
 
+    arrow:
+        -startarrow Boolean           arrowhead on/off
+        -startarrowlength float       0.0 is special, draws '|-----', negative values draws '>----'
+        -startarrowwidth float        positive value
+        -startarrowfill float         relative to startarrowlength, for example:
+                                      0.0: do not fill arrowhead, draws head by lines with linewidth
+                                      1.0: '<|-------'
+                                      2.0: '<>-------'
+        -endarrow Boolean             see startarrow
+        -endarrowlength float         see startarrowlength
+        -endarrowwidth float          see startarrowwidth
+        -endarrowfill float           see startarrowfill
+    Arrow options accepted by pline, polyline and path objects, but not implemented on surface.
 
     A matrix is specified by a double list as {{a b} {c d} {tx ty}}.
     There are utility functions to create a matrix using simpler transformations,
