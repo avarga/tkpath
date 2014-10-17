@@ -1,4 +1,4 @@
-                  
+
                              tkpath README
                              _____________
 
@@ -12,8 +12,8 @@ child of the root item. The tkpath items, described below, are by default
 a child of the root item, but can be configured to be a child of any group
 item using the -parent option.
 
-There can be subtle differences compared to the original canvas. 
-One such situation is where an option value has switched from an integer 
+There can be subtle differences compared to the original canvas.
+One such situation is where an option value has switched from an integer
 to float (double).
 
  o Syntax: The canvas is created using:
@@ -27,36 +27,36 @@ to float (double).
  o The canvas tree structure:
 
       0----
-	  1
-	  2
-	  3
-	  4
-	  5----
-	      6
-	      7
-	  8----
-	      9
-	     10
-	 11
-	 12
+          1
+          2
+          3
+          4
+          5----
+              6
+              7
+          8----
+              9
+             10
+         11
+         12
 
  o Additional commands
 
     pathName ancestors tagOrId
         Returns a list of item id's of the first item matching tagOrId
-	starting with the root item with id 0.
+        starting with the root item with id 0.
 
     pathName children tagOrId
         Lists all children of the first item matching tagOrId.
 
     pathName depth tagOrId
-	Returns the depth in the tree hierarchy of the first
-	item matching tagOrId. The root item has depth 0 and children
-	of the root has depth 1 and so on.
+        Returns the depth in the tree hierarchy of the first
+        item matching tagOrId. The root item has depth 0 and children
+        of the root has depth 1 and so on.
 
     pathName distance tagOrId x y
         Returns the closest distance between the point (x, y) and the first
-	item matching tagOrId.
+        item matching tagOrId.
 
     pathName firstchild tagOrId
         Returns the first child item of the first item matching tagOrId.
@@ -64,8 +64,8 @@ to float (double).
 
     pathName gradient command ?options?
         See tkp::gradient for the commands. The gradients created with this
-	command are local to the canvas instance. Only gradients defined
-	this way can be used.
+        command are local to the canvas instance. Only gradients defined
+        this way can be used.
 
     pathName lastchild tagOrId
         Returns the last child item of the first item matching tagOrId.
@@ -73,22 +73,22 @@ to float (double).
 
     pathName nextsibling tagOrId
         Returns the next sibling item of the first item matching tagOrId.
-	If tagOrId is the last child we return empty.
+        If tagOrId is the last child we return empty.
 
     pathName parent tagOrId
         Returns the parent item of the first item matching tagOrId. This
-	command works for all items, also for the standard ones. It is
-	therefore better to use this than 'cget id -parent' which is only
-	supported for the new tkpath items.
+        command works for all items, also for the standard ones. It is
+        therefore better to use this than 'cget id -parent' which is only
+        supported for the new tkpath items.
 
     pathName prevsibling tagOrId
         Returns the previous sibling item of the first item matching tagOrId.
-	If tagOrId is the first child we return empty.
+        If tagOrId is the first child we return empty.
     pathName style cmd ?options?
          See tkp::style for the commands. The styles created with this
-	command are local to the canvas instance. Only styles defined
-	this way can be used.
-        
+        command are local to the canvas instance. Only styles defined
+        this way can be used.
+
     pathName types
         List all item types defined in canvas.
 
@@ -98,48 +98,48 @@ to float (double).
 
  o Commands affected by changes
 
-    lower/raise: 
-	movement is constrained to siblings. If reference tagOrId
-    	not given it defaults to first/last item of the root items children.
-    	Items which are not siblings to the reference tagOrId are silently
-    	ignored. Good or bad?
+    lower/raise:
+        movement is constrained to siblings. If reference tagOrId
+        not given it defaults to first/last item of the root items children.
+        Items which are not siblings to the reference tagOrId are silently
+        ignored. Good or bad?
 
-    find above/below: 
-	is constrained to siblings. Good or bad?
+    find above/below:
+        is constrained to siblings. Good or bad?
 
    scale/move:
-	if you apply scale or move on a group item it will apply this to all its 
-	descendants, also to child group items in a recursive way.
+        if you apply scale or move on a group item it will apply this to all its
+        descendants, also to child group items in a recursive way.
 
    tag "all":
-	Note that this presently also includes the root item which can result in some
-	unexpected behavior. In many case you can operate on the root item (0) instead.
-	As an example, if you want to move all items in canvas,	then do:
-	  	pathName move 0 x y
-	and similar for scale etc.
+        Note that this presently also includes the root item which can result in some
+        unexpected behavior. In many case you can operate on the root item (0) instead.
+        As an example, if you want to move all items in canvas, then do:
+                  pathName move 0 x y
+        and similar for scale etc.
 
  o New items
 
-	There are various differences compared to SVG. 
-	The display attribute names are adapted to tcl conventions, see below.
-	Also, SVG is web oriented and therefore tolerates parameter errors to some
-	degree, while tk is a programming tool and typically generates errors
-	if parameters are wrong. Some syntax changes have also been made. One such is
-	the -matrix option where we have delegated specific transforms to our support
-	functions in tkpath.tcl. Where the SVG tag names coincide with the ordinary
-	canvas item names we have added a "p" in front of its name instead.
+    There are various differences compared to SVG.
+    The display attribute names are adapted to tcl conventions, see below.
+    Also, SVG is web oriented and therefore tolerates parameter errors to some
+    degree, while tk is a programming tool and typically generates errors
+    if parameters are wrong. Some syntax changes have also been made. One such is
+    the -matrix option where we have delegated specific transforms to our support
+    functions in tkpath.tcl. Where the SVG tag names coincide with the ordinary
+    canvas item names we have added a "p" in front of its name instead.
 
-	New items:
-		circle
-		ellipse
-		group
-		path
-		pimage
-		pline
-		polyline
-		ppolygon
-		prect
-		ptext
+    New items:
+        circle
+        ellipse
+        group
+        path
+        pimage
+        pline
+        polyline
+        ppolygon
+        prect
+        ptext
 
  o The options
 
@@ -155,7 +155,7 @@ to float (double).
     Stroke (strokeOptions):
         -stroke color
         -strokedasharray dashArray
-        -strokelinecap 
+        -strokelinecap
         -strokelinejoin
         -strokemiterlimit float
         -strokeopacity float (0,1)
@@ -163,7 +163,7 @@ to float (double).
 
     Generic (genericOptions):
         -matrix {{a b} {c d} {tx ty}}
-	-parent tagOrId
+        -parent tagOrId
         -state
         -style styleToken
         -tags tagList
@@ -172,8 +172,8 @@ to float (double).
     There are utility functions to create a matrix using simpler transformations,
     such as rotation, translation etc.
 
-    The styleToken is a style created with 'pathName style create'. 
-    It's options take precedence over any other options set directly. 
+    The styleToken is a style created with 'pathName style create'.
+    It's options take precedence over any other options set directly.
     This is how SVG works (bad?). Currently all a style's options ever set
     are recorded in a cumulative way using a mask. Even if an option is set
     to its default it takes precedence over an items option.
@@ -182,7 +182,7 @@ to float (double).
 
    A group item is merely a placeholder for other items, similar to how a
    frame widget is a container for other widgets. It is a building block for
-   the tree structure. Unlike other items, and unlike frame widgets, it 
+   the tree structure. Unlike other items, and unlike frame widgets, it
    doesn't display anything. It has no coordinates which is an additional
    difference. The root item is a special group item with id 0 and tags
    equal to "root". The root group can be configured like other items, but
@@ -222,15 +222,15 @@ to float (double).
       H x     Draw a horizontal line to the given x coordinate.
       V y     Draw a vertical line to the given y coordinate.
       A rx ry phi largeArc sweep x y
-              Draw an elliptical arc from the current point to (x, y). 
+              Draw an elliptical arc from the current point to (x, y).
               The points are on an ellipse with x-radius rx and y-radius ry.
-              The ellipse is rotated by phi degrees. If the arc is less than 
+              The ellipse is rotated by phi degrees. If the arc is less than
               180 degrees, largeArc is zero, else it is one. If the arc is to be
               drawn in cw direction, sweep is one, and zero for the ccw
               direction.
               NB: the start and end points may not coincide else the result
-	          is undefined. If you want to make a circle just do two
-		  180 degree arcs.
+              is undefined. If you want to make a circle just do two
+              180 degree arcs.
       Q x1 y1 x y
               Draw a qadratic Bezier curve from the current point to (x, y)
               using control point (x1, y1).
@@ -245,7 +245,7 @@ to float (double).
               (x2, y2) as the control point for this new endpoint. The first
               control point will be the reflection of the previous C atoms
               ending control point. This makes smooth paths.
-      Z       Close path by drawing from the current point to the preceeding M 
+      Z       Close path by drawing from the current point to the preceeding M
               point.
 
     You may use lower case characters for all atoms which then means that all
@@ -307,10 +307,10 @@ to float (double).
  o The ptext item
 
    Displays text as expected. Note that the x coordinate marks the baseline
-   of the text. Gradient fills unsupported so far. Especially the font 
-   handling and settings will likely be developed further. 
+   of the text. Gradient fills unsupported so far. Especially the font
+   handling and settings will likely be developed further.
    Editing not implemented. The default font family and size is platform dependent.
-   
+
    .c create ptext x y ?-text string -textanchor start|middle|end?
        ?-fontfamily fontname -fontsize float?
        ?fillOptions strokeOptions genericOptions?
@@ -320,7 +320,7 @@ to float (double).
     Each tkpath item has a -matrix option which defines the local coordinate
     system for that item. It is defined as a double list {{a b} {c d} {tx ty}}
     (better with a flat list {a b c d tx ty} ?) where a simple scaling
-    is {{sx 0} {0 sy} {0 0}}, a translation {{1 0} {0 1} {tx ty}}, and a 
+    is {{sx 0} {0 sy} {0 0}}, a translation {{1 0} {0 1} {tx ty}}, and a
     rotation around origin with an angle 'a' is {{cos(a) sin(a)} {-sin(a) cos{a}} {0 0}}.
     The simplest way to interpret this is to design an extra coordinate
     system according to the matrix, and then draw the item in that system.
@@ -345,7 +345,7 @@ to float (double).
    actions. Either you can manually position lines with odd integer widths
    at the center of pixels (adding 0.5), or set the ::tkp::depixelize equal
    to 1, see below.
-   
+
  o With the boolean variable ::tkp::depixelize equal to 1 we try to adjust
    coordinates for objects with integer line widths so that lines ...
 
@@ -366,8 +366,8 @@ to float (double).
             Deletes the object.
 
         tkp::style inuse token
-	    If any item is configured with the style token 1 is
-	    returned, else 0.
+            If any item is configured with the style token 1 is
+            returned, else 0.
 
         tkp::style names
             Returns all existing tokens.
@@ -376,7 +376,7 @@ to float (double).
     -state, and -tags.
 
 
- o Gradients can be of two types, linear and radial. They are created and 
+ o Gradients can be of two types, linear and radial. They are created and
    configured using:
 
     tkp::gradient command ?options?
@@ -395,8 +395,8 @@ to float (double).
             Deletes the object.
 
         tkp::gradient inuse token
-	    If any item is configured with the gradient token 1 is
-	    returned, else 0.
+            If any item is configured with the gradient token 1 is
+            returned, else 0.
 
         tkp::gradient names
             Returns all existing tokens.
@@ -418,7 +418,7 @@ to float (double).
             coordinate system. It defaults to {0 0 1 0}, left to right.
         -matrix {{a b} {c d} {tx ty}}
             sets a specific transformation for the gradient pattern only.
-	    NB: not sure about the order transforms, see -units.
+            NB: not sure about the order transforms, see -units.
         -units bbox|userspace sets the units of the transition coordinates.
             See above. Defaults to bbox.
 
@@ -447,7 +447,7 @@ to float (double).
     $token copy imageName
 
     copies the surface to an existing image (photo) and returns the name of
-    the image so you can do: 
+    the image so you can do:
     set image [$token copy [image create photo]]
     See Tk_PhotoPutBlock for how it affects the existing image.
 
@@ -461,8 +461,8 @@ to float (double).
 
     $token create type coords ?options?
 
-    draws the item of type to the surface. All item types except the group 
-    and the corresponding options as described above are supported, 
+    draws the item of type to the surface. All item types except the group
+    and the corresponding options as described above are supported,
     except the canvas specific -tags and -state.
 
     $token destroy
@@ -473,7 +473,7 @@ to float (double).
 
     erases the indicated area to transparent.
 
-    $token height 
+    $token height
     $token width
 
     returns height and width respectively.
@@ -493,23 +493,23 @@ to float (double).
 
     tkp::transform cmd ?args?
 
-        tkp::transform rotate angle ?centerX centerY?
+    tkp::transform rotate angle ?centerX centerY?
 
-        tkp::transform scale factorXY ?factorY?
+    tkp::transform scale factorXY ?factorY?
 
-        tkp::transform skewx angle
+    tkp::transform skewx angle
 
-        tkp::transform skewy angle
+    tkp::transform skewy angle
 
-        tkp::transform translate x y
+    tkp::transform translate x y
 
-	tkp::transform mult transform1 transform2
+    tkp::transform mult transform1 transform2
 
 
  o Known issues:
 
    - See the TODO file and comments marked "@@@" in the C sources.
-     
+
 
  o Further documentation:
 
