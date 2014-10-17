@@ -306,14 +306,27 @@ to float (double).
 
  o The ptext item
 
-   Displays text as expected. Note that the x coordinate marks the baseline
-   of the text. Gradient fills unsupported so far. Especially the font
-   handling and settings will likely be developed further.
-   Editing not implemented. The default font family and size is platform dependent.
+    Displays text as expected. Note that the x coordinate marks the baseline
+    of the text. Gradient fills unsupported so far. Especially the font
+    handling and settings will likely be developed further.
+    Editing not implemented. The default font family and size is platform dependent.
 
-   .c create ptext x y ?-text string -textanchor start|middle|end?
+    ptext extra options:
+        -textanchor n|w|s|e|nw|ne|sw|se|c|start|middle|end
+                                            textanchor extended with points of compass
+        -fontslant normal|italic|oblique    default value is normal
+        -fontweight normal|bold             default value is normal
+        -filloverstroke BOOLEAN             the fill drawed over the stroke line
+
+        These options not implemented on surface items, except the -textanchor start|middle|end.
+
+
+   .c create ptext x y ?-text string -textanchor start|middle|end|n|w|s|e|nw|ne|sw|se|c?
        ?-fontfamily fontname -fontsize float?
+       ?-fontslant normal|italic|oblique?
+       ?-fontweight normal|bold?
        ?fillOptions strokeOptions genericOptions?
+       ?-filloverstroke BOOLEAN?
 
  o The Matrix
 
