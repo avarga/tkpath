@@ -1930,7 +1930,6 @@ ArrowShapeOptionSetProc(
                              * internal representation of value should
                              * be stored, or NULL. */
     Tcl_Obj *valuePtr;
-    Tcl_Obj *newPtr;
     Tcl_Obj **objv;
     int objc;
     double dvalue;
@@ -1943,7 +1942,6 @@ ArrowShapeOptionSetProc(
     }
     if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
 	valuePtr = NULL;
-	newPtr = NULL;
     }
     if (internalPtr != NULL) {
 	if (valuePtr != NULL) {
