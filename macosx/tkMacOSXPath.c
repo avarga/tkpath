@@ -75,6 +75,11 @@ typedef struct PathATSUIRecord {
     UniChar         *buffer;	/* @@@ Not sure this needs to be cached! */
 } PathATSUIRecord;
 
+typedef struct FillInfo {
+    double fillOpacity;
+    GradientStopArray *stopArrPtr;
+} FillInfo;
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1161,7 +1166,9 @@ TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
 static void
 ShadeEvaluate(void *info, const CGFloat *in, CGFloat *out)
 {
-    GradientStopArray 	*stopArrPtr = (GradientStopArray *) info;
+    FillInfo            *fillInfo = (FillInfo *)info;
+    GradientStopArray 	*stopArrPtr = fillInfo->stopArrPtr;
+    double              fillOpacity = fillInfo->fillOpacity;
     GradientStop        **stopPtrPtr = stopArrPtr->stops;
     GradientStop		*stop1 = NULL, *stop2 = NULL;
     int					nstops = stopArrPtr->nstops;
@@ -1194,7 +1201,7 @@ ShadeEvaluate(void *info, const CGFloat *in, CGFloat *out)
         *out++ = RedFloatFromXColorPtr(stop2->color);
         *out++ = GreenFloatFromXColorPtr(stop2->color);
         *out++ = BlueFloatFromXColorPtr(stop2->color); 
-        *out++ = stop2->opacity;
+        *out++ = stop2->opacity * fillOpacity;
     } else {
         f1 = (stop2->offset - par)/(stop2->offset - stop1->offset);
         f2 = (par - stop1->offset)/(stop2->offset - stop1->offset);
@@ -1204,7 +1211,7 @@ ShadeEvaluate(void *info, const CGFloat *in, CGFloat *out)
                 f2 * GreenFloatFromXColorPtr(stop2->color);
         *out++ = f1 * BlueFloatFromXColorPtr(stop1->color) + 
                 f2 * BlueFloatFromXColorPtr(stop2->color);
-        *out++ = f1 * stop1->opacity + f2 * stop2->opacity;
+        *out++ = (f1 * stop1->opacity + f2 * stop2->opacity) * fillOpacity;
     }
 }
 
@@ -1224,7 +1231,10 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
     CGFunctionRef 		function;
     CGFunctionCallbacks callbacks;
     PathRect 			*trans = fillPtr->transitionPtr;		/* The transition line. */
-    GradientStopArray 	*stopArrPtr = fillPtr->stopArrPtr;
+    FillInfo            fillInfo;
+
+    fillInfo.fillOpacity = fillOpacity;
+    fillInfo.stopArrPtr = fillPtr->stopArrPtr;
 
     callbacks.version = 0;
     callbacks.evaluate = ShadeEvaluate;
@@ -1240,7 +1250,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
         CGContextTranslateCTM(context->c, bbox->x1, bbox->y1);
         CGContextScaleCTM(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
     }
-    function = CGFunctionCreate((void *) stopArrPtr, 1, kValidDomain, 4, kValidRange, &callbacks);
+    function = CGFunctionCreate((void *) &fillInfo, 1, kValidDomain, 4, kValidRange, &callbacks);
     start = CGPointMake(trans->x1, trans->y1);
     end   = CGPointMake(trans->x2, trans->y2);
     shading = CGShadingCreateAxial(colorSpaceRef, start, end, function, 1, 1);
@@ -1265,8 +1275,11 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
     CGFunctionRef 		function;
     CGFunctionCallbacks callbacks;
     RadialTransition    *tPtr = fillPtr->radialPtr;
-    GradientStopArray 	*stopArrPtr = fillPtr->stopArrPtr;
+    FillInfo            fillInfo;
     
+    fillInfo.fillOpacity = fillOpacity;
+    fillInfo.stopArrPtr = fillPtr->stopArrPtr;
+
     callbacks.version = 0;
     callbacks.evaluate = ShadeEvaluate;
     callbacks.releaseInfo = ShadeRelease;
@@ -1281,7 +1294,7 @@ TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill 
         CGContextTranslateCTM(context->c, bbox->x1, bbox->y1);
         CGContextScaleCTM(context->c, bbox->x2 - bbox->x1, bbox->y2 - bbox->y1);
     }
-    function = CGFunctionCreate((void *) stopArrPtr, 1, kValidDomain, 4, kValidRange, &callbacks);
+    function = CGFunctionCreate((void *) &fillInfo, 1, kValidDomain, 4, kValidRange, &callbacks);
     start = CGPointMake(tPtr->focalX, tPtr->focalY);
     end   = CGPointMake(tPtr->centerX, tPtr->centerY);
     shading = CGShadingCreateRadial(colorSpaceRef, start, 0.0, end, tPtr->radius, function, 1, 1);
