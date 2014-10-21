@@ -1,4 +1,4 @@
-package require tkpath 0.3.0
+package require tkpath 0.3.3
 
 set t .c_textanchor
 toplevel $t
