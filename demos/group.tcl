@@ -6,6 +6,8 @@ toplevel $t
 set w $t.c
 pack [tkp::canvas $w -width 400 -height 400 -bg white]
 
+unset -nocomplain s f stroke fill
+
 array set stroke [list 1 "#c8c8c8" 2 "#a19de2" 3 "#9ac790" 4 "#e2a19d"]
 array set fill   [list 1 "#e6e6e6" 2 "#d6d6ff" 3 "#cae2c5" 4 "#ffd6d6"]
 
