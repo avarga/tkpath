@@ -20,9 +20,15 @@
 #include <tkUnixInt.h>
 #include "tkIntPath.h"
 
-#define BlueDoubleFromXColorPtr(xc)   (double) (((xc)->pixel & 0xFF)) / 255.0
-#define GreenDoubleFromXColorPtr(xc)  (double) ((((xc)->pixel >> 8) & 0xFF)) / 255.0
-#define RedDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
+#define TINT_INT_CALCULATION
+
+#define Blue255FromXColorPtr(xc)   ((xc)->pixel & 0xFF)
+#define Green255FromXColorPtr(xc)  (((xc)->pixel >> 8) & 0xFF)
+#define Red255FromXColorPtr(xc)    (((xc)->pixel >> 16) & 0xFF)
+
+#define BlueDoubleFromXColorPtr(xc)   ((double) (((xc)->pixel & 0xFF)) / 255.0)
+#define GreenDoubleFromXColorPtr(xc)  ((double) ((((xc)->pixel >> 8) & 0xFF)) / 255.0)
+#define RedDoubleFromXColorPtr(xc)    ((double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0)
 
 extern int gAntiAlias;
 extern int gSurfaceCopyPremultiplyAlpha;
@@ -298,16 +304,14 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     unsigned char *srcPtr, *dstPtr;
     int srcR, srcG, srcB, srcA;		/* The source pixel offsets. */
     int dstR, dstG, dstB, dstA;		/* The destination pixel offsets. */
-    int size, pitch;
+    int pitch;
     int iwidth, iheight;
     int i, j;
-    double tintR, tintG, tintB;
     double width, height;
     cairo_filter_t filter;
 
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
-    size = block.pitch * block.height;
     iwidth = block.width;
     iheight = block.height;
     pitch = block.pitch;
@@ -358,6 +362,56 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         ptr = data;
 
         if (tintColor && tintAmount > 0.0) {
+#ifdef TINT_INT_CALCULATION
+            /* calculate with integer arithmetic */
+            uint32_t tintR, tintG, tintB, uAmount, uRemain;
+            if (tintAmount > 1.0)
+                tintAmount = 1.0;
+            uAmount = (uint32_t)(tintAmount * 256.0);
+            uRemain = 256 - uAmount;
+            tintR = Red255FromXColorPtr(tintColor);
+            tintG = Green255FromXColorPtr(tintColor);
+            tintB = Blue255FromXColorPtr(tintColor);
+
+            for (i = 0; i < iheight; i++) {
+                srcPtr = block.pixelPtr + i*pitch;
+                dstPtr = ptr + i*pitch;
+                for (j = 0; j < iwidth; j++) {
+                    // extract
+                    uint32_t r = *(srcPtr+srcR);
+                    uint32_t g = *(srcPtr+srcG);
+                    uint32_t b = *(srcPtr+srcB);
+                    uint32_t a = *(srcPtr+srcA);
+
+                    // transform
+                    uint32_t lumAmount = ((r * 6966 + g * 23436 + b * 2366) * uAmount) >> 23;  /* 0-256 */
+                    r = (uRemain * r + lumAmount * tintR);
+                    g = (uRemain * g + lumAmount * tintG);
+                    b = (uRemain * b + lumAmount * tintB);
+
+                    if (a != 255) {
+                        /* Cairo expects RGB premultiplied by alpha */
+                        r = r * a / 255;
+                        g = g * a / 255;
+                        b = b * a / 255;
+                    }
+
+                    // fix range
+                    r = r>0xFFFF ? 0xFFFF : r;
+                    g = g>0xFFFF ? 0xFFFF : g;
+                    b = b>0xFFFF ? 0xFFFF : b;
+
+                    // and put back
+                    *(dstPtr+dstR) = r >> 8;
+                    *(dstPtr+dstG) = g >> 8;
+                    *(dstPtr+dstB) = b >> 8;
+                    *(dstPtr+dstA) = a;
+                    srcPtr += 4;
+                    dstPtr += 4;
+                }
+            }
+#else
+            double tintR, tintG, tintB;
             if (tintAmount > 1.0)
                 tintAmount = 1.0;
             tintR = RedDoubleFromXColorPtr(tintColor);
@@ -401,6 +455,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
                     dstPtr += 4;
                 }
             }
+#endif
         } else {
             for (i = 0; i < iheight; i++) {
                 srcPtr = block.pixelPtr + i*pitch;

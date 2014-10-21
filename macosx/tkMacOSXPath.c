@@ -24,12 +24,16 @@
 #import <Cocoa/Cocoa.h>
 
 
-
+#define TINT_INT_CALCULATION
 
 /* Seems to work for both Endians. */
-#define BlueFloatFromXColorPtr(xc)   (float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0
-#define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
-#define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
+#define BlueFloatFromXColorPtr(xc)   ((float) ((((xc)->pixel >> 0)  & 0xFF)) / 255.0)
+#define GreenFloatFromXColorPtr(xc)  ((float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0)
+#define RedFloatFromXColorPtr(xc)    ((float) ((((xc)->pixel >> 16) & 0xFF)) / 255.0)
+
+#define Blue255FromXColorPtr(xc)   ((((xc)->pixel >> 0)  & 0xFF))
+#define Green255FromXColorPtr(xc)  ((((xc)->pixel >> 8)  & 0xFF))
+#define Red255FromXColorPtr(xc)    ((((xc)->pixel >> 16) & 0xFF))
 
 
 #ifndef FloatToFixed
@@ -649,7 +653,6 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     int pitch;
     int iwidth, iheight;
     int i, j;
-    float tintR, tintG, tintB;
 
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
@@ -689,6 +692,51 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
             ptr = data;
 
             if (tintColor && tintAmount > 0.0) {
+#ifdef TINT_INT_CALCULATION
+                uint32_t tintR, tintG, tintB, uAmount, uRemain, uOpacity;
+
+                if (tintAmount > 1.0)
+                    tintAmount = 1.0;
+                uAmount = (uint32_t)(tintAmount * 256.0);
+                uRemain = 256 - uAmount;
+                uOpacity = (uint32_t)(fillOpacity * 256.0);
+                tintR = Red255FromXColorPtr(tintColor);
+                tintG = Green255FromXColorPtr(tintColor);
+                tintB = Blue255FromXColorPtr(tintColor);
+                /* printf("tint:%g,%g,%g,%g amount=%g\n", tintR, tintG, tintB, tintAmount); */
+                for (i = 0; i < iheight; i++) {
+                    srcPtr = block.pixelPtr + i*pitch;
+                    dstPtr = ptr + i*pitch;
+                    for (j = 0; j < iwidth; j++) {
+                        // extract
+                        uint32_t r = *(srcPtr+srcR);
+                        uint32_t g = *(srcPtr+srcG);
+                        uint32_t b = *(srcPtr+srcB);
+                        uint32_t a = *(srcPtr+srcA);
+
+                        // transform
+                        uint32_t lumAmount = ((r * 6966 + g * 23436 + b * 2366) * uAmount) >> 23;  /* 0-256 */
+                        r = (uRemain * r + lumAmount * tintR);
+                        g = (uRemain * g + lumAmount * tintG);
+                        b = (uRemain * b + lumAmount * tintB);
+
+                        // fix range
+                        r = r>0xFFFF ? 0xFFFF : r;
+                        g = g>0xFFFF ? 0xFFFF : g;
+                        b = b>0xFFFF ? 0xFFFF : b;
+
+                        // and put back
+                        *(dstPtr+dstR) = r >> 8;
+                        *(dstPtr+dstG) = g >> 8;
+                        *(dstPtr+dstB) = b >> 8;
+                        *(dstPtr+dstA) = (a * uOpacity) >> 8;
+                        srcPtr += 4;
+                        dstPtr += 4;
+                    }
+                }
+#else
+                float tintR, tintG, tintB;
+
                 if (tintAmount > 1.0)
                     tintAmount = 1.0;
                 tintR = RedFloatFromXColorPtr(tintColor);
@@ -724,6 +772,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
                         dstPtr += 4;
                     }
                 }
+#endif
             } else {
                 for (i = 0; i < iheight; i++) {
                     srcPtr = block.pixelPtr + i*pitch;
