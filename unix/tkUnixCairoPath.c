@@ -659,7 +659,7 @@ static int GetCairoExtend(int method)
 
     switch (method) {
         case kPathGradientMethodPad: 
-            extend = CAIRO_EXTEND_NONE;
+            extend = CAIRO_EXTEND_PAD;
             break;
         case kPathGradientMethodRepeat:
             extend = CAIRO_EXTEND_REPEAT;
