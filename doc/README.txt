@@ -168,19 +168,20 @@ to float (double).
         -style styleToken
         -tags tagList
 
-    arrow:
-        -startarrow Boolean           arrowhead on/off
-        -startarrowlength float       0.0 is special, draws '|-----', negative values draws '>----'
-        -startarrowwidth float        positive value
-        -startarrowfill float         relative to startarrowlength, for example:
-                                      0.0: do not fill arrowhead, draws head by lines with linewidth
+    Arrow (arrowOptions):
+        -startarrow Boolean           arrowhead on/off; the default value is off
+        -startarrowlength float       length of the arrowhead;
+                                      0.0 is special and draws '|-----';
+                                      negative values draw '>----'
+        -startarrowwidth float        arrow width; must be positive
+        -startarrowfill float         relative to startarrowlength; for example:
+                                      0.0: do not fill arrowhead, arrowhead will be two lines
                                       1.0: '<|-------'
                                       2.0: '<>-------'
         -endarrow Boolean             see startarrow
         -endarrowlength float         see startarrowlength
         -endarrowwidth float          see startarrowwidth
         -endarrowfill float           see startarrowfill
-    Arrow options accepted by pline, polyline and path objects, but not implemented on surface.
 
     A matrix is specified by a double list as {{a b} {c d} {tx ty}}.
     There are utility functions to create a matrix using simpler transformations,
@@ -191,6 +192,9 @@ to float (double).
     This is how SVG works (bad?). Currently all a style's options ever set
     are recorded in a cumulative way using a mask. Even if an option is set
     to its default it takes precedence over an items option.
+
+    Arrow options accepted by pline, polyline and path objects. Arrows are not
+    implemented on surfaces (see tkp::surface).
 
  o The group item
 
@@ -220,7 +224,7 @@ to float (double).
     one major difference: all separators must be whitespace, no commas, no
     implicit assumptions; all instructions and numbers must form a tcl list.
 
-    .c create path pathSpec ?fillOptions strokeOptions genericOptions?
+    .c create path pathSpec ?fillOptions strokeOptions arrowOptions genericOptions?
 
     All path specifications are normalized initially to the fundamental atoms
     M, L, A, Q, and C, all upper case. When you use the canvas 'coords' command
@@ -295,15 +299,15 @@ to float (double).
 
  o The pline item
 
-    Makes a single segment straight line.
+    Makes a single-segment straight line.
 
-    .c create pline x1 y1 x2 y2 ?strokeOptions genericOptions?
+    .c create pline x1 y1 x2 y2 ?strokeOptions arrowOptions genericOptions?
 
  o The polyline item
 
-    Makes a multiple segment line with open ends.
+    Makes a multi-segment line with open ends.
 
-    .c create polyline x1 y1 x2 y2 .... ?strokeOptions genericOptions?
+    .c create polyline x1 y1 x2 y2 .... ?strokeOptions arrowOptions genericOptions?
 
  o The ppolygon item
 
@@ -318,19 +322,22 @@ to float (double).
 
     pimage extra options:
         -anchor n|w|s|e|nw|ne|sw|se|c   default value is nw
-        -tintcolor color                tinting color, default value is "", disable tint
+        -tintcolor color                tint color; the default value is ""
+                                        which means no tinting
         -tintamount 0.0-1.0             amount for tinting
-        -interpolation none|fast|best
-        -srcregion {x1 y1 x2 y2}        shows only specified region of image.
-                                        if x2 or y2 larger than image, then shows tiled image.
-        These options not implemented on surface items.
+        -interpolation none|fast|best   image interpolation mode
+        -srcregion {x1 y1 x2 y2}        shows only the specified region of image;
+                                        if x2 or y2 are larger than the image bounds,
+                                        then the image will be repeated (tiling)
+
+    These options are not implemented on surfaces (see tkp::surface).
 
     .c create pimage x y ?-image -width -height genericOptions?
 
  o The ptext item
 
     Displays text as expected. Note that the x coordinate marks the baseline
-    of the text. Gradient fills unsupported so far. Especially the font
+    of the text. Gradient fills are unsupported so far. Especially the font
     handling and settings will likely be developed further.
     Editing not implemented. The default font family and size is platform dependent.
 
@@ -339,12 +346,13 @@ to float (double).
                                             textanchor extended with points of compass
         -fontslant normal|italic|oblique    default value is normal
         -fontweight normal|bold             default value is normal
-        -filloverstroke BOOLEAN             the fill drawed over the stroke line
+        -filloverstroke BOOLEAN             fill drawn over the stroke; default value is false
 
-        These options not implemented on surface items, except the -textanchor start|middle|end.
+    These options are not implemented on surface items (tkp::surface), except
+    for -textanchor start|middle|end.
 
-
-   .c create ptext x y ?-text string -textanchor start|middle|end|n|w|s|e|nw|ne|sw|se|c?
+   .c create ptext x y ?-text string?
+       ?-textanchor start|middle|end|n|w|s|e|nw|ne|sw|se|c?
        ?-fontfamily fontname -fontsize float?
        ?-fontslant normal|italic|oblique?
        ?-fontweight normal|bold?
