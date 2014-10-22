@@ -1,0 +1,46 @@
+WHAT'S NEW
+==========
+
+In tkpath 0.3.3 (October 2014):
+-------------------------------
+
+Bug fixes:
+
+    - updated for recent OS X versions (the code did not compile or work
+      due to the use of deprecated APIs)
+
+    - pimage: -width/-height did not work on all platforms
+
+    - pimage: faulty rendering of images with partial transparency on Linux
+      (Cairo requires R,G,B channels to be pre-multiplied by the alpha channel)
+
+    - pline, polyline, path: -strokedasharray behavior was inconsistent across
+      platforms (on Linux, dash lengths were not scaled by the line width)
+
+    - transparency was not implemented for gradient fills
+
+    - transform skewx/skewy was bogus (needed tan() instead of sin())
+
+    - "delete all" was unusable as it always complained about not being able
+      to delete the root item
+
+New item options:
+
+    - pimage: anchoring (-anchor); image interpolation mode (-interpolation);
+      cropping and tiling (-srcregion); tinting (-tintcolor, -tintamount)
+
+    - ptext: anchoring options extended (-textanchor); support for bold
+      (-fontweight) and italic (-fontslant); contoured text (-filloverstroke)
+
+    - pline, polyline, path: arrowhead support (-startarrow, -startarrowlength,
+      -startarrowwidth, -startarrowfill; same for end arrow)
+
+Other:
+
+    - matrix multiplication utility function (tkp::transform mult)
+
+
+
+
+
+
