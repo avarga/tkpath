@@ -40,7 +40,7 @@ $w create prect $x $y [expr $x + $iwidth] [expr $y + $iheight] -stroke green
 $w create prect [expr $x + $rx1] [expr $y + $ry1] [expr $x + $rx2] [expr $y + $ry2] -stroke blue
 
 
-# Scaled to 1.5, topleft and rightbottom drawed with -srcregion
+# Scaled to 1.5, topleft and rightbottom drawn with -srcregion
 set x 400
 set y  50
 
@@ -49,7 +49,7 @@ set height [expr 1.5 * $iheight]
 set halfwidth  [expr $width / 2]
 set halfheight [expr $height / 2]
 
-$w create ptext $x [expr $y - 5] -text "Scaled to 1.5, topleft and rightbottom drawed with -srcregion"
+$w create ptext $x [expr $y - 5] -text "Scaled to 1.5, topleft and rightbottom drawn with -srcregion"
 $w create pimage $x $y -image $name -width $width -height $height -tintcolor yellow -tintamount 0.5
 $w create pimage $x $y -image $name \
         -width $halfwidth -height $halfheight \

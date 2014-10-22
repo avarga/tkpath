@@ -1,3 +1,5 @@
+catch {package require tkpng} ;# load 3rd party PNG support if available; pre-8.6 Tk version need it
+
 package require tkpath 0.3.3
 
 set t .c_imagetint
