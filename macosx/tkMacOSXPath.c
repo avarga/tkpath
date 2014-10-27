@@ -631,8 +631,8 @@ CGInterpolationQuality convertInterpolationToCGInterpolation(int interpolation)
 
 void
 TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
-        double x, double y, double width, double height, double fillOpacity,
-        XColor *tintColor, double tintAmount, int interpolation)
+        double x, double y, double width0, double height0, double fillOpacity,
+        XColor *tintColor, double tintAmount, int interpolation, PathRect *srcRegion)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGImageRef cgImage;
@@ -657,6 +657,9 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     iheight = block.height;
     iwidth = block.width;
     pitch = block.pitch;
+    double width = (width0 == 0.0) ? (double)iwidth : width0;
+    double height = (height0 == 0.0) ? (double)iheight : height0;
+
 
     /*
      * The offset array contains the offsets from the address of a pixel to 
@@ -760,12 +763,27 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         height = (double) block.height;
     }
     
-    /* Flip back to an upright coordinate system since CGContextDrawImage expect this. */
     CGContextSaveGState(context->c);
-    CGContextSetInterpolationQuality(context->c, convertInterpolationToCGInterpolation(interpolation));
-    CGContextTranslateCTM(context->c, x, y+height);
-    CGContextScaleCTM(context->c, 1, -1);
-    CGContextDrawImage(context->c, CGRectMake(0.0, 0.0, width, height), cgImage);
+
+    if (srcRegion != NULL) {
+        width = (width0 == 0.0) ? srcRegion->x2 - srcRegion->x1 : width0;
+        height = (height0 == 0.0) ? srcRegion->y2 - srcRegion->y1 : height0;
+        double xscale = width / (srcRegion->x2 - srcRegion->x1);
+        double yscale = height / (srcRegion->y2 - srcRegion->y1);
+        CGContextSetInterpolationQuality(context->c, convertInterpolationToCGInterpolation(interpolation));
+        CGContextTranslateCTM(context->c, x, y+height);
+        CGContextScaleCTM(context->c, xscale, -yscale);
+        CGContextClipToRect(context->c, CGRectMake(0.0, 0.0, width/xscale, height/yscale));
+        CGContextDrawTiledImage(context->c,
+                CGRectMake(srcRegion->x1, fmod(srcRegion->y2, iheight), iwidth, iheight),
+                cgImage);
+    } else {
+        /* Flip back to an upright coordinate system since CGContextDrawImage expect this. */
+        CGContextSetInterpolationQuality(context->c, convertInterpolationToCGInterpolation(interpolation));
+        CGContextTranslateCTM(context->c, x, y+height);
+        CGContextScaleCTM(context->c, 1, -1);
+        CGContextDrawImage(context->c, CGRectMake(0.0, 0.0, width, height), cgImage);
+    }
     CGImageRelease(cgImage);
     CGContextRestoreGState(context->c);
     if (data) {

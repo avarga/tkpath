@@ -46,6 +46,7 @@ typedef struct PimageItem  {
     XColor *tintColor;
     double tintAmount;
     int interpolation;
+    PathRect *srcRegionPtr;
 } PimageItem;
 
 
@@ -95,7 +96,8 @@ enum {
     PIMAGE_OPTION_INDEX_ANCHOR      = (1L << (PATH_STYLE_OPTION_INDEX_END + 6)),
     PIMAGE_OPTION_INDEX_TINTCOLOR   = (1L << (PATH_STYLE_OPTION_INDEX_END + 7)),
     PIMAGE_OPTION_INDEX_TINTAMOUNT  = (1L << (PATH_STYLE_OPTION_INDEX_END + 8)),
-    PIMAGE_OPTION_INDEX_INTERPOLATION = (1L << (PATH_STYLE_OPTION_INDEX_END + 9))
+    PIMAGE_OPTION_INDEX_INTERPOLATION = (1L << (PATH_STYLE_OPTION_INDEX_END + 9)),
+    PIMAGE_OPTION_INDEX_SRCREGION   = (1L << (PATH_STYLE_OPTION_INDEX_END + 10))
 };
 
 static char *imageAnchorST[] = {
@@ -106,9 +108,28 @@ static char *imageInterpolationST[] = {
         "none", "fast", "best", NULL
 };
 
+int         PathRectSetOption(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
+                    Tcl_Obj **value, char *recordPtr, int internalOffset, char *oldInternalPtr, int flags);
+Tcl_Obj *   PathRectGetOption(ClientData clientData, Tk_Window tkwin, char *recordPtr, int internalOffset);
+void        PathRectRestoreOption(ClientData clientData, Tk_Window tkwin, char *internalPtr, char *oldInternalPtr);
+void        PathRectFreeOption(ClientData clientData, Tk_Window tkwin, char *internalPtr);
+
+#define PATH_STYLE_CUSTOM_OPTION_PATHRECT     \
+    static Tk_ObjCustomOption pathRectCO = {  \
+        "pathrect",               \
+        PathRectSetOption,        \
+        PathRectGetOption,        \
+        PathRectRestoreOption,    \
+        PathRectFreeOption,       \
+        (ClientData) NULL          \
+    };
+
+
+
 PATH_STYLE_CUSTOM_OPTION_MATRIX
 PATH_CUSTOM_OPTION_TAGS
 PATH_OPTION_STRING_TABLES_STATE
+PATH_STYLE_CUSTOM_OPTION_PATHRECT
 
 #define PATH_OPTION_SPEC_FILLOPACITY			    \
     {TK_OPTION_DOUBLE, "-fillopacity", NULL, NULL,	    \
@@ -156,6 +177,13 @@ PATH_OPTION_STRING_TABLES_STATE
         "fast", -1, Tk_Offset(PimageItem, interpolation),      \
         0, (ClientData) imageInterpolationST, 0}
 
+#define PATH_OPTION_SPEC_SRCREGION                 \
+    {TK_OPTION_CUSTOM, "-srcregion", NULL, NULL,           \
+    NULL, -1, Tk_Offset(PimageItem, srcRegionPtr),     \
+    TK_OPTION_NULL_OK, (ClientData) &pathRectCO,      \
+    PIMAGE_OPTION_INDEX_SRCREGION}
+
+
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(PimageItem),
     PATH_OPTION_SPEC_PARENT,
@@ -168,6 +196,7 @@ static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_TINTCOLOR,
     PATH_OPTION_SPEC_TINTAMOUNT,
     PATH_OPTION_SPEC_INTERPOLATION,
+    PATH_OPTION_SPEC_SRCREGION,
     PATH_OPTION_SPEC_END
 };
 
@@ -206,7 +235,7 @@ Tk_PathItemType tkPimageType = {
 
 static int		
 CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
-        int objc, Tcl_Obj *CONST objv[])
+        int objc, Tcl_Obj *const objv[])
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     int	i;
@@ -234,8 +263,9 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
     pimagePtr->tintColor = NULL;
     pimagePtr->tintAmount = 0.0;
     pimagePtr->interpolation = kPathImageInterpolationFast;
+    pimagePtr->srcRegionPtr = NULL;
     itemPtr->bbox = NewEmptyPathRect();
-    
+
     if (optionTable == NULL) {
 	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
     } 
@@ -270,7 +300,7 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
 
 static int		
 PimageCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
-        int objc, Tcl_Obj *CONST objv[])
+        int objc, Tcl_Obj *const objv[])
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     int result;
@@ -322,13 +352,18 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
         pimagePtr->header.x1 = pimagePtr->header.x2 =
         pimagePtr->header.y1 = pimagePtr->header.y2 = -1;
         return;
-    }    
-    Tk_SizeOfImage(pimagePtr->image, &width, &height);
+    }
+    if (pimagePtr->srcRegionPtr) {
+        width  = pimagePtr->srcRegionPtr->x2 - pimagePtr->srcRegionPtr->x1;
+        height = pimagePtr->srcRegionPtr->y2 - pimagePtr->srcRegionPtr->y1;
+    } else {
+        Tk_SizeOfImage(pimagePtr->image, &width, &height);
+    }
     if (pimagePtr->width > 0.0) {
-	width = (int) (pimagePtr->width + 1.0);
+        width = (int) (pimagePtr->width + 1.0);
     }
     if (pimagePtr->height > 0.0) {
-	height = (int) (pimagePtr->height + 1.0);
+        height = (int) (pimagePtr->height + 1.0);
     }
 
     switch (pimagePtr->anchor) {
@@ -385,7 +420,7 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
 
 static int		
 ConfigurePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr, 
-        int objc, Tcl_Obj *CONST objv[], int flags)
+        int objc, Tcl_Obj *const objv[], int flags)
 {
     PimageItem *pimagePtr = (PimageItem *) itemPtr;
     Tk_Window tkwin;
@@ -544,7 +579,8 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
     TkPathImage(ctx, pimagePtr->image, pimagePtr->photo,
             itemPtr->bbox.x1, itemPtr->bbox.y1,
             pimagePtr->width, pimagePtr->height, pimagePtr->fillOpacity,
-            pimagePtr->tintColor, pimagePtr->tintAmount, pimagePtr->interpolation);
+            pimagePtr->tintColor, pimagePtr->tintAmount, pimagePtr->interpolation,
+            pimagePtr->srcRegionPtr);
     TkPathFree(ctx);
 }
 
@@ -648,6 +684,166 @@ PimageStyleChangedProc(ClientData clientData, int flags)
 		itemPtr->x2, itemPtr->y2);
     }
 }
+
+int
+PathGetPathRect(
+        Tcl_Interp* interp,
+        const char *list,   /* Object containg the lists for the matrix. */
+        PathRect *rectPtr) /* Where to store TMatrix corresponding
+                                 * to list. Must be allocated! */
+{
+    const char **argv = NULL;
+    int i, argc;
+    int result = TCL_OK;
+    double tmp[4];
+
+    /* Check matrix consistency. */
+    if (Tcl_SplitList(interp, list, &argc, &argv) != TCL_OK) {
+        result = TCL_ERROR;
+        goto bail;
+    }
+    if (argc != 4) {
+        Tcl_AppendResult(interp, "rect \"", list, "\" is inconsistent",
+                (char *) NULL);
+        result = TCL_ERROR;
+        goto bail;
+    }
+
+    /* Take each row in turn. */
+    for (i = 0; i < 4; i++) {
+        if (Tcl_GetDouble(interp, argv[i], &(tmp[i])) != TCL_OK) {
+            Tcl_AppendResult(interp, "rect \"", list, "\" is inconsistent", (char *) NULL);
+            result = TCL_ERROR;
+            goto bail;
+        }
+    }
+
+    /* PathRect. */
+    rectPtr->x1  = tmp[0];
+    rectPtr->y1  = tmp[1];
+    rectPtr->x2  = tmp[2];
+    rectPtr->y2  = tmp[3];
+
+bail:
+    if (argv != NULL) {
+        Tcl_Free((char *) argv);
+    }
+    return result;
+}
+
+int
+PathGetTclObjFromPathRect(
+        Tcl_Interp* interp,
+        PathRect *rectPtr,
+        Tcl_Obj **listObjPtrPtr)
+{
+    Tcl_Obj     *listObj;
+
+    /* @@@ Error handling remains. */
+
+    listObj = Tcl_NewListObj( 0, (Tcl_Obj **) NULL );
+    if (rectPtr != NULL) {
+        Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(rectPtr->x1));
+        Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(rectPtr->y1));
+        Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(rectPtr->x2));
+        Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(rectPtr->y2));
+    }
+    *listObjPtrPtr = listObj;
+    return TCL_OK;
+}
+
+/*
+ * The -srcregion custom option.
+ */
+
+int PathRectSetOption(
+    ClientData clientData,
+    Tcl_Interp *interp,     /* Current interp; may be used for errors. */
+    Tk_Window tkwin,        /* Window for which option is being set. */
+    Tcl_Obj **value,        /* Pointer to the pointer to the value object.
+                             * We use a pointer to the pointer because
+                             * we may need to return a value (NULL). */
+    char *recordPtr,        /* Pointer to storage for the widget record. */
+    int internalOffset,     /* Offset within *recordPtr at which the
+                               internal value is to be stored. */
+    char *oldInternalPtr,   /* Pointer to storage for the old value. */
+    int flags)          /* Flags for the option, set Tk_SetOptions. */
+{
+    char *internalPtr;      /* Points to location in record where
+                             * internal representation of value should
+                             * be stored, or NULL. */
+    char *list;
+    int length;
+    Tcl_Obj *valuePtr;
+    PathRect *newPtr;
+
+    valuePtr = *value;
+    if (internalOffset >= 0) {
+        internalPtr = recordPtr + internalOffset;
+    } else {
+        internalPtr = NULL;
+    }
+    if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(valuePtr)) {
+    valuePtr = NULL;
+    }
+    if (internalPtr != NULL) {
+        if (valuePtr != NULL) {
+            list = Tcl_GetStringFromObj(valuePtr, &length);
+            newPtr = (PathRect *) ckalloc(sizeof(PathRect));
+            if (PathGetPathRect(interp, list, newPtr) != TCL_OK) {
+                ckfree((char *) newPtr);
+                return TCL_ERROR;
+            }
+        } else {
+            newPtr = NULL;
+        }
+        *((PathRect **) oldInternalPtr) = *((PathRect **) internalPtr);
+        *((PathRect **) internalPtr) = newPtr;
+    }
+    return TCL_OK;
+}
+
+Tcl_Obj *
+PathRectGetOption(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *recordPtr,        /* Pointer to widget record. */
+    int internalOffset)     /* Offset within *recordPtr containing the
+                             * value. */
+{
+    char    *internalPtr;
+    PathRect     *pathRectPtr;
+    Tcl_Obj     *listObj;
+
+    /* @@@ An alternative to this could be to have an objOffset in option table. */
+    internalPtr = recordPtr + internalOffset;
+    pathRectPtr = *((PathRect **) internalPtr);
+    PathGetTclObjFromPathRect(NULL, pathRectPtr, &listObj);
+    return listObj;
+}
+
+void
+PathRectRestoreOption(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr,      /* Pointer to storage for value. */
+    char *oldInternalPtr)   /* Pointer to old value. */
+{
+    *(PathRect **)internalPtr = *(PathRect **)oldInternalPtr;
+}
+
+void
+PathRectFreeOption(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr)      /* Pointer to storage for value. */
+{
+    if (*((char **) internalPtr) != NULL) {
+        ckfree(*((char **) internalPtr));
+        *((char **) internalPtr) = NULL;
+    }
+}
+
 
 /*----------------------------------------------------------------------*/
 

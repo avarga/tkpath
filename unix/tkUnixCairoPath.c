@@ -286,8 +286,8 @@ cairo_filter_t convertInterpolationToCairoFilter(int interpolation)
 
 void
 TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
-        double x, double y, double width, double height, double fillOpacity,
-        XColor *tintColor, double tintAmount, int interpolation)
+        double x, double y, double width0, double height0, double fillOpacity,
+        XColor *tintColor, double tintAmount, int interpolation, PathRect *srcRegion)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     Tk_PhotoImageBlock block;
@@ -302,6 +302,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     int iwidth, iheight;
     int i, j;
     double tintR, tintG, tintB;
+    double width, height;
     cairo_filter_t filter;
 
     /* Return value? */
@@ -310,13 +311,9 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     iwidth = block.width;
     iheight = block.height;
     pitch = block.pitch;
-    if (width == 0.0) {
-        width = (double) iwidth;
-    }
-    if (height == 0.0) {
-        height = (double) iheight;
-    }
-    
+    width = (width0 == 0.0) ? (double) iwidth : width0;
+    height = (height0 == 0.0) ? (double) iheight : height0;
+
     /*
      * @format: the format of pixels in the buffer
      * @width: the width of the image to be stored in the buffer
@@ -428,10 +425,38 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
             pitch);		/* stride */
 
     filter = convertInterpolationToCairoFilter(interpolation);
-    if (width == (double)iwidth && height == (double)iheight) {
+    if (width == (double)iwidth && height == (double)iheight && !srcRegion) {
         cairo_set_source_surface(context->c, surface, x, y);
         cairo_pattern_set_filter(cairo_get_source(context->c), filter);
         cairo_paint_with_alpha(context->c, fillOpacity);
+    } else if (srcRegion) {
+        width = (width0 == 0.0) ? srcRegion->x2 - srcRegion->x1 : width0;
+        height = (height0 == 0.0) ? srcRegion->y2 - srcRegion->y1 : height0;
+        //crop x0,y0 positions:
+        int xcrop = srcRegion->x1;
+        int ycrop = srcRegion->y1;
+        //scale image:
+        double xscale = width / (srcRegion->x2 - srcRegion->x1);
+        double yscale = height / (srcRegion->y2 - srcRegion->y1);
+
+        cairo_matrix_t   matrix;
+        cairo_pattern_t *pattern = cairo_pattern_create_for_surface(surface);
+        cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+
+        double xoffs = xcrop*xscale;
+        double yoffs = ycrop*yscale;
+        cairo_translate (context->c, (x-xoffs), (y-yoffs));
+
+        cairo_matrix_init_scale (&matrix, 1.0/xscale, 1.0/yscale);
+        cairo_pattern_set_matrix (pattern, &matrix);
+
+        cairo_set_source (context->c, pattern);
+
+        cairo_pattern_set_filter(cairo_get_source(context->c), filter);
+        cairo_rectangle (context->c, xoffs, yoffs, width, height);
+        cairo_fill (context->c);
+
+        cairo_pattern_destroy (pattern);
     } else {
         cairo_save(context->c);
         cairo_translate(context->c, x, y);
@@ -440,8 +465,8 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         cairo_pattern_set_filter(cairo_get_source(context->c), filter);
         cairo_paint_with_alpha(context->c, fillOpacity);
         cairo_restore(context->c);
+        cairo_surface_destroy(surface);
     }
-    cairo_surface_destroy(surface);
     if (data) {
         ckfree((char *)data);
     }

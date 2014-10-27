@@ -82,7 +82,7 @@ class PathC {
     void AddRectangle(float x, float y, float width, float height);
     void AddEllipse(float cx, float cy, float rx, float ry);
     void DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height, double fillOpacity,
-            XColor *tintColor, double tintAmount, int interpolation);
+            XColor *tintColor, double tintAmount, int interpolation, PathRect *srcRegion);
     void DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr,
         float x, float y, int fillOverStroke, char *utf8);
     void CloseFigure(void);
@@ -283,7 +283,7 @@ inline InterpolationMode canvasInterpolationToGdiPlusInterpolation(int interpola
 #define BlueDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
 inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height, double fillOpacity,
-        XColor *tintColor, double tintAmount, int interpolation)
+        XColor *tintColor, double tintAmount, int interpolation, PathRect *srcRegion)
 {
     Tk_PhotoImageBlock block;
     PixelFormat format;
@@ -304,11 +304,17 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     iheight = block.height;
     stride = block.pitch;
     pitch = block.pitch;
+
+    int srcX = srcRegion ? (int)srcRegion->x1 : 0;
+    int srcY = srcRegion ? (int)srcRegion->y1 : 0;
+    int srcWidth = srcRegion ? ((int)srcRegion->x2 - (int)srcRegion->x1) : iwidth;
+    int srcHeight = srcRegion ? ((int)srcRegion->y2 - (int)srcRegion->y1) : iheight;
+
     if (width == 0.0) {
-        width = (float) iwidth;
+        width = (float)srcWidth;
     }
     if (height == 0.0) {
-        height = (float) iheight;
+        height = (float)srcHeight;
     }
 
     if (tintColor && tintAmount > 0.0) {
@@ -361,29 +367,31 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     } else {
         return;
     }
-    mGraphics->SetInterpolationMode(canvasInterpolationToGdiPlusInterpolation(interpolation));
-    Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
-    if (fillOpacity >= 1.0 && tintAmount <= 0.0) {
-        mGraphics->DrawImage(&bitmap, x, y, width, height);
-    } else {
+
+    ImageAttributes imageAttrs;
+    imageAttrs.SetWrapMode(WrapModeTile);
+    ColorMatrix colorMatrix;
+    if (fillOpacity < 1.0 || tintAmount > 0.0) {
         /*
-        // transform
-        int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
-        r = (int)((1.0-tintAmount + tintAmount*tintR*0.2126) * r + tintAmount*tintR*0.7152*g + tintAmount*tintR*0.0722*b));
-        g = (int)((1.0-tintAmount)*g + (tintAmount*tintG*0.2126*r + tintAmount*tintG*0.7152*g + tintAmount*tintG*0.0722*b));
-        b = (int)((1.0-tintAmount)*b + (tintAmount*tintB*0.2126*r + tintAmount*tintB*0.7152*g + tintAmount*tintB*0.0722*b));
-        */
-        ColorMatrix colorMatrix = {
+         * int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
+         * r = (int)((1.0-tintAmount + tintAmount*tintR*0.2126) * r + tintAmount*tintR*0.7152*g + tintAmount*tintR*0.0722*b));
+         * g = (int)((1.0-tintAmount)*g + (tintAmount*tintG*0.2126*r + tintAmount*tintG*0.7152*g + tintAmount*tintG*0.0722*b));
+         * b = (int)((1.0-tintAmount)*b + (tintAmount*tintB*0.2126*r + tintAmount*tintB*0.7152*g + tintAmount*tintB*0.0722*b));
+         */
+        ColorMatrix tmp = {
                 1.0-tintAmount + tintAmount*tintR*0.2126, tintAmount*tintG*0.2126,                  tintAmount*tintB*0.2126,                  0.0f,               0.0f,
                 tintAmount*tintR*0.7152,                  1.0-tintAmount + tintAmount*tintG*0.7152, tintAmount*tintB*0.7152,                  0.0f,               0.0f,
                 tintAmount*tintR*0.0722,                  tintAmount*tintG*0.0722,                  1.0-tintAmount + tintAmount*tintB*0.0722, 0.0f,               0.0f,
                 0.0f,                                     0.0f,                                     0.0f,                                     (float)fillOpacity, 0.0f,
                 0.0f,                                     0.0f,                                     0.0f,                                     0.0f,               1.0f
-    };
-    ImageAttributes imageAttrs;
-    imageAttrs.SetColorMatrix(&colorMatrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-    mGraphics->DrawImage(&bitmap, RectF(x, y, width, height), 0.0f, 0.0f, (float)iwidth, (float)iheight, UnitPixel, &imageAttrs);
+        };
+        colorMatrix = tmp;
+        imageAttrs.SetColorMatrix(&colorMatrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
     }
+    mGraphics->SetInterpolationMode(canvasInterpolationToGdiPlusInterpolation(interpolation));
+    Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
+    mGraphics->DrawImage(&bitmap, RectF(x, y, width, height), srcX, srcY, srcWidth, srcHeight, UnitPixel, &imageAttrs);
+
     if (data) {
         ckfree((char *)data);
     }
@@ -956,10 +964,10 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 void
 TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         double x, double y, double width, double height, double fillOpacity,
-        XColor *tintColor, double tintAmount, int interpolation)
+        XColor *tintColor, double tintAmount, int interpolation, PathRect *srcRegion)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->DrawImage(photo, (float) x, (float) y, (float) width, (float) height, fillOpacity, tintColor, tintAmount, interpolation);
+    context->c->DrawImage(photo, (float) x, (float) y, (float) width, (float) height, fillOpacity, tintColor, tintAmount, interpolation, srcRegion);
 }
 
 void

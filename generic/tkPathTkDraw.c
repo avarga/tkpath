@@ -279,7 +279,7 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 void
 TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         double x, double y, double width, double height, double fillOpacity,
-        XColor *tintColor, double tintAmount, int interpolation)
+        XColor *tintColor, double tintAmount, int interpolation, PathRect *srcRegion)
 {
     //FIXME use fillOpacity, tintColor, tintAmount parameters
     TkPathContext_ *context = (TkPathContext_ *) ctx;

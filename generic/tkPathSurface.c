@@ -676,7 +676,7 @@ static Tk_OptionSpec pimageOptionSpecs[] = {
 };
 
 static int
-SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* CONST objv[]) 
+SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Obj* const objv[])
 {
     TkPathContext 	context = surfacePtr->ctx;
     SurfPimageItem	item;
@@ -713,7 +713,7 @@ SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
         TkPathSaveState(context);
         TkPathPushTMatrix(context, style.matrixPtr);
         TkPathImage(context, image, photo, point[0], point[1], item.width, item.height, style.fillOpacity,
-                NULL, 0.0, 99);
+                NULL, 0.0, 99, NULL);
         Tk_FreeImage(image);
         TkPathRestoreState(context);
     }

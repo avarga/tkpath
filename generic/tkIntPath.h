@@ -296,7 +296,7 @@ void		TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry);
 void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
                     double x, double y, double width, double height, double fillOpacity,
-                    XColor *tintColor, double tintAmount, int interpolation);
+                    XColor *tintColor, double tintAmount, int interpolation, PathRect *srcRegion);
 int			TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr);
 void		TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, 
                     Tk_PathTextStyle *textStylePtr, double x, double y, int fillOverStroke, char *utf8, void *custom);
