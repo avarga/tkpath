@@ -181,6 +181,7 @@ DLLOBJS = \
 	$(TMP_DIR)\tkpRectOval.obj \
 	$(TMP_DIR)\tkpTrig.obj \
 	$(TMP_DIR)\tkpUtil.obj \
+	$(TMP_DIR)\tkCanvArrow.obj \
 	$(TMP_DIR)\tkCanvPathUtil.obj \
 	$(TMP_DIR)\tkCanvEllipse.obj \
 	$(TMP_DIR)\tkCanvGroup.obj \

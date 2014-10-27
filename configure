@@ -5745,6 +5745,7 @@ fi
 		tkpRectOval.c \
 		tkpTrig.c \
 		tkpUtil.c \
+		tkCanvArrow.c \
 		tkCanvPathUtil.c \
 		tkCanvEllipse.c \
 		tkCanvGroup.c \

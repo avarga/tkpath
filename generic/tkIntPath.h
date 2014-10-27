@@ -189,6 +189,14 @@ typedef struct LookupTable {
 } LookupTable;
 
 /*
+ * Points in an arrowHead:
+ */
+#define PTS_IN_ARROW 6
+#define DRAWABLE_PTS_IN_ARROW 5
+#define ORIG_PT_IN_ARROW 2
+#define LINE_PT_IN_ARROW 5
+
+/*
  * Records used for parsing path to a linked list of primitive 
  * drawing instructions.
  *
@@ -375,6 +383,8 @@ int		EndpointToCentralArcParameters(
                     double *cxPtr, double *cyPtr, 			/* Out. */
                     double *rxPtr, double *ryPtr,
                     double *theta1Ptr, double *dthetaPtr);
+
+/* --- */
 
 MODULE_SCOPE int    TkPathGenericCmdDispatcher( 
 			Tcl_Interp* interp,

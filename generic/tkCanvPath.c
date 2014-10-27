@@ -11,6 +11,7 @@
 
 #include "tkIntPath.h"
 #include "tkCanvPathUtil.h"
+#include "tkCanvArrow.h"
 #include "tkpCanvas.h"
 #include "tkPathStyle.h"
 
@@ -37,6 +38,8 @@ typedef struct PathItem  {
     PathAtom *atomPtr;
     int maxNumSegments;     /* Max number of straight segments (for subpath)
                              * needed for Area and Point functions. */
+    ArrowDescr startarrow;
+    ArrowDescr endarrow;
     long flags;             /* Various flags, see enum. */
 } PathItem;
 
@@ -94,6 +97,8 @@ static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
     PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
     PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
+    PATH_OPTION_SPEC_STARTARROW_GRP(PathItem),
+    PATH_OPTION_SPEC_ENDARROW_GRP(PathItem),
     PATH_OPTION_SPEC_END
 };
 
@@ -214,6 +219,8 @@ CreatePath(
     itemPtr->bbox = NewEmptyPathRect();
     itemPtr->totalBbox = NewEmptyPathRect();
     pathPtr->maxNumSegments = 0;
+    TkPathArrowDescrInit(&pathPtr->startarrow);
+    TkPathArrowDescrInit(&pathPtr->endarrow);
     pathPtr->flags = 0L;
     
     /* Forces a computation of the normalized path in PathCoords. */
@@ -401,10 +408,42 @@ ComputePathBbox(
      * assuming zero stroke width.
      */
     itemPtr->bbox = GetGenericBarePathBbox(pathPtr->atomPtr);
+    IncludeArrowPointsInRect(&itemPtr->bbox, &pathPtr->startarrow);
+    IncludeArrowPointsInRect(&itemPtr->bbox, &pathPtr->endarrow);
     itemPtr->totalBbox = GetGenericPathTotalBboxFromBare(pathPtr->atomPtr,
             &style, &itemPtr->bbox);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &itemPtr->totalBbox);
     TkPathCanvasFreeInheritedStyle(&style);
+}
+
+static int
+ConfigureArrows(
+        Tk_PathCanvas canvas, PathItem *pathPtr)
+{
+    PathPoint *pfirstp;
+    PathPoint psecond;
+    PathPoint ppenult;
+    PathPoint *plastp;
+
+    int error = getSegmentsFromPathAtomList(pathPtr->atomPtr, &pfirstp, &psecond, &ppenult, &plastp);
+
+    if (error == TCL_OK) {
+        PathPoint pfirst = *pfirstp;
+        PathPoint plast = *plastp;
+        Tk_PathStyle *lineStyle = &pathPtr->headerEx.style;
+        int isOpen = lineStyle->fill==NULL && ((pfirst.x != plast.x) || (pfirst.y != plast.y));
+
+        TkPathPreconfigureArrow(&pfirst, &pathPtr->startarrow);
+        TkPathPreconfigureArrow(&plast, &pathPtr->endarrow);
+
+        *pfirstp = TkPathConfigureArrow(pfirst, psecond, &pathPtr->startarrow, lineStyle, isOpen);
+        *plastp = TkPathConfigureArrow(plast, ppenult, &pathPtr->endarrow, lineStyle, isOpen);
+    } else {
+        TkPathFreeArrow(&pathPtr->startarrow);
+        TkPathFreeArrow(&pathPtr->endarrow);
+    }
+
+    return TCL_OK;
 }
 
 /*
@@ -425,7 +464,6 @@ ComputePathBbox(
  *
  *--------------------------------------------------------------
  */
-
 static int
 ConfigurePath(
     Tcl_Interp *interp,		/* Used for error reporting. */
@@ -483,6 +521,9 @@ ConfigurePath(
         return TCL_OK;
     }
 #endif    
+
+    ConfigureArrows(canvas, pathPtr);
+
     /*
      * Recompute bounding box for path.
      */
@@ -540,6 +581,8 @@ DeletePath(
         TkPathFreeAtoms(pathPtr->atomPtr);
         pathPtr->atomPtr = NULL;
     }
+    TkPathFreeArrow(&pathPtr->startarrow);
+    TkPathFreeArrow(&pathPtr->endarrow);
     Tk_FreeConfigOptions((char *) pathPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
 
@@ -583,6 +626,12 @@ DisplayPath(
         style = TkPathCanvasInheritStyle(itemPtr, 0);
         TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, pathPtr->atomPtr, 
                 &style, &m, &itemPtr->bbox);
+        /*
+         * Display arrowheads, if they are wanted.
+         */
+        DisplayArrow(canvas, drawable, &pathPtr->startarrow, &style, &m, &itemPtr->bbox);
+        DisplayArrow(canvas, drawable, &pathPtr->endarrow, &style, &m, &itemPtr->bbox);
+
         TkPathCanvasFreeInheritedStyle(&style);
     }
 }
@@ -904,6 +953,9 @@ ScalePath(
     
     ScalePathRect(&itemPtr->totalBbox, originX, originY, scaleX, scaleY);
     NormalizePathRect(&r);
+    TkPathScaleArrow(&pathPtr->startarrow, originX, originY, scaleX, scaleY);
+    TkPathScaleArrow(&pathPtr->endarrow, originX, originY, scaleX, scaleY);
+    ConfigureArrows(canvas, pathPtr);
     ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
@@ -946,6 +998,8 @@ TranslatePath(
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&itemPtr->bbox, deltaX, deltaY);
     TranslatePathRect(&itemPtr->totalBbox, deltaX, deltaY);
+    TkPathTranslateArrow(&pathPtr->startarrow, deltaX, deltaY);
+    TkPathTranslateArrow(&pathPtr->endarrow, deltaX, deltaY);
     TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 

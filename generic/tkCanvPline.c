@@ -11,6 +11,7 @@
 
 #include "tkIntPath.h"
 #include "tkpCanvas.h"
+#include "tkCanvArrow.h"
 #include "tkCanvPathUtil.h"
 #include "tkPathStyle.h"
 
@@ -25,6 +26,8 @@ typedef struct PlineItem  {
     Tk_PathItemEx headerEx; /* Generic stuff that's the same for all
                              * path types.  MUST BE FIRST IN STRUCTURE. */
     PathRect coords;		/* Coordinates (unorders bare bbox). */
+    ArrowDescr startarrow;
+    ArrowDescr endarrow;
 } PlineItem;
 
 
@@ -62,6 +65,8 @@ static void	ScalePline(Tk_PathCanvas canvas,
 static void	TranslatePline(Tk_PathCanvas canvas,
 		    Tk_PathItem *itemPtr, double deltaX, double deltaY);
 static PathAtom * MakePathAtoms(PlineItem *plinePtr);
+static int      ConfigureArrows(Tk_PathCanvas canvas, PlineItem *linePtr);
+
 
 PATH_STYLE_CUSTOM_OPTION_MATRIX
 PATH_STYLE_CUSTOM_OPTION_DASH
@@ -69,11 +74,14 @@ PATH_CUSTOM_OPTION_TAGS
 PATH_OPTION_STRING_TABLES_STROKE
 PATH_OPTION_STRING_TABLES_STATE
 
+
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
     PATH_OPTION_SPEC_PARENT,
     PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
     PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
+    PATH_OPTION_SPEC_STARTARROW_GRP(PlineItem),
+    PATH_OPTION_SPEC_ENDARROW_GRP(PlineItem),
     PATH_OPTION_SPEC_END
 };
 
@@ -130,7 +138,9 @@ CreatePline(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPt
     itemExPtr->styleObj = NULL;
     itemExPtr->styleInst = NULL;
     itemPtr->totalBbox = NewEmptyPathRect();
-    
+    TkPathArrowDescrInit(&plinePtr->startarrow);
+    TkPathArrowDescrInit(&plinePtr->endarrow);
+
     if (optionTable == NULL) {
 	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
     } 
@@ -240,6 +250,8 @@ ComputePlineBbox(Tk_PathCanvas canvas, PlineItem *plinePtr)
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
+    IncludeArrowPointsInRect(&r, &plinePtr->startarrow);
+    IncludeArrowPointsInRect(&r, &plinePtr->endarrow);
     itemPtr->totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &r);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &itemPtr->totalBbox);
     TkPathCanvasFreeInheritedStyle(&style);
@@ -253,37 +265,37 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     Tk_PathItemEx *itemExPtr = &plinePtr->headerEx;
     Tk_PathStyle *stylePtr = &itemExPtr->style;
     Tk_Window tkwin;
-    //Tk_PathState state;
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
-    int error, mask;
+    int error;
+    int mask = 0;
 
     tkwin = Tk_PathCanvasTkwin(canvas);
     for (error = 0; error <= 1; error++) {
-	if (!error) {
-	    if (Tk_SetOptions(interp, (char *) plinePtr, optionTable, 
-		    objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
-		continue;
-	    }
-	} else {
-	    errorResult = Tcl_GetObjResult(interp);
-	    Tcl_IncrRefCount(errorResult);
-	    Tk_RestoreSavedOptions(&savedOptions);
-	}	
-	if (TkPathCanvasItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
-	    continue;
-	}
+        if (!error) {
+            if (Tk_SetOptions(interp, (char *) plinePtr, optionTable,
+            objc, objv, tkwin, &savedOptions, &mask) != TCL_OK) {
+                continue;
+            }
+        } else {
+            errorResult = Tcl_GetObjResult(interp);
+            Tcl_IncrRefCount(errorResult);
+            Tk_RestoreSavedOptions(&savedOptions);
+        }
+        if (TkPathCanvasItemExConfigure(interp, canvas, itemExPtr, mask) != TCL_OK) {
+            continue;
+        }
 
-	/*
-	 * If we reach this on the first pass we are OK and continue below.
-	 */
-	break;
+        /*
+         * If we reach this on the first pass we are OK and continue below.
+         */
+        break;
     }
     if (!error) {
-	Tk_FreeSavedOptions(&savedOptions);
-	stylePtr->mask |= mask;
+        Tk_FreeSavedOptions(&savedOptions);
+        stylePtr->mask |= mask;
     }
-    
+
 #if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
@@ -293,13 +305,20 @@ ConfigurePline(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         return TCL_OK;
     }
 #endif
+
+    /*
+     * Setup arrowheads, if needed. If arrowheads are turned off, restore the
+     * line's endpoints (they were shortened when the arrowheads were added).
+     */
+    ConfigureArrows(canvas, plinePtr);
+
     if (error) {
-	Tcl_SetObjResult(interp, errorResult);
-	Tcl_DecrRefCount(errorResult);
-	return TCL_ERROR;
+        Tcl_SetObjResult(interp, errorResult);
+        Tcl_DecrRefCount(errorResult);
+        return TCL_ERROR;
     } else {
-	ComputePlineBbox(canvas, plinePtr);
-	return TCL_OK;
+        ComputePlineBbox(canvas, plinePtr);
+        return TCL_OK;
     }
 }
 
@@ -322,6 +341,8 @@ DeletePline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
     if (itemExPtr->styleInst != NULL) {
 	TkPathFreeStyle(itemExPtr->styleInst);
     }
+    TkPathFreeArrow(&plinePtr->startarrow);
+    TkPathFreeArrow(&plinePtr->endarrow);
     Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
 
@@ -334,20 +355,29 @@ DisplayPline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     PathRect r;
     PathAtom *atomPtr;
     Tk_PathStyle style;
-    
+
     /* === EB - 23-apr-2010: register coordinate offsets */
     TkPathSetCoordOffsets(m.tx, m.ty);
     /* === */
-    
+
     r.x1 = MIN(plinePtr->coords.x1, plinePtr->coords.x2);
     r.x2 = MAX(plinePtr->coords.x1, plinePtr->coords.x2);
     r.y1 = MIN(plinePtr->coords.y1, plinePtr->coords.y2);
     r.y2 = MAX(plinePtr->coords.y1, plinePtr->coords.y2);
+    IncludeArrowPointsInRect(&r, &plinePtr->startarrow);
+    IncludeArrowPointsInRect(&r, &plinePtr->endarrow);
 
     atomPtr = MakePathAtoms(plinePtr);
     style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &style, &m, &r);
     TkPathFreeAtoms(atomPtr);
+
+    /*
+     * Display arrowheads, if they are wanted.
+     */
+    DisplayArrow(canvas, drawable, &plinePtr->startarrow, &style, &m, &r);
+    DisplayArrow(canvas, drawable, &plinePtr->endarrow, &style, &m, &r);
+
     TkPathCanvasFreeInheritedStyle(&style);
 }
 
@@ -410,6 +440,9 @@ ScalePline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double or
 
     ScalePathRect(&itemPtr->totalBbox, originX, originY, scaleX, scaleY);
     ScalePathRect(&plinePtr->coords, originX, originY, scaleX, scaleY);
+    TkPathScaleArrow(&plinePtr->startarrow, originX, originY, scaleX, scaleY);
+    TkPathScaleArrow(&plinePtr->endarrow, originX, originY, scaleX, scaleY);
+    ConfigureArrows(canvas, plinePtr);
     ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
@@ -421,7 +454,62 @@ TranslatePline(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double
     /* Just translate the bbox as well. */
     TranslatePathRect(&itemPtr->totalBbox, deltaX, deltaY);
     TranslatePathRect(&plinePtr->coords, deltaX, deltaY);
+    TkPathTranslateArrow(&plinePtr->startarrow, deltaX, deltaY);
+    TkPathTranslateArrow(&plinePtr->endarrow, deltaX, deltaY);
     TranslateItemHeader(itemPtr, deltaX, deltaY);
+}
+
+/*--------------------------------------------------------------
+ *
+ * ConfigureArrows --
+ *
+ *  If arrowheads have been requested for a line, this function makes
+ *  arrangements for the arrowheads.
+ *
+ * Results:
+ *  Always returns TCL_OK.
+ *
+ * Side effects:
+ *  Information in linePtr is set up for one or two arrowheads. The
+ *  startarrowPtr and endarrowPtr polygons are allocated and initialized,
+ *  if need be, and the end points of the line are adjusted so that a
+ *  thick line doesn't stick out past the arrowheads.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+ConfigureArrows(
+    Tk_PathCanvas canvas,       /* Canvas in which arrows will be displayed
+                             * (interp and tkwin fields are needed). */
+    PlineItem *linePtr)      /* Item to configure for arrows. */
+{
+    PathPoint pf, pl,newp;
+    Tk_PathStyle *lineStyle = &linePtr->headerEx.style;
+    int dontFill = lineStyle->fill == NULL;
+    Tk_PathState state = linePtr->headerEx.header.state;
+
+    if(state == TK_STATE_NULL) {
+        state = ((TkPathCanvas *)canvas)->canvas_state;
+    }
+
+    pf.x = linePtr->coords.x1;
+    pf.y = linePtr->coords.y1;
+    pl.x = linePtr->coords.x2;
+    pl.y = linePtr->coords.y2;
+
+    TkPathPreconfigureArrow(&pf, &linePtr->startarrow);
+    TkPathPreconfigureArrow(&pl, &linePtr->endarrow);
+
+    newp = TkPathConfigureArrow(pf, pl, &linePtr->startarrow, lineStyle, dontFill);
+    linePtr->coords.x1 = newp.x;
+    linePtr->coords.y1 = newp.y;
+
+    newp = TkPathConfigureArrow(pl, pf, &linePtr->endarrow, lineStyle, dontFill);
+    linePtr->coords.x2 = newp.x;
+    linePtr->coords.y2 = newp.y;
+
+    return TCL_OK;
 }
 
 /*----------------------------------------------------------------------*/

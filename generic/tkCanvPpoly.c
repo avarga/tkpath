@@ -12,6 +12,7 @@
 #include "tkIntPath.h"
 #include "tkpCanvas.h"
 #include "tkCanvPathUtil.h"
+#include "tkCanvArrow.h"
 #include "tkPathStyle.h"
 
 /* For debugging. */
@@ -28,6 +29,8 @@ typedef struct PpolyItem  {
     PathAtom *atomPtr;
     int maxNumSegments;	    /* Max number of straight segments (for subpath)
 			     * needed for Area and Point functions. */
+    ArrowDescr startarrow;
+    ArrowDescr endarrow;
 } PpolyItem;
 
 enum {
@@ -87,6 +90,8 @@ static Tk_OptionSpec optionSpecsPolyline[] = {
     PATH_OPTION_SPEC_STYLE_FILL(Tk_PathItemEx, ""),
     PATH_OPTION_SPEC_STYLE_MATRIX(Tk_PathItemEx),
     PATH_OPTION_SPEC_STYLE_STROKE(Tk_PathItemEx, "black"),
+    PATH_OPTION_SPEC_STARTARROW_GRP(PpolyItem),
+    PATH_OPTION_SPEC_ENDARROW_GRP(PpolyItem),
     PATH_OPTION_SPEC_END
 };
 
@@ -197,7 +202,9 @@ CreateAny(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemPtr,
     itemPtr->bbox = NewEmptyPathRect();
     itemPtr->totalBbox = NewEmptyPathRect();
     ppolyPtr->maxNumSegments = 0;
-    
+    TkPathArrowDescrInit(&ppolyPtr->startarrow);
+    TkPathArrowDescrInit(&ppolyPtr->endarrow);
+
     if (ppolyPtr->type == kPpolyTypePolyline) {
 	if (optionTablePolyline == NULL) {
 	    optionTablePolyline = Tk_CreateOptionTable(interp, optionSpecsPolyline);
@@ -277,10 +284,61 @@ ComputePpolyBbox(Tk_PathCanvas canvas, PpolyItem *ppolyPtr)
     }
     style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     itemPtr->bbox = GetGenericBarePathBbox(ppolyPtr->atomPtr);
+    IncludeArrowPointsInRect(&itemPtr->bbox, &ppolyPtr->startarrow);
+    IncludeArrowPointsInRect(&itemPtr->bbox, &ppolyPtr->endarrow);
     itemPtr->totalBbox = GetGenericPathTotalBboxFromBare(ppolyPtr->atomPtr,
             &style, &itemPtr->bbox);
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &itemPtr->totalBbox);
     TkPathCanvasFreeInheritedStyle(&style);
+}
+
+/*--------------------------------------------------------------
+ *
+ * ConfigureArrows --
+ *
+ *  If arrowheads have been requested for a line, this function makes
+ *  arrangements for the arrowheads.
+ *
+ * Results:
+ *  Always returns TCL_OK.
+ *
+ * Side effects:
+ *  Information in ppolyPtr is set up for one or two arrowheads. The
+ *  startarrowPtr and endarrowPtr polygons are allocated and initialized,
+ *  if need be, and the end points of the line are adjusted so that a
+ *  thick line doesn't stick out past the arrowheads.
+ *
+ *--------------------------------------------------------------
+ */
+typedef PathPoint *PathPointPtr;
+static int
+ConfigureArrows(
+        Tk_PathCanvas canvas, PpolyItem *ppolyPtr)
+{
+    PathPoint *pfirstp;
+    PathPoint psecond;
+    PathPoint ppenult;
+    PathPoint *plastp;
+
+    int error = getSegmentsFromPathAtomList(ppolyPtr->atomPtr, &pfirstp, &psecond, &ppenult, &plastp);
+
+    if (error == TCL_OK) {
+        PathPoint pfirst = *pfirstp;
+        PathPoint plast = *plastp;
+        Tk_PathStyle *lineStyle = &ppolyPtr->headerEx.style;
+        int isOpen = lineStyle->fill==NULL && ((pfirst.x != plast.x) || (pfirst.y != plast.y));
+
+        TkPathPreconfigureArrow(&pfirst, &ppolyPtr->startarrow);
+        TkPathPreconfigureArrow(&plast, &ppolyPtr->endarrow);
+
+        *pfirstp = TkPathConfigureArrow(pfirst, psecond, &ppolyPtr->startarrow, lineStyle, isOpen);
+        *plastp = TkPathConfigureArrow(plast, ppenult, &ppolyPtr->endarrow, lineStyle, isOpen);
+    } else {
+        TkPathFreeArrow(&ppolyPtr->startarrow);
+        TkPathFreeArrow(&ppolyPtr->endarrow);
+    }
+
+    return TCL_OK;
 }
 
 static int		
@@ -324,7 +382,7 @@ ConfigurePpoly(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 	stylePtr->mask |= mask;
     }
     stylePtr->strokeOpacity = MAX(0.0, MIN(1.0, stylePtr->strokeOpacity));
-    
+
 #if 0	    // From old code. Needed?
     state = itemPtr->state;
     if(state == TK_PATHSTATE_NULL) {
@@ -334,6 +392,9 @@ ConfigurePpoly(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         return TCL_OK;
     }
 #endif
+
+    ConfigureArrows(canvas, ppolyPtr);
+
     if (error) {
 	Tcl_SetObjResult(interp, errorResult);
 	Tcl_DecrRefCount(errorResult);
@@ -362,6 +423,8 @@ DeletePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display)
         TkPathFreeAtoms(ppolyPtr->atomPtr);
         ppolyPtr->atomPtr = NULL;
     }
+    TkPathFreeArrow(&ppolyPtr->startarrow);
+    TkPathFreeArrow(&ppolyPtr->endarrow);
     optionTable = (ppolyPtr->type == kPpolyTypePolyline) ? optionTablePolyline : optionTablePpolygon;
     Tk_FreeConfigOptions((char *) itemPtr, optionTable, Tk_PathCanvasTkwin(canvas));
 }
@@ -381,6 +444,11 @@ DisplayPpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     style = TkPathCanvasInheritStyle(itemPtr, 0);
     TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, ppolyPtr->atomPtr, &style,
             &m, &itemPtr->bbox);
+    /*
+     * Display arrowheads, if they are wanted.
+     */
+    DisplayArrow(canvas, drawable, &ppolyPtr->startarrow, &style, &m, &itemPtr->bbox);
+    DisplayArrow(canvas, drawable, &ppolyPtr->endarrow, &style, &m, &itemPtr->bbox);
     TkPathCanvasFreeInheritedStyle(&style);
 }
 
@@ -438,6 +506,9 @@ ScalePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double or
     ScalePathAtoms(ppolyPtr->atomPtr, originX, originY, scaleX, scaleY);
     ScalePathRect(&itemPtr->bbox, originX, originY, scaleX, scaleY);
     ScalePathRect(&itemPtr->totalBbox, originX, originY, scaleX, scaleY);
+    TkPathScaleArrow(&ppolyPtr->startarrow, originX, originY, scaleX, scaleY);
+    TkPathScaleArrow(&ppolyPtr->endarrow, originX, originY, scaleX, scaleY);
+    ConfigureArrows(canvas, ppolyPtr);
     ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
@@ -449,6 +520,8 @@ TranslatePpoly(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double
     TranslatePathAtoms(ppolyPtr->atomPtr, deltaX, deltaY);
     TranslatePathRect(&itemPtr->bbox, deltaX, deltaY);
     TranslatePathRect(&itemPtr->totalBbox, deltaX, deltaY);
+    TkPathTranslateArrow(&ppolyPtr->startarrow, deltaX, deltaY);
+    TkPathTranslateArrow(&ppolyPtr->endarrow, deltaX, deltaY);
     TranslateItemHeader(itemPtr, deltaX, deltaY);    
 }
 
