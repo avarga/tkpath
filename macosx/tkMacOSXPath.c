@@ -31,6 +31,7 @@
 #define GreenFloatFromXColorPtr(xc)  (float) ((((xc)->pixel >> 8)  & 0xFF)) / 255.0
 #define RedFloatFromXColorPtr(xc)    (float) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
+
 #ifndef FloatToFixed
 #define FloatToFixed(a) ((Fixed)((float) (a) * fixed1))
 #endif
@@ -615,7 +616,8 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 
 void
 TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
-        double x, double y, double width, double height)
+        double x, double y, double width, double height, double fillOpacity,
+        XColor *tintColor, double tintAmount)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGImageRef cgImage;
@@ -624,26 +626,106 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     CGImageAlphaInfo alphaInfo;
     size_t size;
     Tk_PhotoImageBlock block;
-    
+    unsigned char *data = NULL;
+    unsigned char *ptr = NULL;
+    unsigned char *srcPtr, *dstPtr;
+    int srcR, srcG, srcB, srcA;     /* The source pixel offsets. */
+    int dstR, dstG, dstB, dstA;     /* The destination pixel offsets. */
+    int pitch;
+    int iwidth, iheight;
+    int i, j;
+    float tintR, tintG, tintB;
+
     /* Return value? */
     Tk_PhotoGetImage(photo, &block);
     size = block.pitch * block.height;
-    
+    iheight = block.height;
+    iwidth = block.width;
+    pitch = block.pitch;
+
     /*
      * The offset array contains the offsets from the address of a pixel to 
      * the addresses of the bytes containing the red, green, blue and alpha 
      * (transparency) components.  These are normally 0, 1, 2 and 3. 
      * @@@ There are more cases to consider than these!
      */
-    if (block.offset[3] == 3) {
+    srcR = dstR = block.offset[0];
+    srcG = dstG = block.offset[1];
+    srcB = dstB = block.offset[2];
+    srcA = dstA = block.offset[3];
+
+    if (srcA == 3) {
         alphaInfo = kCGImageAlphaLast;
-    } else if (block.offset[3] == 0) {
+    } else if (srcA == 0) {
         alphaInfo = kCGImageAlphaFirst;
     } else {
         /* @@@ What to do here? */
         return;
     }
-    provider = CGDataProviderCreateWithData(NULL, block.pixelPtr, size, NULL);
+
+    if (block.pixelSize == 4) {
+        if ((srcR == dstR) && (srcG == dstG) && (srcB == dstB) && (srcA == dstA) && fillOpacity >= 1.0 && (tintAmount <= 0.0 || tintColor == NULL)) {
+            ptr = (unsigned char *) block.pixelPtr;
+        } else {
+            data = (unsigned char *) ckalloc(pitch*iheight);
+            ptr = data;
+
+            if (tintColor && tintAmount > 0.0) {
+                if (tintAmount > 1.0)
+                    tintAmount = 1.0;
+                tintR = RedFloatFromXColorPtr(tintColor);
+                tintG = GreenFloatFromXColorPtr(tintColor);
+                tintB = BlueFloatFromXColorPtr(tintColor);
+                /* printf("tint:%g,%g,%g,%g amount=%g\n", tintR, tintG, tintB, tintAmount); */
+                for (i = 0; i < iheight; i++) {
+                    srcPtr = block.pixelPtr + i*pitch;
+                    dstPtr = ptr + i*pitch;
+                    for (j = 0; j < iwidth; j++) {
+                        // extract
+                        int r = *(srcPtr+srcR);
+                        int g = *(srcPtr+srcG);
+                        int b = *(srcPtr+srcB);
+
+                        // transform
+                        int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
+                        r = (int)((1.0-tintAmount)*r + tintAmount*lum*tintR);
+                        g = (int)((1.0-tintAmount)*g + tintAmount*lum*tintG);
+                        b = (int)((1.0-tintAmount)*b + tintAmount*lum*tintB);
+
+                        // fix range
+                        r = r<0 ? 0 : r>255 ? 255 : r;
+                        g = g<0 ? 0 : g>255 ? 255 : g;
+                        b = b<0 ? 0 : b>255 ? 255 : b;
+
+                        // and put back
+                        *(dstPtr+dstR) = r;
+                        *(dstPtr+dstG) = g;
+                        *(dstPtr+dstB) = b;
+                        *(dstPtr+dstA) = *(srcPtr+srcA) * fillOpacity;
+                        srcPtr += 4;
+                        dstPtr += 4;
+                    }
+                }
+            } else {
+                for (i = 0; i < iheight; i++) {
+                    srcPtr = block.pixelPtr + i*pitch;
+                    dstPtr = ptr + i*pitch;
+                    for (j = 0; j < iwidth; j++) {
+                        *(dstPtr+dstR) = *(srcPtr+srcR);
+                        *(dstPtr+dstG) = *(srcPtr+srcG);
+                        *(dstPtr+dstB) = *(srcPtr+srcB);
+                        *(dstPtr+dstA) = *(srcPtr+srcA) * fillOpacity;
+                        srcPtr += 4;
+                        dstPtr += 4;
+                    }
+                }
+            }
+        }
+    } else {
+        ptr = (unsigned char *) block.pixelPtr;
+        return;
+    }
+    provider = CGDataProviderCreateWithData(NULL, ptr, size, NULL);
     colorspace = CGColorSpaceCreateDeviceRGB();
     cgImage = CGImageCreate(block.width, block.height, 
             8, 						/* bitsPerComponent */
@@ -670,6 +752,9 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     CGContextDrawImage(context->c, CGRectMake(0.0, 0.0, width, height), cgImage);
     CGImageRelease(cgImage);
     CGContextRestoreGState(context->c);
+    if (data) {
+        ckfree((char *)data);
+    }
 }
 
 void
@@ -1047,7 +1132,7 @@ ShadeRelease(void *info)
 }
 
 void
-TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGShadingRef 		shading;
@@ -1088,7 +1173,7 @@ TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill 
 }
 
 void
-TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGShadingRef 		shading;

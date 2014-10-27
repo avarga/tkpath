@@ -162,7 +162,7 @@ TkPathPaintPath(
     
     if (gradientPtr != NULL) {
         TkPathClipToPath(context, stylePtr->fillRule);
-        PathGradientPaint(context, bboxPtr, gradientPtr, stylePtr->fillRule);
+        PathGradientPaint(context, bboxPtr, gradientPtr, stylePtr->fillRule, stylePtr->fillOpacity);
         
         /* NB: Both CoreGraphics on MacOSX and Win32 GDI (and cairo from 1.0) 
          *     clear the current path when setting clipping. Need therefore

@@ -304,9 +304,9 @@ void	TkPathFillAndStroke(TkPathContext ctx, Tk_PathStyle *style);
 int	TkPathGetCurrentPosition(TkPathContext ctx, PathPoint *ptPtr);
 int 	TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr);
 void	TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, 
-		LinearGradientFill *fillPtr, int fillRule, TMatrix *matrixPtr);
+		LinearGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *matrixPtr);
 void	TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, 
-		RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr);
+		RadialGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr);
 void    TkPathFree(TkPathContext ctx);
 int	TkPathDrawingDestroysPath(void);
 int	TkPathPixelAlign(void);

@@ -43,6 +43,8 @@ typedef struct PimageItem  {
     double width;	    /* If 0 use natural width or height. */
     double height;
     int anchor;
+    XColor *tintColor;
+    double tintAmount;
 } PimageItem;
 
 
@@ -89,7 +91,9 @@ enum {
     PIMAGE_OPTION_INDEX_IMAGE		= (1L << (PATH_STYLE_OPTION_INDEX_END + 3)),
     PIMAGE_OPTION_INDEX_MATRIX		= (1L << (PATH_STYLE_OPTION_INDEX_END + 4)),
     PIMAGE_OPTION_INDEX_WIDTH		= (1L << (PATH_STYLE_OPTION_INDEX_END + 5)),
-    PIMAGE_OPTION_INDEX_ANCHOR      = (1L << (PATH_STYLE_OPTION_INDEX_END + 6))
+    PIMAGE_OPTION_INDEX_ANCHOR      = (1L << (PATH_STYLE_OPTION_INDEX_END + 6)),
+    PIMAGE_OPTION_INDEX_TINTCOLOR   = (1L << (PATH_STYLE_OPTION_INDEX_END + 7)),
+    PIMAGE_OPTION_INDEX_TINTAMOUNT  = (1L << (PATH_STYLE_OPTION_INDEX_END + 8))
 };
 
 static char *imageAnchorST[] = {
@@ -132,6 +136,16 @@ PATH_OPTION_STRING_TABLES_STATE
         "nw", -1, Tk_Offset(PimageItem, anchor),         \
         0, (ClientData) imageAnchorST, 0}
 
+#define PATH_OPTION_SPEC_TINTCOLOR                             \
+    {TK_OPTION_COLOR, "-tintcolor", NULL, NULL,                \
+        NULL, -1, Tk_Offset(PimageItem, tintColor),         \
+        TK_OPTION_NULL_OK, 0, PIMAGE_OPTION_INDEX_TINTCOLOR}
+
+#define PATH_OPTION_SPEC_TINTAMOUNT                \
+    {TK_OPTION_DOUBLE, "-tintamount", NULL, NULL,      \
+        "0.5", -1, Tk_Offset(PimageItem, tintAmount),      \
+    0, 0, PIMAGE_OPTION_INDEX_TINTAMOUNT}
+
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(PimageItem),
     PATH_OPTION_SPEC_PARENT,
@@ -141,6 +155,8 @@ static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_IMAGE,
     PATH_OPTION_SPEC_WIDTH,
     PATH_OPTION_SPEC_ANCHOR,
+    PATH_OPTION_SPEC_TINTCOLOR,
+    PATH_OPTION_SPEC_TINTAMOUNT,
     PATH_OPTION_SPEC_END
 };
 
@@ -204,6 +220,8 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
     pimagePtr->height = 0;
     pimagePtr->width = 0;
     pimagePtr->anchor = kPathImageAnchorNW;
+    pimagePtr->tintColor = NULL;
+    pimagePtr->tintAmount = 0.0;
     itemPtr->bbox = NewEmptyPathRect();
     
     if (optionTable == NULL) {

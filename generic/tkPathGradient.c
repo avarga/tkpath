@@ -487,15 +487,15 @@ FormatResult(Tcl_Interp *interp, char *fmt, ...)
 
 void
 PathGradientPaint(TkPathContext ctx, PathRect *bbox, 
-    TkPathGradientMaster *gradientPtr, int fillRule)
+    TkPathGradientMaster *gradientPtr, int fillRule, double fillOpacity)
 {
     if (!ObjectIsEmpty(gradientPtr->stopsObj)) {
 	if (gradientPtr->type == kPathGradientTypeLinear) {
 	    TkPathPaintLinearGradient(ctx, bbox, &gradientPtr->linearFill, 
-		    fillRule, gradientPtr->matrixPtr);
+	            fillRule, fillOpacity, gradientPtr->matrixPtr);
 	} else {
 	    TkPathPaintRadialGradient(ctx, bbox, &gradientPtr->radialFill, 
-		    fillRule, gradientPtr->matrixPtr);
+                   fillRule, fillOpacity, gradientPtr->matrixPtr);
 	}
     }
 }

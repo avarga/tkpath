@@ -81,7 +81,8 @@ class PathC {
     void CurveTo(float x1, float y1, float x2, float y2, float x, float y);
     void AddRectangle(float x, float y, float width, float height);
     void AddEllipse(float cx, float cy, float rx, float ry);
-    void DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height);
+    void DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height, double fillOpacity,
+            XColor *tintColor, double tintAmount);
     void DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr,
         float x, float y, int fillOverStroke, char *utf8);
     void CloseFigure(void);
@@ -89,8 +90,8 @@ class PathC {
     void Fill(Tk_PathStyle *style);
     void FillAndStroke(Tk_PathStyle *style);
     void GetCurrentPoint(PointF *pt);
-    void FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr);
-    void FillRadialGradient(PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr);
+    void FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr);
+    void FillRadialGradient(PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr);
 
   private:
     HDC                 mMemHdc;
@@ -263,7 +264,12 @@ inline void PathC::AddEllipse(float cx, float cy, float rx, float ry)
     mCurrentPoint.Y = cy;
 }
 
-inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height)
+#define RedDoubleFromXColorPtr(xc)   (double) (((xc)->pixel & 0xFF)) / 255.0
+#define GreenDoubleFromXColorPtr(xc)  (double) ((((xc)->pixel >> 8) & 0xFF)) / 255.0
+#define BlueDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
+
+inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height, double fillOpacity,
+        XColor *tintColor, double tintAmount)
 {
     Tk_PhotoImageBlock block;
     PixelFormat format;
@@ -277,6 +283,7 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     int srcR, srcG, srcB, srcA;        /* The source pixel offsets. */
     int dstR, dstG, dstB, dstA;        /* The destination pixel offsets. */
     int i, j;
+    double tintR, tintG, tintB;
 
     Tk_PhotoGetImage(photo, &block);
     iwidth = block.width;
@@ -288,6 +295,17 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     }
     if (height == 0.0) {
         height = (float) iheight;
+    }
+
+    if (tintColor && tintAmount > 0.0) {
+        if (tintAmount > 1.0)
+            tintAmount = 1.0;
+        tintR = RedDoubleFromXColorPtr(tintColor);
+        tintG = GreenDoubleFromXColorPtr(tintColor);
+        tintB = BlueDoubleFromXColorPtr(tintColor);
+    } else {
+        tintAmount = 0.0;
+        tintR = 0.0; tintG = 0.0; tintB = 0.0;
     }
 
     if (block.pixelSize*8 == 32) {
@@ -330,7 +348,27 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
         return;
     }
     Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
-    mGraphics->DrawImage(&bitmap, x, y, width, height);
+    if (fillOpacity >= 1.0 && tintAmount <= 0.0) {
+        mGraphics->DrawImage(&bitmap, x, y, width, height);
+    } else {
+        /*
+        // transform
+        int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
+        r = (int)((1.0-tintAmount + tintAmount*tintR*0.2126) * r + tintAmount*tintR*0.7152*g + tintAmount*tintR*0.0722*b));
+        g = (int)((1.0-tintAmount)*g + (tintAmount*tintG*0.2126*r + tintAmount*tintG*0.7152*g + tintAmount*tintG*0.0722*b));
+        b = (int)((1.0-tintAmount)*b + (tintAmount*tintB*0.2126*r + tintAmount*tintB*0.7152*g + tintAmount*tintB*0.0722*b));
+        */
+        ColorMatrix colorMatrix = {
+                1.0-tintAmount + tintAmount*tintR*0.2126, tintAmount*tintG*0.2126,                  tintAmount*tintB*0.2126,                  0.0f,               0.0f,
+                tintAmount*tintR*0.7152,                  1.0-tintAmount + tintAmount*tintG*0.7152, tintAmount*tintB*0.7152,                  0.0f,               0.0f,
+                tintAmount*tintR*0.0722,                  tintAmount*tintG*0.0722,                  1.0-tintAmount + tintAmount*tintB*0.0722, 0.0f,               0.0f,
+                0.0f,                                     0.0f,                                     0.0f,                                     (float)fillOpacity, 0.0f,
+                0.0f,                                     0.0f,                                     0.0f,                                     0.0f,               1.0f
+    };
+    ImageAttributes imageAttrs;
+    imageAttrs.SetColorMatrix(&colorMatrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+    mGraphics->DrawImage(&bitmap, RectF(x, y, width, height), 0.0f, 0.0f, (float)iwidth, (float)iheight, UnitPixel, &imageAttrs);
+    }
     if (data) {
         ckfree((char *)data);
     }
@@ -440,7 +478,7 @@ inline void PathC::GetCurrentPoint(PointF *pt)
     *pt = mCurrentPoint;
 }
 
-void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {
     int                    i;
     int                    nstops;
@@ -449,6 +487,12 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
     GradientStopArray     *stopArrPtr;
     PathRect            *tPtr;
     PointF                p1, p2, pstart, pend;
+
+    /* Trim fillOpacity to [0,1] */
+    if (fillOpacity < 0.0)
+        fillOpacity = 0.0;
+    if (fillOpacity > 1.0)
+        fillOpacity = 1.0;
 
     stopArrPtr = fillPtr->stopArrPtr;
     nstops = stopArrPtr->nstops;
@@ -475,9 +519,9 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
         p2.Y = float(tPtr->y2);
     }
     stop = stopArrPtr->stops[0];
-    Color col1(MakeGDIPlusColor(stop->color, stop->opacity));
+    Color col1(MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity));
     stop = stopArrPtr->stops[nstops-1];
-    Color col2(MakeGDIPlusColor(stop->color, stop->opacity));
+    Color col2(MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity));
     if (fillPtr->method == kPathGradientMethodPad) {
         /*
          * GDI+ seems to miss a simple way to pad with constant colors.
@@ -590,7 +634,7 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
         float den = fabs(min) + length + fabs(max);
         for (i = 0; i < nstops; i++) {
             stop = stopArrPtr->stops[i];
-            col[i+1] = MakeGDIPlusColor(stop->color, stop->opacity);
+            col[i+1] = MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity);
             pos[i+1] = (fabs(min) + REAL(stop->offset) * length)/den;
         }
         if (mPtr) {
@@ -615,7 +659,7 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
         REAL *pos = new REAL[nstops];
         for (i = 0; i < nstops; i++) {
             stop = stopArrPtr->stops[i];
-            col[i] = MakeGDIPlusColor(stop->color, stop->opacity);
+            col[i] = MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity);
             pos[i] = REAL(stop->offset);
         }
         brush.SetInterpolationColors(col, pos, nstops);
@@ -628,7 +672,7 @@ void PathC::FillLinearGradient(PathRect *bbox, LinearGradientFill *fillPtr, int 
 
 void PathC::FillRadialGradient(
         PathRect *bbox,     /* The items bounding box in untransformed coords. */
-        RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+        RadialGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {
     int                    i;
     int                    nstops;
@@ -641,6 +685,12 @@ void PathC::FillRadialGradient(
     stopArrPtr = fillPtr->stopArrPtr;
     nstops = stopArrPtr->nstops;
     tPtr = fillPtr->radialPtr;
+
+    /* Trim fillOpacity to [0,1] */
+    if (fillOpacity < 0.0)
+        fillOpacity = 0.0;
+    if (fillOpacity > 1.0)
+        fillOpacity = 1.0;
 
      /*
      * We need to do like this since this is how SVG defines gradient drawing
@@ -667,7 +717,7 @@ void PathC::FillRadialGradient(
     mGraphics->SetClip(mPath);
     // @@@ Extend the transition instead like we did for liner gradients above.
     stop = stopArrPtr->stops[nstops-1];
-    SolidBrush solidBrush(MakeGDIPlusColor(stop->color, stop->opacity));
+    SolidBrush solidBrush(MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity));
     mGraphics->FillPath(&solidBrush, mPath);
 
     /* This is a special trick to make a radial gradient pattern.
@@ -681,11 +731,11 @@ void PathC::FillRadialGradient(
         brush.MultiplyTransform(&m);
     }
     stop = stopArrPtr->stops[0];
-    brush.SetCenterColor(MakeGDIPlusColor(stop->color, stop->opacity));
+    brush.SetCenterColor(MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity));
     brush.SetCenterPoint(focal);
     int count = 1;
     stop = stopArrPtr->stops[nstops-1];
-    Color color = MakeGDIPlusColor(stop->color, stop->opacity);
+    Color color = MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity);
     brush.SetSurroundColors(&color, &count);
 
     /* gdi+ counts them from the border and not from the center. */
@@ -693,7 +743,7 @@ void PathC::FillRadialGradient(
     REAL *pos = new REAL[nstops];
     for (i = nstops-1; i >= 0; i--) {
         stop = stopArrPtr->stops[i];
-        col[i] = MakeGDIPlusColor(stop->color, stop->opacity);
+        col[i] = MakeGDIPlusColor(stop->color, stop->opacity * fillOpacity);
         pos[i] = REAL(1.0 - stop->offset);
     }
     brush.SetInterpolationColors(col, pos, nstops);
@@ -889,11 +939,12 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 }
 
 void
-TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
-        double x, double y, double width, double height)
+TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
+        double x, double y, double width, double height, double fillOpacity,
+        XColor *tintColor, double tintAmount)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->DrawImage(photo, (float) x, (float) y, (float) width, (float) height);
+    context->c->DrawImage(photo, (float) x, (float) y, (float) width, (float) height, fillOpacity, tintColor, tintAmount);
 }
 
 void
@@ -1113,17 +1164,17 @@ TkPathPixelAlign(void)
 
 /* @@@ INCOMPLETE! We need to consider any padding as well. */
 
-void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->FillLinearGradient(bbox, fillPtr, fillRule, mPtr);
+    context->c->FillLinearGradient(bbox, fillPtr, fillRule, fillOpacity, mPtr);
 }
 
 void
-TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->FillRadialGradient(bbox, fillPtr, fillRule, mPtr);
+    context->c->FillRadialGradient(bbox, fillPtr, fillRule, fillOpacity, mPtr);
 }
 
 

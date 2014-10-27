@@ -277,8 +277,11 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 }
 
 void
-TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, double x, double y, double width, double height)
+TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
+        double x, double y, double width, double height, double fillOpacity,
+        XColor *tintColor, double tintAmount)
 {
+    //FIXME use fillOpacity, tintColor, tintAmount parameters
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     int iwidth, iheight;
 
@@ -483,7 +486,7 @@ int TkPathBoundingBox(TkPathContext ctx, PathRect *rPtr)
     return TCL_ERROR;
 }
 
-void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {    
     /* TkPathContext_ *context = (TkPathContext_ *) ctx; */
     /* The Tk X11 compatibility layer does not have tha ability to set up
@@ -492,7 +495,7 @@ void TkPathPaintLinearGradient(TkPathContext ctx, PathRect *bbox, LinearGradient
 }
             
 void
-TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, TMatrix *mPtr)
+TkPathPaintRadialGradient(TkPathContext ctx, PathRect *bbox, RadialGradientFill *fillPtr, int fillRule, double fillOpacity, TMatrix *mPtr)
 {
 }
 

@@ -290,7 +290,8 @@ void		TkPathRect(TkPathContext ctx, double x, double y, double width, double hei
 void		TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry);
 void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
-                    double x, double y, double width, double height);
+                    double x, double y, double width, double height, double fillOpacity,
+                    XColor *tintColor, double tintAmount);
 int			TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr);
 void		TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, 
                     Tk_PathTextStyle *textStylePtr, double x, double y, int fillOverStroke, char *utf8, void *custom);
@@ -389,7 +390,7 @@ MODULE_SCOPE void   TkPathStyleMergeStyles(Tk_PathStyle *srcStyle, Tk_PathStyle 
 MODULE_SCOPE int    TkPathStyleMergeStyleStatic(Tcl_Interp* interp, Tcl_Obj *styleObj, 
 			Tk_PathStyle *dstStyle, long flags);
 MODULE_SCOPE void   PathGradientPaint(TkPathContext ctx, PathRect *bbox, 
-			TkPathGradientMaster *gradientStylePtr, int fillRule);
+			TkPathGradientMaster *gradientStylePtr, int fillRule, double fillOpacity);
 
 
 MODULE_SCOPE Tk_PathSmoothMethod	tkPathBezierSmoothMethod;
