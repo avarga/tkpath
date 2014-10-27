@@ -82,8 +82,8 @@ class PathC {
     void AddRectangle(float x, float y, float width, float height);
     void AddEllipse(float cx, float cy, float rx, float ry);
     void DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height);
-    void DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
-        float x, float y, char *utf8);
+    void DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr,
+        float x, float y, int fillOverStroke, char *utf8);
     void CloseFigure(void);
     void Stroke(Tk_PathStyle *style);
     void Fill(Tk_PathStyle *style);
@@ -354,7 +354,7 @@ inline int canvasTextStyle2GdiPlusTextStyle(Tk_PathTextStyle *textStylePtr)
 }
 
 inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr,
-        float x, float y, char *utf8)
+        float x, float y, int fillOverStroke, char *utf8)
 {
     Tcl_DString ds, dsFont;
     Tcl_UniChar *uniPtr;
@@ -384,7 +384,7 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
     if (gAntiAlias) {
         mGraphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
     }
-    if (GetColorFromPathColor(style->fill) != NULL) {
+    if (!fillOverStroke && GetColorFromPathColor(style->fill) != NULL) {
         SolidBrush *brush = PathCreateBrush(style);
         mGraphics->DrawString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr), &font, point, brush);
         delete brush;
@@ -395,6 +395,11 @@ inline void PathC::DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePt
                 &fontFamily, fontStyle, (float) textStylePtr->fontSize, point, NULL);
         mGraphics->DrawPath(pen, mPath);
         delete pen;
+    }
+    if (fillOverStroke && GetColorFromPathColor(style->fill) != NULL) {
+        SolidBrush *brush = PathCreateBrush(style);
+        mGraphics->DrawString((const WCHAR *)uniPtr, Tcl_UniCharLen(uniPtr), &font, point, brush);
+        delete brush;
     }
     Tcl_DStringFree(&ds);
 }
@@ -906,10 +911,10 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
 }
 
 void
-TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, double x, double y, char *utf8, void *custom)
+TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, double x, double y, int fillOverStroke, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->DrawString(style, textStylePtr, (float) x, (float) y, utf8);
+    context->c->DrawString(style, textStylePtr, (float) x, (float) y, fillOverStroke, utf8);
 }
 
 void

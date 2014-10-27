@@ -1003,7 +1003,7 @@ SurfaceCreatePtext(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_Ob
     TkPathSaveState(context);
     TkPathPushTMatrix(context, mergedStyle.matrixPtr);
     TkPathBeginPath(context, &mergedStyle);
-    TkPathTextDraw(context, &mergedStyle, &item.textStyle, point[0], point[1], item.utf8, custom);
+    TkPathTextDraw(context, &mergedStyle, &item.textStyle, point[0], point[1], 0 /* fillOverStroke */, item.utf8, custom);
     TkPathEndPath(context);
     TkPathTextFree(&item.textStyle, custom);
     

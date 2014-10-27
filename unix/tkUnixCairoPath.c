@@ -56,6 +56,7 @@ typedef struct TkPathContext_ {
                                  * 2: even integer width */
 } TkPathContext_;
 
+static void TkPathPrepareForStroke(TkPathContext ctx, Tk_PathStyle *style);
 
 void CairoSetFill(TkPathContext ctx, Tk_PathStyle *style)
 {
@@ -423,23 +424,35 @@ convertTkFontWeight2CairoFontWeight(enum FontSlant weight)
 
 void
 TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
-        double x, double y, char *utf8, void *custom)
+        double x, double y, int fillOverStroke, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     
     cairo_select_font_face(context->c, textStylePtr->fontFamily, 
             convertTkFontSlant2CairoFontSlant(textStylePtr->fontSlant), convertTkFontWeight2CairoFontWeight(textStylePtr->fontWeight));
     cairo_set_font_size(context->c, textStylePtr->fontSize);
+
+    int hasStroke = (style->strokeColor != NULL);
+    int hasFill = (GetColorFromPathColor(style->fill) != NULL);
+
     cairo_move_to(context->c, x, y);
-    if ((GetColorFromPathColor(style->fill) != NULL) && (style->strokeColor != NULL)) {
+
+    if (hasStroke && hasFill) {
         cairo_text_path(context->c, utf8);
-        TkPathFillAndStroke(ctx, style);
-    } else if (GetColorFromPathColor(style->fill) != NULL) {
-    
-        /* This is the normal way to draw text which is likely faster. */
+        if (fillOverStroke) {
+            TkPathPrepareForStroke(ctx, style);
+            cairo_stroke_preserve(context->c);
+            CairoSetFill(ctx, style);
+            cairo_fill(context->c);
+        } else {
+            TkPathFillAndStroke(ctx, style);
+        }
+    }
+    else if (hasFill) {
         CairoSetFill(ctx, style);
         cairo_show_text(context->c, utf8);
-    } else if (style->strokeColor != NULL) {
+    }
+    else if (hasStroke) {
         cairo_text_path(context->c, utf8);
         TkPathStroke(ctx, style);
     }
@@ -572,7 +585,7 @@ void TkPathReleaseClipToPath(TkPathContext ctx)
     //cairo_reset_clip(context->c);
 }
 
-void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
+static void TkPathPrepareForStroke(TkPathContext ctx, Tk_PathStyle *style)
 {       
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     Tk_PathDash *dashPtr;
@@ -622,6 +635,12 @@ void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
         cairo_set_dash(context->c, dashes, dashPtr->number, style->offset);
     }
 
+}
+
+void TkPathStroke(TkPathContext ctx, Tk_PathStyle *style)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    TkPathPrepareForStroke(ctx, style);
     cairo_stroke(context->c);
 }
 

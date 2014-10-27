@@ -26,6 +26,7 @@ typedef struct PtextItem  {
                              * path types.  MUST BE FIRST IN STRUCTURE. */
     Tk_PathTextStyle textStyle;
     int textAnchor;
+    int fillOverStroke;    /* boolean parameter */
     double x;
     double y;
     double baseHeightRatio;
@@ -81,6 +82,7 @@ enum {
     PRECT_OPTION_INDEX_TEXTANCHOR	    = (1L << (PATH_STYLE_OPTION_INDEX_END + 3)),
     PRECT_OPTION_INDEX_FONTWEIGHT       = (1L << (PATH_STYLE_OPTION_INDEX_END + 4)),
     PRECT_OPTION_INDEX_FONTSLANT        = (1L << (PATH_STYLE_OPTION_INDEX_END + 5)),
+    PRECT_OPTION_INDEX_FILLOVERSTROKE  = (1L << (PATH_STYLE_OPTION_INDEX_END + 6)),
 };
  
 PATH_STYLE_CUSTOM_OPTION_RECORDS
@@ -155,6 +157,11 @@ static char *fontSlantST[] = {
         DEF_PATHCANVTEXT_FONTSLANT, -1, Tk_Offset(PtextItem, textStyle.fontSlant),   \
     0, (ClientData) fontSlantST, PRECT_OPTION_INDEX_FONTSLANT}
 
+#define PATH_OPTION_SPEC_FILLOVERSTROKE           \
+    {TK_OPTION_BOOLEAN, "-filloverstroke", NULL, NULL,   \
+        0, -1, Tk_Offset(PtextItem, fillOverStroke),   \
+    0, 0, PRECT_OPTION_INDEX_FILLOVERSTROKE}
+
 
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(Tk_PathItemEx),
@@ -168,6 +175,7 @@ static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_FONTWEIGHT,
     PATH_OPTION_SPEC_TEXT,
     PATH_OPTION_SPEC_TEXTANCHOR,
+    PATH_OPTION_SPEC_FILLOVERSTROKE,
     PATH_OPTION_SPEC_END
 };
 
@@ -232,6 +240,7 @@ CreatePtext(Tcl_Interp *interp, Tk_PathCanvas canvas,
     ptextPtr->textAnchor = kPathTextAnchorStart;
     ptextPtr->textStyle.fontFamily = NULL;
     ptextPtr->textStyle.fontSize = 0.0;
+    ptextPtr->fillOverStroke = 0;
     ptextPtr->custom = NULL;
     
     if (optionTable == NULL) {
@@ -558,7 +567,7 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
            Wait to see what the other APIs have to say.
     */
     TkPathTextDraw(ctx, &style, &ptextPtr->textStyle, itemPtr->bbox.x1, itemPtr->bbox.y1 + ptextPtr->baseHeightRatio * (itemPtr->bbox.y2 - itemPtr->bbox.y1),
-            Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
+            ptextPtr->fillOverStroke, Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     TkPathEndPath(ctx);
     TkPathFree(ctx);
     TkPathCanvasFreeInheritedStyle(&style);

@@ -749,7 +749,7 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
 
 void
 TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
-        double x, double y, char *utf8, void *custom)
+        double x, double y, int fillOverStroke, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
@@ -761,7 +761,14 @@ TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textSty
     CGContextSaveGState(context->c);
     CGContextTranslateCTM(context->c, x, y);
     CGContextScaleCTM(context->c, 1, -1);
-    ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
+    if ((style->strokeColor != NULL) && (GetColorFromPathColor(style->fill) != NULL)) {
+        CGContextSetTextDrawingMode(context->c, fillOverStroke ? kCGTextStroke : kCGTextFill);
+        ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
+        CGContextSetTextDrawingMode(context->c, fillOverStroke ? kCGTextFill : kCGTextStroke);
+        ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
+    } else {
+        ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
+    }
     CGContextRestoreGState(context->c);
 }
 
