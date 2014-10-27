@@ -120,7 +120,16 @@ extern int gAntiAlias;
 enum {
     kPathTextAnchorStart		= 0L,
     kPathTextAnchorMiddle,
-    kPathTextAnchorEnd
+    kPathTextAnchorEnd,
+    kPathTextAnchorN,
+    kPathTextAnchorW,
+    kPathTextAnchorS,
+    kPathTextAnchorE,
+    kPathTextAnchorNW,
+    kPathTextAnchorNE,
+    kPathTextAnchorSW,
+    kPathTextAnchorSE,
+    kPathTextAnchorC
 };
 
 /* These MUST be kept in sync with methodST and unitsST! */

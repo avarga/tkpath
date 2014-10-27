@@ -28,6 +28,7 @@ typedef struct PtextItem  {
     int textAnchor;
     double x;
     double y;
+    double baseHeightRatio;
     Tcl_Obj *utf8Obj;		/* The actual text to display; UTF-8 */
     int numChars;		/* Length of text in characters. */
     int numBytes;		/* Length of text in bytes. */
@@ -113,7 +114,7 @@ PATH_OPTION_STRING_TABLES_STATE
  * The enum kPathTextAnchorStart... MUST be kept in sync!
  */
 static char *textAnchorST[] = {
-    "start", "middle", "end", NULL
+    "start", "middle", "end", "n", "w", "s", "e", "nw", "ne", "sw", "se", "c", NULL
 };
 
 static char *fontWeightST[] = {
@@ -324,6 +325,8 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
     Tk_PathStyle style;
     Tk_PathState state = itemExPtr->header.state;
     double width;
+    double height;
+    double bheight;
     PathRect bbox, r;
 
     if(state == TK_PATHSTATE_NULL) {
@@ -338,36 +341,82 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
     r = TkPathTextMeasureBbox(&ptextPtr->textStyle, 
 	    Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     width = r.x2 - r.x1;
+    height = r.y2 - r.y1;
+    bheight = -r.y1;
+
     switch (ptextPtr->textAnchor) {
         case kPathTextAnchorStart: 
+        case kPathTextAnchorW:
+        case kPathTextAnchorNW:
+        case kPathTextAnchorSW:
             bbox.x1 = ptextPtr->x;
             bbox.x2 = bbox.x1 + width;
             break;
         case kPathTextAnchorMiddle:
+        case kPathTextAnchorN:
+        case kPathTextAnchorS:
+        case kPathTextAnchorC:
             bbox.x1 = ptextPtr->x - width/2;
             bbox.x2 = ptextPtr->x + width/2;
             break;
         case kPathTextAnchorEnd:
+        case kPathTextAnchorE:
+        case kPathTextAnchorNE:
+        case kPathTextAnchorSE:
             bbox.x1 = ptextPtr->x - width;
             bbox.x2 = ptextPtr->x;
             break;
+        default:
+            break;
     }
-    bbox.y1 = ptextPtr->y + r.y1;	// r.y1 is negative!
-    bbox.y2 = ptextPtr->y + r.y2;
-    
+
+    switch (ptextPtr->textAnchor) {
+        case kPathTextAnchorStart:
+        case kPathTextAnchorMiddle:
+        case kPathTextAnchorEnd:
+            bbox.y1 = ptextPtr->y + r.y1;   // r.y1 is negative!
+            bbox.y2 = ptextPtr->y + r.y2;
+            break;
+        case kPathTextAnchorN:
+        case kPathTextAnchorNW:
+        case kPathTextAnchorNE:
+            bbox.y1 = ptextPtr->y;
+            bbox.y2 = ptextPtr->y + height;
+            break;
+        case kPathTextAnchorW:
+        case kPathTextAnchorE:
+        case kPathTextAnchorC:
+            bbox.y1 = ptextPtr->y - height/2;
+            bbox.y2 = ptextPtr->y + height/2;
+            break;
+        case kPathTextAnchorS:
+        case kPathTextAnchorSW:
+        case kPathTextAnchorSE:
+            bbox.y1 = ptextPtr->y - height;
+            bbox.y2 = ptextPtr->y;
+            break;
+        default:
+            break;
+    }
+
     /* Fudge for antialiasing etc. */
     bbox.x1 -= 1.0;
     bbox.y1 -= 1.0;
     bbox.x2 += 1.0;
     bbox.y2 += 1.0;
+    height += 2.0;
+    bheight += 1.0;
     if (style.strokeColor) {
         double halfWidth = style.strokeWidth/2;
         bbox.x1 -= halfWidth;
         bbox.y1 -= halfWidth;
         bbox.x2 += halfWidth;
         bbox.x2 += halfWidth;
+        height += style.strokeWidth;
+        bheight += halfWidth;
     }
     itemPtr->bbox = bbox;
+    ptextPtr->baseHeightRatio = bheight / height;
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &bbox);
     TkPathCanvasFreeInheritedStyle(&style);
 }
@@ -508,7 +557,7 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     /* @@@ We need to handle gradients as well here!
            Wait to see what the other APIs have to say.
     */
-    TkPathTextDraw(ctx, &style, &ptextPtr->textStyle, itemPtr->bbox.x1, ptextPtr->y,
+    TkPathTextDraw(ctx, &style, &ptextPtr->textStyle, itemPtr->bbox.x1, itemPtr->bbox.y1 + ptextPtr->baseHeightRatio * (itemPtr->bbox.y2 - itemPtr->bbox.y1),
             Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
     TkPathEndPath(ctx);
     TkPathFree(ctx);

@@ -457,6 +457,7 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     cairo_t *c;
     cairo_surface_t *surface;
     cairo_text_extents_t extents;
+    cairo_font_extents_t fontExtents;
     PathRect r;
 
     /* @@@ Not very happy about this but it seems that there is no way to 
@@ -469,12 +470,15 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     cairo_set_font_size(c, textStylePtr->fontSize);
 
     cairo_text_extents(c, utf8, &extents);
+    cairo_font_extents(c, &fontExtents);
     r.x1 = 0.0;
-    r.y1 = extents.y_bearing;		// will usually be negative.
+    r.y1 = -fontExtents.ascent;
     r.x2 = extents.x_bearing + extents.width;
-    r.y2 = extents.y_bearing + extents.height; 
+    r.y2 = fontExtents.descent;
+
     cairo_destroy(c);
     cairo_surface_destroy(surface);
+
     return r;
 }
 
