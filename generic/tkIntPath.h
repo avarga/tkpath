@@ -132,6 +132,18 @@ enum {
     kPathTextAnchorC
 };
 
+enum {
+    kPathImageAnchorN = 0,
+    kPathImageAnchorW,
+    kPathImageAnchorS,
+    kPathImageAnchorE,
+    kPathImageAnchorNW,
+    kPathImageAnchorNE,
+    kPathImageAnchorSW,
+    kPathImageAnchorSE,
+    kPathImageAnchorC
+};
+
 /* These MUST be kept in sync with methodST and unitsST! */
 enum {
     kPathGradientMethodPad		= 0L,

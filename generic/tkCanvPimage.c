@@ -42,6 +42,7 @@ typedef struct PimageItem  {
     Tk_PhotoHandle photo;
     double width;	    /* If 0 use natural width or height. */
     double height;
+    int anchor;
 } PimageItem;
 
 
@@ -87,9 +88,15 @@ enum {
     PIMAGE_OPTION_INDEX_HEIGHT		= (1L << (PATH_STYLE_OPTION_INDEX_END + 2)),
     PIMAGE_OPTION_INDEX_IMAGE		= (1L << (PATH_STYLE_OPTION_INDEX_END + 3)),
     PIMAGE_OPTION_INDEX_MATRIX		= (1L << (PATH_STYLE_OPTION_INDEX_END + 4)),
-    PIMAGE_OPTION_INDEX_WIDTH		= (1L << (PATH_STYLE_OPTION_INDEX_END + 5))
+    PIMAGE_OPTION_INDEX_WIDTH		= (1L << (PATH_STYLE_OPTION_INDEX_END + 5)),
+    PIMAGE_OPTION_INDEX_ANCHOR      = (1L << (PATH_STYLE_OPTION_INDEX_END + 6))
 };
- 
+
+static char *imageAnchorST[] = {
+    "n", "w", "s", "e", "nw", "ne", "sw", "se", "c", NULL
+};
+
+
 PATH_STYLE_CUSTOM_OPTION_MATRIX
 PATH_CUSTOM_OPTION_TAGS
 PATH_OPTION_STRING_TABLES_STATE
@@ -118,7 +125,12 @@ PATH_OPTION_STRING_TABLES_STATE
 #define PATH_OPTION_SPEC_WIDTH				    \
     {TK_OPTION_DOUBLE, "-width", NULL, NULL,		    \
         "0", -1, Tk_Offset(PimageItem, width),		    \
-	0, 0, PIMAGE_OPTION_INDEX_WIDTH}
+        0, 0, PIMAGE_OPTION_INDEX_WIDTH}
+
+#define PATH_OPTION_SPEC_ANCHOR                         \
+    {TK_OPTION_STRING_TABLE, "-anchor", NULL, NULL,     \
+        "nw", -1, Tk_Offset(PimageItem, anchor),         \
+        0, (ClientData) imageAnchorST, 0}
 
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(PimageItem),
@@ -128,6 +140,7 @@ static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_HEIGHT,
     PATH_OPTION_SPEC_IMAGE,
     PATH_OPTION_SPEC_WIDTH,
+    PATH_OPTION_SPEC_ANCHOR,
     PATH_OPTION_SPEC_END
 };
 
@@ -190,6 +203,7 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
     pimagePtr->photo = NULL;
     pimagePtr->height = 0;
     pimagePtr->width = 0;
+    pimagePtr->anchor = kPathImageAnchorNW;
     itemPtr->bbox = NewEmptyPathRect();
     
     if (optionTable == NULL) {
@@ -286,10 +300,54 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
     if (pimagePtr->height > 0.0) {
 	height = (int) (pimagePtr->height + 1.0);
     }
-    bbox.x1 = pimagePtr->coord[0];
-    bbox.y1 = pimagePtr->coord[1];
-    bbox.x2 = bbox.x1 + width;
-    bbox.y2 = bbox.y1 + height;
+
+    switch (pimagePtr->anchor) {
+        case kPathImageAnchorW:
+        case kPathImageAnchorNW:
+        case kPathImageAnchorSW:
+            bbox.x1 = pimagePtr->coord[0];
+            bbox.x2 = bbox.x1 + width;
+            break;
+        case kPathImageAnchorN:
+        case kPathImageAnchorS:
+        case kPathImageAnchorC:
+            bbox.x1 = pimagePtr->coord[0] - width/2;
+            bbox.x2 = pimagePtr->coord[0] + width/2;
+            break;
+        case kPathImageAnchorE:
+        case kPathImageAnchorNE:
+        case kPathImageAnchorSE:
+            bbox.x1 = pimagePtr->coord[0] - width;
+            bbox.x2 = pimagePtr->coord[0];
+            break;
+        default:
+            break;
+    }
+
+    switch (pimagePtr->anchor) {
+        case kPathImageAnchorN:
+        case kPathImageAnchorNW:
+        case kPathImageAnchorNE:
+            bbox.y1 = pimagePtr->coord[1];
+            bbox.y2 = pimagePtr->coord[1] + height;
+            break;
+        case kPathImageAnchorW:
+        case kPathImageAnchorE:
+        case kPathImageAnchorC:
+            bbox.y1 = pimagePtr->coord[1] - height/2;
+            bbox.y2 = pimagePtr->coord[1] + height/2;
+            break;
+        case kPathImageAnchorS:
+        case kPathImageAnchorSW:
+        case kPathImageAnchorSE:
+            bbox.y1 = pimagePtr->coord[1] - height;
+            bbox.y2 = pimagePtr->coord[1];
+            break;
+        default:
+            break;
+    }
+
+
     itemPtr->bbox = bbox;
     matrix = GetTMatrix(pimagePtr);
     SetGenericPathHeaderBbox(&pimagePtr->header, &matrix, &bbox);
@@ -453,9 +511,10 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
     m = GetTMatrix(pimagePtr);
     TkPathPushTMatrix(ctx, &m);
     /* @@@ Maybe we should taking care of x, y etc.? */
-    TkPathImage(ctx, pimagePtr->image, pimagePtr->photo, 
-	    pimagePtr->coord[0], pimagePtr->coord[1], 
-            pimagePtr->width, pimagePtr->height);
+    TkPathImage(ctx, pimagePtr->image, pimagePtr->photo,
+            itemPtr->bbox.x1, itemPtr->bbox.y1,
+            pimagePtr->width, pimagePtr->height, pimagePtr->fillOpacity,
+            pimagePtr->tintColor, pimagePtr->tintAmount);
     TkPathFree(ctx);
 }
 
