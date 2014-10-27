@@ -17,6 +17,7 @@
 /* For debugging. */
 extern Tcl_Interp *gInterp;
 
+#define BBOX_OUT 2.0
 
 /*
  * The structure below defines the record for each path item.
@@ -342,7 +343,7 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
     Tk_PathItem *itemPtr = (Tk_PathItem *)pimagePtr;
     Tk_PathState state = pimagePtr->header.state;
     TMatrix matrix;
-    int width = 0, height = 0;
+    double width = 0.0, height = 0.0;
     PathRect bbox;
 
     if (state == TK_PATHSTATE_NULL) {
@@ -357,13 +358,16 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
         width  = pimagePtr->srcRegionPtr->x2 - pimagePtr->srcRegionPtr->x1;
         height = pimagePtr->srcRegionPtr->y2 - pimagePtr->srcRegionPtr->y1;
     } else {
-        Tk_SizeOfImage(pimagePtr->image, &width, &height);
+        int iwidth = 0, iheight = 0;
+        Tk_SizeOfImage(pimagePtr->image, &iwidth, &iheight);
+        width = iwidth;
+        height = iheight;
     }
     if (pimagePtr->width > 0.0) {
-        width = (int) (pimagePtr->width + 1.0);
+        width = pimagePtr->width + 1.0;
     }
     if (pimagePtr->height > 0.0) {
-        height = (int) (pimagePtr->height + 1.0);
+        height = pimagePtr->height + 1.0;
     }
 
     switch (pimagePtr->anchor) {
@@ -376,8 +380,8 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
         case kPathImageAnchorN:
         case kPathImageAnchorS:
         case kPathImageAnchorC:
-            bbox.x1 = pimagePtr->coord[0] - width/2;
-            bbox.x2 = pimagePtr->coord[0] + width/2;
+            bbox.x1 = pimagePtr->coord[0] - width/2.0;
+            bbox.x2 = pimagePtr->coord[0] + width/2.0;
             break;
         case kPathImageAnchorE:
         case kPathImageAnchorNE:
@@ -399,8 +403,8 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
         case kPathImageAnchorW:
         case kPathImageAnchorE:
         case kPathImageAnchorC:
-            bbox.y1 = pimagePtr->coord[1] - height/2;
-            bbox.y2 = pimagePtr->coord[1] + height/2;
+            bbox.y1 = pimagePtr->coord[1] - height/2.0;
+            bbox.y2 = pimagePtr->coord[1] + height/2.0;
             break;
         case kPathImageAnchorS:
         case kPathImageAnchorSW:
@@ -411,6 +415,10 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
         default:
             break;
     }
+    bbox.x1 -= BBOX_OUT;
+    bbox.x2 += BBOX_OUT;
+    bbox.y1 -= BBOX_OUT;
+    bbox.y2 += BBOX_OUT;
 
 
     itemPtr->bbox = bbox;
@@ -577,7 +585,7 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
     TkPathPushTMatrix(ctx, &m);
     /* @@@ Maybe we should taking care of x, y etc.? */
     TkPathImage(ctx, pimagePtr->image, pimagePtr->photo,
-            itemPtr->bbox.x1, itemPtr->bbox.y1,
+            itemPtr->bbox.x1+BBOX_OUT, itemPtr->bbox.y1+BBOX_OUT,
             pimagePtr->width, pimagePtr->height, pimagePtr->fillOpacity,
             pimagePtr->tintColor, pimagePtr->tintAmount, pimagePtr->interpolation,
             pimagePtr->srcRegionPtr);
