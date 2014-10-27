@@ -144,6 +144,11 @@ enum {
     kPathImageAnchorC
 };
 
+enum {
+    kPathImageInterpolationNone = 0,
+    kPathImageInterpolationFast,
+    kPathImageInterpolationBest
+};
 /* These MUST be kept in sync with methodST and unitsST! */
 enum {
     kPathGradientMethodPad		= 0L,
@@ -291,7 +296,7 @@ void		TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry);
 void		TkPathClosePath(TkPathContext ctx);
 void		TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
                     double x, double y, double width, double height, double fillOpacity,
-                    XColor *tintColor, double tintAmount);
+                    XColor *tintColor, double tintAmount, int interpolation);
 int			TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8, void **customPtr);
 void		TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, 
                     Tk_PathTextStyle *textStylePtr, double x, double y, int fillOverStroke, char *utf8, void *custom);

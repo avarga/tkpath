@@ -713,7 +713,7 @@ SurfaceCreatePimage(Tcl_Interp* interp, PathSurface *surfacePtr, int objc, Tcl_O
         TkPathSaveState(context);
         TkPathPushTMatrix(context, style.matrixPtr);
         TkPathImage(context, image, photo, point[0], point[1], item.width, item.height, style.fillOpacity,
-                NULL, 0.0);
+                NULL, 0.0, 99);
         Tk_FreeImage(image);
         TkPathRestoreState(context);
     }

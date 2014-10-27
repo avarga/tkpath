@@ -82,7 +82,7 @@ class PathC {
     void AddRectangle(float x, float y, float width, float height);
     void AddEllipse(float cx, float cy, float rx, float ry);
     void DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height, double fillOpacity,
-            XColor *tintColor, double tintAmount);
+            XColor *tintColor, double tintAmount, int interpolation);
     void DrawString(Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr,
         float x, float y, int fillOverStroke, char *utf8);
     void CloseFigure(void);
@@ -264,12 +264,26 @@ inline void PathC::AddEllipse(float cx, float cy, float rx, float ry)
     mCurrentPoint.Y = cy;
 }
 
+inline InterpolationMode canvasInterpolationToGdiPlusInterpolation(int interpolation)
+{
+    switch (interpolation) {
+        case kPathImageInterpolationNone:
+            return InterpolationModeNearestNeighbor;
+        case kPathImageInterpolationFast:
+            return InterpolationModeBilinear;
+        case kPathImageInterpolationBest:
+            return InterpolationModeHighQualityBicubic;
+        default:
+            return InterpolationModeBilinear;
+    }
+}
+
 #define RedDoubleFromXColorPtr(xc)   (double) (((xc)->pixel & 0xFF)) / 255.0
 #define GreenDoubleFromXColorPtr(xc)  (double) ((((xc)->pixel >> 8) & 0xFF)) / 255.0
 #define BlueDoubleFromXColorPtr(xc)    (double) ((((xc)->pixel >> 16) & 0xFF)) / 255.0
 
 inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width, float height, double fillOpacity,
-        XColor *tintColor, double tintAmount)
+        XColor *tintColor, double tintAmount, int interpolation)
 {
     Tk_PhotoImageBlock block;
     PixelFormat format;
@@ -347,6 +361,7 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     } else {
         return;
     }
+    mGraphics->SetInterpolationMode(canvasInterpolationToGdiPlusInterpolation(interpolation));
     Bitmap bitmap(iwidth, iheight, stride, format, (BYTE *)ptr);
     if (fillOpacity >= 1.0 && tintAmount <= 0.0) {
         mGraphics->DrawImage(&bitmap, x, y, width, height);
@@ -941,10 +956,10 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
 void
 TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
         double x, double y, double width, double height, double fillOpacity,
-        XColor *tintColor, double tintAmount)
+        XColor *tintColor, double tintAmount, int interpolation)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    context->c->DrawImage(photo, (float) x, (float) y, (float) width, (float) height, fillOpacity, tintColor, tintAmount);
+    context->c->DrawImage(photo, (float) x, (float) y, (float) width, (float) height, fillOpacity, tintColor, tintAmount, interpolation);
 }
 
 void

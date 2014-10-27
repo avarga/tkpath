@@ -614,10 +614,25 @@ TkPathOval(TkPathContext ctx, double cx, double cy, double rx, double ry)
     CGContextAddEllipseInRect(context->c, r);
 }
 
+
+CGInterpolationQuality convertInterpolationToCGInterpolation(int interpolation)
+{
+    switch (interpolation) {
+        case kPathImageInterpolationNone:
+            return kCGInterpolationNone;
+        case kPathImageInterpolationFast:
+            return kCGInterpolationLow;
+        case kPathImageInterpolationBest:
+            return kCGInterpolationHigh;
+        default:
+            return kCGInterpolationMedium;
+    }
+}
+
 void
 TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo, 
         double x, double y, double width, double height, double fillOpacity,
-        XColor *tintColor, double tintAmount)
+        XColor *tintColor, double tintAmount, int interpolation)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
     CGImageRef cgImage;
@@ -734,7 +749,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
             colorspace,				/* colorspace */
             alphaInfo,				/* alphaInfo */
             provider, NULL, 
-            1, 						/* shouldInterpolate */
+            interpolation > 0 ? 1 : 0,  /* shouldInterpolate */
             kCGRenderingIntentDefault);
     CGDataProviderRelease(provider);
     CGColorSpaceRelease(colorspace);
@@ -747,6 +762,7 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
     
     /* Flip back to an upright coordinate system since CGContextDrawImage expect this. */
     CGContextSaveGState(context->c);
+    CGContextSetInterpolationQuality(context->c, convertInterpolationToCGInterpolation(interpolation));
     CGContextTranslateCTM(context->c, x, y+height);
     CGContextScaleCTM(context->c, 1, -1);
     CGContextDrawImage(context->c, CGRectMake(0.0, 0.0, width, height), cgImage);

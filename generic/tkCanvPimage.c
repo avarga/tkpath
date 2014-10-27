@@ -45,6 +45,7 @@ typedef struct PimageItem  {
     int anchor;
     XColor *tintColor;
     double tintAmount;
+    int interpolation;
 } PimageItem;
 
 
@@ -93,13 +94,17 @@ enum {
     PIMAGE_OPTION_INDEX_WIDTH		= (1L << (PATH_STYLE_OPTION_INDEX_END + 5)),
     PIMAGE_OPTION_INDEX_ANCHOR      = (1L << (PATH_STYLE_OPTION_INDEX_END + 6)),
     PIMAGE_OPTION_INDEX_TINTCOLOR   = (1L << (PATH_STYLE_OPTION_INDEX_END + 7)),
-    PIMAGE_OPTION_INDEX_TINTAMOUNT  = (1L << (PATH_STYLE_OPTION_INDEX_END + 8))
+    PIMAGE_OPTION_INDEX_TINTAMOUNT  = (1L << (PATH_STYLE_OPTION_INDEX_END + 8)),
+    PIMAGE_OPTION_INDEX_INTERPOLATION = (1L << (PATH_STYLE_OPTION_INDEX_END + 9))
 };
 
 static char *imageAnchorST[] = {
     "n", "w", "s", "e", "nw", "ne", "sw", "se", "c", NULL
 };
 
+static char *imageInterpolationST[] = {
+        "none", "fast", "best", NULL
+};
 
 PATH_STYLE_CUSTOM_OPTION_MATRIX
 PATH_CUSTOM_OPTION_TAGS
@@ -146,6 +151,11 @@ PATH_OPTION_STRING_TABLES_STATE
         "0.5", -1, Tk_Offset(PimageItem, tintAmount),      \
     0, 0, PIMAGE_OPTION_INDEX_TINTAMOUNT}
 
+#define PATH_OPTION_SPEC_INTERPOLATION                \
+    {TK_OPTION_STRING_TABLE, "-interpolation", NULL, NULL,      \
+        "fast", -1, Tk_Offset(PimageItem, interpolation),      \
+        0, (ClientData) imageInterpolationST, 0}
+
 static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_CORE(PimageItem),
     PATH_OPTION_SPEC_PARENT,
@@ -157,6 +167,7 @@ static Tk_OptionSpec optionSpecs[] = {
     PATH_OPTION_SPEC_ANCHOR,
     PATH_OPTION_SPEC_TINTCOLOR,
     PATH_OPTION_SPEC_TINTAMOUNT,
+    PATH_OPTION_SPEC_INTERPOLATION,
     PATH_OPTION_SPEC_END
 };
 
@@ -222,6 +233,7 @@ CreatePimage(Tcl_Interp *interp, Tk_PathCanvas canvas, struct Tk_PathItem *itemP
     pimagePtr->anchor = kPathImageAnchorNW;
     pimagePtr->tintColor = NULL;
     pimagePtr->tintAmount = 0.0;
+    pimagePtr->interpolation = kPathImageInterpolationFast;
     itemPtr->bbox = NewEmptyPathRect();
     
     if (optionTable == NULL) {
@@ -532,7 +544,7 @@ DisplayPimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Draw
     TkPathImage(ctx, pimagePtr->image, pimagePtr->photo,
             itemPtr->bbox.x1, itemPtr->bbox.y1,
             pimagePtr->width, pimagePtr->height, pimagePtr->fillOpacity,
-            pimagePtr->tintColor, pimagePtr->tintAmount);
+            pimagePtr->tintColor, pimagePtr->tintAmount, pimagePtr->interpolation);
     TkPathFree(ctx);
 }
 
