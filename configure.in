@@ -182,12 +182,15 @@ else
     CLEANFILES="pkgIndex.tcl"
     if test "${TEA_WINDOWINGSYSTEM}" = "aqua" ; then
 	TEA_ADD_SOURCES([macosx/tkMacOSXPath.c])
+	TEA_ADD_LIBS([-arch i386 -arch x86_64])
 	TEA_ADD_LIBS([-framework Carbon])
 	TEA_ADD_LIBS([-framework CoreServices])
 	TEA_ADD_LIBS([-framework CoreFoundation])
 	TEA_ADD_LIBS([-framework Cocoa])
 	TEA_ADD_LIBS([-framework IOKit])
 	TEA_ADD_CFLAGS([-x objective-c])
+	TEA_ADD_CFLAGS([-fobjc-gc])
+	TEA_ADD_CFLAGS([-arch i386 -arch x86_64])
     else
 	TEA_ADD_SOURCES([unix/tkUnixCairoPath.c])
 	TEA_ADD_INCLUDES([`freetype-config --cflags`])
