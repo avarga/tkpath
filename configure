@@ -5824,7 +5824,7 @@ fi
 
 
 
-    PKG_CFLAGS="$PKG_CFLAGS "
+    PKG_CFLAGS="$PKG_CFLAGS -DTCL_NO_DEPRECATED"
 
 
 
@@ -6257,6 +6257,17 @@ else
 
 
 
+    vars="-arch i386 -arch x86_64"
+    for i in $vars; do
+	if test "${TEA_PLATFORM}" = "windows" -a "$GCC" = "yes" ; then
+	    # Convert foo.lib to -lfoo for GCC.  No-op if not *.lib
+	    i=`echo "$i" | sed -e 's/^\([^-].*\)\.lib$/-l\1/i'`
+	fi
+	PKG_LIBS="$PKG_LIBS $i"
+    done
+
+
+
     vars="-framework Carbon"
     for i in $vars; do
 	if test "${TEA_PLATFORM}" = "windows" -a "$GCC" = "yes" ; then
@@ -6313,6 +6324,10 @@ else
 
 
     PKG_CFLAGS="$PKG_CFLAGS -x objective-c"
+
+
+
+    PKG_CFLAGS="$PKG_CFLAGS -arch i386 -arch x86_64"
 
 
     else
