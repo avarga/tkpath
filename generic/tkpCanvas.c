@@ -1621,11 +1621,6 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	
-        /* === EB - 22-apr-2010: round the deltas to the nearest integer to avoid round-off errors */
-        xAmount = (double)((int)(xAmount + (xAmount > 0 ? 0.5 : -0.5)));
-        yAmount = (double)((int)(yAmount + (yAmount > 0 ? 0.5 : -0.5)));
-        /* === */
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    EventuallyRedrawItem((Tk_PathCanvas) canvasPtr, itemPtr);
@@ -3125,12 +3120,7 @@ CanvasTranslateGroup(Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
 {
     TkPathCanvas *canvasPtr = (TkPathCanvas *) canvas;
     Tk_PathItem *walkPtr;
-    
-    /* === EB - 22-apr-2010: round the deltas to the nearest integer to avoid round-off errors */
-    deltaX = (double)((int)(deltaX + (deltaX > 0 ? 0.5 : -0.5)));
-    deltaY = (double)((int)(deltaY + (deltaY > 0 ? 0.5 : -0.5)));
-    /* === */
-    
+
     /*
      * Invoke all its childs translateProc. Any child groups will call this
      * function recursively.
