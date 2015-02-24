@@ -426,6 +426,7 @@ ComputePtextBbox(Tk_PathCanvas canvas, PtextItem *ptextPtr)
     }
     itemPtr->bbox = bbox;
     ptextPtr->baseHeightRatio = bheight / height;
+    itemPtr->totalBbox = itemPtr->bbox;    //FIXME
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &bbox);
     TkPathCanvasFreeInheritedStyle(&style);
 }
@@ -623,6 +624,7 @@ ScalePtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double or
     ptextPtr->x = originX + scaleX*(ptextPtr->x - originX);
     ptextPtr->y = originY + scaleY*(ptextPtr->y - originY);
     ScalePathRect(&itemPtr->bbox, originX, originY, scaleX, scaleY);
+    ScalePathRect(&itemPtr->totalBbox, originX, originY, scaleX, scaleY);
     ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
@@ -634,6 +636,7 @@ TranslatePtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, double
     ptextPtr->x += deltaX;
     ptextPtr->y += deltaY;
     TranslatePathRect(&itemPtr->bbox, deltaX, deltaY);
+    TranslatePathRect(&itemPtr->totalBbox, deltaX, deltaY);
     TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 

@@ -422,6 +422,7 @@ ComputePimageBbox(Tk_PathCanvas canvas, PimageItem *pimagePtr)
 
 
     itemPtr->bbox = bbox;
+    itemPtr->totalBbox = itemPtr->bbox;    //FIXME
     matrix = GetTMatrix(pimagePtr);
     SetGenericPathHeaderBbox(&pimagePtr->header, &matrix, &bbox);
 }
@@ -635,6 +636,7 @@ TranslatePimage(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, doubl
 
     /* Just translate the bbox'es as well. */
     TranslatePathRect(&(itemPtr->bbox), deltaX, deltaY);
+    TranslatePathRect(&itemPtr->totalBbox, deltaX, deltaY);
     pimagePtr->coord[0] += deltaX;
     pimagePtr->coord[1] += deltaY;
     TranslateItemHeader(itemPtr, deltaX, deltaY);
