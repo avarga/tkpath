@@ -303,6 +303,8 @@ ComputeEllipseBbox(Tk_PathCanvas canvas, EllipseItem *ellPtr)
     style = TkPathCanvasInheritStyle(itemPtr, kPathMergeStyleNotFill);
     bbox = GetBareBbox(ellPtr);
     totalBbox = GetGenericPathTotalBboxFromBare(NULL, &style, &bbox);
+    itemPtr->bbox = bbox;
+    itemPtr->totalBbox = totalBbox;
     SetGenericPathHeaderBbox(&itemExPtr->header, style.matrixPtr, &totalBbox);
     TkPathCanvasFreeInheritedStyle(&style);
 }
@@ -620,6 +622,8 @@ ScaleEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double originX, double 
     ellPtr->center[1] = originY + scaleY*(ellPtr->center[1] - originY);
     ellPtr->rx *= scaleX;
     ellPtr->ry *= scaleY;
+    ScalePathRect(&itemPtr->bbox, originX, originY, scaleX, scaleY);
+    ScalePathRect(&itemPtr->totalBbox, originX, originY, scaleX, scaleY);
     ScaleItemHeader(itemPtr, originX, originY, scaleX, scaleY);
 }
 
@@ -630,6 +634,8 @@ TranslateEllipse(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, double deltaX, doub
 
     ellPtr->center[0] += deltaX;
     ellPtr->center[1] += deltaY;
+    TranslatePathRect(&itemPtr->bbox, deltaX, deltaY);
+    TranslatePathRect(&itemPtr->totalBbox, deltaX, deltaY);
     TranslateItemHeader(itemPtr, deltaX, deltaY);
 }
 
