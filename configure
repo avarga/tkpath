@@ -5824,10 +5824,6 @@ fi
 
 
 
-    PKG_CFLAGS="$PKG_CFLAGS -DTCL_NO_DEPRECATED"
-
-
-
     vars=""
     for i in $vars; do
 	# check for existence - allows for generic/win/unix VPATH
@@ -6328,6 +6324,10 @@ else
 
 
     PKG_CFLAGS="$PKG_CFLAGS -arch i386 -arch x86_64"
+
+
+
+    PKG_CFLAGS="$PKG_CFLAGS -DTCL_NO_DEPRECATED"
 
 
     else

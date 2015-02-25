@@ -144,7 +144,6 @@ TEA_ADD_SOURCES([path.c \
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I. -I\"`${CYGPATH} ${srcdir}/generic`\"])
 TEA_ADD_LIBS([])
-TEA_ADD_CFLAGS([-DTCL_NO_DEPRECATED])
 TEA_ADD_STUB_SOURCES([])
 TEA_ADD_TCL_SOURCES([library/tkpath.tcl])
 
@@ -190,6 +189,7 @@ else
 	TEA_ADD_LIBS([-framework IOKit])
 	TEA_ADD_CFLAGS([-x objective-c])
 	TEA_ADD_CFLAGS([-arch i386 -arch x86_64])
+	TEA_ADD_CFLAGS([-DTCL_NO_DEPRECATED])
     else
 	TEA_ADD_SOURCES([unix/tkUnixCairoPath.c])
 	TEA_ADD_INCLUDES([`freetype-config --cflags`])
