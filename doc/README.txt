@@ -155,8 +155,8 @@ to float (double).
     Stroke (strokeOptions):
         -stroke color
         -strokedasharray dashArray
-        -strokelinecap
-        -strokelinejoin
+        -strokelinecap butt|round|square
+        -strokelinejoin miter|round|bevel
         -strokemiterlimit float
         -strokeopacity float (0,1)
         -strokewidth float
@@ -164,7 +164,7 @@ to float (double).
     Generic (genericOptions):
         -matrix {{a b} {c d} {tx ty}}
         -parent tagOrId
-        -state
+        -state active|disabled|normal|hidden
         -style styleToken
         -tags tagList
 
