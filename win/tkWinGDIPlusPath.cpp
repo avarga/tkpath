@@ -369,7 +369,9 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     }
 
     ImageAttributes imageAttrs;
-    imageAttrs.SetWrapMode(WrapModeTile);
+    if (srcX+srcWidth > iwidth || srcY+srcHeight > iheight) {
+        imageAttrs.SetWrapMode(WrapModeTile);
+    }
     ColorMatrix colorMatrix;
     if (fillOpacity < 1.0 || tintAmount > 0.0) {
         /*
