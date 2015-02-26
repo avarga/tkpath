@@ -83,6 +83,103 @@ typedef struct FillInfo {
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXDrawableView --
+ *
+ *      This function returns the NSView for a given X drawable.
+ *
+ * Results:
+ *      A NSView* or nil.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+NSView*
+TkMacOSXDrawableView(
+    MacDrawable *macWin)
+{
+    NSView *result = nil;
+
+    if (!macWin) {
+        result = nil;
+    } else if (!macWin->toplevel) {
+        result = macWin->view;
+    } else if (!(macWin->toplevel->flags & TK_EMBEDDED)) {
+        result = macWin->toplevel->view;
+    } else {
+        TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
+        if (contWinPtr) {
+            result = TkMacOSXDrawableView(contWinPtr->privatePtr);
+        }
+    }
+    return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpClipDrawableToRect --
+ *
+ *      Clip all drawing into the drawable d to the given rectangle.
+ *      If width or height are negative, reset to no clipping.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Subsequent drawing into d is offset and clipped as specified.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpClipDrawableToRect(
+    Display *display,
+    Drawable d,
+    int x, int y,
+    int width, int height)
+{
+    MacDrawable *macDraw = (MacDrawable *) d;
+    NSView *view = TkMacOSXDrawableView(macDraw);
+
+    if (macDraw->drawRgn) {
+        CFRelease(macDraw->drawRgn);
+        macDraw->drawRgn = NULL;
+    }
+    if (width >= 0 && height >= 0) {
+        CGRect drawRect = CGRectMake(x + macDraw->xOff, y + macDraw->yOff,
+                width, height);
+        HIShapeRef drawRgn = HIShapeCreateWithRect(&drawRect);
+
+        if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
+            TkMacOSXUpdateClipRgn(macDraw->winPtr);
+        }
+        if (macDraw->visRgn) {
+            macDraw->drawRgn = HIShapeCreateIntersection(macDraw->visRgn,
+                    drawRgn);
+            CFRelease(drawRgn);
+        } else {
+            macDraw->drawRgn = drawRgn;
+        }
+        if (view && view != [NSView focusView] && [view lockFocusIfCanDraw]) {
+            drawRect.origin.y = [view bounds].size.height -
+                    (drawRect.origin.y + drawRect.size.height);
+            NSRectClip(NSRectFromCGRect(drawRect));
+            macDraw->flags |= TK_FOCUSED_VIEW;
+        }
+    } else {
+        if (view && (macDraw->flags & TK_FOCUSED_VIEW)) {
+            [view unlockFocus];
+            macDraw->flags &= ~TK_FOCUSED_VIEW;
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMacOSXGetClipRgn --
  *
  *	Get the clipping region needed to restrict drawing to the given
@@ -193,9 +290,9 @@ PathSetUpCGContext(
         }
         [[view window] disableFlushWindow];
         dcPtr->view = view;
-        dcPtr->portBounds = NSRectToCGRect([view bounds]);
         NSGraphicsContext *currentGraphicsContext = [NSGraphicsContext currentContext];
         dcPtr->c = (CGContextRef)[currentGraphicsContext graphicsPort];
+        dcPtr->portBounds = NSRectToCGRect([view bounds]);
         if (dcPtr->clipRgn) {
         }
     } else {
@@ -230,12 +327,16 @@ PathSetUpCGContext(
 
     CGAffineTransform t = { .a=1.0, .b=0.0, .c=0.0, .d=-1.0, .tx=0.0, .ty=dcPtr->portBounds.size.height};
     CGContextConcatCTM(dcPtr->c, t);
-  
+
+    CGRect r;
+    HIShapeGetBounds(dcPtr->clipRgn, &r);
+    // printf("  r:x=%f,y=%f,w=%f,h=%f\n", (float)r.origin.x,(float)r.origin.y,(float)r.size.width,(float)r.size.height);
+
     HIShapeReplacePathInCGContext(dcPtr->clipRgn, dcPtr->c);
     CGContextEOClip(dcPtr->c);
 
     CGContextTranslateCTM(dcPtr->c, macDraw->xOff, macDraw->yOff);
-   
+
     CGContextSetShouldAntialias(dcPtr->c, gAntiAlias);
     CGContextSetInterpolationQuality(dcPtr->c, kCGInterpolationHigh);
 

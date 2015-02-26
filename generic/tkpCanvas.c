@@ -2376,33 +2376,6 @@ PathCanvasWorldChanged(
 }
 
 /*
- * This is a very crude trick to get TkpClipDrawableToRect.
- */ 
-#ifdef TK_PATH_NO_DOUBLE_BUFFERING
-
-void
-TkpClipDrawableToRect(
-    Display *display,
-    Drawable d,
-    int x, int y,
-    int width, int height)
-{
-/*
-    MacDrawable *macDraw = (MacDrawable *) d;
-
-    if (width < 0 && height < 0) {
-	macDraw->drawRect = CGRectNull;
-	macDraw->flags &= ~TK_CLIPPED_DRAW;
-    } else {
-	macDraw->drawRect = CGRectMake(x, y, width, height);
-	macDraw->flags |= TK_CLIPPED_DRAW;
-    }
- */
-}
-
-#endif
-
-/*
  *--------------------------------------------------------------
  *
  * DisplayCanvas --
