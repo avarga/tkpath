@@ -91,6 +91,7 @@ void TkPathSetCoordOffsets(double dx, double dy)
 
 TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
 {
+    //printf("TkPathInit(Tk_Window %p, Drawable %p)...\n", tkwin, d);
     cairo_t *c;
     cairo_surface_t *surface;
     TkPathContext_ *context = (TkPathContext_ *) ckalloc((unsigned) (sizeof(TkPathContext_)));
@@ -102,6 +103,7 @@ TkPathContext TkPathInit(Tk_Window tkwin, Drawable d)
     XGetGeometry(Tk_Display(tkwin), d,
 	    &dummy, &x, &y, &width, &height, &borderWidth, &depth);
 
+    //printf("  geom: %d,%d,%d,%d,%d,%d\n", x, y, width, height, borderWidth, depth);
     surface = cairo_xlib_surface_create(Tk_Display(tkwin), d, Tk_Visual(tkwin),
 	    width, height);
     c = cairo_create(surface);
