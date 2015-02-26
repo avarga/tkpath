@@ -369,7 +369,7 @@ inline void PathC::DrawImage(Tk_PhotoHandle photo, float x, float y, float width
     }
 
     ImageAttributes imageAttrs;
-    if (srcX+srcWidth > iwidth || srcY+srcHeight > iheight) {
+    if (srcRegion && (srcRegion->x1 < 0 || srcRegion->x2 > iwidth || srcRegion->y1 < 0 || srcRegion->y2 > iheight)) {
         imageAttrs.SetWrapMode(WrapModeTile);
     }
     ColorMatrix colorMatrix;
