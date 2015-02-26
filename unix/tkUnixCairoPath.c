@@ -576,23 +576,51 @@ convertTkFontWeight2CairoFontWeight(enum FontSlant weight)
     }
 }
 
+void multiline_show_text(TkPathContext ctx, double x, double y, double dy, char *utf8)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    static char s[] = "\n";
+    char *token;
+    char *str = strdup(utf8);
+
+    for (token = strtok(str, s); token; token = strtok(NULL, s), y += dy) {
+        cairo_move_to(context->c, x, y);
+        cairo_show_text(context->c, token);
+    }
+    free(str);
+}
+
+void multiline_text_path(TkPathContext ctx, double x, double y, double dy, char *utf8)
+{
+    TkPathContext_ *context = (TkPathContext_ *) ctx;
+    static char s[] = "\n";
+    char *token;
+    char *str = strdup(utf8);
+
+    for (token = strtok(str, s); token; token = strtok(NULL, s), y += dy) {
+        cairo_move_to(context->c, x, y);
+        cairo_text_path(context->c, token);
+    }
+    free(str);
+}
+
 void
 TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textStylePtr, 
         double x, double y, int fillOverStroke, char *utf8, void *custom)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
-    
+    cairo_font_extents_t fontExtents;
+
     cairo_select_font_face(context->c, textStylePtr->fontFamily, 
             convertTkFontSlant2CairoFontSlant(textStylePtr->fontSlant), convertTkFontWeight2CairoFontWeight(textStylePtr->fontWeight));
     cairo_set_font_size(context->c, textStylePtr->fontSize);
+    cairo_font_extents(context->c, &fontExtents);
 
     int hasStroke = (style->strokeColor != NULL);
     int hasFill = (GetColorFromPathColor(style->fill) != NULL);
 
-    cairo_move_to(context->c, x, y);
-
     if (hasStroke && hasFill) {
-        cairo_text_path(context->c, utf8);
+        multiline_text_path(ctx, x, y, fontExtents.ascent + fontExtents.descent, utf8);
         if (fillOverStroke) {
             TkPathPrepareForStroke(ctx, style);
             cairo_stroke_preserve(context->c);
@@ -604,10 +632,10 @@ TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textSty
     }
     else if (hasFill) {
         CairoSetFill(ctx, style);
-        cairo_show_text(context->c, utf8);
+        multiline_show_text(ctx, x, y, fontExtents.ascent + fontExtents.descent, utf8);
     }
     else if (hasStroke) {
-        cairo_text_path(context->c, utf8);
+        multiline_text_path(ctx, x, y, fontExtents.ascent + fontExtents.descent, utf8);
         TkPathStroke(ctx, style);
     }
 }
@@ -626,6 +654,11 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
     cairo_text_extents_t extents;
     cairo_font_extents_t fontExtents;
     PathRect r;
+    int lc;
+    char *token;
+    const char *s = "\n";
+    double x, y;
+    char *str = strdup(utf8);
 
     /* @@@ Not very happy about this but it seems that there is no way to 
      *     measure text without having a surface (drawable) in cairo.
@@ -636,20 +669,28 @@ TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
             convertTkFontSlant2CairoFontSlant(textStylePtr->fontSlant), convertTkFontWeight2CairoFontWeight(textStylePtr->fontWeight));
     cairo_set_font_size(c, textStylePtr->fontSize);
 
-    cairo_text_extents(c, utf8, &extents);
     cairo_font_extents(c, &fontExtents);
-    r.x1 = 0.0;
+
+    r.x2 = 0.0;
+    for (lc = 0, token = strtok(str, s); token; lc++, token = strtok(NULL, s)) {
+        cairo_text_extents(c, token, &extents);
+        x = extents.x_bearing + extents.width;
+        if (x > r.x2)
+            r.x2 = x;
+    }
     r.y1 = -fontExtents.ascent;
-    r.x2 = extents.x_bearing + extents.width;
-    r.y2 = fontExtents.descent;
+    r.x1 = 0.0;
+    r.y2 = lc * (fontExtents.ascent + fontExtents.descent) - fontExtents.ascent;
 
     cairo_destroy(c);
     cairo_surface_destroy(surface);
+    //printf("TkPathTextMeasureBbox(%s): %g,%g,%g,%g\n", utf8,r.x1,r.y1,r.x2,r.y2);
+    free(str);
 
     return r;
 }
 
-void    	
+void
 TkPathSurfaceErase(TkPathContext ctx, double dx, double dy, double dwidth, double dheight)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
