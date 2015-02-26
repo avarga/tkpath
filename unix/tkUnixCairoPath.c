@@ -509,7 +509,8 @@ TkPathImage(TkPathContext ctx, Tk_Image image, Tk_PhotoHandle photo,
 
         cairo_matrix_t   matrix;
         cairo_pattern_t *pattern = cairo_pattern_create_for_surface(surface);
-        cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+        if (srcRegion->x1 < 0 || srcRegion->x2 > iwidth || srcRegion->y1 < 0 || srcRegion->y2 > iheight)
+            cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
         double xoffs = xcrop*xscale;
         double yoffs = ycrop*yscale;
