@@ -428,7 +428,7 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     /* Set the line join in the current graphics state to `join'. */
     CGContextSetLineJoin(c,
             TableLookup(LineJoinStyleLookupTable, 3, style->joinStyle));
-    
+
     /* Set the miter limit in the current graphics state to `limit'. */
     CGContextSetMiterLimit(c, style->miterLimit);
 
@@ -437,12 +437,11 @@ PathSetCGContextStyle(CGContextRef c, Tk_PathStyle *style)
     if ((dashPtr != NULL) && (dashPtr->number != 0)) {
         CGFloat *dashes = (CGFloat *)ckalloc(dashPtr->number * sizeof(CGFloat));
         int i;
-	        for (i=0; i<dashPtr->number; i++)
-            dashes[i] = dashPtr->array[i];
-        //FIXME alloc CGFLOAT dashes[dashPtr->number]
+        for (i = 0; i < dashPtr->number; i++)
+            dashes[i] = dashPtr->array[i] * style->strokeWidth;
         CGContextSetLineDash(c, 0.0, dashes, dashPtr->number);
     }
-    
+
     /* Set the current fill colorspace in the context `c' to `DeviceRGB' and
      * set the components of the current fill color to `(red, green, blue,
      * alpha)'. */
