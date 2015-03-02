@@ -62,6 +62,7 @@ DisplayArrow(Tk_PathCanvas canvas, Drawable drawable, ArrowDescr *arrowDescr,
             arrowStyle.fill = NULL;
             arrowStyle.fillOpacity = 1.0;
             arrowStyle.joinStyle = 1;
+            arrowStyle.dashPtr = NULL;
         }
         atomPtr = MakePathAtomsFromArrow(arrowDescr);
         TkPathDrawPath(Tk_PathCanvasTkwin(canvas), drawable, atomPtr, &arrowStyle, mPtr, bboxPtr);
