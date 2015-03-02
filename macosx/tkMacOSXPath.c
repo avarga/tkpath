@@ -69,10 +69,15 @@ typedef struct TkPathContext_ {
     int focusLocked;
 } TkPathContext_;
 
+#define MAX_NL 32
 typedef struct PathATSUIRecord {
     ATSUStyle       atsuStyle;
     ATSUTextLayout  atsuLayout;
     UniChar         *buffer;	/* @@@ Not sure this needs to be cached! */
+    int             nlc;
+    int             nl[MAX_NL + 1];
+    ATSUTextMeasurement   dx[MAX_NL];
+    ATSUTextMeasurement   dy[MAX_NL];
 } PathATSUIRecord;
 
 typedef struct FillInfo {
@@ -986,7 +991,7 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
     CFRange 		range;
     CFIndex 		length;
     OSStatus 		err;
-    
+
     if (utf8 == NULL) {
         return TCL_OK;
     }
@@ -1016,8 +1021,29 @@ TkPathTextConfig(Tcl_Interp *interp, Tk_PathTextStyle *textStylePtr, char *utf8,
     recordPtr->atsuStyle = atsuStyle;
     recordPtr->atsuLayout = atsuLayout;
     recordPtr->buffer = buffer;
+    int i, j;
+    recordPtr->nl[0] = 0;
+    for (i=0,j=1; i < length; i++) {
+        if ((j < MAX_NL) && (buffer[i] == '\n')) {
+            recordPtr->nl[j++] = i + 1;
+            buffer[i] = 0x2028;
+        }
+    }
+    recordPtr->nl[j] = i + 1;
+    recordPtr->nlc = j;
+    //printf ("nl array:"); for (i=0; i<=j; i++) printf(" %d", recordPtr->nl[i]);printf("\n");
     *customPtr = (PathATSUIRecord *) recordPtr;
     return TCL_OK;
+}
+
+void drawMultilineText(PathATSUIRecord *recordPtr)
+{
+    int i;
+
+    for (i = 0; i < recordPtr->nlc; i++) {
+        //printf("drawtext: %i .. %i to %g,%g\n", recordPtr->nl[i], recordPtr->nl[i+1], Fix2X(recordPtr->dx[i]), Fix2X(recordPtr->dy[i]));
+        ATSUDrawText(recordPtr->atsuLayout, recordPtr->nl[i], recordPtr->nl[i+1] - recordPtr->nl[i] - 1, recordPtr->dx[i], recordPtr->dy[i]);
+    }
 }
 
 void
@@ -1036,11 +1062,11 @@ TkPathTextDraw(TkPathContext ctx, Tk_PathStyle *style, Tk_PathTextStyle *textSty
     CGContextScaleCTM(context->c, 1, -1);
     if ((style->strokeColor != NULL) && (GetColorFromPathColor(style->fill) != NULL)) {
         CGContextSetTextDrawingMode(context->c, fillOverStroke ? kCGTextStroke : kCGTextFill);
-        ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
+        drawMultilineText(recordPtr);
         CGContextSetTextDrawingMode(context->c, fillOverStroke ? kCGTextFill : kCGTextStroke);
-        ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
+        drawMultilineText(recordPtr);
     } else {
-        ATSUDrawText(recordPtr->atsuLayout, kATSUFromTextBeginning, kATSUToTextEnd, 0, 0);
+        drawMultilineText(recordPtr);
     }
     CGContextRestoreGState(context->c);
 }
@@ -1066,39 +1092,55 @@ PathRect
 TkPathTextMeasureBbox(Tk_PathTextStyle *textStylePtr, char *utf8, void *custom)
 {
     PathATSUIRecord *recordPtr = (PathATSUIRecord *) custom;
-    PathRect r;
-    
-    /*
-     * See Apple header ATSUnicodeDrawing.h for the difference
-     * between these two. Brief: ATSUMeasureTextImage considers
-     * the actual inked rect only.
-     */
-#if 0
+    PathRect r,ri;
+    int i;
     ATSTrapezoid b;
     ItemCount numBounds;
+    double x = 0.0;
+    double y = 0.0;
+    double baseX = 0.0;
 
-    b.upperRight.x = b.upperLeft.x = 0;
-    ATSUGetGlyphBounds(recordPtr->atsuLayout, 0, 0, 
-            kATSUFromTextBeginning, kATSUToTextEnd, 
-            kATSUseFractionalOrigins, 1, &b, &numBounds);
-    r.x1 = MIN(Fix2X(b.upperLeft.x), Fix2X(b.lowerLeft.x));
-    r.y1 = MIN(Fix2X(b.upperLeft.y), Fix2X(b.upperRight.y));
-    r.x2 = MAX(Fix2X(b.upperRight.x), Fix2X(b.lowerRight.x));
-    r.y2 = MAX(Fix2X(b.lowerLeft.y), Fix2X(b.lowerRight.y));
-#else
-    Rect rect;
+    for (i = 0; i < recordPtr->nlc; i++) {
+        //printf("measure %i: from %d, length %d\n", i, recordPtr->nl[i], recordPtr->nl[i+1] - recordPtr->nl[i] - 1);
+        b.upperRight.x = b.upperLeft.x = 0;
 
-    ATSUMeasureTextImage(recordPtr->atsuLayout,
-            kATSUFromTextBeginning, kATSUToTextEnd, 0, 0, &rect);
-    r.x1 = rect.left;
-    r.y1 = rect.top;
-    r.x2 = rect.right;
-    r.y2 = rect.bottom;
-#endif
+        ATSUGetGlyphBounds(recordPtr->atsuLayout, 0, 0,
+                recordPtr->nl[i], recordPtr->nl[i+1] - recordPtr->nl[i] - 1,
+                kATSUseFractionalOrigins, 1, &b, &numBounds);
+        ri.x1 = MIN(Fix2X(b.upperLeft.x), Fix2X(b.lowerLeft.x));
+        ri.y1 = MIN(Fix2X(b.upperLeft.y), Fix2X(b.upperRight.y));
+        ri.x2 = MAX(Fix2X(b.upperRight.x), Fix2X(b.lowerRight.x));
+        ri.y2 = MAX(Fix2X(b.lowerLeft.y), Fix2X(b.lowerRight.y));
+        //printf("textbox %i: %g,%g,%g,%g\n", i, ri.x1,ri.y1,ri.x2,ri.y2);
+        if (i == 0) {
+            baseX = ri.x1;
+            r.x1 = ri.x1;
+            r.y1 = ri.y1;
+            r.x2 = ri.x2;
+            r.y2 = ri.y2;
+        } else {
+            x = ri.x1 - baseX;
+            ri.x1 -= x;
+            ri.y1 += y;
+            ri.x2 -= x;
+            ri.y2 += y;
+            //printf("textbox %i moved: %g,%g,%g,%g\n", i, ri.x1,ri.y1,ri.x2,ri.y2);
+            if (r.x1 > ri.x1) r.x1 = ri.x1;
+            if (r.y1 > ri.y1) r.y1 = ri.y1;
+            if (r.x2 < ri.x2) r.x2 = ri.x2;
+            if (r.y2 < ri.y2) r.y2 = ri.y2;
+        }
+        recordPtr->dx[i] = X2Fix(-x);
+        recordPtr->dy[i] = X2Fix(-y);
+        y = r.y2 - r.y1;
+    }
+
+    //printf("textbox: %g, %g, %g, %g\n", r.x1,r.y1,r.x2,r.y2);
+
     return r;
 }
 
-void    	
+void
 TkPathSurfaceErase(TkPathContext ctx, double x, double y, double width, double height)
 {
     TkPathContext_ *context = (TkPathContext_ *) ctx;
