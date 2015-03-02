@@ -77,6 +77,7 @@ static void	ScalePpoly(Tk_PathCanvas canvas,
 static void	TranslatePpoly(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double deltaX, double deltaY);
 
+static int      ConfigureArrows(Tk_PathCanvas canvas, PpolyItem *ppolyPtr);
 
 PATH_STYLE_CUSTOM_OPTION_RECORDS
 PATH_CUSTOM_OPTION_TAGS
@@ -262,6 +263,7 @@ PpolyCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
         return TCL_ERROR;
     }
     ppolyPtr->maxNumSegments = len;
+    ConfigureArrows(canvas, ppolyPtr);
     ComputePpolyBbox(canvas, ppolyPtr);
     return TCL_OK;
 }	

@@ -223,6 +223,7 @@ PlineCoords(Tcl_Interp *interp, Tk_PathCanvas canvas, Tk_PathItem *itemPtr,
     
     result = ProcessCoords(interp, canvas, itemPtr, objc, objv);
     if ((result == TCL_OK) && ((objc == 1) || (objc == 4))) {
+        ConfigureArrows(canvas, plinePtr);
 	ComputePlineBbox(canvas, plinePtr);
     }
     return result;

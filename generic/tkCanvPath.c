@@ -79,6 +79,7 @@ static void	ScalePath(Tk_PathCanvas canvas,
                         double scaleX, double scaleY);
 static void	TranslatePath(Tk_PathCanvas canvas,
                         Tk_PathItem *itemPtr, double deltaX, double deltaY);
+static int      ConfigureArrows(Tk_PathCanvas canvas, PathItem *pathPtr);
 
 /* Support functions. */
 
@@ -359,6 +360,7 @@ PathCoords(
     
     result = ProcessPath(interp, canvas, itemPtr, objc, objv);
     if ((result == TCL_OK) && (objc == 1)) {
+        ConfigureArrows(canvas, pathPtr);
         ComputePathBbox(canvas, pathPtr);
     }
     return result;
