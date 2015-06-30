@@ -53,11 +53,13 @@ DisplayArrow(Tk_PathCanvas canvas, Drawable drawable, ArrowDescr *arrowDescr,
         PathAtom *atomPtr;
 
         if (arrowDescr->arrowFillRatio > 0.0 && arrowDescr->arrowLength != 0.0) {
-            arrowStyle.strokeWidth = 0.0;
+            // Hack for good arrowheads on linux: draw contour with stroke width=0.1, opacity=0.0 for filled arrowheads instead of stroke width=0.0
+            arrowStyle.strokeWidth = 0.1;       // When this value is 0.0, then Cairo (on Linux) rounding coordinates of fillable object and the zoomed small objects will be drawn with wrong arrowheads.
             fc.color = arrowStyle.strokeColor;
             fc.gradientInstPtr = NULL;
             arrowStyle.fill = &fc;
             arrowStyle.fillOpacity = arrowStyle.strokeOpacity;
+            arrowStyle.strokeOpacity = 0;
         } else {
             arrowStyle.fill = NULL;
             arrowStyle.fillOpacity = 1.0;
