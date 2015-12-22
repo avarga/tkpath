@@ -87,7 +87,7 @@ proc ::tkp::transform {cmd args} {
 	    if {$len != 2} {
 		return -code error "usage: transform mult transform1 transform2"
 	    }
-	    return tkp::mmult [lindex $args 0] [lindex $args 1]
+	    return [tkp::mmult [lindex $args 0] [lindex $args 1]]
 	}
 	default {
 	    return -code error "unrecognized transform command: \"$cmd\""
