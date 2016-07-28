@@ -567,8 +567,15 @@ DisplayPtext(Tk_PathCanvas canvas, Tk_PathItem *itemPtr, Display *display, Drawa
     /* @@@ We need to handle gradients as well here!
            Wait to see what the other APIs have to say.
     */
-    TkPathTextDraw(ctx, &style, &ptextPtr->textStyle, itemPtr->bbox.x1, itemPtr->bbox.y1 + ptextPtr->baseHeightRatio * (itemPtr->bbox.y2 - itemPtr->bbox.y1),
-            ptextPtr->fillOverStroke, Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
+    
+    double bboxOffset = 1; // to cancel the bbox growth which is introduced
+    if (style.strokeColor) // in ComputePtextBbox because of antialiasing
+        bboxOffset += style.strokeWidth/2;
+    
+    TkPathTextDraw(ctx, &style, &ptextPtr->textStyle, itemPtr->bbox.x1 + bboxOffset,
+        itemPtr->bbox.y1 + ptextPtr->baseHeightRatio * (itemPtr->bbox.y2 - itemPtr->bbox.y1) + bboxOffset,
+        ptextPtr->fillOverStroke, Tcl_GetString(ptextPtr->utf8Obj), ptextPtr->custom);
+    
     TkPathEndPath(ctx);
     TkPathFree(ctx);
     TkPathCanvasFreeInheritedStyle(&style);
